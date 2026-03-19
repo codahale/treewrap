@@ -2,7 +2,21 @@
 
 ## Abstract
 
+We introduce TreeWrap, a permutation-based authenticated-encryption construction that separates local chunk processing from final global authentication. Each message chunk is processed by a MonkeySpongeWrap-style keyed duplex transcript, called $`\mathsf{LeafWrap}`$, which outputs a ciphertext body chunk and a hidden leaf tag. The resulting leaf-tag vector is then authenticated together with the global associated data by a final keyed absorb-then-squeeze transcript, called $`\mathsf{TrunkSponge}`$. This decomposition is intended to support parallel chunk processing while preserving a simple final authentication layer.
+
+We analyze TreeWrap in two settings. For authenticated encryption, we prove multi-user IND-CPA, INT-CTXT, and IND-CCA2 bounds in the keyed-duplex model of Mennink. The leaf-layer proof identifies $`\mathsf{LeafWrap}`$ with a reduced MonkeySpongeWrap transcript and imports the corresponding keyed-duplex/IXIF replacement, while the trunk layer is handled by a direct keyed-duplex/IXIF analysis. For commitment, we prove a CMT-4 bound in the public-permutation model by flattening the leaf and trunk layers into duplex and sponge transcripts, respectively. This yields a per-ciphertext commitment bound whose local term depends on the actual chunk lengths rather than only on the leaf-tag length.
+
+We also give a concrete instantiation, $`\mathsf{TW128}`$, based on $`\mathrm{Keccak\text{-}p}[1600,12]`$ with 256-bit capacity, 8064-byte chunks, 128-bit leaf tags, and a 256-bit final tag. The resulting generic security target is 128 bits, with explicit multi-user AE bounds and explicit per-output CMT-4 bounds.
+
 ## 1. Introduction
+
+TreeWrap is a permutation-based AEAD construction that separates local chunk processing from final global authentication. The construction applies a MonkeySpongeWrap-style keyed duplex transcript to each message chunk, producing a ciphertext body chunk and a hidden leaf tag, and then authenticates the resulting leaf-tag vector together with the global associated data using a final keyed trunk sponge. This leaf/trunk split is designed to make chunk processing embarrassingly parallel while keeping the final authentication transcript simple enough to analyze both in the keyed AE setting and in the public-permutation commitment setting.
+
+The proof strategy follows the same decomposition. The AE analysis is carried out in the multi-user keyed-duplex model of [Men23]. At the leaf layer, Lemma 6.1 identifies $`\mathsf{LeafWrap}`$ with a reduced MonkeySpongeWrap transcript, and Theorem 6.2 imports the corresponding KD/IXIF replacement. Lemma 6.3 then supplies the TreeWrap-specific step needed for integrity: in the IXIF world, a fresh chunk body induces a fresh hidden leaf tag except with probability $`2^{-t_{\mathsf{leaf}}}`$. At the trunk layer, Corollary 4.6 gives a direct keyed-duplex/IXIF replacement for $`\mathsf{TrunkSponge}`$. These ingredients yield the IND-CPA and INT-CTXT theorems, and Theorem 5.3 derives IND-CCA2 from them by a BN00-style game hop using the multi-forgery integrity notion of Section 4.2.
+
+The commitment analysis is deliberately separate from the keyed AE path. Because the CMT-4 adversary chooses both candidate keys and nonces, the proof does not use the keyed [Men23] bounds. Instead, it flattens the construction into public permutation transcripts. Lemma 6.4 handles the local leaf wrapper via the duplexing-sponge viewpoint of [BDPVA11], yielding a per-chunk collision term on the full local output pair $`(Y_i,T_i)`$. Lemma 6.5 handles the outer trunk transcript via the sponge indifferentiability analysis of [BDPVA08], extended to the two-root setting needed for cross-key collisions. Theorem 5.4 then composes these two cases: a TreeWrap commitment collision either arises at the first differing chunk or at the final trunk combiner.
+
+The remainder of the paper is organized as follows. Section 2 fixes notation, the keyed-duplex model, and the encoding conventions. Section 3 defines $`\mathsf{LeafWrap}`$, $`\mathsf{TrunkSponge}`$, and $`\mathsf{TreeWrap}`$, together with the AEAD wrapper. Section 4 gives the multi-user security experiments, the resource translation, and the imported external bounds. Section 5 states the main AE and CMT-4 theorems. Section 6 proves them using the proof split described above. Section 7 instantiates the construction as $`\mathsf{TW128}`$ using $`\mathrm{Keccak\text{-}p}[1600,12]`$, SP 800-185 encodings, 8064-byte chunks, 128-bit leaf tags, and a 256-bit final tag.
 
 ## 2. Preliminaries
 
@@ -1695,6 +1709,10 @@ Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the concret
   and the empty-message case contributes only the outer trunk-sponge term.
 
 ## 8. Conclusion
+
+TreeWrap shows that a chunk-parallel permutation-based AEAD can be analyzed cleanly by splitting the construction into a local wrapper and a final trunk authenticator. On the AE side, this decomposition lets the proof reuse the keyed-duplex/IXIF machinery of [Men23] at both layers while isolating the one TreeWrap-specific step needed for integrity: a fresh chunk body yields a fresh hidden leaf tag except with the expected guessing probability. On the commitment side, the same decomposition supports a separate public-permutation analysis in which the local and outer transcripts are flattened and bounded by duplexing-sponge and sponge arguments, respectively.
+
+The concrete $`\mathsf{TW128}`$ instantiation shows that this proof strategy leads to a practically parameterized scheme based on twelve-round Keccak, 8064-byte chunks, 128-bit leaf tags, and a 256-bit final tag. Its AE guarantees remain explicitly multi-user and parameterized by the imported keyed-duplex bounds, while its commitment guarantee specializes to an explicit per-output collision bound with especially strong terms on full chunks. Together, these results provide a complete proof framework for TreeWrap and a concrete target instantiation for further evaluation.
 
 ## References
 
