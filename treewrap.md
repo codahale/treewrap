@@ -150,7 +150,7 @@ for the unique padded decomposition of $`Z`$ into $`s`$-bit blocks under the $`\
 
 LeafWrap embeds each padded message or ciphertext block as $`Z_j \| 1 \| 0^{c-1}`$. These are full-state blocks of length $`b = r + c`$ and provide a dedicated transcript format for the body-processing phase. By contrast, the outer trunk sponge absorbs padded combiner blocks as $`W_j \| 0^c`$, that is, as ordinary rate-$`r`$ sponge blocks with an all-zero capacity suffix.
 
-**Domain separation.** TreeWrap separates leaf and trunk calls in two ways. First, the proofs rely on disjoint IV namespaces: trunk calls use $`V_{\mathsf{out}}(U) = \mathsf{iv}(U,0)`$, while leaf calls use $`V_i(U) = \mathsf{iv}(U,i+1)`$. Second, even if the rate parts happen to coincide, the absorbed full-state blocks differ in format: LeafWrap uses a suffix $`1 \| 0^{c-1}`$, whereas TrunkSponge uses $`0^c`$. The later reductions use the IV separation as the primary argument and the block-format distinction as secondary transcript-format separation.
+**Domain separation.** TreeWrap separates leaf and trunk calls in two ways. First, the proofs rely on disjoint IV namespaces: trunk calls use $`V_{\mathsf{out}}(U) = \mathsf{iv}(U,0)`$, while leaf calls use $`V_i(U) = \mathsf{iv}(U,i+1)`$. Second, even if the rate parts happen to coincide, the absorbed full-state blocks differ in format: LeafWrap uses a suffix $`1 \| 0^{c-1}`$, whereas TrunkSponge uses $`0^c`$. Thus even if an adversary were somehow to link a trunk IV to a leaf IV, the two transcripts would still diverge at every body-processing step because their capacity-part framing bits differ. The later reductions use the IV separation as the primary argument and the block-format distinction as secondary transcript-format separation.
 
 ## 3. The TreeWrap Construction
 
@@ -746,19 +746,19 @@ This is the bidirectional LeafWrap import under the resource assignment of Lemma
   M = \sigma^{\mathsf{out}}_e + \sigma^{\mathsf{out}}_d,\quad
   Q = q^{\mathsf{out}}_e + q^{\mathsf{out}}_d,\quad
   Q_{IV} \le \mu,\quad
-  L \le \sigma^{\mathsf{out}}_d,\quad
+  L \le q^{\mathsf{out}}_d,\quad
   \Omega = 0,\quad
   \nu_{\mathsf{fix}} = 0.
   ```
 
-**Proof sketch.** Each $`\mathsf{TrunkSponge}[p]`$ evaluation contributes one initialization, $`\lceil (|W|+1)/r \rceil`$ absorption calls on blocks of the form $`\widetilde{W}_i \| 0^c`$, and $`s_{\mathsf{out}}`$ blank squeezing calls. All calls use flag $`\mathsf{false}`$, so $`\Omega = 0`$ throughout. For encryption-type queries, Lemma 4.1 implies that the derived outer keyed contexts $`(\delta,V_{\mathsf{out}}(U)) = (\delta,\mathsf{iv}(U,0))`$ are distinct, hence $`L = \nu_{\mathsf{fix}} = 0`$. Across different users, the same bare outer IV may recur, but again the idealized initialization paths are $`\mathrm{uid}(\delta) \| IV`$, so $`Q_{IV} \le \mu`$ is the correct bound. In the general case, repeated subpaths can arise only from decryption-side recomputations under reused outer keyed contexts, and their total number is bounded by the total number of decryption-side duplexing calls, namely $`\sigma^{\mathsf{out}}_d`$. Because absorbed blocks have the fixed form $`\widetilde{W}_i \| 0^c`$, each absorption call enters the permutation with rate part $`Z_i \oplus \widetilde{W}_i`$, where $`Z_i`$ is the unrevealed intermediate squeeze output of the keyed duplex. Even if the adversary determines $`\widetilde{W}_i`$ indirectly through the recomputed leaf tags, it does not observe $`Z_i`$ during absorption and therefore cannot choose $`\widetilde{W}_i`$ so as to force the outer part to one fixed value. Hence $`\nu_{\mathsf{fix}} = 0`$ remains valid.
+**Proof sketch.** Each $`\mathsf{TrunkSponge}[p]`$ evaluation contributes one initialization, $`\lceil (|W|+1)/r \rceil`$ absorption calls on blocks of the form $`\widetilde{W}_i \| 0^c`$, and $`s_{\mathsf{out}}`$ blank squeezing calls. All calls use flag $`\mathsf{false}`$, so $`\Omega = 0`$ throughout. For encryption-type queries, Lemma 4.1 implies that the derived outer keyed contexts $`(\delta,V_{\mathsf{out}}(U)) = (\delta,\mathsf{iv}(U,0))`$ are distinct, hence $`L = \nu_{\mathsf{fix}} = 0`$. Across different users, the same bare outer IV may recur, but again the idealized initialization paths are $`\mathrm{uid}(\delta) \| IV`$, so $`Q_{IV} \le \mu`$ is the correct bound. In the general case, repeated subpaths can arise only from decryption-side recomputations under reused outer keyed contexts. Each such recomputation can contribute at most one repeated subpath, namely at initialization: after that point the absorption calls extend the same path monotonically, so they do not create independent repeated subpaths within a single trunk evaluation. Hence $`L \le q^{\mathsf{out}}_d`$. Because absorbed blocks have the fixed form $`\widetilde{W}_i \| 0^c`$, each absorption call enters the permutation with rate part $`Z_i \oplus \widetilde{W}_i`$, where $`Z_i`$ is the unrevealed intermediate squeeze output of the keyed duplex. Even if the adversary determines $`\widetilde{W}_i`$ indirectly through the recomputed leaf tags, it does not observe $`Z_i`$ during absorption and therefore cannot choose $`\widetilde{W}_i`$ so as to force the outer part to one fixed value. Hence $`\nu_{\mathsf{fix}} = 0`$ remains valid.
 
 **Corollary 4.6 (Imported Outer TrunkSponge KD/IXIF Bound).** If $`\sigma^{\mathsf{out}}_e + \sigma^{\mathsf{out}}_d + N \le 0.1 \cdot 2^c`$, then the outer-combiner real-to-IXIF replacement term can be instantiated as
 
 ```math
 \epsilon_{\mathsf{out}}^{\mathsf{ixif}}(\mu,q^{\mathsf{out}}_e,q^{\mathsf{out}}_d,\sigma^{\mathsf{out}}_e,\sigma^{\mathsf{out}}_d,N)
 :=
-\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{out}}_e+\sigma^{\mathsf{out}}_d,q^{\mathsf{out}}_e+q^{\mathsf{out}}_d,\mu,\sigma^{\mathsf{out}}_d,0,0,N).
+\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{out}}_e+\sigma^{\mathsf{out}}_d,q^{\mathsf{out}}_e+q^{\mathsf{out}}_d,\mu,q^{\mathsf{out}}_d,0,0,N).
 ```
 
 This is the direct keyed-duplex import for the outer trunk-sponge transcript under the resource assignment of Lemma 4.3.
@@ -935,10 +935,10 @@ Assume $`M_{\mathsf{lw}}(\ell_i,N) < 2^c`$ for every $`i = 0,\ldots,n-1`$ and $`
 \end{cases}
 ```
 
-Then, over the random permutation $`p`$ alone,
+Then, for every fixed output pair $`\Theta`$ and every realized prior transcript of the adversary's primitive and wrapper-oracle queries consistent with $`\Theta`$, the conditional collision probability over the remaining random permutation choices satisfies
 
 ```math
-\Pr_p\!\bigl[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)\bigr]
+\Pr\!\bigl[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)\bigr]
 \le
 \epsilon_{\mathsf{lw}}^{\mathsf{first}}(\Theta,N)
 +
@@ -947,7 +947,7 @@ Then, over the random permutation $`p`$ alone,
 2^{-\tau}.
 ```
 
-Equivalently, for every fixed output profile $`\Theta`$, the corresponding TreeWrap commitment collision probability reduces either to a local encryption-side LeafWrap collision on the full chunk-output pair $`(Y_i,T_i)`$ at the first differing chunk or to a collision in the flattened outer combiner transcript. Consequently, if $`\Theta`$ denotes the random realized output pair of a CMT-4 adversary $`\mathcal{A}`$, then applying the pointwise bound above and averaging over the distribution of $`\Theta`$ gives
+Equivalently, for every fixed output profile $`\Theta`$ and every fixed prior transcript, the corresponding TreeWrap commitment collision probability reduces either to a local encryption-side LeafWrap collision on the full chunk-output pair $`(Y_i,T_i)`$ at the first differing chunk or to a collision in the flattened outer combiner transcript. The same pointwise estimate therefore remains valid after conditioning on the adversary's adaptively generated prior transcript, because Lemma 4.7 and Section 4.8 bound bad rooted extensions relative to the already exposed rooted nodes and full states. Consequently, if $`\Theta`$ denotes the random realized output pair of a CMT-4 adversary $`\mathcal{A}`$, then conditioning first on the realized prior transcript and then averaging over the joint distribution of that transcript and $`\Theta`$ gives
 
 ```math
 \mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}(\mathcal{A})
@@ -1069,7 +1069,7 @@ It remains to analyze $`H_2^b`$. In this game, the chunk layer is answered by IX
 ((\delta,\mathsf{iv}(U,0)), \mathsf{enc}_{\mathsf{out}}(A, T_0, \ldots, T_{n-1}, n)),
 ```
 
-and by per-user nonce respect this outer keyed context is fresh for every encryption query. The IXIF oracle used for the leaf and trunk replacements is sampled independently of the real permutation $`p`$, so the primitive transcript is unchanged across the hybrids and remains shared between $`H_2^0`$ and $`H_2^1`$. Hence every outer evaluation in $`H_2^b`$ occurs on a fresh IXIF path and returns an independent uniform $`\tau`$-bit string, while the primitive oracle answers are identical in both games. Consequently, the entire view of $`\mathcal{A}`$ in $`H_2^0`$ and $`H_2^1`$ is identical up to public lengths, and therefore
+and by per-user nonce respect this outer keyed context is fresh for every encryption query. The IXIF oracle used for the leaf and trunk replacements is sampled independently of the real permutation $`p`$, so the primitive transcript is unchanged across the hybrids and remains shared between $`H_2^0`$ and $`H_2^1`$. This independence is load-bearing: without it, the primitive oracle could couple the two final games through the shared permutation transcript. Hence every outer evaluation in $`H_2^b`$ occurs on a fresh IXIF path and returns an independent uniform $`\tau`$-bit string, while the primitive oracle answers are identical in both games. Consequently, the entire view of $`\mathcal{A}`$ in $`H_2^0`$ and $`H_2^1`$ is identical up to public lengths, and therefore
 
 ```math
 \Pr[H_2^1(\mathcal{A}) = 1] = \Pr[H_2^0(\mathcal{A}) = 1].
@@ -1395,19 +1395,19 @@ If there exists a first index $`j`$ such that
 (K,V_j,P_j) \ne (K',V'_j,P'_j),
 ```
 
-then the two distinct local inputs at position $`j`$ produce the same local output pair
+then the two distinct local inputs at position $`j`$ either produce the same local output pair
 
 ```math
 (Y_j,T_j) = (Y_j,T'_j),
 ```
 
-and Lemma 7.2 applies directly. Thus the contribution of this case is bounded by
+in which case Lemma 7.2 applies directly, or they produce different local output pairs, in which case the common final TreeWrap ciphertext can only arise if the outer combiner collides on distinct inputs. Therefore the successful collision event in this case lies in the union of a first-differing-chunk local collision event and a distinct-input outer collision event. The local contribution is bounded by
 
 ```math
 \epsilon_{\mathsf{lw}}^{\flat}(|Y_j|,N),
 ```
 
-that is, by the local flat-duplex term plus the full-output collision tail $`2^{-(|Y_j|+t_{\mathsf{leaf}})}`$ at the first differing chunk. This is exactly the quantity $`\epsilon_{\mathsf{lw}}^{\mathsf{first}}(\Theta,N)`$ appearing in Theorem 5.4.
+that is, by the local flat-duplex term plus the full-output collision tail $`2^{-(|Y_j|+t_{\mathsf{leaf}})}`$ at the first differing chunk. This is exactly the quantity $`\epsilon_{\mathsf{lw}}^{\mathsf{first}}(\Theta,N)`$ appearing in Theorem 5.4. The outer-collision contribution in this same case is bounded separately by Lemma 7.3.
 
 It remains to consider the complementary case, namely that for every chunk position $`i`$,
 
@@ -1441,7 +1441,7 @@ are evaluated on distinct flattened inputs. Since the final TreeWrap tags are eq
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho) + 2^{-\tau}.
 ```
 
-Therefore, for every fixed output pair $`\Theta`$, the corresponding successful CMT-4 event reduces either to a first-differing-chunk collision bounded by Lemma 7.2 or to a distinct-input outer-combiner collision bounded by Lemma 7.3. Adding these two mutually exclusive branches yields the conditional bound of Theorem 5.4, and averaging over the adversary's random output pair gives the displayed expectation bound on $`\mathrm{Adv}^{\mathsf{cmt}\text{-}4}`$.
+Therefore, for every fixed output pair $`\Theta`$, the corresponding successful CMT-4 event lies in the union of two events: a first-differing-chunk local collision bounded by Lemma 7.2 and a distinct-input outer-combiner collision bounded by Lemma 7.3. The case split on whether a first differing chunk exists is mutually exclusive, but within the first case these two bad events are related by a union bound rather than exclusivity. Adding the two bounds therefore yields the conditional estimate of Theorem 5.4, and averaging over the adversary's random output pair gives the displayed expectation bound on $`\mathrm{Adv}^{\mathsf{cmt}\text{-}4}`$.
 
 ## 8. TW128 Instantiation
 
