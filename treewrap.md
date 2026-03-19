@@ -81,6 +81,37 @@ Algorithm KD[p]_K.duplex(flag, B):
 
 Here $`\delta`$ ranges over $`\{1,\ldots,\mu\}`$, $`IV`$ ranges over $`\mathcal{IV}`$, $`\mathsf{flag}`$ ranges over $`\{\mathsf{true},\mathsf{false}\}`$, and $`B`$ ranges over $`\{0,1\}^b`$. When $`\mathsf{flag} = \mathsf{true}`$, the outer $`r`$ bits are overwritten; when $`\mathsf{flag} = \mathsf{false}`$, they are XOR-absorbed. This keyed duplex interface is the primitive on which both the TreeWrap outer combiner and the MonkeySpongeWrap-style LeafWrap transcript are built.
 
+#### 2.3.2 Ideal IXIF Interface
+
+For the authenticated-encryption proofs, we also use the ideal path-based interface $`\mathsf{IXIF}[\mathrm{ro}]`$ imported from [Men23]. Fix a random oracle
+
+```math
+\mathrm{ro} : \{0,1\}^* \to \{0,1\}^r
+```
+
+and a fixed injective encoding
+
+```math
+\mathrm{uid} : \{1,\ldots,\mu\} \to \{0,1\}^*.
+```
+
+The interface maintains a current transcript path $`\pi \in \{0,1\}^*`$ and exposes:
+
+```text
+Algorithm IXIF[ro].init(δ, IV):
+    π <- uid(δ) || IV
+```
+
+```text
+Algorithm IXIF[ro].duplex(flag, B):
+    Z <- ro(π)
+    D <- ([flag] * (Z || 0^{b-r})) xor B
+    π <- π || D
+    return Z
+```
+
+Thus $`\mathsf{IXIF}[\mathrm{ro}]`$ keeps the same control flow as the keyed duplex but replaces the permutation state by a transcript path. A repeated path returns the same deterministic oracle value, while a fresh path returns an independent uniform $`r`$-bit string. This is the ideal interface used by the imported KD/IXIF replacements of Section 4.6.
+
 ### 2.4 Encoding Conventions and Domain Separation
 
 **Encodings.** We use two encoding components: a prefix-free injective string encoding $`\eta : \{0,1\}^* \to \{0,1\}^*`$ and a suffix-free injective integer encoding $`\nu : \mathbb{N} \to \{0,1\}^*`$.
@@ -517,7 +548,7 @@ V_i(U) := \mathsf{iv}(U,i+1)
 
 induces pairwise distinct leaf keyed contexts $`(\delta,V_i(U))`$ across all encryption-side LeafWrap calls; and no outer keyed context equals any leaf keyed context.
 
-**Proof.** All claims follow from per-user nonce-respecting behavior together with injectivity of the map $`(U,j) \mapsto \mathsf{iv}(U,j)`$ on $`\mathcal{U} \times \mathbb{N}`$. Distinct encryption queries for a fixed user $`\delta`$ use distinct nonces, and within a fixed encryption query the suffixes $`0,1,\ldots,n`$ are all different. Hence the corresponding derived keyed contexts are pairwise distinct. Repetitions of the bare IV string across different users are harmless because [Men23] keys each initialization path by the user index $`\delta`$ as well.
+**Proof.** All claims follow from per-user nonce-respecting behavior together with injectivity of the map $`(U,j) \mapsto \mathsf{iv}(U,j)`$ on $`\mathcal{U} \times \mathbb{N}`$. Distinct encryption queries for a fixed user $`\delta`$ use distinct nonces, and within a fixed encryption query the suffixes $`0,1,\ldots,n`$ are all different. Hence the corresponding derived keyed contexts are pairwise distinct. Repetitions of the bare IV string across different users are harmless because the idealized initialization path is $`\mathrm{uid}(\delta) \| IV`$, so different user indices still induce distinct keyed contexts.
 
 For any bitstring $`Z \in \{0,1\}^*`$, define the number of rate-blocks after $`\mathrm{pad}10^*`$ padding by
 
@@ -561,7 +592,7 @@ If one later wishes to instantiate the imported LeafWrap bounds with explicit IV
 \iota_{\mathsf{lw}}(X) := \chi(X)\cdot (b-k).
 ```
 
-This isolates the contribution of the derived leaf IVs to the lower-level LeafWrap resource tuple. In the multi-user setting, [Men23] additionally prefixes each initialization path by the encoded user index $`\delta`$; this contributes only a fixed per-initialization overhead independent of the message length, so we leave it implicit in the present abstract resource accounting.
+This isolates the contribution of the derived leaf IVs to the lower-level LeafWrap resource tuple. In the multi-user setting, Section 2.3.2 additionally prefixes each initialization path by the encoded user index $`\delta`$ via $`\mathrm{uid}(\delta)`$; this contributes only a fixed per-initialization overhead independent of the message length, so we leave it implicit in the present abstract resource accounting.
 
 For an adversary's encryption queries with plaintext bodies $`P^{(1)},\ldots,P^{(q_e)}`$ and decryption-side ciphertext bodies $`Y^{(1)},\ldots,Y^{(q_*)}`$, aggregated across all users, where $`q_*`$ denotes either the final-candidate count $`q_f`$ in INT-CTXT or the decryption-query count $`q_d`$ in IND-CCA2, we set
 
@@ -660,7 +691,7 @@ Because $`\mathrm{pad}10^*`$ always produces at least one padded body block, eve
   \nu_{\mathsf{fix}} \le \max\!\bigl(\Omega_{\mathsf{lw},d} + \chi_e + \chi_d - 1, 0\bigr).
   ```
 
-**Proof sketch.** For LeafWrap, each construction query corresponds to one initialization and a sequence of body-phase and squeezing duplex calls. In the encryption-only case, Lemma 4.1 gives pairwise distinct leaf keyed contexts $`(\delta,\mathsf{iv}(U,i+1))`$, so no repeated subpath can occur across encryption-side queries; moreover, encryption never uses overwrite calls, hence $`L = \Omega = \nu_{\mathsf{fix}} = 0`$. Across different users, the same bare IV may recur, but [Men23] counts initialization paths as $`\mathrm{encode}[\delta] \| IV`$, so $`Q_{IV} \le \mu`$ is the correct bound. In the bidirectional case, the argument follows the proof of Theorem 7 of [Men23] mutatis mutandis. Distinct encryption-side leaf keyed contexts still eliminate encryption/encryption subpath repetition, while decryption-side queries may repeat keyed leaf contexts and contribute at most $`\chi_d`$ repeated subpaths. Because the reduced LeafWrap transcript has no local associated-data phase and $`\mathrm{pad}10^*`$ guarantees at least one body block per chunk, each decryption-side chunk contributes exactly $`\omega_r(Y^{(b)}_i)`$ overwrite body calls and exactly $`s_{\mathsf{leaf}}`$ non-overwriting squeeze calls, giving the stated identity for $`\Omega_{\mathsf{lw},d}`$.
+**Proof sketch.** For LeafWrap, each construction query corresponds to one initialization and a sequence of body-phase and squeezing duplex calls. In the encryption-only case, Lemma 4.1 gives pairwise distinct leaf keyed contexts $`(\delta,\mathsf{iv}(U,i+1))`$, so no repeated subpath can occur across encryption-side queries; moreover, encryption never uses overwrite calls, hence $`L = \Omega = \nu_{\mathsf{fix}} = 0`$. Across different users, the same bare IV may recur, but the idealized initialization paths are $`\mathrm{uid}(\delta) \| IV`$, so $`Q_{IV} \le \mu`$ is the correct bound. In the bidirectional case, the argument follows the proof of Theorem 7 of [Men23] mutatis mutandis. Distinct encryption-side leaf keyed contexts still eliminate encryption/encryption subpath repetition, while decryption-side queries may repeat keyed leaf contexts and contribute at most $`\chi_d`$ repeated subpaths. Because the reduced LeafWrap transcript has no local associated-data phase and $`\mathrm{pad}10^*`$ guarantees at least one body block per chunk, each decryption-side chunk contributes exactly $`\omega_r(Y^{(b)}_i)`$ overwrite body calls and exactly $`s_{\mathsf{leaf}}`$ non-overwriting squeeze calls, giving the stated identity for $`\Omega_{\mathsf{lw},d}`$.
 
 The parameter $`\nu_{\mathsf{fix}}`$ is not merely the number of overwrite calls. By [Men23, Section 4.1], it counts duplexing calls for which the adversary can force the outer part of the duplex input to one fixed value, and this can happen either through overwrite or through a repeated subpath, where the corresponding squeeze output is already known from the earlier transcript. This is why [Men23, Theorem 7] concludes
 
@@ -720,7 +751,7 @@ This is the bidirectional LeafWrap import under the resource assignment of Lemma
   \nu_{\mathsf{fix}} = 0.
   ```
 
-**Proof sketch.** Each $`\mathsf{TrunkSponge}[p]`$ evaluation contributes one initialization, $`\lceil (|W|+1)/r \rceil`$ absorption calls on blocks of the form $`\widetilde{W}_i \| 0^c`$, and $`s_{\mathsf{out}}`$ blank squeezing calls. All calls use flag $`\mathsf{false}`$, so $`\Omega = 0`$ throughout. For encryption-type queries, Lemma 4.1 implies that the derived outer keyed contexts $`(\delta,V_{\mathsf{out}}(U)) = (\delta,\mathsf{iv}(U,0))`$ are distinct, hence $`L = \nu_{\mathsf{fix}} = 0`$. Across different users, the same bare outer IV may recur, but again [Men23] counts initialization paths as $`\mathrm{encode}[\delta] \| IV`$, so $`Q_{IV} \le \mu`$ is the correct bound. In the general case, repeated subpaths can arise only from decryption-side recomputations under reused outer keyed contexts, and their total number is bounded by the total number of decryption-side duplexing calls, namely $`\sigma^{\mathsf{out}}_d`$. Because absorbed blocks have the fixed form $`\widetilde{W}_i \| 0^c`$, each absorption call enters the permutation with rate part $`Z_i \oplus \widetilde{W}_i`$, where $`Z_i`$ is the unrevealed intermediate squeeze output of the keyed duplex. Even if the adversary determines $`\widetilde{W}_i`$ indirectly through the recomputed leaf tags, it does not observe $`Z_i`$ during absorption and therefore cannot choose $`\widetilde{W}_i`$ so as to force the outer part to one fixed value. Hence $`\nu_{\mathsf{fix}} = 0`$ remains valid.
+**Proof sketch.** Each $`\mathsf{TrunkSponge}[p]`$ evaluation contributes one initialization, $`\lceil (|W|+1)/r \rceil`$ absorption calls on blocks of the form $`\widetilde{W}_i \| 0^c`$, and $`s_{\mathsf{out}}`$ blank squeezing calls. All calls use flag $`\mathsf{false}`$, so $`\Omega = 0`$ throughout. For encryption-type queries, Lemma 4.1 implies that the derived outer keyed contexts $`(\delta,V_{\mathsf{out}}(U)) = (\delta,\mathsf{iv}(U,0))`$ are distinct, hence $`L = \nu_{\mathsf{fix}} = 0`$. Across different users, the same bare outer IV may recur, but again the idealized initialization paths are $`\mathrm{uid}(\delta) \| IV`$, so $`Q_{IV} \le \mu`$ is the correct bound. In the general case, repeated subpaths can arise only from decryption-side recomputations under reused outer keyed contexts, and their total number is bounded by the total number of decryption-side duplexing calls, namely $`\sigma^{\mathsf{out}}_d`$. Because absorbed blocks have the fixed form $`\widetilde{W}_i \| 0^c`$, each absorption call enters the permutation with rate part $`Z_i \oplus \widetilde{W}_i`$, where $`Z_i`$ is the unrevealed intermediate squeeze output of the keyed duplex. Even if the adversary determines $`\widetilde{W}_i`$ indirectly through the recomputed leaf tags, it does not observe $`Z_i`$ during absorption and therefore cannot choose $`\widetilde{W}_i`$ so as to force the outer part to one fixed value. Hence $`\nu_{\mathsf{fix}} = 0`$ remains valid.
 
 **Corollary 4.6 (Imported Outer TrunkSponge KD/IXIF Bound).** If $`\sigma^{\mathsf{out}}_e + \sigma^{\mathsf{out}}_d + N \le 0.1 \cdot 2^c`$, then the outer-combiner real-to-IXIF replacement term can be instantiated as
 
@@ -929,7 +960,7 @@ This section contains proof sketches for the authenticated-encryption path. The 
 
 The LeafWrap analysis identifies $`\mathsf{LeafWrap}`$ with the reduced MonkeySpongeWrap transcript obtained by excising the vacuous local associated-data phase, and then imports the corresponding KD/IXIF replacement from [Men23]. The outer combiner uses the same keyed-duplex/IXIF paradigm, but its transcript is simpler because it consists only of absorb-then-squeeze calls with flag $`\mathsf{false}`$.
 
-Let $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}]`$ denote the same transcript as $`\mathsf{LeafWrap}[p]`$, but with the keyed duplex $`\mathsf{KD}[p]`$ replaced by the ideal interface $`\mathsf{IXIF}[\mathrm{ro}]`$ of [Men23]. Thus
+Let $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}]`$ denote the same transcript as $`\mathsf{LeafWrap}[p]`$, but with the keyed duplex $`\mathsf{KD}[p]`$ replaced by the ideal interface $`\mathsf{IXIF}[\mathrm{ro}]`$ of Section 2.3.2 (equivalently, the IXIF interface used in [Men23]). Thus
 
 ```math
 \mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}](K,V,X,m) \to (Y,T)
