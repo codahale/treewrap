@@ -729,9 +729,9 @@ This is the bidirectional LeafWrap import under the resource assignment of Lemma
 
 This is the direct keyed-duplex import for the outer trunk-sponge transcript under the resource assignment of Lemma 4.3.
 
-### 4.7 Imported Flat Sponge Bound
+### 4.7 Flat Sponge Bound and $`\rho`$-Root Extension
 
-For the outer CMT-4 analysis, we use the random-permutation sponge bound of [BDPVA08, Eq. (6)] together with an explicit $`\rho`$-root forest variant. In the simulator proof of [BDPVA08], the single-root case starts from one rooted supernode and maintains two exclusion sets: a rooted set $`R`$ and an outer-state set $`O`$. In the present setting, the simulator instead starts from $`\rho`$ public rooted supernodes. After $`i`$ successful transcript extensions, the same inductive argument gives
+For the outer CMT-4 analysis, we import the single-root random-permutation sponge bound of [BDPVA08, Eq. (6)] and extend the same simulator/counting argument to an explicit $`\rho`$-root forest setting. In the simulator proof of [BDPVA08], the single-root case starts from one rooted supernode and maintains two exclusion sets: a rooted set $`R`$ and an outer-state set $`O`$. In the present setting, the simulator instead starts from $`\rho`$ public rooted supernodes. After $`i`$ successful transcript extensions, the same inductive argument gives
 
 ```math
 |R_i| \le \rho + i,
@@ -747,10 +747,10 @@ f_{P,\rho}(M)
 1 - \prod_{i=0}^{M-1} \frac{1-(\rho+i)2^{-c}}{1-i2^{-b}}.
 ```
 
-Here the numerator is the probability that the next randomly chosen capacity slice avoids the at most $`\rho+i`$ rooted supernodes, while the denominator is the probability that the next full-state sample avoids the at most $`i`$ previously fixed full states. The simulator itself is obtained by the same construction as in [BDPVA08], but with its rooted-path tables keyed by a pair consisting of the root identifier and the path suffix. Distinct roots start from distinct full keyed-initialization states because the pairs $`(K,\mathsf{iv}(U,0))`$ are distinct and the keyed-duplex initialization is deterministic, so the rooted forest cannot merge before the adversary creates an actual transcript collision. Thus every forward or inverse query performs exactly the same local consistency checks as in the one-root case, with at most a linear factor $`O(\rho)`$ additional work for root lookup. In particular, the simulator remains polynomial-time; in the TreeWrap application one always has $`\rho \in \{1,2\}`$. Applying the same quadratic relaxation as in [BDPVA08, Eq. (6)] then gives the explicit upper bound
+Here the numerator is the probability that the next randomly chosen capacity slice avoids the at most $`\rho+i`$ rooted supernodes, while the denominator is the probability that the next full-state sample avoids the at most $`i`$ previously fixed full states. The simulator itself is obtained by adapting the construction of [BDPVA08] so that its rooted-path tables are keyed by a pair consisting of the root identifier and the path suffix. Distinct roots start from distinct full keyed-initialization states because the pairs $`(K,\mathsf{iv}(U,0))`$ are distinct and the keyed-duplex initialization is deterministic, so the rooted forest cannot merge before the adversary creates an actual transcript collision. Thus every forward or inverse query performs exactly the same local consistency checks as in the one-root case, with at most a linear factor $`O(\rho)`$ additional work for root lookup. In particular, the simulator remains polynomial-time; in the TreeWrap application one always has $`\rho \in \{1,2\}`$. Applying the same quadratic relaxation as in [BDPVA08, Eq. (6)] then gives the explicit upper bound for this $`\rho`$-root extension:
 
 ```math
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M,\rho)
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M,\rho)
 :=
 \frac{(1-2^{-r})M^2 + (2\rho-1+2^{-r})M}{2^{c+1}}
 ```
@@ -772,7 +772,7 @@ This quantity counts the adversary's primitive-query budget together with the tw
 ```math
 \epsilon_{\mathsf{lw}}^{\flat}(\ell,N)
 :=
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{lw}}(\ell,N),2)
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{lw}}(\ell,N),2)
 +
 2^{-(\ell+t_{\mathsf{leaf}})}.
 ```
@@ -788,7 +788,7 @@ For the IND-CPA and INT-CTXT path, we instantiate the imported [Men23] terms usi
 - Let $`\epsilon_{\mathsf{out}}^{\mathsf{ixif}}`$ be the explicit imported outer KD/IXIF term of Corollary 4.6.
 - By Lemma 6.3 together with the derived keyed-context discipline of Lemma 4.1, the only additional local freshness failure in the INT-CTXT proof is the event that a fresh random leaf tag equals the unique prior leaf tag in the same keyed leaf context, which contributes at most $`2^{-t_{\mathsf{leaf}}}`$.
 - Let $`\epsilon_{\mathsf{lw}}^{\flat}(\ell,N)`$ be the explicit local flat-duplex term of Section 4.8.
-- Let $`\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}`$ be the explicit $`\rho`$-root flat-sponge term of Section 4.7.
+- Let $`\mathrm{Sponge}^{(i)}_{\mathsf{forest}}`$ be the explicit $`\rho`$-root flat-sponge term of Section 4.7.
 
 ### 5.1 IND-CPA Theorem
 
@@ -887,7 +887,7 @@ Assume $`M_{\mathsf{lw}}(\ell_i,N) < 2^c`$ for every $`i = 0,\ldots,n-1`$ and $`
 \le
 \sum_{i=0}^{n-1} \epsilon_{\mathsf{lw}}^{\flat}(\ell_i,N)
 +
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}},\rho)
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho)
 +
 2^{-\tau}.
 ```
@@ -900,7 +900,7 @@ Equivalently, for every fixed output profile $`\Theta`$, the corresponding TreeW
 \mathbb{E}_{\Theta}\!\left[
 \sum_{i=0}^{n(\Theta)-1} \epsilon_{\mathsf{lw}}^{\flat}(\ell_i(\Theta),N)
 +
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}}(\Theta),\rho(\Theta))
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}}(\Theta),\rho(\Theta))
 +
 2^{-\tau}
 \right],
@@ -1250,7 +1250,7 @@ If
 let $`\ell := |Y|`$ and assume $`M_{\mathsf{lw}}(\ell,N) < 2^c`$. Then either the two flattened local transcripts collide under the duplexing-sponge reduction of [BDPVA11] in the presence of at most $`N`$ primitive queries, or two distinct ideal local transcript histories produce the same full local output pair $`(Y,T)`$. By Section 4.8, the first event is bounded by
 
 ```math
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{lw}}(\ell,N),2),
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{lw}}(\ell,N),2),
 ```
 
 and the second contributes the residual ideal-output collision term
@@ -1264,7 +1264,7 @@ Hence
 ```math
 \Pr[\text{local collision on an }\ell\text{-bit chunk}]
 \le
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{lw}}(\ell,N),2)
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{lw}}(\ell,N),2)
 +
 2^{-(\ell+t_{\mathsf{leaf}})}
 =
@@ -1318,7 +1318,7 @@ N
 and assume $`M_{\mathsf{out}} < 2^c`$. Then either the two flattened combiner transcripts merge in the underlying sponge graph, or two distinct ideal combiner transcript inputs collide on the same truncated output. The first event is bounded by
 
 ```math
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}},\rho)
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho)
 ```
 
 via the rooted-forest counting of Section 4.7, and the second event contributes the generic truncation term $`2^{-\tau}`$. Hence
@@ -1326,7 +1326,7 @@ via the rooted-forest counting of Section 4.7, and the second event contributes 
 ```math
 \Pr[\text{outer collision}]
 \le
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}},\rho)
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho)
 +
 2^{-\tau}.
 ```
@@ -1339,7 +1339,7 @@ f_{P,\rho}(M_{\mathsf{out}})
 1 - \prod_{i=0}^{M_{\mathsf{out}}-1} \frac{1-(\rho+i)2^{-c}}{1-i2^{-b}},
 ```
 
-whose quadratic relaxation is precisely $`\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}},\rho)`$. Conditioned on no merger, the two distinct flattened combiner transcripts behave as distinct random-oracle inputs, and their $`\tau`$-bit truncated outputs collide with probability exactly $`2^{-\tau}`$.
+whose quadratic relaxation is precisely $`\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho)`$. Conditioned on no merger, the two distinct flattened combiner transcripts behave as distinct random-oracle inputs, and their $`\tau`$-bit truncated outputs collide with probability exactly $`2^{-\tau}`$.
 
 Let
 
@@ -1424,7 +1424,7 @@ and
 are evaluated on distinct flattened inputs. Since the final TreeWrap tags are equal, Lemma 6.5 applies and bounds this case by
 
 ```math
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}},\rho) + 2^{-\tau}.
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho) + 2^{-\tau}.
 ```
 
 Therefore, for every fixed output pair $`\Theta`$, the corresponding successful CMT-4 event reduces either to a first-differing-chunk collision bounded by Lemma 6.4 or to a distinct-input outer-combiner collision bounded by Lemma 6.5. Summing these contributions yields the conditional bound of Theorem 5.4, and averaging over the adversary's random output pair gives the displayed expectation bound on $`\mathrm{Adv}^{\mathsf{cmt}\text{-}4}`$.
@@ -1511,7 +1511,7 @@ since the exact-rate chunk still incurs one additional padded body block and one
 ```math
 \epsilon_{\mathsf{lw}}^{\flat}(64512,N)
 =
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(N+100,2)
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(N+100,2)
 +
 2^{-64640}.
 ```
@@ -1521,7 +1521,7 @@ If the final chunk has length $`\lambda`$ bits, where $`0 < \lambda \le 64512`$ 
 ```math
 \epsilon_{\mathsf{lw}}^{\flat}(\lambda,N)
 =
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}\!\left(N + 2 \left(\left\lceil \frac{\lambda+1}{1344} \right\rceil + 1\right),2\right)
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}\!\left(N + 2 \left(\left\lceil \frac{\lambda+1}{1344} \right\rceil + 1\right),2\right)
 +
 2^{-(\lambda+128)}.
 ```
@@ -1545,7 +1545,7 @@ Accordingly,
 the local CMT-4 sum is empty, and Theorem 5.4 specializes to the pure outer trunk-sponge term
 
 ```math
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}},\rho) + 2^{-256}
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho) + 2^{-256}
 ```
 
 with
@@ -1559,7 +1559,7 @@ N + \sigma_{\mathsf{out}}(A_1,\epsilon) + \sigma_{\mathsf{out}}(A_2,\epsilon).
 For the outer CMT-4 term, Theorem 5.4 now uses
 
 ```math
-\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}},\rho) + 2^{-256}
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho) + 2^{-256}
 =
 \frac{(1-2^{-1344})M_{\mathsf{out}}^2 + (2\rho-1+2^{-1344})M_{\mathsf{out}}}{2^{257}}
 +
@@ -1636,12 +1636,12 @@ Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the concret
   \Pr_p[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)]
   \le
   \sum_{i=0}^{n-1} \left(
-      \mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{lw}}(\ell_i,N),2)
+      \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{lw}}(\ell_i,N),2)
       +
       2^{-(\ell_i+128)}
   \right)
   +
-  \mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}}(\Theta),\rho(\Theta))
+  \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}}(\Theta),\rho(\Theta))
   +
   2^{-256}.
   ```
@@ -1649,7 +1649,7 @@ Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the concret
   In particular, each full 8064-byte chunk contributes
 
   ```math
-  \mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(N+100,2) + 2^{-64640},
+  \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(N+100,2) + 2^{-64640},
   ```
 
   and the empty-message case contributes only the outer trunk-sponge term.
