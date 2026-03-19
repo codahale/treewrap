@@ -1661,6 +1661,21 @@ Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the concret
 
 ### 8.2 Worked TW128 Examples
 
+To keep the arithmetic reproducible on the page, we evaluate the leading low-complexity term visible in the imported [Men23] expressions rather than only quoting the final numerical exponents. For the reduced MonkeySpongeWrap import and for the keyed-duplex import used by $`\mathsf{TrunkSponge}`$, the leading capacity term has the form
+
+```math
+\frac{2 \nu_{r,c}^{2M}(N+1)}{2^c},
+```
+
+where $`M`$ is the relevant total number of duplexing calls and $`\nu_{r,c}^{2M}`$ is the transcript-combinatorial factor of [Men23, Section 4.2]. For $`\mathsf{TW128}`$, we have $`(b,r,c) = (1600,1344,256)`$. In both examples below, $`2M < 2^r`$, so the simple bound of [Men23, Section 4.2] gives
+
+```math
+\nu_{1344,256}^{2M}
+\le
+\left\lceil \frac{1600}{1344-\log_2(2M)} \right\rceil
+= 2.
+```
+
 As a concrete illustration, consider first a single-user deployment with $`\mu = 1`$, empty associated data, $`2^{20}`$ encryption queries, and a $`2^{20}`$-byte plaintext in each query. This corresponds to a total wrapped plaintext volume of $`2^{40}`$ bytes (one tebibyte). Each message decomposes into $`131`$ chunks, so the induced resources are
 
 ```math
@@ -1673,13 +1688,37 @@ q^{\mathsf{out}}_e = 2^{20},
 \sigma^{\mathsf{out}}_e = 27{,}262{,}976.
 ```
 
-If one further grants the adversary a primitive-query budget of $`N = 2^{40}`$ and a decryption/final-forgery cap of $`q_d = q_f = 2^{32}`$, then the dominant low-complexity terms of the imported [Men23] expressions evaluate to approximately $`2^{-156.3}`$ at the leaf layer and $`2^{-171.4}`$ at the trunk layer, while the explicit TW128 guessing term is only
+If one further grants the adversary a primitive-query budget of $`N = 2^{40}`$ and a decryption/final-forgery cap of $`q_d = q_f = 2^{32}`$, then
+
+```math
+2 \sigma^{\mathsf{lw}}_e = 13{,}736{,}345{,}600 < 2^{34},
+\qquad
+2 \sigma^{\mathsf{out}}_e = 54{,}525{,}952 < 2^{26},
+```
+
+so both leading imported terms use $`\nu_{1344,256}^{2M} \le 2`$. Hence the leading leaf-side imported term of Corollary 4.4 is bounded by
+
+```math
+\frac{2 \nu_{1344,256}^{2\sigma^{\mathsf{lw}}_e}(N+1)}{2^{256}}
+\le
+\frac{4(2^{40}+1)}{2^{256}}
+
+< 2^{-214},
+```
+
+and the same estimate applies to the leading trunk-side imported term of Corollary 4.6. The next visible imported term is
+
+```math
+\frac{\mu N}{2^{256}} = 2^{-216},
+```
+
+while the explicit TW128 guessing term is only
 
 ```math
 \frac{2 q_f}{2^{256}} = 2^{-223}.
 ```
 
-Thus, at a one-tebibyte single-user scale, the concrete TW128 bounds remain comfortably below the intended $`2^{-128}`$ target.
+All remaining visible imported terms carry denominators $`2^{512}`$ or $`2^{1600}`$ and are therefore far smaller. Thus, at a one-tebibyte single-user scale, the concrete TW128 bounds remain comfortably below the intended $`2^{-128}`$ target.
 
 As a stress point, keep the same single-user, empty-AD, one-mebibyte message shape but scale to about $`2.69 \cdot 10^9`$ encryption queries, for a total wrapped plaintext volume of approximately $`2.82 \cdot 10^{15}`$ bytes (about $`2.50`$ PiB). Then
 
@@ -1691,7 +1730,13 @@ As a stress point, keep the same single-user, empty-AD, one-mebibyte message sha
 \sigma^{\mathsf{out}}_e = 69{,}831{,}578{,}180.
 ```
 
-If the primitive-query budget is scaled to the same order, namely $`N = \sigma^{\mathsf{lw}}_e`$, then the dominant imported leaf term rises to approximately $`2^{-129.7}`$ and the dominant imported trunk term to approximately $`2^{-144.7}`$. This identifies the rough single-user throughput scale at which the generic TW128 margin starts to approach, but still remains below, the intended $`2^{-128}`$ security level under an aggressive public-permutation query model.
+If the primitive-query budget is scaled to the same order, namely $`N = \sigma^{\mathsf{lw}}_e \approx 2^{44}`$, then still $`2 \sigma^{\mathsf{lw}}_e < 2^{45} < 2^{1344}`$ and $`2 \sigma^{\mathsf{out}}_e < 2^{38} < 2^{1344}`$, so the same simple estimate gives $`\nu_{1344,256}^{2M} \le 2`$ for both imports. Consequently, the leading leaf-side and trunk-side imported terms are both bounded by
+
+```math
+\frac{4(2^{44}+1)}{2^{256}} < 2^{-210},
+```
+
+and the corresponding $`\mu N / 2^{256}`$ term is $`2^{-212}`$. Thus even this multi-petabyte single-user stress point leaves a wide gap to the intended $`2^{-128}`$ target. For $`\mathsf{TW128}`$ in the low-complexity regime, the visible AE margin at these scales is driven much more by the primitive-query budget $`N`$ than by the wrapped data volume itself.
 
 ## 9. Conclusion
 
