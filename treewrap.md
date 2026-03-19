@@ -1624,6 +1624,76 @@ so the outer contribution also matches the intended 128-bit generic target.
 
 Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the concrete parameterized security statements for $`\mathsf{TW128}`$. On the AE side, these remain $`\mu`$-user, $`N`$-query formulas: the imported KD/IXIF terms of Theorems 5.1 and 5.2 retain their explicit dependence on both $`\mu`$ and $`N`$, so a fully numeric deployment claim must fix concrete caps for those quantities and then evaluate the imported [Men23] expressions. The present section therefore fixes the algorithmic parameters and the exact terms to be evaluated, but does not bake in deployment-specific values of $`\mu`$ or $`N`$. Under any such concrete caps satisfying the low-complexity side conditions of Section 4.6, the dominant generic terms remain capacity-limited and target the intended 128-bit level, while the commitment bound inherits the same 128-bit target through the combination of the 256-bit outer tag and the sharpened per-chunk local collision term.
 
+**Corollary 7.1 (TW128 Security).** Let $`\mathcal{A}`$ be an adversary against $`\mathsf{TW128}`$ in the corresponding $`\mu`$-user experiment, and let the induced lower-level resources be as in Sections 4.5 and 4.6.
+
+- If $`\sigma^{\mathsf{lw}}_e + N \le 0.1 \cdot 2^{256}`$ and $`\sigma^{\mathsf{out}}_e + N \le 0.1 \cdot 2^{256}`$, then
+
+  ```math
+  \mathrm{Adv}^{\mathsf{ind}\text{-}\mathsf{cpa}}_{\mathsf{TW128}}(\mathcal{A})
+  \le
+  \epsilon_{\mathsf{lw}}^{\mathsf{enc}}(\mu,\chi_e,\sigma^{\mathsf{lw}}_e,N)
+  +
+  \epsilon_{\mathsf{out}}^{\mathsf{ixif}}(\mu,q^{\mathsf{out}}_e,0,\sigma^{\mathsf{out}}_e,0,N),
+  ```
+
+  where the imported [Men23] terms are evaluated with $`(b,r,c,k) = (1600,1344,256,256)`$ and the concrete 1344-bit IV embedding defined above.
+
+- If $`\sigma^{\mathsf{lw}}_e + \sigma^{\mathsf{lw}}_d + N \le 0.1 \cdot 2^{256}`$ and $`\sigma^{\mathsf{out}}_e + \sigma^{\mathsf{out}}_d + N \le 0.1 \cdot 2^{256}`$, then
+
+  ```math
+  \mathrm{Adv}^{\mathsf{int}\text{-}\mathsf{ctxt}}_{\mathsf{TW128}}(\mathcal{A})
+  \le
+  \epsilon_{\mathsf{lw}}^{\mathsf{ae}}(\mu,\chi_e,\chi_d,\sigma^{\mathsf{lw}}_e,\sigma^{\mathsf{lw}}_d,N)
+  +
+  \frac{q_d}{2^{128}}
+  +
+  \epsilon_{\mathsf{out}}^{\mathsf{ixif}}(\mu,q^{\mathsf{out}}_e,q^{\mathsf{out}}_d,\sigma^{\mathsf{out}}_e,\sigma^{\mathsf{out}}_d,N)
+  +
+  \frac{q_d}{2^{256}}.
+  ```
+
+- Consequently, under the same side conditions, IND-CCA2 specializes to
+
+  ```math
+  \mathrm{Adv}^{\mathsf{ind}\text{-}\mathsf{cca2}}_{\mathsf{TW128}}(\mathcal{A})
+  \le
+  \epsilon_{\mathsf{lw}}^{\mathsf{enc}}(\mu,\chi_e,\sigma^{\mathsf{lw}}_e,N)
+  +
+  \epsilon_{\mathsf{out}}^{\mathsf{ixif}}(\mu,q^{\mathsf{out}}_e,0,\sigma^{\mathsf{out}}_e,0,N)
+  +
+  2 \cdot \epsilon_{\mathsf{lw}}^{\mathsf{ae}}(\mu,\chi_e,\chi_d,\sigma^{\mathsf{lw}}_e,\sigma^{\mathsf{lw}}_d,N)
+  +
+  2 \cdot \epsilon_{\mathsf{out}}^{\mathsf{ixif}}(\mu,q^{\mathsf{out}}_e,q^{\mathsf{out}}_d,\sigma^{\mathsf{out}}_e,\sigma^{\mathsf{out}}_d,N)
+  +
+  \frac{2 q_d}{2^{128}}
+  +
+  \frac{2 q_d}{2^{256}}.
+  ```
+
+- For any fixed CMT-4 output pair $`\Theta`$ with chunk lengths $`\ell_0,\ldots,\ell_{n-1}`$, and with $`M_{\mathsf{out}}(\Theta)`$ and $`\rho(\Theta)`$ extracted from $`\Theta`$ exactly as in Theorem 5.4, if $`M_{\mathsf{lw}}(\ell_i,N) < 2^{256}`$ for all $`i`$ and $`M_{\mathsf{out}}(\Theta) < 2^{256}`$, then
+
+  ```math
+  \Pr_p[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)]
+  \le
+  \sum_{i=0}^{n-1} \left(
+      \mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{lw}}(\ell_i,N),2)
+      +
+      2^{-(\ell_i+128)}
+  \right)
+  +
+  \mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}}(\Theta),\rho(\Theta))
+  +
+  2^{-256}.
+  ```
+
+  In particular, each full 8064-byte chunk contributes
+
+  ```math
+  \mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(N+100,2) + 2^{-64640},
+  ```
+
+  and the empty-message case contributes only the outer trunk-sponge term.
+
 ## 8. Conclusion
 
 ## References
