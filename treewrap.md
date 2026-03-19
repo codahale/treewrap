@@ -22,23 +22,9 @@ The remainder of the paper is organized as follows. Section 2 fixes notation, th
 
 ### 2.1 Notation
 
-Unless stated otherwise, all strings are bitstrings. We write $`\epsilon`$ for the empty string, $`|X|`$ for the bitlength of a string $`X`$, and $`X \| Y`$ for concatenation. For $`n \in \mathbb{N}`$ and a string $`X`$ with $`|X| \ge n`$, $`\mathrm{left}_n(X)`$ denotes the leftmost $`n`$ bits of $`X`$.
+Unless stated otherwise, all strings are bitstrings. We write $`\epsilon`$ for the empty string, $`|X|`$ for the bitlength of a string $`X`$, $`X \| Y`$ for concatenation, and $`\mathrm{left}_n(X)`$ for the leftmost $`n`$ bits of a string $`X`$ with $`|X| \ge n`$. For integers $`m \le n`$, write $`[m,n) := \{m,m+1,\ldots,n-1\}`$.
 
-For integers $`m \le n`$, write
-
-```math
-[m,n) := \{m,m+1,\ldots,n-1\}.
-```
-
-Chunk indices always start at $`0`$, while padded-block and transcript-block indices start at $`1`$.
-
-When a body string $`X`$ is partitioned into chunks of size $`B`$, we write
-
-```math
-X = X_0 \| \cdots \| X_{n-1}
-```
-
-for the canonical chunk decomposition, where $`n = \lceil |X|/B \rceil`$, each nonfinal chunk has length exactly $`B`$, the final chunk has length at most $`B`$, and $`n = 0`$ when $`X = \epsilon`$.
+Chunk indices always start at $`0`$, while padded-block and transcript-block indices start at $`1`$. When a body string $`X`$ is partitioned into chunks of size $`B`$, we write $`X = X_0 \| \cdots \| X_{n-1}`$ for the canonical chunk decomposition, where $`n = \lceil |X|/B \rceil`$, each nonfinal chunk has length exactly $`B`$, the final chunk has length at most $`B`$, and $`n = 0`$ when $`X = \epsilon`$.
 
 ### 2.2 AEAD Syntax
 
@@ -95,37 +81,11 @@ Here $`\delta`$ ranges over $`\{1,\ldots,\mu\}`$, $`IV`$ ranges over $`\mathcal{
 
 ### 2.4 Encoding Conventions and Domain Separation
 
-We use two encoding components:
+**Encodings.** We use two encoding components: a prefix-free injective string encoding $`\eta : \{0,1\}^* \to \{0,1\}^*`$ and a suffix-free injective integer encoding $`\nu : \mathbb{N} \to \{0,1\}^*`$.
 
-- a prefix-free injective string encoding
+**Derived IVs.** The integer encoding $`\nu`$ is used both for internal IV derivation and for the final chunk-count field in the outer combiner. We assume a fixed-length nonce space $`\mathcal{U} \subseteq \{0,1\}^u`$ for some nonce length $`u \in \mathbb{N}`$. TreeWrap reserves suffix $`0`$ for the outer trunk-sponge call and uses positive suffixes for chunk-local LeafWrap calls, so $`V_{\mathsf{out}}(U) := U \| \nu(0)`$ and $`V_i(U) := U \| \nu(i+1)`$. We assume that all such derived values lie in $`\mathcal{IV}`$. Because $`\mathcal{U}`$ is fixed-length and $`\nu`$ is suffix-free, the map $`(U,j) \mapsto U \| \nu(j)`$ is injective on $`\mathcal{U} \times \mathbb{N}`$.
 
-  ```math
-  \eta : \{0,1\}^* \to \{0,1\}^*,
-  ```
-
-- a suffix-free injective integer encoding
-
-  ```math
-  \nu : \mathbb{N} \to \{0,1\}^*.
-  ```
-
-The integer encoding $`\nu`$ is used both for internal IV derivation and for the final chunk-count field in the outer combiner. We assume a fixed-length nonce space $`\mathcal{U} \subseteq \{0,1\}^u`$ for some nonce length $`u` \in \mathbb{N}`$. TreeWrap reserves suffix $`0`$ for the outer trunk-sponge call and uses positive suffixes for chunk-local LeafWrap calls:
-
-```math
-V_{\mathsf{out}}(U) := U \| \nu(0),
-\qquad
-V_i(U) := U \| \nu(i+1).
-```
-
-We assume that $`V_{\mathsf{out}}(U) \in \mathcal{IV}`$ and $`V_i(U) \in \mathcal{IV}`$ for all $`U \in \mathcal{U}`$ and $`i \in \mathbb{N}`$. Because $`\mathcal{U}`$ is fixed-length and $`\nu`$ is suffix-free, the map
-
-```math
-(U,j) \mapsto U \| \nu(j)
-```
-
-is injective on $`\mathcal{U} \times \mathbb{N}`$.
-
-For the final TreeWrap combiner, define
+**Outer encoding.** For the final TreeWrap combiner, define
 
 ```math
 \mathsf{enc}_{\mathsf{out}}(A,T_0,\ldots,T_{n-1},n)
@@ -133,20 +93,11 @@ For the final TreeWrap combiner, define
 \eta(A) \| T_0 \| \cdots \| T_{n-1} \| \nu(n).
 ```
 
-Because $`\eta`$ is prefix-free, the leaf tags have fixed length $`t_{\mathsf{leaf}}`$, and $`\nu`$ is suffix-free, this outer encoding is injective in all of its arguments.
-Equivalently, one can parse $`\mathsf{enc}_{\mathsf{out}}`$ from right to left: strip the unique suffix $`\nu(n)`$, use the recovered value of $`n`$ to peel off exactly $`n`$ fixed-length leaf tags, and then recover the unique remaining prefix $`\eta(A)`$.
+Because $`\eta`$ is prefix-free, the leaf tags have fixed length $`t_{\mathsf{leaf}}`$, and $`\nu`$ is suffix-free, this outer encoding is injective in all of its arguments. Equivalently, one can parse $`\mathsf{enc}_{\mathsf{out}}`$ from right to left: strip the unique suffix $`\nu(n)`$, use the recovered value of $`n`$ to peel off exactly $`n`$ fixed-length leaf tags, and then recover the unique remaining prefix $`\eta(A)`$.
 
-For later resource accounting, we write
+**Overhead notation.** For later resource accounting, we write $`|\eta(A)| \le |A| + \lambda_\eta(|A|)`$ and $`|\nu(n)| \le \lambda_\nu(n)`$ for encoding-overhead functions $`\lambda_\eta`$ and $`\lambda_\nu`$ associated with the chosen encodings.
 
-```math
-|\eta(A)| \le |A| + \lambda_\eta(|A|),
-\qquad
-|\nu(n)| \le \lambda_\nu(n),
-```
-
-for encoding-overhead functions $`\lambda_\eta`$ and $`\lambda_\nu`$ associated with the chosen encodings.
-
-For any block length $`s \in \mathbb{N}`$ and any bitstring $`Z \in \{0,1\}^*`$, we write
+**Padding and framing.** For any block length $`s \in \mathbb{N}`$ and any bitstring $`Z \in \{0,1\}^*`$, we write
 
 ```math
 (Z_1,\ldots,Z_w) \gets \mathrm{pad}^{*}_{10^s*}(Z)
@@ -158,23 +109,9 @@ for the unique padded decomposition of $`Z`$ into $`s`$-bit blocks under the $`\
 \mathrm{left}_{|Z|}(Z_1 \| \cdots \| Z_w) = Z.
 ```
 
-LeafWrap embeds each padded message or ciphertext block as
+LeafWrap embeds each padded message or ciphertext block as $`Z_j \| 1 \| 0^{c-1}`$. These are full-state blocks of length $`b = r + c`$ and provide a dedicated transcript format for the body-processing phase. By contrast, the outer trunk sponge absorbs padded combiner blocks as $`W_j \| 0^c`$, that is, as ordinary rate-$`r`$ sponge blocks with an all-zero capacity suffix.
 
-```math
-Z_j \| 1 \| 0^{c-1}.
-```
-
-These encodings are full-state blocks of length $`b = r + c`$ and provide a dedicated transcript format for the body-processing phase.
-
-By contrast, the outer trunk sponge absorbs padded combiner blocks as
-
-```math
-W_j \| 0^c,
-```
-
-that is, as ordinary rate-$`r`$ sponge blocks with an all-zero capacity suffix.
-
-TreeWrap therefore separates leaf and trunk calls in two ways. First, the proofs rely on disjoint IV namespaces: trunk calls use $`V_{\mathsf{out}}(U) = U \| \nu(0)`$, while leaf calls use $`V_i(U) = U \| \nu(i+1)`$. Second, even if the rate parts happen to coincide, the absorbed full-state blocks differ in format: LeafWrap uses a suffix $`1 \| 0^{c-1}`$, whereas TrunkSponge uses $`0^c`$. The later reductions use the IV separation as the primary argument and the block-format distinction as secondary transcript-format separation.
+**Domain separation.** TreeWrap separates leaf and trunk calls in two ways. First, the proofs rely on disjoint IV namespaces: trunk calls use $`V_{\mathsf{out}}(U) = U \| \nu(0)`$, while leaf calls use $`V_i(U) = U \| \nu(i+1)`$. Second, even if the rate parts happen to coincide, the absorbed full-state blocks differ in format: LeafWrap uses a suffix $`1 \| 0^{c-1}`$, whereas TrunkSponge uses $`0^c`$. The later reductions use the IV separation as the primary argument and the block-format distinction as secondary transcript-format separation.
 
 ## 3. The TreeWrap Construction
 
