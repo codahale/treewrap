@@ -924,12 +924,23 @@ be the canonical chunk decomposition, let $`\ell_i := |P_{1,i}|`$ for $`i = 0,\l
 M_{\mathsf{out}} := N + \sigma_{\mathsf{out}}(A_1,P_1) + \sigma_{\mathsf{out}}(A_2,P_2).
 ```
 
-Assume $`M_{\mathsf{lw}}(\ell_i,N) < 2^c`$ for every $`i = 0,\ldots,n-1`$ and $`M_{\mathsf{out}} < 2^c`$. Then, over the random permutation $`p`$ alone,
+Assume $`M_{\mathsf{lw}}(\ell_i,N) < 2^c`$ for every $`i = 0,\ldots,n-1`$ and $`M_{\mathsf{out}} < 2^c`$. Define
+
+```math
+\epsilon_{\mathsf{lw}}^{\mathsf{first}}(\Theta,N)
+:=
+\begin{cases}
+\epsilon_{\mathsf{lw}}^{\flat}(\ell_{j^\star},N), & \text{if } j^\star := \min\{i : (K_1,\mathsf{iv}(U_1,i+1),P_{1,i}) \ne (K_2,\mathsf{iv}(U_2,i+1),P_{2,i})\} \text{ exists},\\
+0, & \text{otherwise}.
+\end{cases}
+```
+
+Then, over the random permutation $`p`$ alone,
 
 ```math
 \Pr_p\!\bigl[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)\bigr]
 \le
-\sum_{i=0}^{n-1} \epsilon_{\mathsf{lw}}^{\flat}(\ell_i,N)
+\epsilon_{\mathsf{lw}}^{\mathsf{first}}(\Theta,N)
 +
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho)
 +
@@ -942,7 +953,7 @@ Equivalently, for every fixed output profile $`\Theta`$, the corresponding TreeW
 \mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}(\mathcal{A})
 \le
 \mathbb{E}_{\Theta}\!\left[
-\sum_{i=0}^{n(\Theta)-1} \epsilon_{\mathsf{lw}}^{\flat}(\ell_i(\Theta),N)
+\epsilon_{\mathsf{lw}}^{\mathsf{first}}(\Theta,N)
 +
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}}(\Theta),\rho(\Theta))
 +
@@ -1394,13 +1405,7 @@ and Lemma 7.2 applies directly. Thus the contribution of this case is bounded by
 \epsilon_{\mathsf{lw}}^{\flat}(|Y_j|,N),
 ```
 
-that is, by the local flat-duplex term plus the full-output collision tail $`2^{-(|Y_j|+t_{\mathsf{leaf}})}`$ at the first differing chunk. Taking a union bound over the at most $`n`$ chunk positions yields the local contribution
-
-```math
-\sum_{i=0}^{n-1} \epsilon_{\mathsf{lw}}^{\flat}(|Y_i|,N)
-```
-
-of Theorem 5.4.
+that is, by the local flat-duplex term plus the full-output collision tail $`2^{-(|Y_j|+t_{\mathsf{leaf}})}`$ at the first differing chunk. This is exactly the quantity $`\epsilon_{\mathsf{lw}}^{\mathsf{first}}(\Theta,N)`$ appearing in Theorem 5.4.
 
 It remains to consider the complementary case, namely that for every chunk position $`i`$,
 
@@ -1434,7 +1439,7 @@ are evaluated on distinct flattened inputs. Since the final TreeWrap tags are eq
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho) + 2^{-\tau}.
 ```
 
-Therefore, for every fixed output pair $`\Theta`$, the corresponding successful CMT-4 event reduces either to a first-differing-chunk collision bounded by Lemma 7.2 or to a distinct-input outer-combiner collision bounded by Lemma 7.3. Summing these contributions yields the conditional bound of Theorem 5.4, and averaging over the adversary's random output pair gives the displayed expectation bound on $`\mathrm{Adv}^{\mathsf{cmt}\text{-}4}`$.
+Therefore, for every fixed output pair $`\Theta`$, the corresponding successful CMT-4 event reduces either to a first-differing-chunk collision bounded by Lemma 7.2 or to a distinct-input outer-combiner collision bounded by Lemma 7.3. Adding these two mutually exclusive branches yields the conditional bound of Theorem 5.4, and averaging over the adversary's random output pair gives the displayed expectation bound on $`\mathrm{Adv}^{\mathsf{cmt}\text{-}4}`$.
 
 ## 8. TW128 Instantiation
 
@@ -1635,23 +1640,19 @@ Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the concret
   \frac{4 q_d}{2^{256}}.
   ```
 
-- For any fixed CMT-4 output pair $`\Theta`$ with chunk lengths $`\ell_0,\ldots,\ell_{n-1}`$, and with $`M_{\mathsf{out}}(\Theta)`$ and $`\rho(\Theta)`$ extracted from $`\Theta`$ exactly as in Theorem 5.4, if $`M_{\mathsf{lw}}(\ell_i,N) < 2^{256}`$ for all $`i`$ and $`M_{\mathsf{out}}(\Theta) < 2^{256}`$, then
+- For any fixed CMT-4 output pair $`\Theta`$ with chunk lengths $`\ell_0,\ldots,\ell_{n-1}`$, and with $`M_{\mathsf{out}}(\Theta)`$, $`\rho(\Theta)`$, and $`\epsilon_{\mathsf{lw}}^{\mathsf{first}}(\Theta,N)`$ extracted from $`\Theta`$ exactly as in Theorem 5.4, if $`M_{\mathsf{lw}}(\ell_i,N) < 2^{256}`$ for all $`i`$ and $`M_{\mathsf{out}}(\Theta) < 2^{256}`$, then
 
   ```math
   \Pr_p[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)]
   \le
-  \sum_{i=0}^{n-1} \left(
-      \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{lw}}(\ell_i,N),2)
-      +
-      2^{-(\ell_i+256)}
-  \right)
+  \epsilon_{\mathsf{lw}}^{\mathsf{first}}(\Theta,N)
   +
   \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}}(\Theta),\rho(\Theta))
   +
   2^{-256}.
   ```
 
-  In particular, each full 8064-byte chunk contributes
+  In particular, if the first differing chunk is a full 8064-byte chunk, then the local contribution is
 
   ```math
   \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(N+100,2) + 2^{-64768},
