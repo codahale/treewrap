@@ -122,7 +122,7 @@ Thus $`\mathsf{IXIF}[\mathrm{ro}]`$ keeps the same control flow as the keyed dup
 \mathsf{iv} : \mathcal{U} \times \mathbb{N} \to \mathcal{IV}.
 ```
 
-TreeWrap reserves suffix $`0`$ for the outer trunk-sponge call and uses positive suffixes for chunk-local LeafWrap calls, so $`V_{\mathsf{out}}(U) := \mathsf{iv}(U,0)`$ and $`V_i(U) := \mathsf{iv}(U,i+1)`$. In concrete instantiations, $`\mathsf{iv}`$ may itself be built from the integer encoding $`\nu`$; Section 7 does this for $`\mathsf{TW128}`$.
+TreeWrap reserves suffix $`0`$ for the outer trunk-sponge call and uses positive suffixes for chunk-local LeafWrap calls, so $`V_{\mathsf{out}}(U) := \mathsf{iv}(U,0)`$ and $`V_i(U) := \mathsf{iv}(U,i+1)`$. In concrete instantiations, $`\mathsf{iv}`$ may itself be built from the integer encoding $`\nu`$; Section 8 does this for $`\mathsf{TW128}`$.
 
 **Outer encoding.** For the final TreeWrap combiner, define
 
@@ -769,15 +769,11 @@ For the outer CMT-4 analysis, we only need a bad-event bound for rooted transcri
 
 **Lemma 4.7 (Rooted-Forest Sponge Collision Bound).** Fix $`\rho \ge 1`$ public roots. For each root, consider the rooted sponge tree obtained by following absorb/squeeze paths from that root as in [BDPVA08]. Let $`R_i`$ be the set of rooted nodes exposed after $`i`$ successful transcript or primitive-query extensions, and let $`O_i`$ be the set of already fixed full states encountered along those rooted paths. Define the bad event $`\mathsf{Merge}_{\rho}(M)`$ to be the event that, during the first $`M`$ such extensions, a new forward or inverse step lands on a previously exposed rooted node or previously fixed full state in a way that merges two distinct rooted transcripts. Then
 
-Exactly as in the single-root counting of [BDPVA08], each safe extension contributes at most one new rooted node and at most one new full state. Hence, inductively,
-
 ```math
-|R_i| \le \rho + i,
-\qquad
-|O_i| \le i,
+\Pr[\mathsf{Merge}_{\rho}(M)] \le f_{P,\rho}(M),
 ```
 
-for every $`i \ge 0`$. Repeating the one-root bad-event count with these cardinalities yields
+where
 
 ```math
 f_{P,\rho}(M)
@@ -785,21 +781,25 @@ f_{P,\rho}(M)
 1 - \prod_{i=0}^{M-1} \frac{1-(\rho+i)2^{-c}}{1-i2^{-b}}.
 ```
 
-Here the numerator bounds the probability that the next capacity slice avoids the at most $`\rho+i`$ exposed rooted nodes, while the denominator conditions on avoiding the at most $`i`$ previously fixed full states. Therefore
+Moreover, in the regime $`M < 2^c`$,
 
 ```math
-\Pr[\mathsf{Merge}_{\rho}(M)] \le f_{P,\rho}(M).
-```
-
-Applying the same quadratic relaxation as in [BDPVA08, Eq. (6)] gives the explicit rooted-forest collision bound
-
-```math
+f_{P,\rho}(M)
+\le
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M,\rho)
 :=
-\frac{(1-2^{-r})M^2 + (2\rho-1+2^{-r})M}{2^{c+1}}
+\frac{(1-2^{-r})M^2 + (2\rho-1+2^{-r})M}{2^{c+1}}.
 ```
 
-in the regime $`M < 2^c`$. For $`\rho = 1`$, the product expression specializes to the original single-root counting bound and the displayed quadratic term recovers exactly [BDPVA08, Eq. (6)].
+**Proof sketch.** Exactly as in the single-root counting of [BDPVA08], each safe extension contributes at most one new rooted node and at most one new full state. Hence, inductively,
+
+```math
+|R_i| \le \rho + i,
+\qquad
+|O_i| \le i,
+```
+
+for every $`i \ge 0`$. Repeating the one-root bad-event count with these cardinalities yields the displayed product bound. Here the numerator bounds the probability that the next capacity slice avoids the at most $`\rho+i`$ exposed rooted nodes, while the denominator conditions on avoiding the at most $`i`$ previously fixed full states. Applying the same quadratic relaxation as in [BDPVA08, Eq. (6)] gives the displayed explicit rooted-forest collision bound. For $`\rho = 1`$, the product expression specializes to the original single-root counting bound and the quadratic term recovers exactly [BDPVA08, Eq. (6)].
 
 ### 4.8 Imported Flat Duplex Bound
 
@@ -1022,6 +1022,8 @@ with initialization
 ```
 
 is identical to the reduced MonkeySpongeWrap transcript on nonce $`V`$ and input string $`X`$ obtained by excising the vacuous local associated-data phase, with the middle phase parameterized by $`m`$. Thus $`m = \mathsf{enc}`$ gives the reduced encryption transcript, $`m = \mathsf{dec}`$ gives the corresponding reduced decryption-side transcript with overwrite enabled in the middle phase, and the returned pair $`(Y,T)`$ is exactly the body/tag pair determined by that reduced transcript.
+
+This excision does not alter the structural preconditions used by [Men23]: every reduced LeafWrap transcript still makes at least one padded body call after initialization, even when $`X = \epsilon`$, and at least one subsequent squeeze call because $`t_{\mathsf{leaf}} > 0`$ implies $`s_{\mathsf{leaf}} \ge 1`$.
 
 **Theorem 6.2 (Ported LeafWrap KD/IXIF Replacement).** For every distinguisher $`\mathcal{D}_{\mathsf{LW}}`$ attacking a family of LeafWrap transcripts under the keyed-context discipline induced by TreeWrap, there exists a distinguisher $`\mathcal{D}_{\mathsf{MSW}}`$ against the corresponding reduced MonkeySpongeWrap transcript family such that
 
