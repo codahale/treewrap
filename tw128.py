@@ -9,7 +9,7 @@ Parameters (Section 7):
     k        = 256           (32 bytes)
     nonce    ∈ {0,1}^128     (16 bytes)
     B        = 64512 bits    (8064 bytes = 48 × 168)
-    t_leaf   = 128           (16 bytes)
+    t_leaf   = 256           (32 bytes)
     τ        = 256           (32 bytes)
     η        = encode_string (SP 800-185)
     ν        = right_encode  (SP 800-185)
@@ -34,7 +34,7 @@ _C      = 32     # capacity in bytes
 _K      = 32     # key length in bytes
 _NONCE  = 16     # nonce length in bytes
 _CHUNK  = 8064   # chunk size in bytes
-_TLEAF  = 16     # leaf tag in bytes
+_TLEAF  = 32     # leaf tag in bytes
 _TAG    = 32     # final tag in bytes
 
 _ZERO_B = bytes(_B)
