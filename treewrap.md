@@ -421,7 +421,7 @@ The IND-CPA advantage is
 
 ### 4.2 INT-CTXT
 
-Ciphertext integrity is defined by the following multi-forgery experiment.
+Ciphertext integrity is defined by the following multi-forgery experiment. We use the multi-forgery form so that the IND-CCA2 reduction of Section 6.4 can record all fresh decryption attempts of the adversary and output them together, rather than paying an additional index-guessing loss to select one candidate in advance.
 
 ```text
 Experiment INT-CTXT^TreeWrap(A):
