@@ -24,8 +24,6 @@ The remainder of the paper is organized as follows. Section 2 fixes notation, th
 
 Unless stated otherwise, all strings are bitstrings. We write $`\epsilon`$ for the empty string, $`|X|`$ for the bitlength of a string $`X`$, and $`X \| Y`$ for concatenation. For $`n \in \mathbb{N}`$ and a string $`X`$ with $`|X| \ge n`$, $`\mathrm{left}_n(X)`$ denotes the leftmost $`n`$ bits of $`X`$.
 
-For a string $`X \in \{0,1\}^m`$ and an integer $`\alpha \in [0,m)`$, write $`\mathrm{rot}_\alpha(X)`$ for the cyclic rotation of $`X`$ by $`\alpha`$ positions.
-
 For integers $`m \le n`$, write
 
 ```math
@@ -64,7 +62,7 @@ for all valid inputs.
 
 #### 2.3.1 Keyed Duplex
 
-We adopt the keyed duplex interface of [Men23, Algorithm 1]. Let $`b,c,r,k,\mu,\alpha \in \mathbb{N}`$ with $`c + r = b`$, $`k \le b`$, and $`\alpha \le b-k`$. Let $`\mathcal{IV} \subseteq \{0,1\}^{b-k}`$ be an IV space, and let $`p \in \mathrm{Perm}(b)`$ be a $`b`$-bit permutation. The keyed duplex construction is denoted
+We adopt the keyed duplex interface of [Men23, Algorithm 1], specialized to the case $`\alpha = 0`$ used throughout TreeWrap. Let $`b,c,r,k,\mu \in \mathbb{N}`$ with $`c + r = b`$ and $`k \le b`$. Let $`\mathcal{IV} \subseteq \{0,1\}^{b-k}`$ be an IV space, and let $`p \in \mathrm{Perm}(b)`$ be a $`b`$-bit permutation. The keyed duplex construction is denoted
 
 ```math
 \mathsf{KD}[p]_K,
@@ -82,7 +80,7 @@ It maintains a state $`S \in \{0,1\}^b`$ and exposes the following two interface
 
 ```text
 Algorithm KD[p]_K.init(δ, IV):
-    S <- rot_α(K[δ] || IV)
+    S <- K[δ] || IV
 ```
 
 ```text
@@ -198,8 +196,6 @@ Let $`\mathsf{TreeWrap}`$ be parameterized by:
 - a tag size $`\tau`$.
 
 These parameters satisfy $`c + r = b`$ and $`k \le b`$.
-
-TreeWrap instantiates keyed duplexes without a key offset, that is, with $`\alpha = 0`$.
 
 We write the resulting primitive as
 
