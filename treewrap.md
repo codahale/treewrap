@@ -1671,6 +1671,40 @@ Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the concret
 
   and the empty-message case contributes only the outer trunk-sponge term.
 
+#### 7.1 Worked TW128 Examples
+
+As a concrete illustration, consider first a single-user deployment with $`\mu = 1`$, empty associated data, $`2^{20}`$ encryption queries, and a $`2^{20}`$-byte plaintext in each query. This corresponds to a total wrapped plaintext volume of $`2^{40}`$ bytes (one tebibyte). Each message decomposes into $`131`$ chunks, so the induced resources are
+
+```math
+\chi_e = 137{,}363{,}456,
+\qquad
+\sigma^{\mathsf{lw}}_e = 6{,}868{,}172{,}800,
+\qquad
+q^{\mathsf{out}}_e = 2^{20},
+\qquad
+\sigma^{\mathsf{out}}_e = 27{,}262{,}976.
+```
+
+If one further grants the adversary a primitive-query budget of $`N = 2^{40}`$ and a decryption/final-forgery cap of $`q_d = q_f = 2^{32}`$, then the dominant low-complexity terms of the imported [Men23] expressions evaluate to approximately $`2^{-156.3}`$ at the leaf layer and $`2^{-171.4}`$ at the trunk layer, while the explicit TW128 guessing term is only
+
+```math
+\frac{2 q_f}{2^{256}} = 2^{-223}.
+```
+
+Thus, at a one-tebibyte single-user scale, the concrete TW128 bounds remain comfortably below the intended $`2^{-128}`$ target.
+
+As a stress point, keep the same single-user, empty-AD, one-mebibyte message shape but scale to about $`2.69 \cdot 10^9`$ encryption queries, for a total wrapped plaintext volume of approximately $`2.82 \cdot 10^{15}`$ bytes (about $`2.50`$ PiB). Then
+
+```math
+\chi_e = 351{,}843{,}720{,}830,
+\qquad
+\sigma^{\mathsf{lw}}_e \approx 2^{44},
+\qquad
+\sigma^{\mathsf{out}}_e = 69{,}831{,}578{,}180.
+```
+
+If the primitive-query budget is scaled to the same order, namely $`N = \sigma^{\mathsf{lw}}_e`$, then the dominant imported leaf term rises to approximately $`2^{-129.7}`$ and the dominant imported trunk term to approximately $`2^{-144.7}`$. This identifies the rough single-user throughput scale at which the generic TW128 margin starts to approach, but still remains below, the intended $`2^{-128}`$ security level under an aggressive public-permutation query model.
+
 ## 8. Conclusion
 
 TreeWrap shows that a chunk-parallel permutation-based AEAD can be analyzed cleanly by splitting the construction into a local wrapper and a final trunk authenticator. On the AE side, this decomposition lets the proof reuse the keyed-duplex/IXIF machinery of [Men23] at both layers while isolating the one TreeWrap-specific step needed for integrity: a fresh chunk body yields a fresh hidden leaf tag except with the expected guessing probability. On the commitment side, the same decomposition supports a separate public-permutation analysis in which the local and outer transcripts are flattened and bounded by duplexing-sponge and sponge arguments, respectively.
