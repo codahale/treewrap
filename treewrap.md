@@ -1440,6 +1440,7 @@ The parameter choices are:
 - capacity: $`c = 256`$;
 - rate: $`r = 1344`$;
 - key length: $`k = 256`$;
+- IV space: $`\mathcal{IV} = \{0,1\}^{1344}`$;
 - nonce space: $`\mathcal{U} = \{0,1\}^{128}`$;
 - chunk size: $`B = 64512`$ bits $`= 8064`$ bytes $`= 48 \cdot 168`$ bytes;
 - leaf tag size: $`t_{\mathsf{leaf}} = 128`$;
@@ -1447,9 +1448,15 @@ The parameter choices are:
 - associated-data encoding: $`\eta = \mathrm{encode\_string}`$ from [SP800185];
 - integer encoding: $`\nu = \mathrm{right\_encode}`$ from [SP800185].
 
-Although $`\mathrm{encode\_string}`$ and $`\mathrm{right\_encode}`$ are specified on bit strings in [SP800185], $`\mathsf{TW128}`$ operates on octet strings throughout. This matches the intended software interface and keeps the encoding layer aligned with the byte-oriented presentation of SP 800-185.
+Although $`\mathrm{encode\_string}`$ and $`\mathrm{right\_encode}`$ are specified on bit strings in [SP800185], $`\mathsf{TW128}`$ operates on octet strings throughout. Concretely, $`\mathsf{TW128.ENC}`$ takes a 32-byte key, a 16-byte nonce, an octet-string associated-data input, and an octet-string plaintext, and returns an octet-string ciphertext of length $`|P| + 32`$ bytes; $`\mathsf{TW128.DEC}`$ has the corresponding octet-string ciphertext interface. This matches the intended software interface and keeps the encoding layer aligned with the byte-oriented presentation of SP 800-185.
 
-The only remaining concrete formatting choice is the embedding of the user nonce and chunk counter into the $`b-k = 1344`$-bit IV field expected by the keyed duplex. For $`j \in \mathbb{N}`$, define
+The only remaining concrete formatting choice is the embedding of the user nonce and chunk counter into the $`b-k = 1344`$-bit IV field expected by the keyed duplex. Define the concrete IV-derivation map
+
+```math
+\mathsf{iv}^{\mathsf{TW128}} : \mathcal{U} \times \{0,\ldots,2^{1208}-1\} \to \mathcal{IV}
+```
+
+by
 
 ```math
 \mathsf{iv}^{\mathsf{TW128}}(U,j)
@@ -1457,7 +1464,7 @@ The only remaining concrete formatting choice is the embedding of the user nonce
 0^{1344 - 128 - |\nu(j)|} \| U \| \nu(j),
 ```
 
-whenever $`128 + |\nu(j)| \le 1344`$. Equivalently, $`\mathsf{TW128}`$ is defined for suffix values $`0 \le j \le 2^{1208}-1`$, so on inputs with canonical chunk count $`n`$ one requires $`n \le 2^{1208}-1`$. In particular,
+which is well defined exactly for suffix values $`0 \le j \le 2^{1208}-1`$. Equivalently, on inputs with canonical chunk count $`n`$ one requires $`n \le 2^{1208}-1`$. In particular,
 
 ```math
 V_{\mathsf{out}}(U) := \mathsf{iv}^{\mathsf{TW128}}(U,0),
@@ -1577,7 +1584,7 @@ so the outer contribution also matches the intended 128-bit generic target.
 
 Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the concrete parameterized security statements for $`\mathsf{TW128}`$. On the AE side, these remain $`\mu`$-user, $`N`$-query formulas: the imported KD/IXIF terms of Theorems 5.1 and 5.2 retain their explicit dependence on both $`\mu`$ and $`N`$, so a fully numeric deployment claim must fix concrete caps for those quantities and then evaluate the imported [Men23] expressions. The present section therefore fixes the algorithmic parameters and the exact terms to be evaluated, but does not bake in deployment-specific values of $`\mu`$ or $`N`$. Under any such concrete caps satisfying the low-complexity side conditions of Section 4.6, the dominant generic terms remain capacity-limited and target the intended 128-bit level, while the commitment bound inherits the same 128-bit target through the combination of the 256-bit outer tag and the sharpened per-chunk local collision term.
 
-**Corollary 7.1 (TW128 Security).** Let $`\mathcal{A}`$ be an adversary against $`\mathsf{TW128}`$ in the corresponding $`\mu`$-user experiment, and let the induced lower-level resources be as in Sections 4.5 and 4.6.
+**Corollary 7.1 (TW128 Security).** Let $`\mathcal{A}`$ be an adversary against $`\mathsf{TW128}`$ in the corresponding $`\mu`$-user experiment, and let the induced lower-level resources be as in Sections 4.5 and 4.6. Throughout this corollary, all wrapper inputs are assumed to lie in the defined domain of $`\mathsf{TW128}`$; equivalently, every queried or extracted message has canonical chunk count at most $`2^{1208}-1`$.
 
 - If $`\sigma^{\mathsf{lw}}_e + N \le 0.1 \cdot 2^{256}`$ and $`\sigma^{\mathsf{out}}_e + N \le 0.1 \cdot 2^{256}`$, then
 
