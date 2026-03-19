@@ -1723,23 +1723,41 @@ while the explicit TW128 guessing term is only
 
 All remaining visible imported terms carry denominators $`2^{512}`$ or $`2^{1600}`$ and are therefore far smaller. Thus, at a one-tebibyte single-user scale, the concrete TW128 bounds remain comfortably below the intended $`2^{-128}`$ target.
 
-As a stress point, keep the same single-user, empty-AD, one-mebibyte message shape but scale to about $`2.69 \cdot 10^9`$ encryption queries, for a total wrapped plaintext volume of approximately $`2.82 \cdot 10^{15}`$ bytes (about $`2.50`$ PiB). Then
+The preceding example is already representative of realistic deployment scales. If one instead asks for the actual edge of the visible $`\mathsf{TW128}`$ AE margin in the low-complexity regime, the answer is not a larger wrapped-data volume but a much larger primitive-query budget. Indeed, for the same one-tebibyte single-user workload above, the leading imported term remains
 
 ```math
-\chi_e = 351{,}843{,}720{,}830,
-\qquad
-\sigma^{\mathsf{lw}}_e \approx 2^{44},
-\qquad
-\sigma^{\mathsf{out}}_e = 69{,}831{,}578{,}180.
+\frac{2 \nu_{1344,256}^{2M}(N+1)}{2^{256}}
+\le
+\frac{4(N+1)}{2^{256}},
 ```
 
-If the primitive-query budget is scaled to the same order, namely $`N = \sigma^{\mathsf{lw}}_e \approx 2^{44}`$, then still $`2 \sigma^{\mathsf{lw}}_e < 2^{45} < 2^{1344}`$ and $`2 \sigma^{\mathsf{out}}_e < 2^{38} < 2^{1344}`$, so the same simple estimate gives $`\nu_{1344,256}^{2M} \le 2`$ for both imports. Consequently, the leading leaf-side and trunk-side imported terms are both bounded by
+so it reaches the $`2^{-128}`$ scale only when $`N`$ itself approaches $`2^{126}`$. Concretely, if one keeps the same message shape and data volume as above but grants
 
 ```math
-\frac{4(2^{44}+1)}{2^{256}} < 2^{-210},
+N = 2^{126},
 ```
 
-and the corresponding $`\mu N / 2^{256}`$ term is $`2^{-212}`$. Thus even this multi-petabyte single-user stress point leaves a wide gap to the intended $`2^{-128}`$ target. For $`\mathsf{TW128}`$ in the low-complexity regime, the visible AE margin at these scales is driven much more by the primitive-query budget $`N`$ than by the wrapped data volume itself.
+then the leading leaf-side and trunk-side imported terms both become
+
+```math
+\frac{4(2^{126}+1)}{2^{256}} \approx 2^{-128},
+```
+
+while the corresponding visible multi-user term is still only
+
+```math
+\frac{\mu N}{2^{256}} = 2^{-130}
+\qquad
+(\text{for } \mu = 1).
+```
+
+Likewise, the explicit integrity-guessing term reaches the same scale only when
+
+```math
+\frac{2 q_f}{2^{256}} \approx 2^{-128},
+```
+
+that is, when $`q_f`$ approaches $`2^{127}`$. In other words, for $`\mathsf{TW128}`$ the practical AE margin is not volume-limited at realistic scales; the visible edge of the bound appears only under astronomically large primitive-query or forgery budgets.
 
 ## 9. Conclusion
 
