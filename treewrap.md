@@ -14,7 +14,7 @@ TreeWrap is a permutation-based AEAD construction that separates local chunk pro
 
 The proof strategy follows the same decomposition. The AE analysis is carried out in the multi-user keyed-duplex model of [Men23]. At the leaf layer, Lemma 6.1 identifies $`\mathsf{LeafWrap}`$ with a reduced MonkeySpongeWrap transcript, and Theorem 6.2 imports the corresponding KD/IXIF replacement. Lemma 6.3 then supplies the TreeWrap-specific step needed for integrity: in the IXIF world, a fresh chunk body induces a fresh hidden leaf tag except with probability $`2^{-t_{\mathsf{leaf}}}`$. At the trunk layer, Corollary 4.6 gives a direct keyed-duplex/IXIF replacement for $`\mathsf{TrunkSponge}`$. These ingredients yield the IND-CPA and INT-CTXT theorems, and Theorem 5.3 derives IND-CCA2 from them by a BN00-style game hop using the multi-forgery integrity notion of Section 4.2.
 
-The commitment analysis is deliberately separate from the keyed AE path. Because the CMT-4 adversary chooses both candidate keys and nonces, the proof does not use the keyed [Men23] bounds. Instead, it flattens the construction into public permutation transcripts. Lemma 6.4 handles the local leaf wrapper via the duplexing-sponge viewpoint of [BDPVA11], yielding a per-chunk collision term on the full local output pair $`(Y_i,T_i)`$. Lemma 6.5 handles the outer trunk transcript via the sponge indifferentiability analysis of [BDPVA08], extended to the two-root setting needed for cross-key collisions. Theorem 5.4 then composes these two cases: a TreeWrap commitment collision either arises at the first differing chunk or at the final trunk combiner.
+The commitment analysis is deliberately separate from the keyed AE path. Because the CMT-4 adversary chooses both candidate keys and nonces, the proof does not use the keyed [Men23] bounds. Instead, it flattens the construction into public permutation transcripts. Lemma 6.4 handles the local leaf wrapper via the duplexing-sponge viewpoint of [BDPVA11], yielding a per-chunk collision term on the full local output pair $`(Y_i,T_i)`$. Lemma 6.5 handles the outer trunk transcript via a rooted-forest counting extension of the single-root sponge bound of [BDPVA08]. Theorem 5.4 then composes these two cases: a TreeWrap commitment collision either arises at the first differing chunk or at the final trunk combiner.
 
 The remainder of the paper is organized as follows. Section 2 fixes notation, the keyed-duplex model, and the encoding conventions. Section 3 defines $`\mathsf{LeafWrap}`$, $`\mathsf{TrunkSponge}`$, and $`\mathsf{TreeWrap}`$, together with the AEAD wrapper. Section 4 gives the multi-user security experiments, the resource translation, and the imported external bounds. Section 5 states the main AE and CMT-4 theorems. Section 6 proves them using the proof split described above. Section 7 instantiates the construction as $`\mathsf{TW128}`$ using $`\mathrm{Keccak\text{-}p}[1600,12]`$, SP 800-185 encodings, 8064-byte chunks, 128-bit leaf tags, and a 256-bit final tag.
 
@@ -729,9 +729,13 @@ This is the bidirectional LeafWrap import under the resource assignment of Lemma
 
 This is the direct keyed-duplex import for the outer trunk-sponge transcript under the resource assignment of Lemma 4.3.
 
-### 4.7 Flat Sponge Bound and $`\rho`$-Root Extension
+### 4.7 Rooted-Forest Sponge Collision Bound
 
-For the outer CMT-4 analysis, we import the single-root random-permutation sponge bound of [BDPVA08, Eq. (6)] and extend the same simulator/counting argument to an explicit $`\rho`$-root forest setting. In the simulator proof of [BDPVA08], the single-root case starts from one rooted supernode and maintains two exclusion sets: a rooted set $`R`$ and an outer-state set $`O`$. In the present setting, the simulator instead starts from $`\rho`$ public rooted supernodes. After $`i`$ successful transcript extensions, the same inductive argument gives
+For the outer CMT-4 analysis, we only need a bad-event bound for rooted transcript merging, not a full indifferentiability statement. We therefore import the single-root random-permutation sponge counting argument of [BDPVA08, Eq. (6)] and record the corresponding $`\rho`$-root extension directly.
+
+**Lemma 4.7 (Rooted-Forest Sponge Collision Bound).** Fix $`\rho \ge 1`$ public roots. For each root, consider the rooted sponge tree obtained by following absorb/squeeze paths from that root as in [BDPVA08]. Let $`R_i`$ be the set of rooted nodes exposed after $`i`$ successful transcript or primitive-query extensions, and let $`O_i`$ be the set of already fixed full states encountered along those rooted paths. Define the bad event $`\mathsf{Merge}_{\rho}(M)`$ to be the event that, during the first $`M`$ such extensions, a new forward or inverse step lands on a previously exposed rooted node or previously fixed full state in a way that merges two distinct rooted transcripts. Then
+
+Exactly as in the single-root counting of [BDPVA08], each safe extension contributes at most one new rooted node and at most one new full state. Hence, inductively,
 
 ```math
 |R_i| \le \rho + i,
@@ -739,7 +743,7 @@ For the outer CMT-4 analysis, we import the single-root random-permutation spong
 |O_i| \le i,
 ```
 
-because each new forward or inverse extension contributes at most one new rooted node and at most one new outer state, exactly as in [BDPVA08]. Repeating the bad-event counting with these sizes yields the rooted-forest analogue
+for every $`i \ge 0`$. Repeating the one-root bad-event count with these cardinalities yields
 
 ```math
 f_{P,\rho}(M)
@@ -747,7 +751,13 @@ f_{P,\rho}(M)
 1 - \prod_{i=0}^{M-1} \frac{1-(\rho+i)2^{-c}}{1-i2^{-b}}.
 ```
 
-Here the numerator is the probability that the next randomly chosen capacity slice avoids the at most $`\rho+i`$ rooted supernodes, while the denominator is the probability that the next full-state sample avoids the at most $`i`$ previously fixed full states. The simulator itself is obtained by adapting the construction of [BDPVA08] so that its rooted-path tables are keyed by a pair consisting of the root identifier and the path suffix. Distinct roots start from distinct full keyed-initialization states because the pairs $`(K,\mathsf{iv}(U,0))`$ are distinct and the keyed-duplex initialization is deterministic, so the rooted forest cannot merge before the adversary creates an actual transcript collision. Thus every forward or inverse query performs exactly the same local consistency checks as in the one-root case, with at most a linear factor $`O(\rho)`$ additional work for root lookup. In particular, the simulator remains polynomial-time; in the TreeWrap application one always has $`\rho \in \{1,2\}`$. Applying the same quadratic relaxation as in [BDPVA08, Eq. (6)] then gives the explicit upper bound for this $`\rho`$-root extension:
+Here the numerator bounds the probability that the next capacity slice avoids the at most $`\rho+i`$ exposed rooted nodes, while the denominator conditions on avoiding the at most $`i`$ previously fixed full states. Therefore
+
+```math
+\Pr[\mathsf{Merge}_{\rho}(M)] \le f_{P,\rho}(M).
+```
+
+Applying the same quadratic relaxation as in [BDPVA08, Eq. (6)] gives the explicit rooted-forest collision bound
 
 ```math
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M,\rho)
@@ -755,7 +765,7 @@ Here the numerator is the probability that the next randomly chosen capacity sli
 \frac{(1-2^{-r})M^2 + (2\rho-1+2^{-r})M}{2^{c+1}}
 ```
 
-in the regime $`M < 2^c`$. For $`\rho = 1`$, the product expression specializes to the original single-root simulator bound and the displayed quadratic term recovers exactly [BDPVA08, Eq. (6)].
+in the regime $`M < 2^c`$. For $`\rho = 1`$, the product expression specializes to the original single-root counting bound and the displayed quadratic term recovers exactly [BDPVA08, Eq. (6)].
 
 ### 4.8 Imported Flat Duplex Bound
 
@@ -788,7 +798,7 @@ For the IND-CPA and INT-CTXT path, we instantiate the imported [Men23] terms usi
 - Let $`\epsilon_{\mathsf{out}}^{\mathsf{ixif}}`$ be the explicit imported outer KD/IXIF term of Corollary 4.6.
 - By Lemma 6.3 together with the derived keyed-context discipline of Lemma 4.1, the only additional local freshness failure in the INT-CTXT proof is the event that a fresh random leaf tag equals the unique prior leaf tag in the same keyed leaf context, which contributes at most $`2^{-t_{\mathsf{leaf}}}`$.
 - Let $`\epsilon_{\mathsf{lw}}^{\flat}(\ell,N)`$ be the explicit local flat-duplex term of Section 4.8.
-- Let $`\mathrm{Sponge}^{(i)}_{\mathsf{forest}}`$ be the explicit $`\rho`$-root flat-sponge term of Section 4.7.
+- Let $`\mathrm{Sponge}^{(i)}_{\mathsf{forest}}`$ be the explicit $`\rho`$-root flat-sponge term of Lemma 4.7.
 
 ### 5.1 IND-CPA Theorem
 
@@ -1315,13 +1325,13 @@ N
 2 s_{\mathsf{out}},
 ```
 
-and assume $`M_{\mathsf{out}} < 2^c`$. Then either the two flattened combiner transcripts merge in the underlying sponge graph, or two distinct ideal combiner transcript inputs collide on the same truncated output. The first event is bounded by
+and assume $`M_{\mathsf{out}} < 2^c`$. Then either the bad event $`\mathsf{Merge}_{\rho}(M_{\mathsf{out}})`$ occurs for the two rooted outer transcripts, or two distinct ideal combiner transcript inputs collide on the same truncated output. The first event is bounded by
 
 ```math
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho)
 ```
 
-via the rooted-forest counting of Section 4.7, and the second event contributes the generic truncation term $`2^{-\tau}`$. Hence
+via the rooted-forest counting of Lemma 4.7, and the second event contributes the generic truncation term $`2^{-\tau}`$. Hence
 
 ```math
 \Pr[\text{outer collision}]
@@ -1331,15 +1341,21 @@ via the rooted-forest counting of Section 4.7, and the second event contributes 
 2^{-\tau}.
 ```
 
-**Proof sketch.** In the flattened view, each outer evaluation consists of a public root state determined by $`(K,\mathsf{iv}(U,0))`$ followed by a rate-$`r`$ absorb-then-squeeze transcript on the string $`\mathsf{enc}_{\mathsf{out}}(A,T_0,\ldots,T_{n-1},n)`$. When there are $`\rho`$ distinct outer roots, the simulator graph of [BDPVA08] becomes a rooted forest rather than a rooted tree. One labels each path by its root identifier together with its block sequence, so rooted paths remain injective exactly as in the one-root case. The permutation simulator still excludes rooted supernodes when answering inverse queries, and it still selects new rooted forward images outside $`R \cup O`$. The only quantitative change is that the rooted exclusion set starts at size $`\rho`$ rather than $`1`$, so after $`i`$ successful extensions one has $`|R_i| \le \rho + i`$ and $`|O_i| \le i`$. Section 4.7 records the resulting exact product bound
+**Proof sketch.** In the flattened view, each outer evaluation consists of a public root state determined by $`(K,\mathsf{iv}(U,0))`$ followed by a rate-$`r`$ absorb-then-squeeze transcript on the string $`\mathsf{enc}_{\mathsf{out}}(A,T_0,\ldots,T_{n-1},n)`$. Thus the two evaluations expose rooted sponge paths from $`\rho`$ public roots, where
 
 ```math
-f_{P,\rho}(M_{\mathsf{out}})
-=
-1 - \prod_{i=0}^{M_{\mathsf{out}}-1} \frac{1-(\rho+i)2^{-c}}{1-i2^{-b}},
+\rho := |\{(K,U),(K',U')\}| \in \{1,2\}.
 ```
 
-whose quadratic relaxation is precisely $`\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho)`$. Conditioned on no merger, the two distinct flattened combiner transcripts behave as distinct random-oracle inputs, and their $`\tau`$-bit truncated outputs collide with probability exactly $`2^{-\tau}`$.
+Lemma 4.7 defines the bad event $`\mathsf{Merge}_{\rho}(M_{\mathsf{out}})`$ that two distinct rooted transcripts merge during the first $`M_{\mathsf{out}}`$ safe extensions, and proves the bound
+
+```math
+\Pr[\mathsf{Merge}_{\rho}(M_{\mathsf{out}})]
+\le
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{out}},\rho).
+```
+
+Conditioned on the complement of this event, root-labeled transcript prefixes remain injective, so the two distinct flattened combiner inputs induce distinct ideal sponge inputs. Their $`\tau`$-bit truncated outputs therefore collide only with the generic truncation probability $`2^{-\tau}`$.
 
 Let
 
