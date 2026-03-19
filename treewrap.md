@@ -10,6 +10,8 @@
 
 Unless stated otherwise, all strings are bitstrings. We write $`\epsilon`$ for the empty string, $`|X|`$ for the bitlength of a string $`X`$, and $`X \| Y`$ for concatenation. For $`n \in \mathbb{N}`$ and a string $`X`$ with $`|X| \ge n`$, $`\mathrm{left}_n(X)`$ denotes the leftmost $`n`$ bits of $`X`$.
 
+For a string $`X \in \{0,1\}^m`$ and an integer $`\alpha \in [0,m)`$, write $`\mathrm{rot}_\alpha(X)`$ for the cyclic rotation of $`X`$ by $`\alpha`$ positions.
+
 For integers $`m \le n`$, write
 
 ```math
@@ -48,7 +50,7 @@ for all valid inputs.
 
 #### 2.3.1 Keyed Duplex
 
-We adopt the keyed duplex interface of [Men23, Algorithm 1]. Let $`b,c,r,k,\mu,\alpha \in \mathbb{N}`$ with $`c + r = b`$, $`k \le b`$, and $`\alpha \le b-k`$. Let $`p \in \mathrm{Perm}(b)`$ be a $`b`$-bit permutation. The keyed duplex construction is denoted
+We adopt the keyed duplex interface of [Men23, Algorithm 1]. Let $`b,c,r,k,\mu,\alpha \in \mathbb{N}`$ with $`c + r = b`$, $`k \le b`$, and $`\alpha \le b-k`$. Let $`\mathcal{IV} \subseteq \{0,1\}^{b-k}`$ be an IV space, and let $`p \in \mathrm{Perm}(b)`$ be a $`b`$-bit permutation. The keyed duplex construction is denoted
 
 ```math
 \mathsf{KD}[p]_K,
@@ -77,7 +79,7 @@ Algorithm KD[p]_K.duplex(flag, B):
     return Z
 ```
 
-Here $`\delta`$ ranges over $`\{1,\ldots,\mu\}`$, $`IV`$ ranges over the IV space, $`\mathsf{flag}`$ ranges over $`\{\mathsf{true},\mathsf{false}\}`$, and $`B`$ ranges over $`\{0,1\}^b`$. When $`\mathsf{flag} = \mathsf{true}`$, the outer $`r`$ bits are overwritten; when $`\mathsf{flag} = \mathsf{false}`$, they are XOR-absorbed. This keyed duplex interface is the primitive on which both the TreeWrap outer combiner and the MonkeySpongeWrap-style LeafWrap transcript are built.
+Here $`\delta`$ ranges over $`\{1,\ldots,\mu\}`$, $`IV`$ ranges over $`\mathcal{IV}`$, $`\mathsf{flag}`$ ranges over $`\{\mathsf{true},\mathsf{false}\}`$, and $`B`$ ranges over $`\{0,1\}^b`$. When $`\mathsf{flag} = \mathsf{true}`$, the outer $`r`$ bits are overwritten; when $`\mathsf{flag} = \mathsf{false}`$, they are XOR-absorbed. This keyed duplex interface is the primitive on which both the TreeWrap outer combiner and the MonkeySpongeWrap-style LeafWrap transcript are built.
 
 ### 2.4 Encoding Conventions and Domain Separation
 
@@ -95,7 +97,7 @@ We use two encoding components:
   \nu : \mathbb{N} \to \{0,1\}^*.
   ```
 
-The integer encoding $`\nu`$ is used both for internal IV derivation and for the final chunk-count field in the outer combiner. TreeWrap reserves suffix $`0`$ for the outer trunk-sponge call and uses positive suffixes for chunk-local LeafWrap calls:
+The integer encoding $`\nu`$ is used both for internal IV derivation and for the final chunk-count field in the outer combiner. We assume a fixed-length nonce space $`\mathcal{U} \subseteq \{0,1\}^u`$ for some nonce length $`u` \in \mathbb{N}`$. TreeWrap reserves suffix $`0`$ for the outer trunk-sponge call and uses positive suffixes for chunk-local LeafWrap calls:
 
 ```math
 V_{\mathsf{out}}(U) := U \| \nu(0),
@@ -103,7 +105,7 @@ V_{\mathsf{out}}(U) := U \| \nu(0),
 V_i(U) := U \| \nu(i+1).
 ```
 
-We assume that $`V_{\mathsf{out}}(U) \in \mathcal{IV}`$ and $`V_i(U) \in \mathcal{IV}`$ for all $`U \in \mathcal{U}`$ and $`i \in \mathbb{N}`$. Because $`\nu`$ is suffix-free, the map
+We assume that $`V_{\mathsf{out}}(U) \in \mathcal{IV}`$ and $`V_i(U) \in \mathcal{IV}`$ for all $`U \in \mathcal{U}`$ and $`i \in \mathbb{N}`$. Because $`\mathcal{U}`$ is fixed-length and $`\nu`$ is suffix-free, the map
 
 ```math
 (U,j) \mapsto U \| \nu(j)
@@ -120,6 +122,7 @@ For the final TreeWrap combiner, define
 ```
 
 Because $`\eta`$ is prefix-free, the leaf tags have fixed length $`t_{\mathsf{leaf}}`$, and $`\nu`$ is suffix-free, this outer encoding is injective in all of its arguments.
+Equivalently, one can parse $`\mathsf{enc}_{\mathsf{out}}`$ from right to left: strip the unique suffix $`\nu(n)`$, use the recovered value of $`n`$ to peel off exactly $`n`$ fixed-length leaf tags, and then recover the unique remaining prefix $`\eta(A)`$.
 
 For later resource accounting, we write
 
@@ -172,6 +175,7 @@ Let $`\mathsf{TreeWrap}`$ be parameterized by:
 - a rate $`r`$,
 - a capacity $`c`$,
 - a key length $`k`$,
+- an IV space $`\mathcal{IV} \subseteq \{0,1\}^{b-k}`$,
 - a nonce space $`\mathcal{U}`$,
 - a chunk size $`B`$,
 - a prefix-free injective string encoding $`\eta`$,
@@ -246,6 +250,16 @@ then
 ```
 
 In other words, the encryption and decryption modes of LeafWrap invert the body transformation while reproducing the same leaf tag.
+
+**Proof sketch.** In the $`j`$th body step of encryption, the ciphertext block is $`Y_j = X_j \oplus Z_j`$, where $`Z_j`$ is the corresponding duplex squeeze output. Decryption feeds the same framed block $`Y_j \| 1 \| 0^{c-1}`$ with overwrite flag $`\mathsf{true}`$, so the absorbed full-state input becomes
+
+```math
+[\mathsf{true}] \cdot (Z_j \| 0^{b-r}) \oplus (Y_j \| 1 \| 0^{c-1})
+=
+X_j \| 1 \| 0^{c-1},
+```
+
+which is exactly the framed encryption-side body block. Thus the entire body transcript, and therefore the subsequent tag-squeezing transcript, is reproduced exactly.
 
 ### 3.3 TrunkSponge
 
@@ -592,7 +606,7 @@ If one later wishes to instantiate the imported LeafWrap bounds with explicit IV
 \chi(X)\cdot |U| + \sum_{j=1}^{n} |\nu(j)|.
 ```
 
-This isolates the contribution of the chunk-index encoding $`\nu`$ to the lower-level LeafWrap resource tuple. In the multi-user setting, [Men23] additionally prefixes each initialization path by the encoded user index $`\delta`$; that contribution is a fixed per-query overhead already absorbed into the $`Q_{IV} \le \mu`$ bookkeeping of Section 4.6.
+This isolates the contribution of the chunk-index encoding $`\nu`$ to the lower-level LeafWrap resource tuple. In the multi-user setting, [Men23] additionally prefixes each initialization path by the encoded user index $`\delta`$; this contributes only a fixed per-initialization overhead independent of the message length, so we leave it implicit in the present abstract resource accounting.
 
 For an adversary's encryption queries with plaintext bodies $`P^{(1)},\ldots,P^{(q_e)}`$ and decryption-side ciphertext bodies $`Y^{(1)},\ldots,Y^{(q_d)}`$, aggregated across all users, we set
 
@@ -651,10 +665,10 @@ where $`(A^{(a)},P^{(a)})`$ and $`(A'^{(b)},Y^{(b)})`$ range over the encryption
 When instantiating the imported results of [Men23], we keep the full $`\mu`$-user setting. For readability, write
 
 ```math
-\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,q_e,q_d,\sigma_e,\sigma_d,N)
+\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,M,Q,Q_{IV},L,\Omega,\nu_{\mathsf{fix}},N)
 ```
 
-for the right-hand side of [Men23, Eq. (34)] under the valid resource assignments stated below, using the bound $`Q_{IV} \le \mu`$. This is the simplified low-complexity branch valid in the regime $`\sigma + N \le 0.1 \cdot 2^c`$; if this side condition is not met, one may instead use the general branch [Men23, Eq. (35)].
+for the low-complexity keyed-duplex distinguishing bound obtained by instantiating the imported [Men23] security theorem with the displayed resource tuple. This shorthand is generic: the reduced LeafWrap and outer TrunkSponge imports below use different valid assignments of $`(M,Q,Q_{IV},L,\Omega,\nu_{\mathsf{fix}})`$. The simplified branch is valid in the regime $`M + N \le 0.1 \cdot 2^c`$; if this side condition is not met, one may instead use the corresponding general branch.
 
 For the reduced MonkeySpongeWrap-style analysis of LeafWrap, define the decryption-side overwrite count
 
@@ -687,7 +701,7 @@ where $`Y^{(b)}_i`$ denotes the $`i`$th chunk body in the $`b`$th decryption que
   Q_{IV} \le \mu,\quad
   L \le \chi_d,\quad
   \Omega = \Omega_{\mathsf{lw},d},\quad
-  \nu_{\mathsf{fix}} \le \Omega_{\mathsf{lw},d} + \chi_e + \chi_d - 1.
+  \nu_{\mathsf{fix}} \le \max\!\bigl(\Omega_{\mathsf{lw},d} + \chi_e + \chi_d - 1, 0\bigr).
   ```
 
 **Proof sketch.** For LeafWrap, each construction query corresponds to one initialization and a sequence of body-phase and squeezing duplex calls. In the encryption-only case, Lemma 4.1 gives pairwise distinct leaf keyed contexts $`(\delta,U \| \nu(i+1))`$, so no repeated subpath can occur across encryption-side queries; moreover, encryption never uses overwrite calls, hence $`L = \Omega = \nu_{\mathsf{fix}} = 0`$. Across different users, the same bare IV may recur, but [Men23] counts initialization paths as $`\mathrm{encode}[\delta] \| IV`$, so $`Q_{IV} \le \mu`$ is the correct bound. In the bidirectional case, the argument follows the proof of Theorem 7 of [Men23] mutatis mutandis. Distinct encryption-side leaf keyed contexts still eliminate encryption/encryption subpath repetition, while decryption-side queries may repeat keyed leaf contexts and contribute at most $`\chi_d`$ repeated subpaths. Because the reduced LeafWrap transcript has no local associated-data phase, each decryption-side query contributes exactly its body-processing calls to $`\Omega`$ and exactly $`s_{\mathsf{leaf}}`$ non-overwriting squeeze calls, giving the stated identity for $`\Omega_{\mathsf{lw},d}`$.
@@ -701,28 +715,30 @@ The parameter $`\nu_{\mathsf{fix}}`$ is not merely the number of overwrite calls
 rather than $`\nu_{\mathsf{fix}} \le \Omega`$. In reduced LeafWrap, the same path-counting argument carries over with $`q_e = \chi_e`$, $`q_d = \chi_d`$, and $`\Omega = \Omega_{\mathsf{lw},d}`$, because the only structural change is that the vacuous local associated-data phase has been removed. This yields exactly
 
 ```math
-\nu_{\mathsf{fix}} \le \Omega_{\mathsf{lw},d} + \chi_e + \chi_d - 1.
+\nu_{\mathsf{fix}} \le \max\!\bigl(\Omega_{\mathsf{lw},d} + \chi_e + \chi_d - 1, 0\bigr).
 ```
+
+The clamp at $`0`$ is only needed in the degenerate case $`\chi_e = \chi_d = \Omega_{\mathsf{lw},d} = 0`$, where no LeafWrap transcript occurs at all and $`\nu_{\mathsf{fix}}`$ must therefore be zero.
 
 **Corollary 4.4 (Imported LeafWrap Encryption-Side KD/IXIF Bound).** If $`\sigma^{\mathsf{lw}}_e + N \le 0.1 \cdot 2^c`$, then the encryption-side LeafWrap real-to-IXIF replacement term of Theorem 6.2 can be instantiated as
 
 ```math
 \epsilon_{\mathsf{lw}}^{\mathsf{enc}}(\mu,\chi_e,\sigma^{\mathsf{lw}}_e,N)
 :=
-\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\chi_e,0,\sigma^{\mathsf{lw}}_e,0,N).
+\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{lw}}_e,\chi_e,\mu,0,0,0,N).
 ```
 
-This is exactly the $`q_d = \sigma_d = 0`$ specialization of the KD/IXIF bound extracted in the proof of [Men23, Theorem 7], under the resource assignment of Lemma 4.2.
+This is the encryption-only LeafWrap import under the resource assignment of Lemma 4.2.
 
 **Corollary 4.5 (Imported LeafWrap Bidirectional KD/IXIF Bound).** If $`\sigma^{\mathsf{lw}}_e + \sigma^{\mathsf{lw}}_d + N \le 0.1 \cdot 2^c`$, then the bidirectional LeafWrap real-to-IXIF replacement term of Theorem 6.2 can be instantiated as
 
 ```math
 \epsilon_{\mathsf{lw}}^{\mathsf{ae}}(\mu,\chi_e,\chi_d,\sigma^{\mathsf{lw}}_e,\sigma^{\mathsf{lw}}_d,N)
 :=
-\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\chi_e,\chi_d,\sigma^{\mathsf{lw}}_e,\sigma^{\mathsf{lw}}_d,N).
+\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{lw}}_e+\sigma^{\mathsf{lw}}_d,\chi_e+\chi_d,\mu,\chi_d,\Omega_{\mathsf{lw},d},\max\!\bigl(\Omega_{\mathsf{lw},d}+\chi_e+\chi_d-1,0\bigr),N).
 ```
 
-This is the direct specialization of the KD/IXIF bound extracted in the proof of [Men23, Theorem 7], under the bidirectional resource assignment of Lemma 4.2.
+This is the bidirectional LeafWrap import under the resource assignment of Lemma 4.2.
 
 **Lemma 4.3 (Outer TrunkSponge Resource Translation).** The outer trunk-sponge families induced by TreeWrap admit the following valid resource assignments in the notation of [Men23]:
 
@@ -748,14 +764,14 @@ This is the direct specialization of the KD/IXIF bound extracted in the proof of
   \nu_{\mathsf{fix}} = 0.
   ```
 
-**Proof sketch.** Each $`\mathsf{TrunkSponge}[p]`$ evaluation contributes one initialization, $`\lceil (|W|+1)/r \rceil`$ absorption calls on blocks of the form $`\widetilde{W}_i \| 0^c`$, and $`s_{\mathsf{out}}`$ blank squeezing calls. All calls use flag $`\mathsf{false}`$, so $`\Omega = 0`$ throughout. For encryption-type queries, Lemma 4.1 implies that the derived outer keyed contexts $`(\delta,V_{\mathsf{out}}(U)) = (\delta,U \| \nu(0))`$ are distinct, hence $`L = \nu_{\mathsf{fix}} = 0`$. Across different users, the same bare outer IV may recur, but again [Men23] counts initialization paths as $`\mathrm{encode}[\delta] \| IV`$, so $`Q_{IV} \le \mu`$ is the correct bound. In the general case, repeated subpaths can arise only from decryption-side recomputations under reused outer keyed contexts, and their total number is bounded by the total number of decryption-side duplexing calls, namely $`\sigma^{\mathsf{out}}_d`$. Because absorbed blocks have the fixed form $`\widetilde{W}_i \| 0^c`$ and no intermediate squeeze output is exposed during absorption, the adversary never fixes the outer part of the state in the sense of [Men23], so $`\nu_{\mathsf{fix}} = 0`$ remains valid.
+**Proof sketch.** Each $`\mathsf{TrunkSponge}[p]`$ evaluation contributes one initialization, $`\lceil (|W|+1)/r \rceil`$ absorption calls on blocks of the form $`\widetilde{W}_i \| 0^c`$, and $`s_{\mathsf{out}}`$ blank squeezing calls. All calls use flag $`\mathsf{false}`$, so $`\Omega = 0`$ throughout. For encryption-type queries, Lemma 4.1 implies that the derived outer keyed contexts $`(\delta,V_{\mathsf{out}}(U)) = (\delta,U \| \nu(0))`$ are distinct, hence $`L = \nu_{\mathsf{fix}} = 0`$. Across different users, the same bare outer IV may recur, but again [Men23] counts initialization paths as $`\mathrm{encode}[\delta] \| IV`$, so $`Q_{IV} \le \mu`$ is the correct bound. In the general case, repeated subpaths can arise only from decryption-side recomputations under reused outer keyed contexts, and their total number is bounded by the total number of decryption-side duplexing calls, namely $`\sigma^{\mathsf{out}}_d`$. Because absorbed blocks have the fixed form $`\widetilde{W}_i \| 0^c`$ and no intermediate squeeze output is exposed during absorption, the adversary never fixes the outer part of the state in the sense of [Men23], so $`\nu_{\mathsf{fix}} = 0`$ remains valid. Although the adversary chooses the ciphertext body and thereby indirectly determines the absorbed trunk blocks through the recomputed leaf tags, it never observes any intermediate trunk-sponge squeeze output during absorption and therefore cannot solve for trunk-block values that would force a desired outer part.
 
 **Corollary 4.6 (Imported Outer TrunkSponge KD/IXIF Bound).** If $`\sigma^{\mathsf{out}}_e + \sigma^{\mathsf{out}}_d + N \le 0.1 \cdot 2^c`$, then the outer-combiner real-to-IXIF replacement term can be instantiated as
 
 ```math
 \epsilon_{\mathsf{out}}^{\mathsf{ixif}}(\mu,q^{\mathsf{out}}_e,q^{\mathsf{out}}_d,\sigma^{\mathsf{out}}_e,\sigma^{\mathsf{out}}_d,N)
 :=
-\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,q^{\mathsf{out}}_e,q^{\mathsf{out}}_d,\sigma^{\mathsf{out}}_e,\sigma^{\mathsf{out}}_d,N).
+\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{out}}_e+\sigma^{\mathsf{out}}_d,q^{\mathsf{out}}_e+q^{\mathsf{out}}_d,\mu,\sigma^{\mathsf{out}}_d,0,0,N).
 ```
 
 This is the direct keyed-duplex import for the outer trunk-sponge transcript under the resource assignment of Lemma 4.3.
@@ -778,7 +794,7 @@ f_{P,\rho}(M)
 1 - \prod_{i=0}^{M-1} \frac{1-(\rho+i)2^{-c}}{1-i2^{-b}}.
 ```
 
-Here the numerator is the probability that the next randomly chosen capacity slice avoids the at most $`\rho+i`$ rooted supernodes, while the denominator is the probability that the next full-state sample avoids the at most $`i`$ previously fixed full states. The simulator itself is obtained by the same construction as in [BDPVA08], but with its rooted-path tables keyed by a pair consisting of the root identifier and the path suffix. Thus every forward or inverse query performs exactly the same local consistency checks as in the one-root case, with at most a linear factor $`O(\rho)`$ additional work for root lookup. In particular, the simulator remains polynomial-time; in the TreeWrap application one always has $`\rho \in \{1,2\}`$. Applying the same quadratic relaxation as in [BDPVA08, Eq. (6)] then gives the explicit upper bound
+Here the numerator is the probability that the next randomly chosen capacity slice avoids the at most $`\rho+i`$ rooted supernodes, while the denominator is the probability that the next full-state sample avoids the at most $`i`$ previously fixed full states. The simulator itself is obtained by the same construction as in [BDPVA08], but with its rooted-path tables keyed by a pair consisting of the root identifier and the path suffix. Distinct roots start from distinct full keyed-initialization states because the pairs $`(K,U \| \nu(0))`$ are distinct and the keyed-duplex initialization is deterministic, so the rooted forest cannot merge before the adversary creates an actual transcript collision. Thus every forward or inverse query performs exactly the same local consistency checks as in the one-root case, with at most a linear factor $`O(\rho)`$ additional work for root lookup. In particular, the simulator remains polynomial-time; in the TreeWrap application one always has $`\rho \in \{1,2\}`$. Applying the same quadratic relaxation as in [BDPVA08, Eq. (6)] then gives the explicit upper bound
 
 ```math
 \mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M,\rho)
@@ -790,7 +806,7 @@ in the regime $`M < 2^c`$. For $`\rho = 1`$, the product expression specializes 
 
 ### 4.8 Imported Flat Duplex Bound
 
-For the local CMT-4 analysis, the duplexing-sponge lemma of [BDPVA11, Lemma 3] allows us to reuse the same rooted-sponge bound for the flattened encryption-side LeafWrap transcript. For an $`\ell`$-bit chunk body, define
+For the local CMT-4 analysis, the duplexing-sponge lemma of [BDPVA11, Lemma 3] allows us to reuse the same rooted-sponge bound for the flattened encryption-side LeafWrap transcript. This use is purely structural: the duplexing-sponge equivalence identifies the duplex transcript with the corresponding sponge transcript for every fixed input history, independent of how the adversary chooses keys, IVs, or message blocks. For an $`\ell`$-bit chunk body, define
 
 ```math
 M_{\mathsf{lw}}(\ell,N)
@@ -893,16 +909,28 @@ The multi-forgery INT-CTXT formulation of Section 4.2 removes the previous index
 
 ### 5.4 CMT-4 Theorem
 
-**Theorem 5.4 (CMT-4).** Let $`((K_1,U_1,A_1,P_1),(K_2,U_2,A_2,P_2))`$ be the two tuples output in a successful CMT-4 collision attempt, let $`\rho := |\{(K_1,U_1),(K_2,U_2)\}| \in \{1,2\}`$, let $`Y_0 \| \cdots \| Y_{n-1}`$ denote the common ciphertext body, let $`n`$ denote its chunk count, let $`\ell_i := |Y_i|`$ for $`i = 0,\ldots,n-1`$, and define
+**Theorem 5.4 (CMT-4).** Let
+
+```math
+\Theta := ((K_1,U_1,A_1,P_1),(K_2,U_2,A_2,P_2))
+```
+
+be any fixed distinct output pair of the CMT-4 adversary. If $`|P_1| \ne |P_2|`$, then the corresponding collision probability is zero because TreeWrap is length preserving. Otherwise let $`n := \chi(P_1) = \chi(P_2)`$, let
+
+```math
+P_1 = P_{1,0} \| \cdots \| P_{1,n-1}
+```
+
+be the canonical chunk decomposition, let $`\ell_i := |P_{1,i}|`$ for $`i = 0,\ldots,n-1`$, let $`\rho := |\{(K_1,U_1),(K_2,U_2)\}| \in \{1,2\}`$, and define
 
 ```math
 M_{\mathsf{out}} := N + \sigma_{\mathsf{out}}(A_1,P_1) + \sigma_{\mathsf{out}}(A_2,P_2).
 ```
 
-Assume $`M_{\mathsf{lw}}(\ell_i,N) < 2^c`$ for every $`i = 0,\ldots,n-1`$ and $`M_{\mathsf{out}} < 2^c`$. Then for every CMT-4 adversary $`\mathcal{A}`$ against TreeWrap making at most $`N`$ primitive queries,
+Assume $`M_{\mathsf{lw}}(\ell_i,N) < 2^c`$ for every $`i = 0,\ldots,n-1`$ and $`M_{\mathsf{out}} < 2^c`$. Then
 
 ```math
-\mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}(\mathcal{A})
+\Pr_p\!\bigl[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)\bigr]
 \le
 \sum_{i=0}^{n-1} \epsilon_{\mathsf{lw}}^{\flat}(\ell_i,N)
 +
@@ -911,7 +939,21 @@ Assume $`M_{\mathsf{lw}}(\ell_i,N) < 2^c`$ for every $`i = 0,\ldots,n-1`$ and $`
 2^{-\tau}.
 ```
 
-Equivalently, every successful TreeWrap commitment collision reduces either to a local encryption-side LeafWrap collision on the full chunk-output pair $`(Y_i,T_i)`$ at the first differing chunk or to a collision in the flattened outer combiner transcript.
+Equivalently, for every fixed output profile $`\Theta`$, the corresponding TreeWrap commitment collision probability reduces either to a local encryption-side LeafWrap collision on the full chunk-output pair $`(Y_i,T_i)`$ at the first differing chunk or to a collision in the flattened outer combiner transcript. Consequently, if $`\Theta`$ denotes the random output pair of a CMT-4 adversary $`\mathcal{A}`$, then
+
+```math
+\mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}(\mathcal{A})
+\le
+\mathbb{E}_{\Theta}\!\left[
+\sum_{i=0}^{n(\Theta)-1} \epsilon_{\mathsf{lw}}^{\flat}(\ell_i(\Theta),N)
++
+\mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}}(\Theta),\rho(\Theta))
++
+2^{-\tau}
+\right],
+```
+
+where $`n(\Theta)`$, $`\ell_i(\Theta)`$, $`\rho(\Theta)`$, and $`M_{\mathsf{out}}(\Theta)`$ are extracted from the realized output pair exactly as above, with the convention that the bracketed quantity is $`0`$ when $`|P_1| \ne |P_2|`$.
 
 ## 6. Supporting Lemmas and Proofs
 
@@ -978,7 +1020,7 @@ is identical to the reduced MonkeySpongeWrap transcript on nonce $`V`$ and input
 
 In both cases, the message-processing and tag-squeezing phases match exactly, and the output pair $`(Y,T)`$ returned by LeafWrap is exactly the body/tag pair determined by that reduced transcript.
 
-**Theorem 6.2 (Ported LeafWrap KD/IXIF Replacement).** For every distinguisher $`\mathcal{D}_{\mathsf{LW}}`$ attacking a family of LeafWrap transcripts under the nonce discipline induced by TreeWrap, there exists a distinguisher $`\mathcal{D}_{\mathsf{MSW}}`$ against the corresponding reduced MonkeySpongeWrap transcript family such that
+**Theorem 6.2 (Ported LeafWrap KD/IXIF Replacement).** For every distinguisher $`\mathcal{D}_{\mathsf{LW}}`$ attacking a family of LeafWrap transcripts under the keyed-context discipline induced by TreeWrap, there exists a distinguisher $`\mathcal{D}_{\mathsf{MSW}}`$ against the corresponding reduced MonkeySpongeWrap transcript family such that
 
 ```math
 \mathrm{Adv}^{\mathsf{real}\text{-}\mathsf{ixif}}_{\mathsf{LeafWrap}}(\mathcal{D}_{\mathsf{LW}})
@@ -1001,7 +1043,7 @@ Then exactly one of the following holds:
 
 In the second case, except for transcript-collision bad events already charged to the KD/IXIF replacement, the returned leaf tag $`T`$ is a fresh random $`t_{\mathsf{leaf}}`$-bit string from the adversary's point of view.
 
-The mechanics behind Lemma 6.3 are entirely local. Because the IXIF path after initialization is determined by the fixed context $`(K,V)`$, all prior agreement between an encryption-side and decryption-side call is captured by equality of the framed blocks appended to that path. The identity above shows that a decryption-side body call appends the recovered plaintext frame $`M_j(X)`$, not the ciphertext frame. Therefore, if a decryption-side call reproduces a prior encryption-side body, it reproduces the same framed message sequence and hence the same subsequent squeeze paths and leaf tag.
+The mechanics behind Lemma 6.3 are entirely local. Because the IXIF path after initialization is determined by the fixed context $`(K,V)`$, all prior agreement between an encryption-side and decryption-side call is captured by equality of the framed blocks appended to that path. The identity above shows that a decryption-side body call appends the recovered plaintext frame $`M_j(X)`$, not the ciphertext frame. Therefore, if a decryption-side call reproduces a prior encryption-side body, it reproduces the same framed message sequence and hence the same subsequent squeeze paths and leaf tag. In the IXIF world this implication is exact: a repeated path is answered by the same deterministic random-oracle value attached to that path.
 
 For the fresh-body case, let $`\pi_j`$ denote the IXIF path after the first $`j`$ body-phase calls of the decryption-side transcript, and let $`\pi^{(a)}_j`$ denote the corresponding path prefix for a prior encryption-side transcript $`a`$ in the same context. Choose $`j^\star`$ as the first index for which the framed block $`M_{j^\star}(X)`$ is not equal to the framed block at position $`j^\star`$ of any prior encryption-side transcript with prefix $`\pi_{j^\star-1}`$. Then $`\pi_{j^\star-1}`$ is still an old path prefix, but
 
@@ -1013,7 +1055,7 @@ is fresh: if it were equal to some prior $`\pi^{(a)}_{j^\star}`$, then by prefix
 
 For the outer combiner, let $`\mathsf{TrunkSponge}^{\mathsf{IXIF}}[\mathrm{ro}]`$ denote the same absorb-then-squeeze transcript as $`\mathsf{TrunkSponge}[p]`$, but with the keyed duplex replaced by $`\mathsf{IXIF}[\mathrm{ro}]`$. Because every absorbed block has the fixed form $`\widetilde{W}_j \| 0^c`$ and every call uses flag $`\mathsf{false}`$, Corollary 4.6 applies directly to this transcript family. Moreover, if the outer keyed-context/input pair $`((\delta,V_{\mathsf{out}}),W)`$ is fresh, then the corresponding IXIF path is fresh and the returned $`\tau`$-bit trunk tag is uniformly random from the adversary's point of view.
 
-The role of these statements is as follows. The IND-CPA proof uses Lemma 6.1 and Theorem 6.2 on the encryption side only, together with the direct outer $`\mathsf{TrunkSponge} \to \mathsf{IXIF}`$ replacement of Corollary 4.6. The INT-CTXT proof uses Lemma 6.1 and Theorem 6.2 to move the chunk layer to the IXIF world and then applies Lemma 6.3 to conclude that any fresh chunk body yields a fresh hidden leaf tag and, except with probability $`2^{-t_{\mathsf{leaf}}}`$, a fresh outer-combiner input. By contrast, the CMT-4 proof requires a flat local collision claim for the map
+The role of these statements is as follows. The IND-CPA proof uses Lemma 6.1 and Theorem 6.2 on the encryption side only, together with the direct outer $`\mathsf{TrunkSponge} \to \mathsf{IXIF}`$ replacement of Corollary 4.6. The INT-CTXT proof uses Lemma 6.1 and Theorem 6.2 to move the chunk layer to the IXIF world and then applies Lemma 6.3 to conclude that any fresh chunk body yields a fresh hidden leaf tag and, except with probability $`2^{-t_{\mathsf{leaf}}}`$, a fresh outer keyed-context/input pair. By contrast, the CMT-4 proof requires a flat local collision claim for the map
 
 ```math
 (K,V,X) \mapsto (Y,T),
@@ -1131,9 +1173,15 @@ If some chunk body $`Y^{(d)}_i`$ is fresh under its leaf keyed context $`(\delta
 
 is fresh.
 
-Otherwise every chunk body reproduces a prior encryption-side body in its own leaf context. Then each local transcript and each local leaf tag is reproduced exactly, so the entire vector $`(T^{(d)}_0,\ldots,T^{(d)}_{n_d-1})`$ is fixed by prior encryptions. If the resulting outer keyed context/input pair coincides with one from a prior encryption query, then the IXIF output for the final tag is the same as in that prior query, and acceptance implies that the full ciphertext is a replay, contradicting freshness. Therefore any valid fresh forgery in this case must also query the outer IXIF object on a fresh outer keyed-context/input pair.
+Otherwise every chunk body reproduces a prior encryption-side body in its own leaf context. Then each local transcript and each local leaf tag is reproduced exactly, so the entire vector $`(T^{(d)}_0,\ldots,T^{(d)}_{n_d-1})`$ is fixed by prior encryptions. This leaves two subcases. If the resulting outer keyed context/input pair is fresh, then the adversary must still predict the value of $`\mathsf{TrunkSponge}^{\mathsf{IXIF}}[\mathrm{ro}]`$ on a fresh outer keyed-context/input pair, which occurs with probability at most $`2^{-\tau}`$. If instead the outer keyed context/input pair coincides with one from a prior encryption query and $`A^{(d)} = A`$ for that query, then the full ciphertext is a replay, contradicting freshness. Finally, if a fresh leaf-tag collision causes the leaf-tag vector to match a prior one while $`A^{(d)} \ne A`$, then the outer keyed context/input pair is still fresh because $`\mathsf{enc}_{\mathsf{out}}`$ is injective in its associated-data argument.
 
-In either case, every valid fresh forgery candidate in $`H_2`$ requires the adversary to predict the value of $`\mathsf{TrunkSponge}^{\mathsf{IXIF}}[\mathrm{ro}]`$ on a fresh outer keyed-context/input pair, which occurs with probability at most $`2^{-\tau}`$. Therefore, for each fixed $`d`$,
+Thus every valid fresh forgery candidate in $`H_2`$ falls into exactly one of three cases:
+
+- some chunk body is fresh and no leaf-tag collision occurs, in which case the outer keyed context/input pair is fresh and the trunk tag must be guessed;
+- a fresh leaf-tag collision occurs, which contributes the explicit $`2^{-t_{\mathsf{leaf}}}`$ term;
+- all leaf tags replay exactly, in which case either the ciphertext is a replay or the outer keyed context/input pair is fresh and the trunk tag must be guessed.
+
+In particular, apart from the explicit leaf-tag-collision event, every valid fresh forgery candidate in $`H_2`$ requires the adversary to predict the value of $`\mathsf{TrunkSponge}^{\mathsf{IXIF}}[\mathrm{ro}]`$ on a fresh outer keyed-context/input pair. Therefore, for each fixed $`d`$,
 
 ```math
 \Pr[(\delta^{(d)},U^{(d)},A^{(d)},C^{(d)}) \text{ is a valid fresh forgery in } H_2]
@@ -1426,7 +1474,7 @@ are evaluated on distinct flattened inputs. Since the final TreeWrap tags are eq
 \mathrm{Sponge}^{(i)}_{\mathsf{BDPVA08}}(M_{\mathsf{out}},\rho) + 2^{-\tau}.
 ```
 
-Therefore, every successful CMT-4 violation against TreeWrap reduces either to a first-differing-chunk collision bounded by Lemma 6.4 or to a distinct-input outer-combiner collision bounded by Lemma 6.5. Summing these contributions yields Theorem 5.4.
+Therefore, for every fixed output pair $`\Theta`$, the corresponding successful CMT-4 event reduces either to a first-differing-chunk collision bounded by Lemma 6.4 or to a distinct-input outer-combiner collision bounded by Lemma 6.5. Summing these contributions yields the conditional bound of Theorem 5.4, and averaging over the adversary's random output pair gives the displayed expectation bound on $`\mathrm{Adv}^{\mathsf{cmt}\text{-}4}`$.
 
 ## 7. TW128 Instantiation
 
@@ -1465,6 +1513,14 @@ V_i(U) := \mathsf{IV}^{\mathsf{TW128}}_{i+1}(U).
 ```
 
 Because the nonce length is fixed and $`\nu = \mathrm{right\_encode}`$ is injective, this yields an injective embedding of the outer-IV and leaf-IV namespaces into the 1344-bit IV field. The size bound is not restrictive in practice: it allows up to $`2^{1208}`$ distinct suffix values, far beyond any realistic number of chunks.
+
+Under this concrete embedding, every instantiated trunk or leaf keyed context contributes a full 1344-bit IV string to the lower-level duplex initialization. Thus the abstract bookkeeping quantity of Section 4.5 specializes to
+
+```math
+\iota_{\mathsf{lw}}^{\mathsf{TW128}}(X) = 1344 \cdot \chi(X),
+```
+
+and each outer trunk invocation likewise contributes one 1344-bit IV. In the low-complexity [Men23] branch imported in Section 4.6, however, the AE bounds depend on initialization only through the keyed-context count $`Q_{IV}`$ rather than through a separate IV-bit-length parameter. Accordingly, this concrete padding choice affects the AE terms only by fixing an explicit injective embedding into the 1344-bit IV field.
 
 For $`\mathsf{TW128}`$, both the leaf tag and the final tag fit within a single $`r = 1344`$-bit squeeze block, so
 
@@ -1566,7 +1622,7 @@ In practice this is extremely close to
 
 so the outer contribution also matches the intended 128-bit generic target.
 
-Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the concrete security statements for $`\mathsf{TW128}`$. On the AE side, these are now $`\mu`$-user statements: the imported KD/IXIF terms of Theorems 5.1 and 5.2 retain their explicit dependence on $`\mu`$, so any concrete deployment claim must fix the intended user count and evaluate those terms accordingly. At a high level, the AE security target remains controlled by the 256-bit capacity and thus aims at 128-bit generic security for practical values of $`\mu`$, while the commitment bound inherits the same 128-bit target through the combination of the 256-bit outer tag and the sharpened per-chunk local collision term.
+Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the concrete parameterized security statements for $`\mathsf{TW128}`$. On the AE side, these remain $`\mu`$-user, $`N`$-query formulas: the imported KD/IXIF terms of Theorems 5.1 and 5.2 retain their explicit dependence on both $`\mu`$ and $`N`$, so a fully numeric deployment claim must fix concrete caps for those quantities and then evaluate the imported [Men23] expressions. The present section therefore fixes the algorithmic parameters and the exact terms to be evaluated, but does not bake in deployment-specific values of $`\mu`$ or $`N`$. Under any such concrete caps satisfying the low-complexity side conditions of Section 4.6, the dominant generic terms remain capacity-limited and target the intended 128-bit level, while the commitment bound inherits the same 128-bit target through the combination of the 256-bit outer tag and the sharpened per-chunk local collision term.
 
 ## 8. Conclusion
 
