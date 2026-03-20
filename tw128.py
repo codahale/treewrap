@@ -11,8 +11,9 @@ Parameters (Section 7):
     B        = 64512 bits    (8064 bytes = 48 × 168)
     t_leaf   = 256           (32 bytes)
     τ        = 256           (32 bytes)
-    η        = encode_string (SP 800-185)
     ν        = right_encode  (SP 800-185)
+    δ_ad     = 0x00
+    δ_tc     = 0x01
     α        = 0
 
 Padding is pad10* from [Men23]: append a 1 bit, then zeros to fill to a
@@ -24,7 +25,7 @@ from __future__ import annotations
 from hmac import compare_digest
 
 from keccak import keccak_p1600
-from sp800185 import encode_string, right_encode
+from sp800185 import right_encode
 
 # -- constants -----------------------------------------------------------------
 
@@ -38,6 +39,8 @@ _TLEAF  = 32     # leaf tag in bytes
 _TAG    = 32     # final tag in bytes
 
 _ZERO_B = bytes(_B)
+_DS_AD  = b"\x00"
+_DS_TC  = b"\x01"
 
 # -- pad10* --------------------------------------------------------------------
 
@@ -47,6 +50,11 @@ def _pad(data: bytes) -> list[bytes]:
     buf.append(0x01)
     buf.extend(bytes(-len(buf) % _R))
     return [bytes(buf[i : i + _R]) for i in range(0, len(buf), _R)]
+
+
+def _pad_phase(data: bytes, trailer: bytes) -> list[bytes]:
+    """Phase-local pad10*: append trailer, then apply pad10*."""
+    return _pad(data + trailer)
 
 # -- keyed duplex (Section 2.3.1, α = 0) --------------------------------------
 
@@ -137,24 +145,22 @@ def _leafwrap(key: bytes, iv: bytes, x: bytes, dec: bool) -> tuple[bytes, bytes]
 
 # -- TrunkSponge (Section 3.3) ------------------------------------------------
 
-def _trunk_sponge(key: bytes, iv: bytes, w: bytes) -> bytes:
-    """TrunkSponge[p](K, IV, W; output length τ) → T"""
-    blocks = _pad(w)
+def _trunk_sponge(key: bytes, iv: bytes, ad: bytes, leaf_tags: list[bytes], n: int) -> bytes:
+    """TrunkSponge[p](K, IV, A, T_0, ..., T_{n-1}, n; output length τ) → T"""
     kd = _KD()
     kd.init(key, iv)
 
-    for blk in blocks:
+    if ad:
+        for blk in _pad_phase(ad, _DS_AD):
+            kd.duplex(False, blk + bytes(_C))            # Ã_i ∥ 0^c
+
+    tail = b"".join(leaf_tags) + right_encode(n)
+    for blk in _pad_phase(tail, _DS_TC):
         kd.duplex(False, blk + bytes(_C))            # W̃_j ∥ 0^c
 
     # squeeze one block (τ ≤ r)
     raw = kd.duplex(False, _ZERO_B)
     return raw[:_TAG]
-
-# -- enc_out (Section 2.4) ----------------------------------------------------
-
-def _enc_out(ad: bytes, leaf_tags: list[bytes], n: int) -> bytes:
-    """η(A) ∥ T_0 ∥ ··· ∥ T_{n−1} ∥ ν(n)"""
-    return encode_string(ad) + b"".join(leaf_tags) + right_encode(n)
 
 # -- TreeWrap core (Section 3.4) ----------------------------------------------
 
@@ -173,7 +179,7 @@ def _treewrap(
         leaf_tags.append(ti)
 
     y = b"".join(y_parts)
-    tag = _trunk_sponge(key, _iv(nonce, 0), _enc_out(ad, leaf_tags, n))
+    tag = _trunk_sponge(key, _iv(nonce, 0), ad, leaf_tags, n)
     return y, tag
 
 # -- AEAD interface (Section 3.5) ---------------------------------------------

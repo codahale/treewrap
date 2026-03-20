@@ -114,7 +114,7 @@ Thus $`\mathsf{IXIF}[\mathrm{ro}]`$ keeps the same control flow as the keyed dup
 
 ### 2.4 Encoding Conventions and Domain Separation
 
-**Encodings.** We use two encoding components: a prefix-free injective string encoding $`\eta : \{0,1\}^* \to \{0,1\}^*`$ and a suffix-free injective integer encoding $`\nu : \mathbb{N} \to \{0,1\}^*`$.
+**Encodings.** We use a suffix-free injective integer encoding $`\nu : \mathbb{N} \to \{0,1\}^*`$ for chunk counts.
 
 **Derived IVs.** We assume a fixed-length nonce space $`\mathcal{U} \subseteq \{0,1\}^u`$ for some nonce length $`u \in \mathbb{N}`$, together with an injective IV-derivation map
 
@@ -124,17 +124,31 @@ Thus $`\mathsf{IXIF}[\mathrm{ro}]`$ keeps the same control flow as the keyed dup
 
 TreeWrap reserves suffix $`0`$ for the outer trunk-sponge call and uses positive suffixes for chunk-local LeafWrap calls, so $`V_{\mathsf{out}}(U) := \mathsf{iv}(U,0)`$ and $`V_i(U) := \mathsf{iv}(U,i+1)`$. In concrete instantiations, $`\mathsf{iv}`$ may itself be built from the integer encoding $`\nu`$; Section 8 does this for $`\mathsf{TW128}`$.
 
-**Outer encoding.** For the final TreeWrap combiner, define
+**Trunk phase framing.** Fix two distinct nonempty bitstrings $`\delta_{\mathsf{ad}}, \delta_{\mathsf{tc}} \in \{0,1\}^+`$. For the trunk sponge, these serve as phase trailers for the associated-data phase and the final tag/count phase, respectively. We write
 
 ```math
-\mathsf{enc}_{\mathsf{out}}(A,T_0,\ldots,T_{n-1},n)
-:=
-\eta(A) \| T_0 \| \cdots \| T_{n-1} \| \nu(n).
+\mathrm{pad}^{\mathsf{ad}}_{10^r*}(Z) := \mathrm{pad}_{10^r*}(Z \| \delta_{\mathsf{ad}}),
+\qquad
+\mathrm{pad}^{\mathsf{tc}}_{10^r*}(Z) := \mathrm{pad}_{10^r*}(Z \| \delta_{\mathsf{tc}}).
 ```
 
-Because $`\eta`$ is prefix-free, the leaf tags have fixed length $`t_{\mathsf{leaf}}`$, and $`\nu`$ is suffix-free, this outer encoding is injective in all of its arguments. Equivalently, one can parse $`\mathsf{enc}_{\mathsf{out}}`$ from right to left: strip the unique suffix $`\nu(n)`$, use the recovered value of $`n`$ to peel off exactly $`n`$ fixed-length leaf tags, and then recover the unique remaining prefix $`\eta(A)`$.
+The final trunk phase absorbs the string
 
-**Overhead notation.** For later resource accounting, we write $`|\eta(A)| \le |A| + \lambda_\eta(|A|)`$ and $`|\nu(n)| \le \lambda_\nu(n)`$ for encoding-overhead functions $`\lambda_\eta`$ and $`\lambda_\nu`$ associated with the chosen encodings.
+```math
+T_0 \| \cdots \| T_{n-1} \| \nu(n).
+```
+
+Because the leaf tags have fixed length $`t_{\mathsf{leaf}}`$ and $`\nu`$ is suffix-free, this final-phase string is injective in $`(T_0,\ldots,T_{n-1},n)`$. Together with the distinct phase trailers and the explicit omission or presence of the associated-data phase, the overall trunk transcript is injective in $`(A,T_0,\ldots,T_{n-1},n)`$.
+
+**Overhead notation.** For later resource accounting, write
+
+```math
+d_{\mathsf{ad}} := |\delta_{\mathsf{ad}}|,
+\qquad
+d_{\mathsf{tc}} := |\delta_{\mathsf{tc}}|,
+\qquad
+|\nu(n)| \le \lambda_\nu(n).
+```
 
 **Padding and framing.** For any block length $`s \in \mathbb{N}`$ and any bitstring $`Z \in \{0,1\}^*`$, we write
 
@@ -148,9 +162,9 @@ for the unique padded decomposition of $`Z`$ into $`s`$-bit blocks under the $`\
 \mathrm{left}_{|Z|}(Z_1 \| \cdots \| Z_w) = Z.
 ```
 
-LeafWrap embeds each padded message or ciphertext block as $`Z_j \| 1 \| 0^{c-1}`$. These are full-state blocks of length $`b = r + c`$ and provide a dedicated transcript format for the body-processing phase. By contrast, the outer trunk sponge absorbs padded combiner blocks as $`W_j \| 0^c`$, that is, as ordinary rate-$`r`$ sponge blocks with an all-zero capacity suffix.
+LeafWrap embeds each padded message or ciphertext block as $`Z_j \| 1 \| 0^{c-1}`$. These are full-state blocks of length $`b = r + c`$ and provide a dedicated transcript format for the body-processing phase. By contrast, the outer trunk sponge absorbs associated-data blocks and final tag/count blocks as $`W_j \| 0^c`$, that is, as ordinary rate-$`r`$ sponge blocks with an all-zero capacity suffix.
 
-**Domain separation.** TreeWrap separates leaf and trunk calls in two ways. First, the proofs rely on disjoint IV namespaces: trunk calls use $`V_{\mathsf{out}}(U) = \mathsf{iv}(U,0)`$, while leaf calls use $`V_i(U) = \mathsf{iv}(U,i+1)`$. Second, even if the rate parts happen to coincide, the absorbed full-state blocks differ in format: LeafWrap uses a suffix $`1 \| 0^{c-1}`$, whereas TrunkSponge uses $`0^c`$. Thus even if an adversary were somehow to link a trunk IV to a leaf IV, the two transcripts would still diverge at every body-processing step because their capacity-part framing bits differ. The later reductions use the IV separation as the primary argument and the block-format distinction as secondary transcript-format separation.
+**Domain separation.** TreeWrap separates leaf and trunk calls in three ways. First, the proofs rely on disjoint IV namespaces: trunk calls use $`V_{\mathsf{out}}(U) = \mathsf{iv}(U,0)`$, while leaf calls use $`V_i(U) = \mathsf{iv}(U,i+1)`$. Second, within the trunk transcript, the optional associated-data phase and the final tag/count phase are terminated by distinct trailers $`\delta_{\mathsf{ad}}`$ and $`\delta_{\mathsf{tc}}`$. Third, even if the rate parts happen to coincide, the absorbed full-state blocks differ in format across layers: LeafWrap uses a suffix $`1 \| 0^{c-1}`$, whereas TrunkSponge uses $`0^c`$. Thus even if an adversary were somehow to link a trunk IV to a leaf IV, the two transcripts would still diverge at every body-processing step because their capacity-part framing bits differ. The later reductions use the IV separation as the primary argument and the block-format distinction as secondary transcript-format separation.
 
 ## 3. The TreeWrap Construction
 
@@ -167,7 +181,6 @@ Let $`\mathsf{TreeWrap}`$ be parameterized by:
 - a nonce space $`\mathcal{U}`$,
 - an injective IV-derivation map $`\mathsf{iv} : \mathcal{U} \times \mathbb{N} \to \mathcal{IV}`$,
 - a chunk size $`B`$,
-- a prefix-free injective string encoding $`\eta`$,
 - a suffix-free injective integer encoding $`\nu`$,
 - a leaf tag size $`t_{\mathsf{leaf}}`$,
 - a tag size $`\tau`$.
@@ -177,8 +190,10 @@ These parameters satisfy $`c + r = b`$ and $`k \le b`$.
 We write the resulting primitive as
 
 ```math
-\mathsf{TreeWrap}_{p,b,r,c,k,\mathcal{IV},\mathcal{U},\mathsf{iv},B,\eta,\nu,t_{\mathsf{leaf}},\tau}.
+\mathsf{TreeWrap}_{p,b,r,c,k,\mathcal{IV},\mathcal{U},\mathsf{iv},B,\nu,t_{\mathsf{leaf}},\tau}.
 ```
+
+and fix the trunk-phase trailers $`\delta_{\mathsf{ad}}`$ and $`\delta_{\mathsf{tc}}`$ from Section 2.4.
 
 When these parameters are fixed by context, we write simply $`\mathsf{TreeWrap}`$, $`\mathsf{TreeWrap.ENC}`$, and $`\mathsf{TreeWrap.DEC}`$.
 
@@ -250,28 +265,33 @@ which is exactly the framed encryption-side body block. Thus the entire body tra
 
 ### 3.3 TrunkSponge
 
-The final TreeWrap combiner is a keyed absorb-then-squeeze transcript built directly from the keyed duplex. We denote it by
+The final TreeWrap combiner is a keyed absorb-then-squeeze transcript built directly from the keyed duplex. It has an optional associated-data phase followed by a mandatory leaf-tag/count phase. We denote it by
 
 ```math
 \mathsf{TrunkSponge}[p].
 ```
 
-In the single-key setting, it takes $`(K,IV,W) \in \{0,1\}^k \times \mathcal{IV} \times \{0,1\}^*`$ and returns $`T \in \{0,1\}^{\ell}`$.
+In the single-key setting, it takes $`(K,IV,A,T_0,\ldots,T_{n-1},n)`$ and returns $`T \in \{0,1\}^{\ell}`$.
 
 ```text
-Algorithm TrunkSponge[p](K, IV, W; output length ell):
-    (W~_1, ..., W~_w) <- pad*_{10^r*}(W)
+Algorithm TrunkSponge[p](K, IV, A, T_0, ..., T_{n-1}, n; output length ell):
     instantiate KD[p]_(K) with α = 0
     KD.init(1, IV)
-    for i = 1 to w:
-        KD.duplex(false, W~_i || 0^c)
+    if A ≠ ε:
+        (A~_1, ..., A~_u) <- pad^{ad}_{10^r*}(A)
+        for i = 1 to u:
+            KD.duplex(false, A~_i || 0^c)
+    V <- T_0 || ... || T_{n-1} || ν(n)
+    (V~_1, ..., V~_v) <- pad^{tc}_{10^r*}(V)
+    for i = 1 to v:
+        KD.duplex(false, V~_i || 0^c)
     T* <- ε
     while |T*| < ell:
         T* <- T* || KD.duplex(false, 0^b)
     return left_ell(T*)
 ```
 
-This construction absorbs only rate-sized blocks and appends $`0^c`$ in the capacity part on every absorption call. On the keyed side, it is a direct keyed-duplex transcript to which the generic KD/IXIF reduction of [Men23] applies. On the flat side, its absorb-then-squeeze behavior matches the ordinary sponge viewpoint of [BDPVA08], which is exactly what the CMT-4 analysis needs.
+This construction absorbs only rate-sized blocks and appends $`0^c`$ in the capacity part on every absorption call. The associated-data phase may be omitted entirely when $`A = \epsilon`$, in which case no permutation calls are spent on AD. On the keyed side, it is a direct keyed-duplex transcript to which the generic KD/IXIF reduction of [Men23] applies. On the flat side, its absorb-then-squeeze behavior matches the ordinary sponge viewpoint of [BDPVA08], which is exactly what the CMT-4 analysis needs.
 
 ### 3.4 TreeWrap
 
@@ -295,11 +315,11 @@ Algorithm TreeWrap(K, U, A, X, m):
         (Y_i, T_i) <- LeafWrap[p](K, V_i, X_i, m)
     Y <- Y_0 || ... || Y_{n-1}
     V_out <- iv(U, 0)
-    T <- TrunkSponge[p](K, V_out, enc_out(A, T_0, ..., T_{n-1}, n); output length tau)
+    T <- TrunkSponge[p](K, V_out, A, T_0, ..., T_{n-1}, n; output length tau)
     return (Y, T)
 ```
 
-The chunking line uses the canonical decomposition of Section 2.1. In the pseudocode, $`\mathsf{enc\_out}`$ abbreviates $`\mathsf{enc}_{\mathsf{out}}`$. The IV-derivation map $`\mathsf{iv}`$ is used with suffix $`0`$ for the outer trunk-sponge IV and with suffixes $`1,2,\ldots,n`$ for the chunk-local LeafWrap IVs. The final tag depends on the nonce, the global associated data, the leaf tags, and the chunk count, but not directly on the mode flag. In particular, the ciphertext body $`Y`$ depends on $`(K,U,P)`$ but not on $`A`$; associated data is bound only through the final trunk-sponge tag.
+The chunking line uses the canonical decomposition of Section 2.1. The IV-derivation map $`\mathsf{iv}`$ is used with suffix $`0`$ for the outer trunk-sponge IV and with suffixes $`1,2,\ldots,n`$ for the chunk-local LeafWrap IVs. The final tag depends on the nonce, the global associated data, the leaf tags, and the chunk count, but not directly on the mode flag. In particular, the ciphertext body $`Y`$ depends on $`(K,U,P)`$ but not on $`A`$; associated data is bound only through the final trunk-sponge transcript.
 
 TreeWrap is nonce-based and not nonce-misuse resistant. If the same key and nonce are reused, then all derived leaf IVs repeat, so corresponding LeafWrap body blocks are masked by the same duplex outputs and the ciphertext body reveals the XOR of the underlying plaintext blocks, i.e. the usual two-time-pad failure mode. This design therefore targets the standard nonce-respecting model rather than nonce-misuse resistance. Achieving NMR would require a different construction, such as an SIV-style two-pass design, which would work against the present single-pass chunked interface. In practice, implementations should use any standard per-key nonce-generation strategy, such as a persistent counter or uniformly random 128-bit nonces subject to the usual birthday-bound collision risk. For the concrete $`\mathsf{TW128}`$ instantiation, the 1344-bit IV field leaves ample room for a wider nonce encoding as well: moving from 128-bit to 256-bit nonces would only change the concrete IV embedding, not the duplex rate, capacity, or permutation-call counts.
 
@@ -353,13 +373,7 @@ Correctness of TreeWrap follows from the corresponding inversion property of Lea
 V_i := \mathsf{iv}(U,i+1), \qquad (Y_i,T_i) \gets \mathsf{LeafWrap}[p](K,V_i,P_i,\mathsf{enc})
 ```
 
-for each $`i \in [0,n)`$. By Lemma 3.1, $`\mathsf{TreeWrap.DEC}`$ recovers each chunk $`P_i`$ from the corresponding body chunk $`Y_i`$ and recomputes the same per-chunk tag $`T_i`$. Hence the encoded outer-combiner input
-
-```math
-\mathsf{enc}_{\mathsf{out}}(A, T_0, \ldots, T_{n-1}, n)
-```
-
-is identical in wrapping and unwrapping, and both procedures use the same outer IV $`V_{\mathsf{out}}(U) = \mathsf{iv}(U,0)`$. Therefore they derive the same final tag via $`\mathsf{TrunkSponge}[p]`$, tag verification succeeds, and the recovered plaintext is exactly $`P`$.
+for each $`i \in [0,n)`$. By Lemma 3.1, $`\mathsf{TreeWrap.DEC}`$ recovers each chunk $`P_i`$ from the corresponding body chunk $`Y_i`$ and recomputes the same per-chunk tag $`T_i`$. Hence both the optional associated-data phase and the final leaf-tag/count phase of $`\mathsf{TrunkSponge}[p]`$ are identical in wrapping and unwrapping, and both procedures use the same outer IV $`V_{\mathsf{out}}(U) = \mathsf{iv}(U,0)`$. Therefore they derive the same final tag via $`\mathsf{TrunkSponge}[p]`$, tag verification succeeds, and the recovered plaintext is exactly $`P`$.
 
 ## 4. Security Model and Imported Bounds
 
@@ -612,25 +626,33 @@ For an adversary's encryption queries with plaintext bodies $`P^{(1)},\ldots,P^{
 
 These are the natural resource measures for the LeafWrap reductions of Section 6.
 
-At the outer layer, each TreeWrap encryption or decryption query performs one $`\mathsf{TrunkSponge}[p]`$ evaluation on the encoded combiner input
+At the outer layer, each TreeWrap encryption or decryption query performs one $`\mathsf{TrunkSponge}[p]`$ evaluation with an optional associated-data phase on $`A`$ and a final phase on
 
 ```math
-W(A,X) := \mathsf{enc}_{\mathsf{out}}(A, T_0, \ldots, T_{n-1}, n),
+T_0 \| \cdots \| T_{n-1} \| \nu(n),
 ```
 
-where $`n = \chi(X)`$ and the $`T_i`$ are the corresponding leaf tags. By definition of $`\mathsf{enc}_{\mathsf{out}}`$,
+where $`n = \chi(X)`$ and the $`T_i`$ are the corresponding leaf tags. The final phase therefore has length
 
 ```math
-|W(A,X)| = |\eta(A)| + n \cdot t_{\mathsf{leaf}} + |\nu(n)|
+n \cdot t_{\mathsf{leaf}} + |\nu(n)|
 \le
-|A| + \lambda_\eta(|A|) + n \cdot t_{\mathsf{leaf}} + \lambda_\nu(n).
+n \cdot t_{\mathsf{leaf}} + \lambda_\nu(n).
 ```
 
 The total number of duplexing calls in this outer evaluation is therefore
 
 ```math
-\sigma_{\mathsf{out}}(A,X) := \left\lceil \frac{|W(A,X)|+1}{r} \right\rceil + s_{\mathsf{out}}.
+\sigma_{\mathsf{out}}(A,X)
+:=
+\mathbf{1}_{A \ne \epsilon} \cdot \left\lceil \frac{|A| + d_{\mathsf{ad}} + 1}{r} \right\rceil
++
+\left\lceil \frac{n \cdot t_{\mathsf{leaf}} + |\nu(n)| + d_{\mathsf{tc}} + 1}{r} \right\rceil
++
+s_{\mathsf{out}},
 ```
+
+where $`\mathbf{1}_{A \ne \epsilon}`$ is $`1`$ when $`A \ne \epsilon`$ and $`0`$ otherwise.
 
 Accordingly, define
 
@@ -767,7 +789,7 @@ This is the bidirectional LeafWrap import under the resource assignment of Lemma
   \nu_{\mathsf{fix}} = 0.
   ```
 
-**Proof sketch.** Each $`\mathsf{TrunkSponge}[p]`$ evaluation contributes one initialization, $`\lceil (|W|+1)/r \rceil`$ absorption calls on blocks of the form $`\widetilde{W}_i \| 0^c`$, and $`s_{\mathsf{out}}`$ blank squeezing calls. All calls use flag $`\mathsf{false}`$, so $`\Omega = 0`$ throughout. For encryption-type queries, Lemma 4.1 implies that the derived outer keyed contexts $`(\delta,V_{\mathsf{out}}(U)) = (\delta,\mathsf{iv}(U,0))`$ are distinct, hence $`L = \nu_{\mathsf{fix}} = 0`$. Across different users, the same bare outer IV may recur, but again the idealized initialization paths are $`\mathrm{uid}(\delta) \| IV`$, so $`Q_{IV} \le \mu`$ is the correct bound. In the general case, repeated subpaths can arise only from decryption-side recomputations under reused outer keyed contexts. Each such recomputation can contribute at most one repeated subpath, namely at initialization: after that point the absorption calls extend the same path monotonically, so they do not create independent repeated subpaths within a single trunk evaluation. Hence $`L \le q^{\mathsf{out}}_d`$. Because absorbed blocks have the fixed form $`\widetilde{W}_i \| 0^c`$, each absorption call enters the permutation with rate part $`Z_i \oplus \widetilde{W}_i`$, where $`Z_i`$ is the unrevealed intermediate squeeze output of the keyed duplex. Even if the adversary determines $`\widetilde{W}_i`$ indirectly through the recomputed leaf tags, it does not observe $`Z_i`$ during absorption and therefore cannot choose $`\widetilde{W}_i`$ so as to force the outer part to one fixed value. Hence $`\nu_{\mathsf{fix}} = 0`$ remains valid.
+**Proof sketch.** Each $`\mathsf{TrunkSponge}[p]`$ evaluation contributes one initialization, an optional associated-data phase with $`\mathbf{1}_{A \ne \epsilon} \cdot \lceil (|A| + d_{\mathsf{ad}} + 1)/r \rceil`$ absorption calls, a final tag/count phase with $`\lceil (n \cdot t_{\mathsf{leaf}} + |\nu(n)| + d_{\mathsf{tc}} + 1)/r \rceil`$ absorption calls, and $`s_{\mathsf{out}}`$ blank squeezing calls. All calls use flag $`\mathsf{false}`$, so $`\Omega = 0`$ throughout. For encryption-type queries, Lemma 4.1 implies that the derived outer keyed contexts $`(\delta,V_{\mathsf{out}}(U)) = (\delta,\mathsf{iv}(U,0))`$ are distinct, hence $`L = \nu_{\mathsf{fix}} = 0`$. Across different users, the same bare outer IV may recur, but again the idealized initialization paths are $`\mathrm{uid}(\delta) \| IV`$, so $`Q_{IV} \le \mu`$ is the correct bound. In the general case, repeated subpaths can arise only from decryption-side recomputations under reused outer keyed contexts. Each such recomputation can contribute at most one repeated subpath, namely at initialization: after that point the absorption calls extend the same path monotonically, even across the optional AD-phase boundary, so they do not create independent repeated subpaths within a single trunk evaluation. Hence $`L \le q^{\mathsf{out}}_d`$. Because absorbed blocks have the fixed form $`\widetilde{W}_i \| 0^c`$, each absorption call enters the permutation with rate part $`Z_i \oplus \widetilde{W}_i`$, where $`Z_i`$ is the unrevealed intermediate squeeze output of the keyed duplex. Even if the adversary determines $`\widetilde{W}_i`$ indirectly through the recomputed leaf tags, it does not observe $`Z_i`$ during absorption and therefore cannot choose $`\widetilde{W}_i`$ so as to force the outer part to one fixed value. Hence $`\nu_{\mathsf{fix}} = 0`$ remains valid.
 
 **Corollary 4.6 (Imported Outer TrunkSponge KD/IXIF Bound).** If $`\sigma^{\mathsf{out}}_e + \sigma^{\mathsf{out}}_d + N \le 0.1 \cdot 2^c`$, then the outer-combiner real-to-IXIF replacement term can be instantiated as
 
@@ -1062,7 +1084,7 @@ Fix a per-user nonce-respecting IND-CPA adversary $`\mathcal{A}`$, and for each 
 - $`H_2^b`$ is obtained from $`H_1^b`$ by replacing the outer combiner
 
   ```math
-  \mathsf{TrunkSponge}[p](K[\delta], \mathsf{iv}(U,0), \mathsf{enc}_{\mathsf{out}}(A, T_0, \ldots, T_{n-1}, n))
+  \mathsf{TrunkSponge}[p](K[\delta], \mathsf{iv}(U,0), A, T_0, \ldots, T_{n-1}, n)
   ```
 
   by $`\mathsf{TrunkSponge}^{\mathsf{IXIF}}[\mathrm{ro}]`$ on the same outer keyed-context/input pair.
@@ -1079,10 +1101,10 @@ For the second hop, Corollary 4.6 applies to the outer trunk-sponge family, so t
 \epsilon_{\mathsf{out}}^{\mathsf{ixif}}(\mu,q^{\mathsf{out}}_e,0,\sigma^{\mathsf{out}}_e,0,N).
 ```
 
-It remains to analyze $`H_2^b`$. In this game, the chunk layer is answered by IXIF under fresh leaf keyed contexts, so the concatenated chunk bodies are distributed independently of $`b`$ except for the public chunk lengths. The outer tag is computed by $`\mathsf{TrunkSponge}^{\mathsf{IXIF}}[\mathrm{ro}]`$ on the pair
+It remains to analyze $`H_2^b`$. In this game, the chunk layer is answered by IXIF under fresh leaf keyed contexts, so the concatenated chunk bodies are distributed independently of $`b`$ except for the public chunk lengths. The outer tag is computed by $`\mathsf{TrunkSponge}^{\mathsf{IXIF}}[\mathrm{ro}]`$ on the input
 
 ```math
-((\delta,\mathsf{iv}(U,0)), \mathsf{enc}_{\mathsf{out}}(A, T_0, \ldots, T_{n-1}, n)),
+((\delta,\mathsf{iv}(U,0)), A, T_0, \ldots, T_{n-1}, n),
 ```
 
 and by per-user nonce respect this outer keyed context is fresh for every encryption query. The IXIF oracle used for the leaf and trunk replacements is sampled independently of the real permutation $`p`$, so the primitive transcript is unchanged across the hybrids and remains shared between $`H_2^0`$ and $`H_2^1`$. This independence is load-bearing: without it, the primitive oracle could couple the two final games through the shared permutation transcript. Hence every outer evaluation in $`H_2^b`$ occurs on a fresh IXIF path and returns an independent uniform $`\tau`$-bit string, while the primitive oracle answers are identical in both games. Consequently, the entire view of $`\mathcal{A}`$ in $`H_2^0`$ and $`H_2^1`$ is identical up to public lengths, and therefore
@@ -1102,7 +1124,7 @@ Fix a per-user nonce-respecting INT-CTXT adversary $`\mathcal{A}`$, and define t
 - $`H_2`$ is obtained from $`H_1`$ by replacing the outer combiner
 
   ```math
-  \mathsf{TrunkSponge}[p](K[\delta], \mathsf{iv}(U,0), \mathsf{enc}_{\mathsf{out}}(A, T_0, \ldots, T_{n-1}, n))
+  \mathsf{TrunkSponge}[p](K[\delta], \mathsf{iv}(U,0), A, T_0, \ldots, T_{n-1}, n)
   ```
 
   by $`\mathsf{TrunkSponge}^{\mathsf{IXIF}}[\mathrm{ro}]`$ on the same outer keyed-context/input pair, both on encryption and on decryption-side recomputation.
@@ -1307,7 +1329,7 @@ Let
 \mathsf{TrunkSponge}^{\flat}[p](K,U,A,T_0,\ldots,T_{n-1},n)
 ```
 
-denote the final TreeWrap tag derivation viewed in the flattened sponge model: the keyed initialization is determined by $`(K,\mathsf{iv}(U,0))`$, the absorbed input is the combiner string $`\mathsf{enc}_{\mathsf{out}}(A,T_0,\ldots,T_{n-1},n)`$, and the output is the leftmost $`\tau`$ bits of the resulting sponge-style evaluation.
+denote the final TreeWrap tag derivation viewed in the flattened sponge model: the keyed initialization is determined by $`(K,\mathsf{iv}(U,0))`$, the absorbed transcript consists of an optional associated-data phase on $`A \| \delta_{\mathsf{ad}}`$ followed by a final phase on $`T_0 \| \cdots \| T_{n-1} \| \nu(n) \| \delta_{\mathsf{tc}}`$, and the output is the leftmost $`\tau`$ bits of the resulting sponge-style evaluation.
 
 **Lemma 7.3 (Flattened Outer-Combiner Collision Bound).** Consider two distinct outer combiner inputs
 
@@ -1338,9 +1360,13 @@ M_{\mathsf{out}}
 :=
 N
 +
-\left\lceil \frac{|\mathsf{enc}_{\mathsf{out}}(A,T_0,\ldots,T_{n-1},n)|+1}{r} \right\rceil
+\mathbf{1}_{A \ne \epsilon} \cdot \left\lceil \frac{|A| + d_{\mathsf{ad}} + 1}{r} \right\rceil
 +
-\left\lceil \frac{|\mathsf{enc}_{\mathsf{out}}(A',T'_0,\ldots,T'_{n'-1},n')|+1}{r} \right\rceil
+\left\lceil \frac{n \cdot t_{\mathsf{leaf}} + |\nu(n)| + d_{\mathsf{tc}} + 1}{r} \right\rceil
++
+\mathbf{1}_{A' \ne \epsilon} \cdot \left\lceil \frac{|A'| + d_{\mathsf{ad}} + 1}{r} \right\rceil
++
+\left\lceil \frac{n' \cdot t_{\mathsf{leaf}} + |\nu(n')| + d_{\mathsf{tc}} + 1}{r} \right\rceil
 +
 2 s_{\mathsf{out}},
 ```
@@ -1361,7 +1387,7 @@ via the rooted-forest counting of Lemma 4.7, and the second event contributes th
 2^{-\tau}.
 ```
 
-**Proof sketch.** In the flattened view, each outer evaluation consists of a public root state determined by $`(K,\mathsf{iv}(U,0))`$ followed by a rate-$`r`$ absorb-then-squeeze transcript on the string $`\mathsf{enc}_{\mathsf{out}}(A,T_0,\ldots,T_{n-1},n)`$. Thus the two evaluations expose rooted sponge paths from $`\rho`$ public roots, where
+**Proof sketch.** In the flattened view, each outer evaluation consists of a public root state determined by $`(K,\mathsf{iv}(U,0))`$ followed by a rate-$`r`$ absorb-then-squeeze transcript with at most two phases: an optional associated-data phase on $`A \| \delta_{\mathsf{ad}}`$ and a final phase on $`T_0 \| \cdots \| T_{n-1} \| \nu(n) \| \delta_{\mathsf{tc}}`$. Thus the two evaluations expose rooted sponge paths from $`\rho`$ public roots, where
 
 ```math
 \rho := |\{(K,U),(K',U')\}| \in \{1,2\}.
@@ -1475,10 +1501,11 @@ The parameter choices are:
 - chunk size: $`B = 64512`$ bits $`= 8064`$ bytes $`= 48 \cdot 168`$ bytes;
 - leaf tag size: $`t_{\mathsf{leaf}} = 256`$;
 - final tag size: $`\tau = 256`$;
-- associated-data encoding: $`\eta = \mathrm{encode\_string}`$ from [SP800185];
+- associated-data phase trailer: $`\delta_{\mathsf{ad}} = \mathtt{00}`$;
+- final tag/count phase trailer: $`\delta_{\mathsf{tc}} = \mathtt{01}`$;
 - integer encoding: $`\nu = \mathrm{right\_encode}`$ from [SP800185].
 
-Although $`\mathrm{encode\_string}`$ and $`\mathrm{right\_encode}`$ are specified on bit strings in [SP800185], $`\mathsf{TW128}`$ operates on octet strings throughout. Concretely, $`\mathsf{TW128.ENC}`$ takes a 32-byte key, a 16-byte nonce, an octet-string associated-data input, and an octet-string plaintext, and returns an octet-string ciphertext of length $`|P| + 32`$ bytes; $`\mathsf{TW128.DEC}`$ has the corresponding octet-string ciphertext interface. This matches the intended software interface and keeps the encoding layer aligned with the byte-oriented presentation of SP 800-185.
+Although $`\mathrm{right\_encode}`$ is specified on bit strings in [SP800185], $`\mathsf{TW128}`$ operates on octet strings throughout. Concretely, $`\mathsf{TW128.ENC}`$ takes a 32-byte key, a 16-byte nonce, an octet-string associated-data input, and an octet-string plaintext, and returns an octet-string ciphertext of length $`|P| + 32`$ bytes; $`\mathsf{TW128.DEC}`$ has the corresponding octet-string ciphertext interface. The trunk phase trailers $`\delta_{\mathsf{ad}} = \mathtt{00}`$ and $`\delta_{\mathsf{tc}} = \mathtt{01}`$ are therefore also interpreted as single octets. This matches the intended software interface and keeps the framing layer aligned with the byte-oriented presentation of SP 800-185.
 
 The only remaining concrete formatting choice is the embedding of the user nonce and chunk counter into the $`b-k = 1344`$-bit IV field expected by the keyed duplex. Define the concrete IV-derivation map
 
@@ -1563,7 +1590,10 @@ This makes the per-ciphertext nature of Theorem 5.4 explicit. The ideal-output c
 The empty-message case is the degenerate endpoint $`n = 0`$. Then TreeWrap makes no LeafWrap calls, the ciphertext body is empty, and the outer combiner input reduces to
 
 ```math
-\mathsf{enc}_{\mathsf{out}}(A,0) = \eta(A) \| \nu(0).
+A \| \delta_{\mathsf{ad}}
+\quad\text{(if } A \ne \epsilon\text{)}
+\qquad\text{and}\qquad
+\nu(0) \| \delta_{\mathsf{tc}}.
 ```
 
 Accordingly,
@@ -1571,7 +1601,11 @@ Accordingly,
 ```math
 \sigma_{\mathsf{out}}(A,\epsilon)
 =
-\left\lceil \frac{|\eta(A)| + |\nu(0)| + 1}{1344} \right\rceil + 1,
+\mathbf{1}_{A \ne \epsilon} \cdot \left\lceil \frac{|A| + 8 + 1}{1344} \right\rceil
++
+\left\lceil \frac{|\nu(0)| + 8 + 1}{1344} \right\rceil
++
+1,
 ```
 
 the local CMT-4 sum is empty, and Theorem 5.4 specializes to the pure outer trunk-sponge term
