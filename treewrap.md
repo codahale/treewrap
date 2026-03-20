@@ -648,13 +648,27 @@ where $`(A^{(a)},P^{(a)})`$ and $`(A'^{(b)},Y^{(b)})`$ range over the encryption
 
 ### 4.6 Translation to Men23 Resources
 
-When instantiating the imported results of [Men23], we keep the full $`\mu`$-user setting. For readability, write
+When instantiating the imported results of [Men23], we keep the full $`\mu`$-user setting. Because TreeWrap always uses keyed-duplex initialization with $`\alpha = 0`$, the low-complexity branch of [Men23, Theorem 1, Eq. (5)] specializes to
 
 ```math
 \mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,M,Q,Q_{IV},L,\Omega,\nu_{\mathsf{fix}},N)
+:=
+\frac{(L+\Omega)N}{2^c}
++
+\frac{2 \nu_{r,c}^{2(M-L)}(N+1)}{2^c}
++
+\frac{(M-L-Q)Q}{2^b-Q}
++
+\frac{M(M-L-1)}{2^b}
++
+\frac{Q(M-L-Q)}{2^{\min\{c+k,b\}}}
++
+\frac{Q_{IV}N}{2^k}
++
+\frac{\mu}{2^k}.
 ```
 
-for the low-complexity keyed-duplex distinguishing bound obtained by instantiating the imported [Men23] security theorem with the displayed resource tuple. This shorthand is generic: the reduced LeafWrap and outer TrunkSponge imports below use different valid assignments of $`(M,Q,Q_{IV},L,\Omega,\nu_{\mathsf{fix}})`$. The simplified branch is valid in the regime $`M + N \le 0.1 \cdot 2^c`$; if this side condition is not met, one may instead use the corresponding general branch.
+Here $`\nu_{r,c}^{X}`$ is the multicollision limit function imported from [Men23, Section 4.2]. The parameter $`\nu_{\mathsf{fix}}`$ is retained in the argument list only to keep the shorthand aligned with the full [Men23] resource tuple; it does not appear in this low-complexity branch. This shorthand is generic: the reduced LeafWrap and outer TrunkSponge imports below use different valid assignments of $`(M,Q,Q_{IV},L,\Omega,\nu_{\mathsf{fix}})`$. The simplified branch is valid in the regime $`M + N \le 0.1 \cdot 2^c`$; if this side condition is not met, one may instead use the corresponding general branch.
 
 For the reduced MonkeySpongeWrap-style analysis of LeafWrap, define the decryption-side overwrite count
 
