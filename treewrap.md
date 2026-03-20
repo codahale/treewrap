@@ -2,7 +2,7 @@
 
 ## Abstract
 
-We introduce TreeWrap, a permutation-based authenticated-encryption construction that separates local chunk processing from a keyed trunk transcript. The first chunk and the global associated data are processed by a keyed duplex transcript called $`\mathsf{TrunkWrap}`$, while later chunks are processed independently by a MonkeySpongeWrap-style keyed duplex transcript called $`\mathsf{LeafWrap}`$, which outputs a ciphertext body chunk and a hidden leaf tag. For multi-chunk messages, the resulting later-leaf tag vector is then absorbed back into the trunk transcript before the final tag is squeezed. This decomposition is intended to preserve the short-message latency of a single serial keyed duplex while still supporting parallel later-chunk processing.
+We introduce TreeWrap, a permutation-based authenticated-encryption construction that separates local chunk processing from a keyed trunk transcript. The first chunk and the global associated data are processed by a keyed duplex transcript called $`\mathsf{TrunkWrap}`$, while later chunks are processed independently by a MonkeySpongeWrap-style keyed duplex transcript called $`\mathsf{LeafWrap}`$, which outputs a ciphertext body chunk and a hidden leaf tag. For multi-chunk messages, the resulting later-leaf tag vector is then absorbed back into the trunk transcript before the final tag is squeezed. This decomposition is intended to preserve the short-message latency of a single serial keyed duplex while still supporting parallel later-chunk processing. In that sense, TreeWrap can be read as transporting the efficiency pattern of KangarooTwelve [K12] into the keyed setting and the AEAD problem domain.
 
 We analyze TreeWrap in two settings. For authenticated encryption, we prove multi-user IND-CPA, INT-CTXT, and IND-CCA2 bounds in the keyed-duplex model of Mennink. This AE analysis is largely modular: the leaf-layer proof identifies $`\mathsf{LeafWrap}`$ with a reduced MonkeySpongeWrap transcript and imports the corresponding keyed-duplex/IXIF replacement, while the trunk layer is handled by a direct keyed-duplex/IXIF analysis. The main TreeWrap-specific AE step is a freshness lemma showing that, in the IXIF world, a fresh chunk body induces a fresh hidden leaf tag except with probability $`2^{-t_{\mathsf{leaf}}}`$. For commitment, we prove a CMT-4 bound in the public-permutation model by flattening the leaf and trunk layers into duplex and sponge transcripts, respectively. This yields a per-ciphertext commitment bound whose local term depends on the actual chunk lengths rather than only on the leaf-tag length.
 
@@ -11,6 +11,15 @@ We also give a concrete instantiation, $`\mathsf{TW128}`$, based on $`\mathrm{Ke
 ## 1. Introduction
 
 TreeWrap is a permutation-based AEAD construction that separates later-chunk processing from a keyed trunk transcript. The construction handles the associated data, the first chunk, and the final authentication tag inside a serial keyed duplex called $`\mathsf{TrunkWrap}`$, while later chunks are processed independently by $`\mathsf{LeafWrap}`$, each producing a ciphertext body chunk and a hidden leaf tag. This leaf/trunk split is designed to improve the short-message path while still making later-chunk processing embarrassingly parallel and keeping the final authentication transcript simple enough to analyze both in the keyed AE setting and in the public-permutation commitment setting.
+
+At a design level, this is deliberately close in spirit to KangarooTwelve
+[K12]: a serial trunk handles the short-message path and the global framing,
+while later chunks can be processed in parallel and fed back as short chaining
+values. The point of departure is that TreeWrap brings this efficiency pattern
+into a keyed-duplex AEAD setting rather than an unkeyed tree-hashing setting.
+Accordingly, TreeWrap uses keyed IV namespaces and duplex padding/framing in
+place of Sakura coding, and it targets authenticated encryption and commitment
+rather than hashing.
 
 On the AE side, most of the proof work is a modular application of [Men23]
 rather than a new keyed-duplex argument. The genuinely new technical pieces
@@ -1944,8 +1953,8 @@ based on the twelve-round Keccak permutation from [FIPS202]. The goal of this
 instantiation is a 128-bit security target with a 256-bit final tag, a 256-bit
 later-leaf tag, and a 48-rate-block chunk size. The choice of
 $`\mathrm{Keccak\text{-}p}[1600,12]`$ is not novel to TreeWrap: it follows the
-software-oriented TurboSHAKE and KangarooTwelve precedent of [RFC9861], which
-likewise uses the twelve-round permutation rather than full-round
+software-oriented KangarooTwelve and TurboSHAKE precedent of [K12, RFC9861],
+which likewise uses the twelve-round permutation rather than full-round
 $`\mathrm{Keccak\text{-}f}[1600]`$. This is the same permutation choice the
 Keccak designers are currently advancing for high-speed unkeyed hash and XOF
 constructions, i.e. in settings that rely directly on public-permutation
@@ -2443,6 +2452,8 @@ The concrete $`\mathsf{TW128}`$ instantiation shows that this proof strategy lea
 [BN00] Mihir Bellare and Chanathip Namprempre. *Authenticated Encryption: Relations among Notions and Analysis of the Generic Composition Paradigm*. In Tatsuaki Okamoto, editor, *Advances in Cryptology -- ASIACRYPT 2000*, volume 1976 of *Lecture Notes in Computer Science*, pages 531-545. Springer, 2000.
 
 [FIPS202] National Institute of Standards and Technology. *SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions*. Federal Information Processing Standards Publication 202, 2015. <https://doi.org/10.6028/NIST.FIPS.202>
+
+[K12] Guido Bertoni, Joan Daemen, Michaël Peeters, Gilles Van Assche, Ronny Van Keer, and Benoît Viguier. *KangarooTwelve: Fast Hashing Based on Keccak-p*. In Pooya Farshim and Steven Guilley, editors, *Applied Cryptography and Network Security*, volume 10892 of *Lecture Notes in Computer Science*, pages 400-418. Springer, 2018. <https://doi.org/10.1007/978-3-319-93387-0_21>
 
 [RFC9861] Benoit Viguier, David Wong, Gilles Van Assche, Quynh Dang, and Joan Daemen. *KangarooTwelve and TurboSHAKE*. RFC 9861, 2025. <https://www.rfc-editor.org/rfc/rfc9861.html>
 
