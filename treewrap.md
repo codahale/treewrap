@@ -190,7 +190,7 @@ For readability, Section 3 presents the construction in the single-key setting. 
 
 LeafWrap is the chunk-local wrapper used inside TreeWrap. It has no local associated-data phase: chunk-local authentication is driven entirely by the body transcript and the leaf tag, while global associated data is incorporated only by the final TreeWrap combiner.
 
-Conceptually, $`\mathsf{LeafWrap}[p]`$ is the message-processing core of $`\mathsf{MonkeySpongeWrap}[p]`$ from [Men23] with the associated-data phase removed and the two directions presented as a single symmetric transcript function parameterized by $`m \in \{\mathsf{enc},\mathsf{dec}\}`$.
+Conceptually, $`\mathsf{LeafWrap}[p]`$ is the message-processing core of $`\mathsf{MonkeySpongeWrap}[p]`$ from [Men23] with the associated-data phase removed and the two directions presented as a single symmetric transcript function parameterized by $`m \in \{\mathsf{enc},\mathsf{dec}\}`$. This omission of per-chunk associated data is deliberate: it keeps the local transcript as close as possible to the reduced MonkeySpongeWrap form used in the imported proof and routes all associated-data binding through the trunk layer instead.
 
 #### 3.2.1 Definition
 
@@ -300,6 +300,8 @@ Algorithm TreeWrap(K, U, A, X, m):
 ```
 
 The chunking line uses the canonical decomposition of Section 2.1. In the pseudocode, $`\mathsf{enc\_out}`$ abbreviates $`\mathsf{enc}_{\mathsf{out}}`$. The IV-derivation map $`\mathsf{iv}`$ is used with suffix $`0`$ for the outer trunk-sponge IV and with suffixes $`1,2,\ldots,n`$ for the chunk-local LeafWrap IVs. The final tag depends on the nonce, the global associated data, the leaf tags, and the chunk count, but not directly on the mode flag. In particular, the ciphertext body $`Y`$ depends on $`(K,U,P)`$ but not on $`A`$; associated data is bound only through the final trunk-sponge tag.
+
+TreeWrap is nonce-based and not nonce-misuse resistant. If the same key and nonce are reused, then all derived leaf IVs repeat, so corresponding LeafWrap body blocks are masked by the same duplex outputs and the ciphertext body reveals the XOR of the underlying plaintext blocks, i.e. the usual two-time-pad failure mode. This design therefore targets the standard nonce-respecting model rather than nonce-misuse resistance. Achieving NMR would require a different construction, such as an SIV-style two-pass design, which would work against the present single-pass chunked interface. In practice, implementations should use any standard per-key nonce-generation strategy, such as a persistent counter or uniformly random 128-bit nonces subject to the usual birthday-bound collision risk. For the concrete $`\mathsf{TW128}`$ instantiation, the 1344-bit IV field leaves ample room for a wider nonce encoding as well: moving from 128-bit to 256-bit nonces would only change the concrete IV embedding, not the duplex rate, capacity, or permutation-call counts.
 
 ### 3.5 AEAD Wrapper
 
@@ -1459,7 +1461,7 @@ Therefore, for every fixed output pair $`\Theta`$, the corresponding successful 
 
 ## 8. TW128 Instantiation
 
-We instantiate TreeWrap as a concrete octet-oriented scheme $`\mathsf{TW128}`$ based on the twelve-round Keccak permutation from [FIPS202]. The goal of this instantiation is a 128-bit security target with a 256-bit outer authentication tag, a 256-bit leaf tag, and a 48-rate-block chunk size.
+We instantiate TreeWrap as a concrete octet-oriented scheme $`\mathsf{TW128}`$ based on the twelve-round Keccak permutation from [FIPS202]. The goal of this instantiation is a 128-bit security target with a 256-bit outer authentication tag, a 256-bit leaf tag, and a 48-rate-block chunk size. The choice of $`\mathrm{Keccak\text{-}p}[1600,12]`$ is not novel to TreeWrap: it follows the software-oriented TurboSHAKE and KangarooTwelve precedent of [RFC9861], which likewise uses the twelve-round permutation rather than full-round $`\mathrm{Keccak\text{-}f}[1600]`$. This is the same permutation choice the Keccak designers are currently advancing for high-speed unkeyed hash and XOF constructions, i.e. in settings that rely directly on public-permutation quality rather than on hidden-key assumptions. For TreeWrap, the motivation is correspondingly pragmatic: strong software throughput together with straightforward SIMD-friendly parallel implementations on current AMD64 and ARM64 processors.
 
 The parameter choices are:
 
@@ -1500,7 +1502,7 @@ V_{\mathsf{out}}(U) := \mathsf{iv}^{\mathsf{TW128}}(U,0),
 V_i(U) := \mathsf{iv}^{\mathsf{TW128}}(U,i+1).
 ```
 
-Because the nonce length is fixed and $`\nu = \mathrm{right\_encode}`$ is injective, this yields an injective embedding of the outer-IV and leaf-IV namespaces into the 1344-bit IV field. The resulting size bound is not restrictive in practice: it allows up to $`2^{1208}`$ distinct suffix values, far beyond any realistic number of chunks. Outside this range the concrete IV embedding is undefined, so $`\mathsf{TW128.ENC}`$ and $`\mathsf{TW128.DEC}`$ are defined only on inputs whose canonical chunk count satisfies $`\chi(P) \le 2^{1208}-1`$.
+Because the nonce length is fixed and $`\nu = \mathrm{right\_encode}`$ is injective, this yields an injective embedding of the outer-IV and leaf-IV namespaces into the 1344-bit IV field. The resulting size bound is not restrictive in practice: it allows up to $`2^{1208}`$ distinct suffix values, far beyond any realistic number of chunks. Outside this range the concrete IV embedding is undefined, so $`\mathsf{TW128.ENC}`$ and $`\mathsf{TW128.DEC}`$ are defined only on inputs whose canonical chunk count satisfies $`\chi(P) \le 2^{1208}-1`$. More generally, the same 1344-bit IV budget would easily accommodate a 256-bit nonce variant with the same rate, capacity, and duplex-call counts; only the concrete IV-embedding map would change.
 
 Under this concrete embedding, every instantiated trunk or leaf keyed context contributes a full 1344-bit IV string to the lower-level duplex initialization. Thus the abstract bookkeeping quantity of Section 4.5 specializes to
 
@@ -1790,6 +1792,8 @@ The concrete $`\mathsf{TW128}`$ instantiation shows that this proof strategy lea
 [BN00] Mihir Bellare and Chanathip Namprempre. *Authenticated Encryption: Relations among Notions and Analysis of the Generic Composition Paradigm*. In Tatsuaki Okamoto, editor, *Advances in Cryptology -- ASIACRYPT 2000*, volume 1976 of *Lecture Notes in Computer Science*, pages 531-545. Springer, 2000.
 
 [FIPS202] National Institute of Standards and Technology. *SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions*. Federal Information Processing Standards Publication 202, 2015. <https://doi.org/10.6028/NIST.FIPS.202>
+
+[RFC9861] Benoit Viguier, David Wong, Gilles Van Assche, Quynh Dang, and Joan Daemen. *KangarooTwelve and TurboSHAKE*. RFC 9861, 2025. <https://www.rfc-editor.org/rfc/rfc9861.html>
 
 [SP800185] John Kelsey, Shu-jen Chang, and Ray Perlner. *SHA-3 Derived Functions: cSHAKE, KMAC, TupleHash, and ParallelHash*. NIST Special Publication 800-185, 2016. <https://doi.org/10.6028/NIST.SP.800-185>
 
