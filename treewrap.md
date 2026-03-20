@@ -4,9 +4,9 @@
 
 We introduce TreeWrap, a permutation-based authenticated-encryption construction that separates local chunk processing from a keyed trunk transcript. The first chunk and the global associated data are processed by a keyed duplex transcript called $`\mathsf{TrunkWrap}`$, while later chunks are processed independently by a MonkeySpongeWrap-style keyed duplex transcript called $`\mathsf{LeafWrap}`$, which outputs a ciphertext body chunk and a hidden leaf tag. For multi-chunk messages, the resulting later-leaf tag vector is then absorbed back into the trunk transcript before the final tag is squeezed. This decomposition is intended to preserve the short-message latency of a single serial keyed duplex while still supporting parallel later-chunk processing. In that sense, TreeWrap can be read as transporting the efficiency pattern of KangarooTwelve [K12] into the keyed setting and the AEAD problem domain.
 
-We analyze TreeWrap in two settings. For authenticated encryption, we prove multi-user IND-CPA, INT-CTXT, and IND-CCA2 bounds in the keyed-duplex model of Mennink. This AE analysis is largely modular: the leaf-layer proof identifies $`\mathsf{LeafWrap}`$ with a reduced MonkeySpongeWrap transcript and imports the corresponding keyed-duplex/IXIF replacement, while the trunk layer is handled by a direct keyed-duplex/IXIF analysis. The main TreeWrap-specific AE step is a freshness lemma showing that, in the IXIF world, a fresh chunk body induces a fresh hidden leaf tag except with probability $`2^{-t_{\mathsf{leaf}}}`$. For commitment, we prove a CMT-4 bound in the public-permutation model by flattening the leaf and trunk layers into duplex and sponge transcripts, respectively. This yields a per-ciphertext commitment bound whose local term depends on the actual chunk lengths rather than only on the leaf-tag length.
+We analyze TreeWrap in two settings. For authenticated encryption, we prove multi-user IND-CPA, INT-CTXT, and IND-CCA2 bounds in the keyed-duplex model of Mennink. This AE analysis is largely modular: the leaf-layer proof identifies $`\mathsf{LeafWrap}`$ with a reduced MonkeySpongeWrap transcript and imports the corresponding keyed-duplex/IXIF replacement, while the trunk layer is handled by a direct keyed-duplex/IXIF analysis. The main TreeWrap-specific AE step is a freshness lemma showing that, in the IXIF world, either a fresh trunk prefix or a fresh later chunk forces a fresh final tag path, except for the explicit later-leaf-tag collision and final-tag guessing terms. For commitment, we prove a CMT-4 bound in the public-permutation model by flattening the leaf and trunk layers into duplex and sponge transcripts, respectively. This yields a per-ciphertext commitment bound whose local term depends on the actual chunk lengths rather than only on the leaf-tag length.
 
-We also give a concrete instantiation, $`\mathsf{TW128}`$, based on $`\mathrm{Keccak\text{-}p}[1600,12]`$ with 256-bit capacity, 8064-byte chunks, 256-bit leaf tags, and a 256-bit final tag. The resulting generic security target is 128 bits, with explicit multi-user AE bounds and explicit per-output CMT-4 bounds.
+We also give a concrete instantiation, $`\mathsf{TW128}`$, based on $`\mathrm{Keccak\text{-}p}[1600,12]`$ with 256-bit capacity, 8064-byte chunks, 256-bit later-leaf tags, and a 256-bit final tag. The resulting generic security target is 128 bits, with explicit multi-user AE bounds and explicit per-output CMT-4 bounds.
 
 ## 1. Introduction
 
@@ -459,7 +459,12 @@ Correctness of TreeWrap follows from the corresponding inversion property of Lea
 `TrunkWrap.finalize`, so they derive the same tag and return the empty string.
 
 Assume now $`P \ne \epsilon`$ and let
-`P = P_0 \| \cdots \| P_{n-1}`$ be the canonical chunk decomposition. The
+
+```math
+P = P_0 \| \cdots \| P_{n-1}
+```
+
+be the canonical chunk decomposition. The
 encryption algorithm computes
 
 ```math
@@ -1043,10 +1048,12 @@ collision tail on the observed trunk output.
   $`\epsilon_{\mathsf{tr}}^{\mathsf{ae}}`$ be the explicit imported trunk
   KD/IXIF terms of Corollary 4.6.
 - By Lemma 7.1 together with the keyed-context discipline of Lemma 4.1, the
-  only additional explicit integrity failure beyond these imported KD/IXIF
-  terms is the event that a fresh later-leaf tag collides with the unique
-  prior later-leaf tag on the same keyed path, which contributes at most
-  $`2^{-t_{\mathsf{leaf}}}`$ per final forgery candidate.
+  only additional explicit integrity failures beyond these imported KD/IXIF
+  terms are the event that a fresh later-leaf tag collides with the unique
+  prior later-leaf tag on the same keyed path, contributing at most
+  $`2^{-t_{\mathsf{leaf}}}`$ per final forgery candidate, and the final trunk-
+  tag guessing event, contributing at most $`2^{-\tau}`$ per final forgery
+  candidate.
 - Let $`\epsilon_{\mathsf{lw}}^{\flat}(\ell,N)`$ be the explicit later-leaf
   flat-duplex term of Section 4.8.
 - Let $`\mathrm{Sponge}^{(i)}_{\mathsf{forest}}`$ be the explicit rooted-forest
