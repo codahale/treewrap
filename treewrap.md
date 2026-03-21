@@ -1472,13 +1472,19 @@ It remains to analyze $`H_2^b`$. In this game:
   encryption query occurs on fresh keyed paths inside these two families.
 
 Hence the IXIF outputs seen by the adversary are independent of the challenge
-bit except through public lengths and message structure. More explicitly:
+bit except through public lengths and message structure. More explicitly, every
+fresh body-phase IXIF path returns an independent uniform $`r`$-bit string, so
+each ciphertext body block is obtained by XORing the corresponding plaintext
+block with a fresh uniform mask. Thus the visible body chunks reveal only their
+public lengths and chunk structure, not the challenge bit. Likewise, every
+fresh squeeze path returns an independent uniform string, so the final trunk
+tag is uniformly distributed on its fresh path. Concretely:
 
 - for $`n = 0`$, the game consists only of a fresh trunk tag path;
-- for $`n = 1`$, it consists only of a fresh trunk body transcript followed by
-  a fresh trunk tag path;
+- for $`n = 1`$, it consists of fresh trunk body masks followed by a fresh
+  trunk tag path;
 - for $`n > 1`$, it consists of those trunk paths together with independent
-  fresh leaf body and tag paths.
+  fresh leaf body masks and fresh leaf tag paths.
 
 The ideal leaf oracle $`\mathrm{ro}_{\mathsf{leaf}}`$ and the ideal trunk
 oracle $`\mathrm{ro}_{\mathsf{tr}}`$ are sampled independently of the real
