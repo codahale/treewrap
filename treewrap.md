@@ -116,10 +116,12 @@ For the authenticated-encryption proofs, we also use the ideal path-based interf
 \mathrm{ro} : \{0,1\}^* \to \{0,1\}^r
 ```
 
-and a fixed injective encoding
+and a fixed-width injective encoding
 
 ```math
-\mathrm{uid} : \{1,\ldots,\mu\} \to \{0,1\}^*.
+\mathrm{uid} : \{1,\ldots,\mu\} \to \{0,1\}^{w_{\mathsf{uid}}},
+\qquad
+w_{\mathsf{uid}} \ge \lceil \log_2 \mu \rceil.
 ```
 
 The interface maintains a current transcript path $`\pi \in \{0,1\}^*`$ and exposes:
@@ -128,6 +130,10 @@ The interface maintains a current transcript path $`\pi \in \{0,1\}^*`$ and expo
 Algorithm IXIF[ro].init(δ, IV):
     π <- uid(δ) || IV
 ```
+
+Because $`\mathrm{uid}`$ has fixed width, the concatenation
+$`(\delta,IV) \mapsto \mathrm{uid}(\delta) \| IV`$ is injective in the user
+index and the keyed context.
 
 ```text
 Algorithm IXIF[ro].duplex(flag, B):
@@ -1999,6 +2005,10 @@ $`\delta_{\mathsf{ad}} = \mathtt{00}`$ and
 $`\delta_{\mathsf{tc}} = \mathtt{01}`$ are therefore also interpreted as
 single octets. This matches the intended software interface and keeps the
 framing layer aligned with the byte-oriented presentation of SP 800-185.
+For the multi-user AE proofs, the user index is encoded separately by the
+fixed-width map $`\mathrm{uid}`$ of Section 2.3.2 when forming IXIF paths; this
+is part of the ideal transcript model only and does not alter the concrete
+32-byte key interface of $`\mathsf{TW128}`$.
 
 The only remaining concrete formatting choice is the embedding of the user
 nonce and suffix value into the $`b-k = 1344`$-bit IV field expected by the
