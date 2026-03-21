@@ -1135,6 +1135,11 @@ the same keyed context. This is exactly the Men23 resource parameter $`L`$ for
 that family, and we keep it explicit rather than replacing it by a coarser
 wrapper-level upper bound.
 
+Likewise, let $`Q_{\mathsf{IV,tr}}`$ denote the induced maximum number of trunk
+initialization calls for a single raw IV in the bidirectional trunk family.
+Because decryption may repeat a trunk keyed context $`(\delta,\mathsf{iv}(U,0))`$
+many times, we keep this Men23 resource parameter explicit as well.
+
 These are the natural lower-level resources for the imported leaf and trunk
 analyses.
 
@@ -1306,7 +1311,7 @@ TreeWrap admit the following valid resource assignments in the notation of
   ```math
   M = \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d,\quad
   Q = q^{\mathsf{tr}}_e + q^{\mathsf{tr}}_d,\quad
-  Q_{IV} \le \mu,\quad
+  Q_{IV} = Q_{\mathsf{IV,tr}},\quad
   L = L_{\mathsf{tr}},\quad
   \Omega = \Omega^{\mathsf{tr}}_d,\quad
   \nu_{\mathsf{fix}} \le \max(\Omega^{\mathsf{tr}}_d + q^{\mathsf{tr}}_e + q^{\mathsf{tr}}_d - 1,0).
@@ -1321,14 +1326,20 @@ all other trunk calls use flag $`\mathsf{false}`$.
 
 In the encryption-only family, pairwise distinct trunk keyed contexts eliminate
 repeated subpaths and encryption never uses overwrite, so $`L = \Omega =
-\nu_{\mathsf{fix}} = 0`$. In the bidirectional family, repeated subpaths can
-arise only from decryption-side recomputations under reused trunk keyed
-contexts. A single replayed trunk evaluation may contribute many repeated
-subpaths before diverging, so we keep the exact induced overlap count explicit
-and set $`L = L_{\mathsf{tr}}`$. The overwrite contribution is exactly the
-first-chunk body cost, so $`\Omega^{\mathsf{tr}}_d = \sum_{b=1}^{q_*}
-\beta_r(Y^{(b)})`$. The same Men23 path-counting argument then gives the stated
-bound on $`\nu_{\mathsf{fix}}`$.
+\nu_{\mathsf{fix}} = 0`$. Per-user nonce-respecting also ensures that a fixed
+raw trunk IV can appear alongside at most $`\mu`$ user labels in the
+encryption-only family, giving $`Q_{IV} \le \mu`$. In the bidirectional family,
+repeated subpaths can arise only from decryption-side recomputations under
+reused trunk keyed contexts. A single replayed trunk evaluation may contribute
+many repeated subpaths before diverging, so we keep the exact induced overlap
+count explicit and set $`L = L_{\mathsf{tr}}`$. For the same reason, repeated decryption-side
+initializations under a fixed raw IV are not absorbed elsewhere in the generic
+Men23 bookkeeping, so we keep the exact induced initialization multiplicity
+explicit and set $`Q_{IV} = Q_{\mathsf{IV,tr}}`$. The overwrite contribution is
+exactly the first-chunk body cost, so
+$`\Omega^{\mathsf{tr}}_d = \sum_{b=1}^{q_*} \beta_r(Y^{(b)})`$. The same Men23
+path-counting argument then gives the stated bound on
+$`\nu_{\mathsf{fix}}`$.
 
 **Corollary 4.6 (Imported TrunkWrap Encryption-Side KD/IXIF Bound).** If
 $`\sigma^{\mathsf{tr}}_e + N \le 0.1 \cdot 2^c`$, then the trunk
@@ -1345,10 +1356,21 @@ $`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d + N \le 0.1 \cdot 2^c`$, then
 the trunk bidirectional real-to-IXIF replacement term can be instantiated as
 
 ```math
-\epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
+\epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},N)
 :=
-\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{tr}}_e+\sigma^{\mathsf{tr}}_d,q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d,\mu,L_{\mathsf{tr}},\Omega^{\mathsf{tr}}_d,\max(\Omega^{\mathsf{tr}}_d+q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d-1,0),N).
+\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{tr}}_e+\sigma^{\mathsf{tr}}_d,q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},\Omega^{\mathsf{tr}}_d,\max(\Omega^{\mathsf{tr}}_d+q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d-1,0),N).
 ```
+
+For a fully wrapper-level explicit instantiation, one may conservatively bound
+
+```math
+Q_{\mathsf{IV,tr}} \le \mu + q^{\mathsf{tr}}_d.
+```
+
+Indeed, per-user nonce-respecting permits at most one encryption-side trunk
+initialization for a fixed raw IV and user label, contributing at most
+$`\mu`$ such initializations in total, while each decryption query contributes
+at most one additional trunk initialization.
 
 ### 4.8 Rooted-Forest Sponge Collision Bound
 
@@ -1554,8 +1576,8 @@ observed trunk output.
 - Let $`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$ and
   $`\epsilon_{\mathsf{tr}}^{\mathsf{ae}}`$ be the explicit imported trunk
   KD/IXIF terms of Corollaries 4.6 and 4.7, respectively, with the
-  bidirectional term evaluated at the induced trunk overlap count
-  $`L_{\mathsf{tr}}`$.
+  bidirectional term evaluated at the induced trunk initialization multiplicity
+  $`Q_{\mathsf{IV,tr}}`$ and overlap count $`L_{\mathsf{tr}}`$.
 - By Lemma 7.1 together with the keyed-context discipline of Lemma 4.1, the
   only additional explicit integrity failures beyond these imported KD/IXIF
   terms are the event that a fresh leaf tag matches some previously exposed
@@ -1603,7 +1625,7 @@ candidates,
 ```math
 \mathrm{Adv}^{\mathsf{int}\text{-}\mathsf{ctxt}}_{\mathsf{TreeWrap}}(\mathcal{A})
 \le
-\epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
+\epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},N)
 +
 \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N)
 +
@@ -1657,7 +1679,7 @@ decryption-side resources of each INT-CTXT reduction,
 +
 \epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N)
 +
-2 \cdot \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
+2 \cdot \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},N)
 +
 2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N)
 +
@@ -2077,7 +2099,7 @@ For the second hop, Corollary 4.7 yields
 ```math
 \left| \Pr[H_1(\mathcal{A}) = 1] - \Pr[H_2(\mathcal{A}) = 1] \right|
 \le
-\epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,L_{\mathsf{tr}},N).
+\epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},N).
 ```
 
 It remains to bound the forgery probability in $`H_2`$. Let
@@ -2881,7 +2903,7 @@ canonical chunk count at most $`2^{1208}`$.
   ```math
   \mathrm{Adv}^{\mathsf{int}\text{-}\mathsf{ctxt}}_{\mathsf{TW128}}(\mathcal{A})
   \le
-  \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
+  \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,\mu+q^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
   +
   \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N)
   +
@@ -2897,7 +2919,7 @@ canonical chunk count at most $`2^{1208}`$.
   +
   \epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N)
   +
-  2 \cdot \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
+  2 \cdot \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,\mu+q^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
   +
   2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N)
   +
