@@ -1950,8 +1950,9 @@ denote the final forgery set output by $`\mathcal{A}`$, and for each $`d \in
 C^{(d)} = Y^{(d)} \| T^{(d)}.
 ```
 
-For each candidate, the TreeWrap-specific freshness split of Lemma 7.1 yields
-exactly one of the following branches.
+For each candidate, apply the ordered TreeWrap-specific freshness split of
+Lemma 7.1: first test whether the trunk prefix is fresh; otherwise test whether
+some leaf is fresh; otherwise all keyed subtranscripts replay.
 
 - If $`n = 0`$, freshness means that the associated-data transcript in the
   trunk keyed context is fresh, so the adversary must guess a fresh
