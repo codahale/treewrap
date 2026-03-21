@@ -68,14 +68,19 @@ duplex padding and phase trailers to separate the trunk and leaf transcripts.
 Among keyed Keccak-family designs, Keyak [Keyak16] is the closest relative in
 spirit. Both designs use `Keccak-p[1600,12]`, both exploit parallel local
 processing, and both ultimately authenticate the whole message through a serial
-top-level transcript. The modes are nevertheless quite different. Keyak is a
-session-oriented full-state keyed-duplex design built around the Motorist mode,
-with persistent parallel pistons and a knot operation that feeds chaining
-values back across lanes. TreeWrap instead targets one-shot AEAD, keeps the
-leaf calls as separate keyed transcripts under derived IVs, and uses an
-explicit trunk transcript for the associated data, first chunk, and final tag.
-This makes TreeWrap less integrated than Motorist, but substantially more
-modular from the perspective of proof reuse.
+top-level transcript. The modes are nevertheless quite different in three
+respects. First, Keyak is a session-oriented full-state keyed-duplex design
+built around the Motorist mode, with persistent parallel pistons and a knot
+operation that feeds chaining values back across lanes; TreeWrap instead
+targets one-shot AEAD. Second, Motorist's piston/knot structure requires a
+dedicated analysis, whereas TreeWrap's leaf and trunk layers each reduce
+directly to the Men23 KD/IXIF framework, keeping the proof substantially
+smaller. Third, Keyak fixes its parallelism at design time (the number of
+pistons is a Motorist parameter), while TreeWrap selects parallelism at
+runtime: the chunk size is a fixed constant, so any number of remaining chunks
+can be dispatched in parallel as hardware resources allow, scaling from
+embedded targets up to wide SIMD pipelines without changing the mode
+definition.
 
 Closer to the modern permutation-based AEAD landscape, Xoodyak [Xoo20] and
 Ascon [Ascon21, SP800232] are serial duplex-based designs that prioritize
@@ -85,6 +90,14 @@ standardized NIST lightweight AEAD family. TreeWrap differs from both by making
 parallel message decomposition a first-class design goal: it keeps the
 associated data and the first chunk on the trunk path, and pushes only the
 remaining chunks into independent leaf transcripts.
+
+Outside the permutation-based family, AEGIS-128L and AEGIS-256 [AEGIS]
+achieve very high throughput on platforms with AES-NI or similar hardware
+acceleration. TreeWrap differs in two ways: it does not require dedicated
+hardware instructions, since Keccak-p is a bitwise construction that performs
+well in pure software and in SIMD pipelines; and its duplex-based structure
+admits a direct CMT-4 commitment analysis, whereas commitment for AEGIS-family
+designs remains an active area of investigation.
 
 On the proof side, the closest antecedent is [Men23]. The leaf layer is
 deliberately kept close to the reduced MonkeySpongeWrap transcript analyzed
