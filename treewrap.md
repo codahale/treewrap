@@ -367,6 +367,12 @@ TreeWrap uses `TrunkWrap` for the empty-message path and the first chunk, and
 uses `LeafWrap` only for remaining chunks. The hidden leaf tags are then fed
 back into the trunk transcript before the final squeeze.
 
+Placing chunk $`0`$ inside the trunk is not only a latency optimization. It is
+also what makes the $`n = 1`$ integrity path reduce directly to trunk-prefix
+freshness: every nonempty message contributes a body phase to the trunk
+transcript, so one-chunk forgeries are handled by the same trunk argument as
+the empty-message and multi-chunk cases.
+
 Its interface is
 
 ```math
@@ -893,7 +899,10 @@ encryption-side leaf keyed contexts eliminate encryption/encryption
 subpath repetition, while decryption-side leaf queries may repeat keyed
 contexts and contribute at most $`\chi_{\mathsf{leaf},d}`$ repeated subpaths.
 The same path-counting argument as in [Men23, Theorem 7] then yields the
-stated bound on $`\nu_{\mathsf{fix}}`$.
+stated bound on $`\nu_{\mathsf{fix}}`$. This bound is slightly conservative,
+but that does not affect the concrete theorems here because
+$`\nu_{\mathsf{fix}}`$ does not appear in the low-complexity branch of
+[Men23, Theorem 1, Eq. (5)] instantiated in Section 4.6.
 
 **Corollary 4.4 (Imported Leaf Encryption-Side KD/IXIF Bound).** If
 $`\sigma^{\mathsf{leaf}}_e + N \le 0.1 \cdot 2^c`$, then the encryption-side
@@ -2370,7 +2379,14 @@ $`2^{20}`$-byte plaintext in each query. This corresponds to a total wrapped
 plaintext volume of $`2^{40}`$ bytes (one tebibyte). Each message decomposes
 into $`131`$ chunks, so each message contributes one trunk evaluation on chunk
 $`0`$ and $`130`$ leaf evaluations on chunks $`1,\ldots,130`$. The
-induced resources are therefore
+leaf-side call count per message is
+
+```math
+129 \cdot 50 + 3 = 6453,
+```
+
+because the first $`129`$ leaf chunks are full 8064-byte chunks and the final
+leaf chunk has length $`256`$ bytes. The induced resources are therefore
 
 ```math
 \chi_{\mathsf{leaf},e} = 136{,}314{,}880,
