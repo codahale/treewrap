@@ -2,19 +2,19 @@
 
 ## Abstract
 
-We introduce TreeWrap, a permutation-based authenticated-encryption construction that separates local chunk processing from a keyed trunk transcript. The first chunk and the global associated data are processed by a keyed duplex transcript called $`\mathsf{TrunkWrap}`$, while later chunks are processed independently by a MonkeySpongeWrap-style keyed duplex transcript called $`\mathsf{LeafWrap}`$, which outputs a ciphertext body chunk and a hidden leaf tag. For multi-chunk messages, the resulting later-leaf tag vector is then absorbed back into the trunk transcript before the final tag is squeezed. This decomposition is intended to preserve the short-message latency of a single serial keyed duplex while still supporting parallel later-chunk processing. In that sense, TreeWrap can be read as transporting the efficiency pattern of KangarooTwelve [K12] into the keyed setting and the AEAD problem domain.
+We introduce TreeWrap, a permutation-based authenticated-encryption construction that separates local chunk processing from a keyed trunk transcript. The first chunk and the global associated data are processed by a keyed duplex transcript called $`\mathsf{TrunkWrap}`$, while the remaining chunks are processed independently by a MonkeySpongeWrap-style keyed duplex transcript called $`\mathsf{LeafWrap}`$, which outputs a ciphertext body chunk and a hidden leaf tag. For multi-chunk messages, the resulting leaf tag vector is then absorbed back into the trunk transcript before the final tag is squeezed. This decomposition is intended to preserve the short-message latency of a single serial keyed duplex while still supporting parallel processing of the remaining chunks. In that sense, TreeWrap can be read as transporting the efficiency pattern of KangarooTwelve [K12] into the keyed setting and the AEAD problem domain.
 
-We analyze TreeWrap in two settings. For authenticated encryption, we prove multi-user IND-CPA, INT-CTXT, and IND-CCA2 bounds in the keyed-duplex model of Mennink. This AE analysis is largely modular: the leaf-layer proof identifies $`\mathsf{LeafWrap}`$ with a reduced MonkeySpongeWrap transcript and imports the corresponding keyed-duplex/IXIF replacement, while the trunk layer is handled by a direct keyed-duplex/IXIF analysis. The main TreeWrap-specific AE step is a freshness lemma showing that, in the IXIF world, either a fresh trunk prefix or a fresh later chunk forces a fresh final tag path, except for the explicit later-leaf-tag collision and final-tag guessing terms. For commitment, we prove a CMT-4 bound in the public-permutation model by flattening the leaf and trunk layers into duplex and sponge transcripts, respectively. This yields a per-ciphertext commitment bound whose local term depends on the actual chunk lengths rather than only on the leaf-tag length.
+We analyze TreeWrap in two settings. For authenticated encryption, we prove multi-user IND-CPA, INT-CTXT, and IND-CCA2 bounds in the keyed-duplex model of Mennink. This AE analysis is largely modular: the leaf-layer proof identifies $`\mathsf{LeafWrap}`$ with a reduced MonkeySpongeWrap transcript and imports the corresponding keyed-duplex/IXIF replacement, while the trunk layer is handled by a direct keyed-duplex/IXIF analysis. The main TreeWrap-specific AE step is a freshness lemma showing that, in the IXIF world, either a fresh trunk prefix or a fresh remaining chunk forces a fresh final tag path, except for the explicit leaf-tag collision and final-tag guessing terms. For commitment, we prove a CMT-4 bound in the public-permutation model by flattening the leaf and trunk layers into duplex and sponge transcripts, respectively. This yields a per-ciphertext commitment bound whose local term depends on the actual chunk lengths rather than only on the leaf-tag length.
 
-We also give a concrete instantiation, $`\mathsf{TW128}`$, based on $`\mathrm{Keccak\text{-}p}[1600,12]`$ with 256-bit capacity, 8064-byte chunks, 256-bit later-leaf tags, and a 256-bit final tag. The resulting generic security target is 128 bits, with explicit multi-user AE bounds and explicit per-output CMT-4 bounds.
+We also give a concrete instantiation, $`\mathsf{TW128}`$, based on $`\mathrm{Keccak\text{-}p}[1600,12]`$ with 256-bit capacity, 8064-byte chunks, 256-bit leaf tags, and a 256-bit final tag. The resulting generic security target is 128 bits, with explicit multi-user AE bounds and explicit per-output CMT-4 bounds.
 
 ## 1. Introduction
 
-TreeWrap is a permutation-based AEAD construction that separates later-chunk processing from a keyed trunk transcript. The construction handles the associated data, the first chunk, and the final authentication tag inside a serial keyed duplex called $`\mathsf{TrunkWrap}`$, while later chunks are processed independently by $`\mathsf{LeafWrap}`$, each producing a ciphertext body chunk and a hidden leaf tag. This leaf/trunk split is designed to improve the short-message path while still making later-chunk processing embarrassingly parallel and keeping the final authentication transcript simple enough to analyze both in the keyed AE setting and in the public-permutation commitment setting.
+TreeWrap is a permutation-based AEAD construction that separates processing of the remaining chunks from a keyed trunk transcript. The construction handles the associated data, the first chunk, and the final authentication tag inside a serial keyed duplex called $`\mathsf{TrunkWrap}`$, while the remaining chunks are processed independently by $`\mathsf{LeafWrap}`$, each producing a ciphertext body chunk and a hidden leaf tag. This leaf/trunk split is designed to improve the short-message path while still making the remaining chunks embarrassingly parallel and keeping the final authentication transcript simple enough to analyze both in the keyed AE setting and in the public-permutation commitment setting.
 
 At a design level, this is deliberately close in spirit to KangarooTwelve
 [K12]: a serial trunk handles the short-message path and the global framing,
-while later chunks can be processed in parallel and fed back as short chaining
+while remaining chunks can be processed in parallel and fed back as short chaining
 values. The point of departure is that TreeWrap brings this efficiency pattern
 into a keyed-duplex AEAD setting rather than an unkeyed tree-hashing setting.
 Accordingly, TreeWrap uses keyed IV namespaces and duplex padding/framing in
@@ -26,20 +26,20 @@ rather than a new keyed-duplex argument. The genuinely new technical pieces
 are the TreeWrap-specific authenticity freshness split of Lemma 7.1 and the
 public-permutation CMT-4 analysis of Section 7.
 
-The proof strategy follows the same decomposition. The AE analysis is carried out in the multi-user keyed-duplex model of [Men23]. At the leaf layer, Lemma 6.1 identifies the later-chunk $`\mathsf{LeafWrap}`$ family with a reduced MonkeySpongeWrap transcript, and Theorem 6.2 imports the corresponding KD/IXIF replacement. A TreeWrap-specific freshness lemma then handles the interaction between fresh later-leaf tags and the trunk transcript. At the trunk layer, Corollary 4.6 gives a direct keyed-duplex/IXIF replacement for $`\mathsf{TrunkWrap}`$. These ingredients yield the IND-CPA and INT-CTXT theorems, and Theorem 5.3 derives IND-CCA2 from them by a BN00-style game hop using the multi-forgery integrity notion of Section 4.2.
+The proof strategy follows the same decomposition. The AE analysis is carried out in the multi-user keyed-duplex model of [Men23]. At the leaf layer, Lemma 6.1 identifies the $`\mathsf{LeafWrap}`$ family on chunks $`i \ge 1`$ with a reduced MonkeySpongeWrap transcript, and Theorem 6.2 imports the corresponding KD/IXIF replacement. A TreeWrap-specific freshness lemma then handles the interaction between fresh leaf tags and the trunk transcript. At the trunk layer, Corollary 4.6 gives a direct keyed-duplex/IXIF replacement for $`\mathsf{TrunkWrap}`$. These ingredients yield the IND-CPA and INT-CTXT theorems, and Theorem 5.3 derives IND-CCA2 from them by a BN00-style game hop using the multi-forgery integrity notion of Section 4.2.
 
 The commitment analysis is deliberately separate from the keyed AE path.
 Because the CMT-4 adversary chooses both candidate keys and nonces, the proof
 does not use the keyed [Men23] bounds. Instead, it flattens the construction
-into public permutation transcripts. Lemma 7.2 handles the later-leaf wrapper
+into public permutation transcripts. Lemma 7.2 handles the leaf wrapper
 via the duplexing-sponge viewpoint of [BDPVA11], yielding a per-chunk
 collision term on the full local output pair $`(Y_i,T_i)`$. Lemma 7.3 handles
 the trunk-local transcript via a rooted-forest counting extension of the
 single-root sponge bound of [BDPVA08]. Theorem 5.4 then composes these two
 cases: a TreeWrap commitment collision either arises at the first differing
-later leaf or at the trunk-local transcript.
+remaining chunk handled by $`\mathsf{LeafWrap}`$ or at the trunk-local transcript.
 
-The remainder of the paper is organized as follows. Section 2 fixes notation, the keyed-duplex model, and the encoding conventions. Section 3 defines $`\mathsf{LeafWrap}`$, $`\mathsf{TrunkWrap}`$, and $`\mathsf{TreeWrap}`$, together with the AEAD wrapper. Section 4 gives the multi-user security experiments, the resource translation, and the imported external bounds. Section 5 states the main AE and CMT-4 theorems. Section 6 gives the imported AE adaptation sketches, and Section 7 contains the TreeWrap-specific proofs. Section 8 instantiates the construction as $`\mathsf{TW128}`$ using $`\mathrm{Keccak\text{-}p}[1600,12]`$, SP 800-185 encodings, 8064-byte chunks, 256-bit later-leaf tags, and a 256-bit final tag.
+The remainder of the paper is organized as follows. Section 2 fixes notation, the keyed-duplex model, and the encoding conventions. Section 3 defines $`\mathsf{LeafWrap}`$, $`\mathsf{TrunkWrap}`$, and $`\mathsf{TreeWrap}`$, together with the AEAD wrapper. Section 4 gives the multi-user security experiments, the resource translation, and the imported external bounds. Section 5 states the main AE and CMT-4 theorems. Section 6 gives the imported AE adaptation sketches, and Section 7 contains the TreeWrap-specific proofs. Section 8 instantiates the construction as $`\mathsf{TW128}`$ using $`\mathrm{Keccak\text{-}p}[1600,12]`$, SP 800-185 encodings, 8064-byte chunks, 256-bit leaf tags, and a 256-bit final tag.
 
 ## 2. Preliminaries
 
@@ -147,9 +147,9 @@ Thus $`\mathsf{IXIF}[\mathrm{ro}]`$ keeps the same control flow as the keyed dup
 \mathsf{iv} : \mathcal{U} \times \mathbb{N} \to \mathcal{IV}.
 ```
 
-TreeWrap reserves suffix $`0`$ for the trunk call and uses positive suffixes for later-chunk LeafWrap calls, so $`V_{\mathsf{tr}}(U) := \mathsf{iv}(U,0)`$ and $`V_i(U) := \mathsf{iv}(U,i)`$ for $`i \ge 1`$. In concrete instantiations, $`\mathsf{iv}`$ may itself be built from an injective integer encoding such as $`\mathrm{right\_encode}`$; Section 8 does this for $`\mathsf{TW128}`$.
+TreeWrap reserves suffix $`0`$ for the trunk call and uses positive suffixes for `LeafWrap` calls on the remaining chunks, so $`V_{\mathsf{tr}}(U) := \mathsf{iv}(U,0)`$ and $`V_i(U) := \mathsf{iv}(U,i)`$ for $`i \ge 1`$. In concrete instantiations, $`\mathsf{iv}`$ may itself be built from an injective integer encoding such as $`\mathrm{right\_encode}`$; Section 8 does this for $`\mathsf{TW128}`$.
 
-**Trunk phase framing.** Fix two distinct nonempty bitstrings $`\delta_{\mathsf{ad}}, \delta_{\mathsf{tc}} \in \{0,1\}^+`$. For the trunk transcript, these serve as phase trailers for the associated-data phase and the later-tag phase, respectively. We write
+**Trunk phase framing.** Fix two distinct nonempty bitstrings $`\delta_{\mathsf{ad}}, \delta_{\mathsf{tc}} \in \{0,1\}^+`$. For the trunk transcript, these serve as phase trailers for the associated-data phase and the leaf-tag phase, respectively. We write
 
 ```math
 \mathrm{pad}^{\mathsf{ad}}_{10^r*}(Z) := \mathrm{pad}_{10^r*}(Z \| \delta_{\mathsf{ad}}),
@@ -157,13 +157,13 @@ TreeWrap reserves suffix $`0`$ for the trunk call and uses positive suffixes for
 \mathrm{pad}^{\mathsf{tc}}_{10^r*}(Z) := \mathrm{pad}_{10^r*}(Z \| \delta_{\mathsf{tc}}).
 ```
 
-When later leaves are present, the final trunk phase absorbs the string
+When leaf calls are present on chunks $`i \ge 1`$, the final trunk phase absorbs the string
 
 ```math
 T_1 \| \cdots \| T_{n-1}.
 ```
 
-Because the later-leaf tags have fixed length $`t_{\mathsf{leaf}}`$ and the message length determines the canonical chunk count, this final-phase string is injective in the later-leaf tag vector once the ciphertext length is fixed. Together with the distinct phase trailers and the explicit omission or presence of the associated-data phase, the overall trunk transcript is injective in the tuple $`(A,X_0,T_1,\ldots,T_{n-1})`$.
+Because the leaf tags have fixed length $`t_{\mathsf{leaf}}`$ and the message length determines the canonical chunk count, this final-phase string is injective in the leaf tag vector once the ciphertext length is fixed. Together with the distinct phase trailers and the explicit omission or presence of the associated-data phase, the overall trunk transcript is injective in the tuple $`(A,X_0,T_1,\ldots,T_{n-1})`$.
 
 **Overhead notation.** For later resource accounting, write
 
@@ -185,9 +185,9 @@ for the unique padded decomposition of $`Z`$ into $`s`$-bit blocks under the $`\
 \mathrm{left}_{|Z|}(Z_1 \| \cdots \| Z_w) = Z.
 ```
 
-LeafWrap embeds each padded message or ciphertext block as $`Z_j \| 1 \| 0^{c-1}`$. These are full-state blocks of length $`b = r + c`$ and provide a dedicated transcript format for the body-processing phase. By contrast, the trunk absorb phases process associated-data blocks and later-tag blocks as $`W_j \| 0^c`$, that is, as ordinary rate-$`r`$ sponge blocks with an all-zero capacity suffix.
+LeafWrap embeds each padded message or ciphertext block as $`Z_j \| 1 \| 0^{c-1}`$. These are full-state blocks of length $`b = r + c`$ and provide a dedicated transcript format for the body-processing phase. By contrast, the trunk absorb phases process associated-data blocks and leaf-tag blocks as $`W_j \| 0^c`$, that is, as ordinary rate-$`r`$ sponge blocks with an all-zero capacity suffix.
 
-**Domain separation.** TreeWrap separates leaf and trunk calls in three ways. First, the proofs rely on disjoint IV namespaces: the trunk uses $`V_{\mathsf{tr}}(U) = \mathsf{iv}(U,0)`$, while later leaves use $`V_i(U) = \mathsf{iv}(U,i)`$ for $`i \ge 1`$. Second, within the trunk transcript, the optional associated-data phase and the optional later-tag phase are terminated by distinct trailers $`\delta_{\mathsf{ad}}`$ and $`\delta_{\mathsf{tc}}`$. Third, even if the rate parts happen to coincide, the absorbed full-state blocks differ in format across layers: the trunk body and leaf body phases use the suffix $`1 \| 0^{c-1}`$, whereas the trunk absorb phases use $`0^c`$. Thus even if an adversary were somehow to link a trunk IV to a leaf IV, the absorb-style and body-style transcripts would still diverge at every body-processing step because their capacity-part framing bits differ. The later reductions use the IV separation as the primary argument and the block-format distinction as secondary transcript-format separation.
+**Domain separation.** TreeWrap separates leaf and trunk calls in three ways. First, the proofs rely on disjoint IV namespaces: the trunk uses $`V_{\mathsf{tr}}(U) = \mathsf{iv}(U,0)`$, while leaf calls on chunks $`i \ge 1`$ use $`V_i(U) = \mathsf{iv}(U,i)`$. Second, within the trunk transcript, the optional associated-data phase and the optional leaf-tag phase are terminated by distinct trailers $`\delta_{\mathsf{ad}}`$ and $`\delta_{\mathsf{tc}}`$. Third, even if the rate parts happen to coincide, the absorbed full-state blocks differ in format across layers: the trunk body and leaf body phases use the suffix $`1 \| 0^{c-1}`$, whereas the trunk absorb phases use $`0^c`$. Thus even if an adversary were somehow to link a trunk IV to a leaf IV, the absorb-style and body-style transcripts would still diverge at every body-processing step because their capacity-part framing bits differ. The later reductions use the IV separation as the primary argument and the block-format distinction as secondary transcript-format separation.
 
 ## 3. The TreeWrap Construction
 
@@ -225,7 +225,7 @@ For readability, Section 3 presents the construction in the single-key setting. 
 
 ### 3.2 LeafWrap
 
-LeafWrap is the later-chunk wrapper used inside TreeWrap. It has no local associated-data phase: later-chunk authentication is driven entirely by the body transcript and the hidden leaf tag, while global associated data is incorporated only by the trunk transcript that processes the first chunk.
+LeafWrap is the wrapper used for chunks after the first. It has no local associated-data phase: authentication of those chunks is driven entirely by the body transcript and the hidden leaf tag, while global associated data is incorporated only by the trunk transcript that processes the first chunk.
 
 Conceptually, $`\mathsf{LeafWrap}[p]`$ is the message-processing core of $`\mathsf{MonkeySpongeWrap}[p]`$ from [Men23] with the associated-data phase removed and the two directions presented as a single symmetric transcript function parameterized by $`m \in \{\mathsf{enc},\mathsf{dec}\}`$. This omission of per-chunk associated data is deliberate: it keeps the local transcript as close as possible to the reduced MonkeySpongeWrap form used in the imported proof and routes all associated-data binding through the trunk layer instead.
 
@@ -307,7 +307,7 @@ contain up to four nonempty regions after initialization:
 
 1. an optional associated-data absorb phase,
 2. an optional first-chunk body phase,
-3. an optional later-tag absorb phase,
+3. an optional leaf-tag absorb phase,
 4. the final squeeze phase.
 
 ```text
@@ -347,7 +347,8 @@ Algorithm TrunkWrap.finalize(KD, T_1, ..., T_m; output length ell):
 ```
 
 The associated-data phase may be omitted entirely when $`A = \epsilon`$, and
-the later-tag absorb phase may be omitted when there are no later leaves. The
+the leaf-tag absorb phase may be omitted when there are no leaf calls on
+chunks $`i \ge 1`$. The
 trunk body phase uses the same $`1 \| 0^{c-1}`$ framing as $`\mathsf{LeafWrap}`$,
 while the absorb phases use $`0^c`$ framing. On the keyed side, `TrunkWrap` is
 again a direct keyed-duplex transcript to which the generic KD/IXIF reduction
@@ -357,7 +358,7 @@ an ordinary rooted sponge history for the CMT-4 analysis.
 ### 3.4 TreeWrap
 
 TreeWrap uses `TrunkWrap` for the empty-message path and the first chunk, and
-uses `LeafWrap` only for later chunks. The hidden later-leaf tags are then fed
+uses `LeafWrap` only for remaining chunks. The hidden leaf tags are then fed
 back into the trunk transcript before the final squeeze.
 
 Its interface is
@@ -388,14 +389,14 @@ Algorithm TreeWrap(K, U, A, X, m):
 
 The chunking line uses the canonical decomposition of Section 2.1. The
 IV-derivation map $`\mathsf{iv}`$ is used with suffix $`0`$ for the trunk IV and
-with suffixes $`1,2,\ldots,n-1`$ for the later-chunk LeafWrap IVs. The first
+with suffixes $`1,2,\ldots,n-1`$ for the `LeafWrap` IVs on chunks $`1,\ldots,n-1`$. The first
 ciphertext body chunk $`Y_0`$ is produced inside the trunk transcript and
 therefore depends on the associated-data prefix $`A`$ as well as on
 $`(K,U,X_0)`$; later ciphertext body chunks $`Y_i`$ for $`i \ge 1`$ depend only
 on their local LeafWrap inputs.
 
 TreeWrap is nonce-based and not nonce-misuse resistant. If the same key and
-nonce are reused, then all derived later-leaf IVs repeat and the trunk IV also
+nonce are reused, then all derived leaf IVs repeat and the trunk IV also
 repeats. Later chunks therefore exhibit the usual two-time-pad failure
 immediately, and the same is true of the first chunk whenever the associated
 data transcript also repeats. This design therefore targets the standard
@@ -474,11 +475,11 @@ encryption algorithm computes
 ```
 
 for each $`i = 1,\ldots,n-1`$. By Lemma 3.1, decryption reproduces the same
-later-leaf tags $`T_i`$ and recovers each later chunk $`P_i`$ from $`Y_i`$.
+leaf tags $`T_i`$ and recovers each remaining chunk $`P_i`$ from $`Y_i`$.
 The trunk body phase uses exactly the same keyed-duplex framing and overwrite
 algebra as LeafWrap, so the same argument shows that `TrunkWrap.body`
 recovers $`P_0`$ from $`Y_0`$ while reproducing the same post-body trunk state.
-Hence both the optional associated-data phase and the optional later-tag absorb
+Hence both the optional associated-data phase and the optional leaf-tag absorb
 phase of `TrunkWrap` are identical in wrapping and unwrapping, and both
 procedures use the same trunk IV $`\mathsf{iv}(U,0)`$. Therefore they derive
 the same final tag via `TrunkWrap.finalize`, tag verification succeeds, and
@@ -656,8 +657,9 @@ The CMT-4 advantage is
 ```
 
 ### 4.5 Induced Lower-Level Resources
+
 We now record the lower-level resources induced by TreeWrap queries at the
-later-leaf and trunk layers.
+leaf and trunk layers.
 
 **Lemma 4.1 (Derived Internal-Keyed-Context Discipline).** Suppose the
 adversary is nonce-respecting at the TreeWrap encryption layer on a per-user
@@ -674,9 +676,9 @@ across encryption queries;
 V_i(U) := \mathsf{iv}(U,i), \qquad i \ge 1
 ```
 
-induces pairwise distinct later-leaf keyed contexts $`(\delta,V_i(U))`$ across
+induces pairwise distinct leaf keyed contexts $`(\delta,V_i(U))`$ across
 all encryption-side LeafWrap calls; and no trunk keyed context equals any
-later-leaf keyed context.
+leaf keyed context.
 
 **Proof.** All claims follow from per-user nonce-respecting behavior together
 with injectivity of the map $`(U,j) \mapsto \mathsf{iv}(U,j)`$ on
@@ -709,13 +711,13 @@ If a TreeWrap body string $`X`$ is partitioned into chunks
 X = X_0 \| \cdots \| X_{n-1},
 ```
 
-then the later-leaf calls perform exactly
+then the leaf calls perform exactly
 
 ```math
 \omega_r(X_i) + s_{\mathsf{leaf}}
 ```
 
-duplexing calls on each later chunk $`X_i`$ with $`i \ge 1`$: $`\omega_r(X_i)`$
+duplexing calls on each remaining chunk $`X_i`$ with $`i \ge 1`$: $`\omega_r(X_i)`$
 body calls and $`s_{\mathsf{leaf}}`$ tag-squeezing calls. Accordingly, define
 
 ```math
@@ -726,13 +728,13 @@ body calls and $`s_{\mathsf{leaf}}`$ tag-squeezing calls. Accordingly, define
 \sigma_{\mathsf{leaf}}(X) := \sum_{i=1}^{n-1} \bigl(\omega_r(X_i) + s_{\mathsf{leaf}}\bigr).
 ```
 
-Thus $`\chi_{\mathsf{leaf}}(X)`$ counts the number of later chunks handled by
+Thus $`\chi_{\mathsf{leaf}}(X)`$ counts the number of remaining chunks handled by
 LeafWrap, and $`\sigma_{\mathsf{leaf}}(X)`$ counts the corresponding
-later-leaf duplex calls.
+leaf duplex calls.
 
 At the trunk layer, each TreeWrap encryption or decryption query performs one
 `TrunkWrap[p]` evaluation with an optional associated-data phase, an optional
-first-chunk body phase, an optional later-tag absorb phase, and a final squeeze
+first-chunk body phase, an optional leaf-tag absorb phase, and a final squeeze
 phase. Define the associated-data cost
 
 ```math
@@ -750,7 +752,7 @@ the first-chunk body cost
 \end{cases}
 ```
 
-and the later-tag absorb cost
+and the leaf-tag absorb cost
 
 ```math
 \gamma_r(X)
@@ -807,7 +809,7 @@ q^{\mathsf{tr}}_d := q_*,
 \Omega^{\mathsf{tr}}_d := \sum_{b=1}^{q_*} \Omega_{\mathsf{tr},d}(Y^{(b)}).
 ```
 
-These are the natural lower-level resources for the imported later-leaf and
+These are the natural lower-level resources for the imported leaf and
 trunk analyses.
 
 ### 4.6 Translation to Men23 Resources
@@ -843,7 +845,7 @@ simplified branch is valid in the regime $`M + N \le 0.1 \cdot 2^c`$; if this
 side condition is not met, one may instead use the corresponding general
 branch.
 
-For the reduced MonkeySpongeWrap-style analysis of the later-leaf family,
+For the reduced MonkeySpongeWrap-style analysis of the leaf family,
 define the decryption-side overwrite count
 
 ```math
@@ -851,9 +853,9 @@ define the decryption-side overwrite count
 ```
 
 Because $`\mathrm{pad}10^*`$ always produces at least one padded body block,
-every later leaf contributes at least one body-phase call.
+every leaf contributes at least one body-phase call.
 
-**Lemma 4.2 (Later-Leaf Resource Translation).** The reduced later-leaf
+**Lemma 4.2 (Leaf Resource Translation).** The reduced leaf
 families induced by TreeWrap admit the following valid resource assignments in
 the notation of [Men23]:
 
@@ -880,16 +882,16 @@ the notation of [Men23]:
   ```
 
 **Proof sketch.** This is the same reduced `LeafWrap` bookkeeping as in the
-current TreeWrap proof, except that only later chunks are included. Distinct
-encryption-side later-leaf keyed contexts eliminate encryption/encryption
-subpath repetition, while decryption-side later-leaf queries may repeat keyed
+current TreeWrap proof, except that only remaining chunks are included. Distinct
+encryption-side leaf keyed contexts eliminate encryption/encryption
+subpath repetition, while decryption-side leaf queries may repeat keyed
 contexts and contribute at most $`\chi_{\mathsf{leaf},d}`$ repeated subpaths.
 The same path-counting argument as in [Men23, Theorem 7] then yields the
 stated bound on $`\nu_{\mathsf{fix}}`$.
 
-**Corollary 4.4 (Imported Later-Leaf Encryption-Side KD/IXIF Bound).** If
+**Corollary 4.4 (Imported Leaf Encryption-Side KD/IXIF Bound).** If
 $`\sigma^{\mathsf{leaf}}_e + N \le 0.1 \cdot 2^c`$, then the encryption-side
-later-leaf real-to-IXIF replacement term can be instantiated as
+leaf real-to-IXIF replacement term can be instantiated as
 
 ```math
 \epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N)
@@ -897,9 +899,9 @@ later-leaf real-to-IXIF replacement term can be instantiated as
 \mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{leaf}}_e,\chi_{\mathsf{leaf},e},\mu,0,0,0,N).
 ```
 
-**Corollary 4.5 (Imported Later-Leaf Bidirectional KD/IXIF Bound).** If
+**Corollary 4.5 (Imported Leaf Bidirectional KD/IXIF Bound).** If
 $`\sigma^{\mathsf{leaf}}_e + \sigma^{\mathsf{leaf}}_d + N \le 0.1 \cdot 2^c`$,
-then the bidirectional later-leaf real-to-IXIF replacement term can be
+then the bidirectional leaf real-to-IXIF replacement term can be
 instantiated as
 
 ```math
@@ -937,7 +939,7 @@ TreeWrap admit the following valid resource assignments in the notation of
 **Proof sketch.** Each `TrunkWrap[p]` evaluation is one serial keyed-duplex
 transcript under the keyed context $`(\delta,\mathsf{iv}(U,0))`$. The
 transcript may have an optional AD absorb phase, then an optional first-chunk
-body phase, then an optional later-tag absorb phase, followed by the final
+body phase, then an optional leaf-tag absorb phase, followed by the final
 squeeze phase. Only the first-chunk body phase uses overwrite on decryption;
 all other trunk calls use flag $`\mathsf{false}`$.
 
@@ -1035,26 +1037,26 @@ This is the concrete local CMT-4 term used below.
 ## 5. Main Results
 
 For authenticated encryption, we instantiate the imported [Men23] terms using
-Section 4.6. For commitment, the later-leaf local term is the explicit
+Section 4.6. For commitment, the leaf local term is the explicit
 flat-duplex quantity of Section 4.8, while the trunk-local term combines the
 rooted-forest sponge count of Lemma 4.7 with an explicit ideal-output
 collision tail on the observed trunk output.
 
 - Let $`\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}`$ be the explicit imported
-  later-leaf encryption-side KD/IXIF term of Corollary 4.4.
+  leaf encryption-side KD/IXIF term of Corollary 4.4.
 - Let $`\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}`$ be the explicit imported
-  later-leaf bidirectional KD/IXIF term of Corollary 4.5.
+  leaf bidirectional KD/IXIF term of Corollary 4.5.
 - Let $`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$ and
   $`\epsilon_{\mathsf{tr}}^{\mathsf{ae}}`$ be the explicit imported trunk
   KD/IXIF terms of Corollary 4.6.
 - By Lemma 7.1 together with the keyed-context discipline of Lemma 4.1, the
   only additional explicit integrity failures beyond these imported KD/IXIF
-  terms are the event that a fresh later-leaf tag collides with the unique
-  prior later-leaf tag on the same keyed path, contributing at most
+  terms are the event that a fresh leaf tag collides with the unique
+  prior leaf tag on the same keyed path, contributing at most
   $`2^{-t_{\mathsf{leaf}}}`$ per final forgery candidate, and the final trunk-
   tag guessing event, contributing at most $`2^{-\tau}`$ per final forgery
   candidate.
-- Let $`\epsilon_{\mathsf{lw}}^{\flat}(\ell,N)`$ be the explicit later-leaf
+- Let $`\epsilon_{\mathsf{lw}}^{\flat}(\ell,N)`$ be the explicit leaf
   flat-duplex term of Section 4.8.
 - Let $`\mathrm{Sponge}^{(i)}_{\mathsf{forest}}`$ be the explicit rooted-forest
   sponge term of Lemma 4.7.
@@ -1077,10 +1079,10 @@ TreeWrap experiment,
 
 Equivalently, in the low-total-complexity regime inherited from [Men23],
 TreeWrap privacy reduces to the direct trunk KD/IXIF replacement of
-Corollary 4.6 together with the reduced later-leaf KD/IXIF replacement of
+Corollary 4.6 together with the reduced leaf KD/IXIF replacement of
 Corollary 4.4. The trunk term governs the entire $`n = 0`$ path, the entire
 $`n = 1`$ path, and the first-chunk prefix of every longer message; the
-later-leaf term is charged only for chunks $`i \ge 1`$ and therefore vanishes
+leaf term is charged only for chunks $`i \ge 1`$ and therefore vanishes
 identically on messages of at most one chunk.
 
 ### 5.2 INT-CTXT Theorem
@@ -1105,7 +1107,7 @@ $`q_f`$ final forgery candidates,
 ```
 
 The explicit $`2^{-t_{\mathsf{leaf}}}`$ tail appears only when a fresh later
-chunk induces a hidden later-leaf tag collision. Every $`n = 0`$ or $`n = 1`$
+chunk induces a hidden leaf tag collision. Every $`n = 0`$ or $`n = 1`$
 forgery is governed entirely by the trunk term and the final $`2^{-\tau}`$
 trunk-tag guess.
 
@@ -1191,7 +1193,7 @@ P_\nu = P_{\nu,0} \| \cdots \| P_{\nu,n-1},
 
 be the canonical chunk decompositions, let
 $`\rho := |\{(K_1,U_1),(K_2,U_2)\}| \in \{1,2\}`$, and define the induced
-later-tag suffixes
+leaf-tag suffixes
 
 ```math
 \Sigma_\nu
@@ -1202,8 +1204,8 @@ T_{\nu,1} \| \cdots \| T_{\nu,n-1}, & \text{if } n \ge 2,
 \end{cases}
 ```
 
-where $`T_{\nu,j}`$ is the hidden later-leaf tag produced by the $`\nu`$-th
-tuple at later chunk index $`j \ge 1`$. Set
+where $`T_{\nu,j}`$ is the hidden leaf tag produced by the $`\nu`$-th
+tuple at remaining chunk index $`j \ge 1`$. Set
 
 ```math
 \epsilon_{\mathsf{leaf}}^{\mathsf{first}}(\Theta,N)
@@ -1214,9 +1216,9 @@ tuple at later chunk index $`j \ge 1`$. Set
 \end{cases}
 ```
 
-Thus the later-leaf term is charged only for the first differing later chunk
+Thus the leaf term is charged only for the first differing remaining chunk
 $`j^\star \ge 1`$, and vanishes identically when $`n \le 1`$ or when all
-later-leaf local inputs agree. For the trunk-local term, define
+leaf local inputs agree. For the trunk-local term, define
 
 ```math
 M_{\mathsf{tr}}^{\flat}(\Theta,N)
@@ -1258,8 +1260,8 @@ probability over the remaining random permutation choices satisfies
 
 Equivalently, for every fixed output profile $`\Theta`$ and every fixed prior
 transcript, the corresponding TreeWrap commitment collision probability
-reduces either to a later-leaf collision on the full local output pair
-$`(Y_j,T_j)`$ at the first differing later chunk or to a collision on the
+reduces either to a leaf collision on the full local output pair
+$`(Y_j,T_j)`$ at the first differing remaining chunk or to a collision on the
 observed trunk-local output. The same pointwise estimate therefore remains
 valid after conditioning on the adversary's adaptively generated prior
 transcript, because Lemma 4.7 and Section 4.8 bound bad rooted extensions
@@ -1290,9 +1292,9 @@ goal is to isolate how TreeWrap fits the [Men23] framework and how the
 resulting hybrid arguments compose. The genuinely TreeWrap-specific arguments
 are deferred to Section 7.
 
-### 6.1 Imported Later-Leaf and Trunk Adaptations
+### 6.1 Imported Leaf and Trunk Adaptations
 
-The later-leaf analysis identifies $`\mathsf{LeafWrap}`$ with the reduced
+The leaf analysis identifies $`\mathsf{LeafWrap}`$ with the reduced
 MonkeySpongeWrap transcript obtained by excising the vacuous local
 associated-data phase, and then imports the corresponding KD/IXIF replacement
 from [Men23]. The trunk transcript is handled directly as a keyed-duplex family
@@ -1300,7 +1302,7 @@ under the keyed contexts $`(\delta,\mathsf{iv}(U,0))`$ and therefore uses
 Corollary 4.6 without any additional reduction.
 
 Let $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}]`$ denote the same
-later-leaf transcript as $`\mathsf{LeafWrap}[p]`$, but with the keyed duplex
+leaf transcript as $`\mathsf{LeafWrap}[p]`$, but with the keyed duplex
 $`\mathsf{KD}[p]`$ replaced by the ideal interface
 $`\mathsf{IXIF}[\mathrm{ro}]`$ of Section 2.3.2. Thus
 
@@ -1311,7 +1313,7 @@ $`\mathsf{IXIF}[\mathrm{ro}]`$ of Section 2.3.2. Thus
 has exactly the same padding, framing bits, mode flag, and output convention as
 $`\mathsf{LeafWrap}[p]`$; only the transcript engine changes.
 
-For later use, write the framed full-state blocks of a later-leaf call as
+For later use, write the framed full-state blocks of a leaf call as
 
 ```math
 M_j(X) := \widetilde{X}_j \| 1 \| 0^{c-1}
@@ -1343,12 +1345,12 @@ path update is
 M_j(X).
 ```
 
-Hence encryption-side and decryption-side later-leaf calls append the same
+Hence encryption-side and decryption-side leaf calls append the same
 framed message blocks precisely when they induce the same recovered plaintext
 transcript. The imported support is summarized by the following two
 statements.
 
-**Lemma 6.1 (Later-Leaf / Reduced MonkeySpongeWrap Transcript Correspondence).**
+**Lemma 6.1 (Leaf / Reduced MonkeySpongeWrap Transcript Correspondence).**
 Fix parameters $`p,b,r,c,k,t_{\mathsf{leaf}}`$. For any inputs $`K`$, $`V`$,
 and $`X`$, the keyed-duplex transcript of
 
@@ -1371,13 +1373,13 @@ with overwrite enabled in the middle phase, and the returned pair $`(Y,T)`$ is
 exactly the body/tag pair determined by that reduced transcript.
 
 This excision does not alter the structural preconditions used by [Men23]:
-every reduced later-leaf transcript still makes at least one padded body call
+every reduced leaf transcript still makes at least one padded body call
 after initialization, even when $`X = \epsilon`$, and at least one subsequent
 squeeze call because $`t_{\mathsf{leaf}} > 0`$ implies
 $`s_{\mathsf{leaf}} \ge 1`$.
 
-**Theorem 6.2 (Ported Later-Leaf KD/IXIF Replacement).** For every
-distinguisher $`\mathcal{D}_{\mathsf{LW}}`$ attacking a family of later-leaf
+**Theorem 6.2 (Ported Leaf KD/IXIF Replacement).** For every
+distinguisher $`\mathcal{D}_{\mathsf{LW}}`$ attacking a family of leaf
 transcripts under the keyed-context discipline induced by TreeWrap, there
 exists a distinguisher $`\mathcal{D}_{\mathsf{MSW}}`$ against the corresponding
 reduced MonkeySpongeWrap transcript family such that
@@ -1388,9 +1390,9 @@ reduced MonkeySpongeWrap transcript family such that
 \mathrm{Adv}^{\mathsf{real}\text{-}\mathsf{ixif}}_{\mathsf{MonkeySpongeWrap}}(\mathcal{D}_{\mathsf{MSW}}),
 ```
 
-with matching transcript resources after interpreting each later-leaf call as
+with matching transcript resources after interpreting each leaf call as
 the corresponding reduced MonkeySpongeWrap call on the same leaf IV $`V`$.
-Consequently, the later-leaf real-to-IXIF replacement is bounded by the
+Consequently, the leaf real-to-IXIF replacement is bounded by the
 corresponding KD/IXIF term imported from [Men23], with the unused local
 associated-data resources deleted from the accounting. In TreeWrap, the
 relevant keyed contexts are $`(\delta,V_i)`$ with
@@ -1420,7 +1422,7 @@ and $`p^{-1}`$.
 
 - $`H_0^b`$ is the real IND-CPA experiment.
 - $`H_1^b`$ is obtained from $`H_0^b`$ by replacing, for each encryption
-  query $`(\delta,U,A,P_0,P_1)`$, every later-leaf call on chunks
+  query $`(\delta,U,A,P_0,P_1)`$, every leaf call on chunks
   $`i \ge 1`$ by $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}]`$ under the
   derived keyed contexts $`(\delta,V_i)`$ with
   $`V_i = \mathsf{iv}(U,i)`$, while keeping the trunk transcript real.
@@ -1434,7 +1436,7 @@ and $`p^{-1}`$.
   context and transcript inputs.
 
 For the first hop, Lemma 4.1 shows that a per-user nonce-respecting TreeWrap
-adversary induces a nonce-respecting family of later-leaf encryption queries,
+adversary induces a nonce-respecting family of leaf encryption queries,
 so Corollary 4.4 applies. Thus the first replacement changes the overall
 left-right distinguishing gap by at most
 
@@ -1452,7 +1454,7 @@ replacement changes the overall left-right distinguishing gap by at most
 It remains to analyze $`H_2^b`$. In this game:
 
 - the trunk keyed context is always $`(\delta,\mathsf{iv}(U,0))`$;
-- the later-leaf keyed contexts are
+- the leaf keyed contexts are
   $`(\delta,\mathsf{iv}(U,j))`$ for $`j \ge 1`$;
 - per-user nonce respect and injectivity of $`\mathsf{iv}`$ ensure that every
   encryption query occurs on fresh keyed paths inside these two families.
@@ -1464,9 +1466,9 @@ bit except through public lengths and message structure. More explicitly:
 - for $`n = 1`$, it consists only of a fresh trunk body transcript followed by
   a fresh trunk tag path;
 - for $`n > 1`$, it consists of those trunk paths together with independent
-  fresh later-leaf body and tag paths.
+  fresh leaf body and tag paths.
 
-The IXIF oracle used for the later-leaf and trunk replacements is sampled
+The IXIF oracle used for the leaf and trunk replacements is sampled
 independently of the real permutation $`p`$, so the primitive transcript is
 unchanged across the hybrids and remains shared between $`H_2^0`$ and
 $`H_2^1`$. This independence is load-bearing: without it, the primitive oracle
@@ -1489,7 +1491,7 @@ primitive access to $`p`$ and $`p^{-1}`$.
 
 - $`H_0`$ is the real INT-CTXT experiment.
 - $`H_1`$ is obtained from $`H_0`$ by replacing, for each wrapper query with
-  user index $`\delta`$ and nonce $`U`$, every later-leaf encryption-side and
+  user index $`\delta`$ and nonce $`U`$, every leaf encryption-side and
   decryption-side call by $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}]`$
   under the keyed contexts $`(\delta,\mathsf{iv}(U,j))`$ with $`j \ge 1`$,
   while keeping the trunk transcript real.
@@ -1499,7 +1501,7 @@ primitive access to $`p`$ and $`p^{-1}`$.
   recomputation.
 
 For the first hop, Lemma 4.1 gives the required keyed-context discipline at
-the later-leaf layer, and Corollary 4.5 therefore yields
+the leaf layer, and Corollary 4.5 therefore yields
 
 ```math
 \left| \Pr[H_0(\mathcal{A}) = 1] - \Pr[H_1(\mathcal{A}) = 1] \right|
@@ -1537,11 +1539,11 @@ exactly one of the following branches.
 - If $`n = 1`$, the candidate either induces a fresh trunk prefix
   $`(A,X_0)`$ in the trunk keyed context, in which case the adversary must
   again guess the final trunk tag, or it is a replay.
-- If $`n > 1`$, either the trunk prefix is fresh, or some later leaf is fresh,
+- If $`n > 1`$, either the trunk prefix is fresh, or some leaf is fresh,
   or every keyed subtranscript replays. In the fresh trunk-prefix branch the
   final trunk squeeze path is fresh, costing $`2^{-\tau}`$. In the fresh
-  later-leaf branch, either a hidden later-leaf tag collision occurs, costing
-  at most $`2^{-t_{\mathsf{leaf}}}`$, or the absorbed later-tag phase of the
+  leaf branch, either a hidden leaf tag collision occurs, costing
+  at most $`2^{-t_{\mathsf{leaf}}}`$, or the absorbed leaf-tag phase of the
   trunk transcript is fresh, so the adversary must again guess the final tag,
   costing $`2^{-\tau}`$. In the replay branch, the candidate cannot witness
   freshness.
@@ -1630,7 +1632,7 @@ analysis.
 ### 7.1 Authenticity Freshness Split
 
 **Lemma 7.1 (TreeWrap Authenticity Freshness Split).** Fix any final IXIF game
-obtained after replacing the real trunk and later-leaf families by their IXIF
+obtained after replacing the real trunk and leaf families by their IXIF
 counterparts. Let $`(Y,T)`$ be any valid fresh forgery candidate, and let
 $`Y = Y_0 \| \cdots \| Y_{n-1}`$ be its canonical chunk decomposition. Then
 exactly one of the following cases holds.
@@ -1642,16 +1644,16 @@ exactly one of the following cases holds.
    squeeze path is fresh, so the adversary must predict a fresh $`\tau`$-bit
    trunk tag, costing $`2^{-\tau}`$.
 
-2. **Fresh later leaf.**
-   Some later chunk $`X_j`$ with $`j \ge 1`$ is fresh in its keyed context
-   $`(\delta,\mathsf{iv}(U,j))`$. Then either its hidden later-leaf tag
-   collides with the unique prior later-leaf tag for that transcript path,
-   costing at most $`2^{-t_{\mathsf{leaf}}}`$, or the later-tag absorb phase
+2. **Fresh leaf.**
+   Some remaining chunk $`X_j`$ with $`j \ge 1`$ is fresh in its keyed context
+   $`(\delta,\mathsf{iv}(U,j))`$. Then either its hidden leaf tag
+   collides with the unique prior leaf tag for that transcript path,
+   costing at most $`2^{-t_{\mathsf{leaf}}}`$, or the leaf-tag absorb phase
    of the trunk transcript is fresh, so the adversary must again predict a
    fresh $`\tau`$-bit trunk tag, costing $`2^{-\tau}`$.
 
 3. **Replay.**
-   The trunk transcript and every later-leaf transcript replay a prior
+   The trunk transcript and every leaf transcript replay a prior
    encryption in the same keyed contexts, in which case the candidate is a
    replay and cannot witness freshness.
 
@@ -1668,8 +1670,8 @@ families to inspect:
 
 - the trunk keyed context $`(\delta,\mathsf{iv}(U,0))`$, whose transcript
   consists of the optional AD phase, the optional first-chunk body phase, the
-  optional later-tag absorb phase, and the final squeeze phase;
-- the later-leaf keyed contexts $`(\delta,\mathsf{iv}(U,j))`$ for $`j \ge 1`$.
+  optional leaf-tag absorb phase, and the final squeeze phase;
+- the leaf keyed contexts $`(\delta,\mathsf{iv}(U,j))`$ for $`j \ge 1`$.
 
 If $`n = 0`$, freshness means exactly that the associated-data transcript in
 the trunk keyed context is fresh. Then the final trunk squeeze path is fresh
@@ -1681,37 +1683,37 @@ phase, so every later trunk path is fresh and the adversary again has only a
 $`2^{-\tau}`$ chance of guessing the final tag.
 
 Otherwise the trunk prefix replays a prior transcript in the same keyed
-context. If some later chunk $`X_j`$ is fresh in its own keyed context
-$`(\delta,\mathsf{iv}(U,j))`$, then the corresponding later-leaf IXIF path is
+context. If some remaining chunk $`X_j`$ is fresh in its own keyed context
+$`(\delta,\mathsf{iv}(U,j))`$, then the corresponding leaf IXIF path is
 fresh at the first divergent body block or at the first position where the
-padded lengths differ. In more detail, if $`\pi_t`$ denotes the later-leaf
+padded lengths differ. In more detail, if $`\pi_t`$ denotes the leaf
 path after $`t`$ body calls, then the first divergence occurs either because a
 framed body block $`M_t(X_j)`$ differs from every prior framed block with the
 same prefix, or because one transcript reaches its padding block before the
 other. In either case the differing padded block itself witnesses freshness of
 the next path, and freshness then propagates to all later extensions by the
-prefix property of IXIF paths. Hence the hidden later-leaf tag $`T_j`$ is
+prefix property of IXIF paths. Hence the hidden leaf tag $`T_j`$ is
 uniform except with probability $`2^{-t_{\mathsf{leaf}}}`$ that it collides
-with the unique prior later-leaf tag for that keyed path. On the complement of
-that collision event, the absorbed later-tag phase of the trunk transcript
+with the unique prior leaf tag for that keyed path. On the complement of
+that collision event, the absorbed leaf-tag phase of the trunk transcript
 differs at or before the first block containing $`T_j`$, so the final trunk
 squeeze path is fresh and the adversary must still guess the final tag,
 costing $`2^{-\tau}`$.
 
-If neither the trunk prefix nor any later leaf is fresh, then every keyed
+If neither the trunk prefix nor any leaf is fresh, then every keyed
 subtranscript replays a prior encryption exactly. The whole candidate is then a
 replay and cannot witness freshness. Applying a union bound over the at most
 $`q_f`$ final candidates gives the displayed tail.
 
-### 7.2 Later-Leaf Flat Collision Bound
+### 7.2 Leaf Flat Collision Bound
 
-For the later-leaf part of the public-permutation commitment analysis, write
+For the leaf part of the public-permutation commitment analysis, write
 
 ```math
 \mathsf{LeafWrap}^{\flat}[p](K,V,X)
 ```
 
-for the encryption-side later-leaf transcript viewed in the flat model: the
+for the encryption-side leaf transcript viewed in the flat model: the
 initialization is determined by the tuple $`(K,V)`$, the padded message blocks
 are embedded as the framed full-state blocks
 
@@ -1722,8 +1724,8 @@ M_j(X) := \widetilde{X}_j \| 1 \| 0^{c-1},
 and the output pair $`(Y,T)`$ is obtained from the resulting sequence of
 duplex squeezes exactly as in encryption-mode LeafWrap.
 
-**Lemma 7.2 (Later-Leaf Flat Collision Bound).** Consider two encryption-side
-later-leaf inputs
+**Lemma 7.2 (Leaf Flat Collision Bound).** Consider two encryption-side
+leaf inputs
 
 ```math
 (K,V,X) \ne (K',V',X').
@@ -1757,7 +1759,7 @@ and the second contributes the residual ideal-output collision term
 Hence
 
 ```math
-\Pr[\text{local collision on an }\ell\text{-bit later chunk}]
+\Pr[\text{local collision on an }\ell\text{-bit remaining chunk}]
 \le
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{lw}}(\ell,N),2)
 +
@@ -1767,11 +1769,11 @@ Hence
 ```
 
 **Proof.** This is exactly the encryption-side flat-duplex argument already
-used in Section 4.8, now restricted to later chunks $`j \ge 1`$. The
+used in Section 4.8, now restricted to chunks $`j \ge 1`$. The
 duplexing-sponge identity of [BDPVA11] is purely structural, so it applies in
 the public-permutation setting regardless of how the adversary chooses keys,
-derived leaf IVs, or later-chunk bodies. The resulting rooted-sponge bad event
-is bounded by the explicit later-leaf term of Section 4.8, and the residual
+derived leaf IVs, or the bodies of those chunks. The resulting rooted-sponge bad event
+is bounded by the explicit leaf term of Section 4.8, and the residual
 ideal collision probability is the full-output term
 $`2^{-(\ell+t_{\mathsf{leaf}})}`$.
 
@@ -1788,7 +1790,7 @@ model: the keyed initialization is determined by $`(K,\mathsf{iv}(U,0))`$,
 the absorbed transcript consists of an optional associated-data phase on
 $`A \| \delta_{\mathsf{ad}}`$, an optional first-chunk body phase on
 $`P_0`$ using the same body framing as $`\mathsf{LeafWrap}`$, an optional
-later-tag phase on $`\Sigma \| \delta_{\mathsf{tc}}`$, and a final squeeze
+leaf-tag phase on $`\Sigma \| \delta_{\mathsf{tc}}`$, and a final squeeze
 phase. Its observed output is $`T`$ when $`P_0 = \epsilon`$ and the pair
 $`(Y_0,T)`$ when $`P_0 \ne \epsilon`$.
 
@@ -1885,10 +1887,10 @@ for two distinct tuples. By canonical chunking, the common ciphertext body
 $`Y`$ determines the same chunk sequence $`Y_0,\ldots,Y_{n-1}`$ and hence the
 same chunk count $`n`$ in both encryptions.
 
-If $`n = 0`$, there are no later leaves at all, so the collision is purely a
+If $`n = 0`$, there are no leaf evaluations at all, so the collision is purely a
 trunk-local collision and Lemma 7.3 gives the claimed bound immediately. If
 $`n = 1`$, the whole observed ciphertext is already the observed trunk output
-$`(Y_0,T)`$, so Lemma 7.3 again applies directly and the later-leaf term
+$`(Y_0,T)`$, so Lemma 7.3 again applies directly and the leaf term
 vanishes.
 
 Assume now $`n > 1`$. First consider the case that the trunk-local prefixes
@@ -1899,7 +1901,7 @@ differ:
 ```
 
 Then the corresponding trunk-local inputs $`\Xi_1`$ and $`\Xi_2`$ are
-distinct regardless of whether the later-tag suffixes $`\Sigma_1`$ and
+distinct regardless of whether the leaf-tag suffixes $`\Sigma_1`$ and
 $`\Sigma_2`$ agree. Since the final ciphertexts collide, their observed trunk
 outputs collide as well, so Lemma 7.3 bounds this branch by
 $`\epsilon_{\mathsf{tr}}^{\mathsf{flat}}(\Theta,N)`$.
@@ -1920,7 +1922,7 @@ If there exists a first later index $`j^\star \ge 1`$ such that
 
 then there are two subcases.
 
-1. The distinct later-leaf inputs at position $`j^\star`$ produce the same
+1. The distinct leaf inputs at position $`j^\star`$ produce the same
    local output pair
 
    ```math
@@ -1933,13 +1935,13 @@ then there are two subcases.
 2. The two local outputs at $`j^\star`$ differ. Because the full ciphertext
    bodies are equal, the common observed body chunk $`Y_{j^\star}`$ is the
    same in both encryptions, so the difference must lie in the hidden
-   later-leaf tags: $`T_{1,j^\star} \ne T_{2,j^\star}`$. Hence the later-tag
+   leaf tags: $`T_{1,j^\star} \ne T_{2,j^\star}`$. Hence the leaf-tag
    suffixes satisfy $`\Sigma_1 \ne \Sigma_2`$, so the trunk-local inputs
    $`\Xi_1`$ and $`\Xi_2`$ are distinct. The common final ciphertext therefore
    implies a collision on distinct observed trunk outputs, which Lemma 7.3
    bounds by $`\epsilon_{\mathsf{tr}}^{\mathsf{flat}}(\Theta,N)`$.
 
-Finally, if no such later index $`j^\star`$ exists, then every later-leaf
+Finally, if no such later index $`j^\star`$ exists, then every leaf
 input agrees, the trunk-local prefixes agree by assumption, and therefore all
 local inputs agree. Injectivity of the IV derivation then forces
 $`K_1 = K_2`$, $`U_1 = U_2`$, and $`P_1 = P_2`$, while trunk-prefix equality
@@ -1947,7 +1949,7 @@ already gives $`A_1 = A_2`$, contradicting tuple distinctness. Hence this case
 cannot occur.
 
 Therefore every successful collision event lies in the union of a trunk-local
-collision event bounded by Lemma 7.3 and a first-differing later-leaf
+collision event bounded by Lemma 7.3 and a first-differing leaf
 collision event bounded by Lemma 7.2. Adding these two bounds gives the
 conditional estimate of Theorem 5.4, and averaging over the adversary's random
 output pair yields the displayed expectation bound on
@@ -1958,7 +1960,7 @@ $`\mathrm{Adv}^{\mathsf{cmt}\text{-}4}`$.
 We instantiate TreeWrap as a concrete octet-oriented scheme $`\mathsf{TW128}`$
 based on the twelve-round Keccak permutation from [FIPS202]. The goal of this
 instantiation is a 128-bit security target with a 256-bit final tag, a 256-bit
-later-leaf tag, and a 48-rate-block chunk size. The choice of
+leaf tag, and a 48-rate-block chunk size. The choice of
 $`\mathrm{Keccak\text{-}p}[1600,12]`$ is not novel to TreeWrap: it follows the
 software-oriented KangarooTwelve and TurboSHAKE precedent of [K12, RFC9861],
 which likewise uses the twelve-round permutation rather than full-round
@@ -1983,7 +1985,7 @@ The parameter choices are:
 - leaf tag size: $`t_{\mathsf{leaf}} = 256`$;
 - final tag size: $`\tau = 256`$;
 - associated-data phase trailer: $`\delta_{\mathsf{ad}} = \mathtt{00}`$;
-- later-tag phase trailer: $`\delta_{\mathsf{tc}} = \mathtt{01}`$;
+- leaf-tag phase trailer: $`\delta_{\mathsf{tc}} = \mathtt{01}`$;
 - IV-suffix encoding: $`\nu = \mathrm{right\_encode}`$ from [SP800185].
 
 Although $`\mathrm{right\_encode}`$ is specified on bit strings in [SP800185],
@@ -2016,7 +2018,7 @@ by
 
 which is well defined exactly for suffix values
 $`0 \le j \le 2^{1208}-1`$. In the present design the trunk always uses
-$`j = 0`$, while later leaves use $`j = i`$ for chunk indices $`i \ge 1`$.
+$`j = 0`$, while leaf calls on chunks $`i \ge 1`$ use $`j = i`$.
 Thus
 
 ```math
@@ -2027,7 +2029,7 @@ V_i(U) := \mathsf{iv}^{\mathsf{TW128}}(U,i)
 ```
 
 Because the nonce length is fixed and $`\nu = \mathrm{right\_encode}`$ is
-injective, this yields an injective embedding of the trunk and later-leaf IV
+injective, this yields an injective embedding of the trunk and leaf IV
 namespaces into the 1344-bit IV field. The resulting size bound is not
 restrictive in practice: it allows up to $`2^{1208}`$ distinct suffix values,
 far beyond any realistic number of chunks. Outside this range the concrete IV
@@ -2038,24 +2040,24 @@ budget would easily accommodate a 256-bit nonce variant with the same rate,
 capacity, and duplex-call counts; only the concrete IV-embedding map would
 change.
 
-For $`\mathsf{TW128}`$, both the later-leaf tag and the final trunk tag fit
+For $`\mathsf{TW128}`$, both the leaf tag and the final trunk tag fit
 within a single $`r = 1344`$-bit squeeze block, so
 
 ```math
 s_{\mathsf{leaf}} = s_{\mathsf{tr}} = 1.
 ```
 
-Thus raising the later-leaf tag from 128 to 256 bits does not change the local
-later-leaf transcript length: each later chunk still performs one blank
+Thus raising the leaf tag from 128 to 256 bits does not change the local
+leaf transcript length: each remaining chunk still performs one blank
 squeeze for its hidden tag. The concrete cost appears only in the trunk later-
 tag phase, which absorbs an additional
 $`128 \max(\chi(P)-1,0)`$ bits across the
-later-leaf tag vector. This tradeoff is favorable for $`\mathsf{TW128}`$,
+leaf tag vector. This tradeoff is favorable for $`\mathsf{TW128}`$,
 because it materially strengthens the INT-CTXT guessing term while leaving the
-later-leaf CMT-4 analysis unchanged apart from the already negligible ideal
+leaf CMT-4 analysis unchanged apart from the already negligible ideal
 collision tail.
 
-For the later-leaf resource accounting of Section 4.5, a full later chunk has
+For the leaf resource accounting of Section 4.5, a full remaining chunk has
 length $`64512`$ bits, so
 
 ```math
@@ -2064,7 +2066,7 @@ length $`64512`$ bits, so
 \omega_r(64512) + s_{\mathsf{leaf}} = 50.
 ```
 
-Hence the full-chunk later-leaf local CMT-4 term of Lemma 7.2 is
+Hence the full-chunk leaf local CMT-4 term of Lemma 7.2 is
 
 ```math
 \epsilon_{\mathsf{lw}}^{\flat}(64512,N)
@@ -2085,7 +2087,7 @@ N + 100,
 ```
 
 since the exact-rate chunk still incurs one additional padded body block and
-one blank squeeze per local transcript. If the final later chunk has length
+one blank squeeze per local transcript. If the final remaining chunk has length
 $`\lambda`$ bits, where $`0 < \lambda \le 64512`$ and $`\lambda`$ is a
 multiple of $`8`$, then the corresponding local term is
 
@@ -2098,7 +2100,7 @@ multiple of $`8`$, then the corresponding local term is
 ```
 
 This makes the per-ciphertext nature of Theorem 5.4 explicit. The ideal-output
-collision tail is least favorable for the shortest nonempty last later chunk,
+collision tail is least favorable for the shortest nonempty last remaining chunk,
 but because $`\mathsf{TW128}`$ is octet-oriented one always has
 $`\lambda \ge 8`$, so even that worst case is only $`2^{-264}`$. At the same
 time, the duplex-merger term improves as $`\lambda`$ decreases, since
@@ -2157,11 +2159,13 @@ Thus:
   +
   \left\lceil \frac{(n-1)256+9}{1344} \right\rceil
   +
-1,
+
+  1,
+
   ```
 
 because the trunk carries the entire associated-data phase, the first chunk,
-the optional later-tag absorb phase, and the final squeeze.
+the optional leaf-tag absorb phase, and the final squeeze.
 
 The trunk-local CMT-4 term of Theorem 5.4 is therefore
 
@@ -2196,7 +2200,7 @@ and
 
 In particular:
 
-- for the empty-message case, the later-leaf term vanishes and the trunk-local
+- for the empty-message case, the leaf term vanishes and the trunk-local
   contribution is
 
   ```math
@@ -2301,8 +2305,8 @@ sharpened per-chunk local collision terms.
   \epsilon_{\mathsf{leaf}}^{\mathsf{first}}(\Theta,N).
   ```
 
-  In particular, if the later-leaf term is nonzero and the first differing
-  later chunk is a full 8064-byte chunk, then the later-leaf contribution is
+  In particular, if the leaf term is nonzero and the first differing
+  remaining chunk is a full 8064-byte chunk, then the leaf contribution is
 
   ```math
   \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(N+100,2) + 2^{-64768},
@@ -2315,7 +2319,7 @@ sharpened per-chunk local collision terms.
 
 To keep the arithmetic reproducible on the page, we evaluate the leading
 low-complexity term visible in the imported [Men23] expressions rather than
-only quoting the final numerical exponents. For both the later-leaf import and
+only quoting the final numerical exponents. For both the leaf import and
 the direct keyed-duplex import used by $`\mathsf{TrunkWrap}`$, the leading
 capacity term has the form
 
@@ -2341,7 +2345,7 @@ $`\mu = 1`$, empty associated data, $`2^{20}`$ encryption queries, and a
 $`2^{20}`$-byte plaintext in each query. This corresponds to a total wrapped
 plaintext volume of $`2^{40}`$ bytes (one tebibyte). Each message decomposes
 into $`131`$ chunks, so each message contributes one trunk evaluation on chunk
-$`0`$ and $`130`$ later-leaf evaluations on chunks $`1,\ldots,130`$. The
+$`0`$ and $`130`$ leaf evaluations on chunks $`1,\ldots,130`$. The
 induced resources are therefore
 
 ```math
@@ -2357,7 +2361,7 @@ q^{\mathsf{tr}}_e = 2^{20},
 Here the trunk count follows from
 $`\sigma_{\mathsf{tr}}(\epsilon,P) = 49 + 25 + 1 = 75`$ per message: one
 full first chunk costs $`49`$ body calls, the absorbed vector of
-$`130`$ later-leaf tags costs
+$`130`$ leaf tags costs
 $`\lceil (130 \cdot 256 + 9)/1344 \rceil = 25`$ absorb calls, and the final
 squeeze contributes one more call.
 
@@ -2444,9 +2448,9 @@ primitive-query or forgery budgets.
 
 ## 9. Conclusion
 
-TreeWrap shows that a chunk-parallel permutation-based AEAD can be analyzed cleanly by splitting the construction into a trunk transcript and a family of later-leaf transcripts. On the AE side, this decomposition lets the proof reuse the keyed-duplex/IXIF machinery of [Men23] for both `TrunkWrap` and the later-leaf family while isolating the one TreeWrap-specific step needed for integrity: a fresh later chunk yields a fresh hidden later-leaf tag except with the expected guessing probability, while fresh trunk prefixes are handled directly at the trunk layer. On the commitment side, the same decomposition supports a separate public-permutation analysis in which the trunk-local and later-leaf local transcripts are flattened and bounded by rooted-forest sponge arguments.
+TreeWrap shows that a chunk-parallel permutation-based AEAD can be analyzed cleanly by splitting the construction into a trunk transcript and a family of leaf transcripts. On the AE side, this decomposition lets the proof reuse the keyed-duplex/IXIF machinery of [Men23] for both `TrunkWrap` and the leaf family while isolating the one TreeWrap-specific step needed for integrity: a fresh remaining chunk yields a fresh hidden leaf tag except with the expected guessing probability, while fresh trunk prefixes are handled directly at the trunk layer. On the commitment side, the same decomposition supports a separate public-permutation analysis in which the trunk-local and leaf local transcripts are flattened and bounded by rooted-forest sponge arguments.
 
-The concrete $`\mathsf{TW128}`$ instantiation shows that this proof strategy leads to a practically parameterized scheme based on twelve-round Keccak, 8064-byte chunks, 256-bit later-leaf tags, and a 256-bit final tag. Its AE guarantees remain explicitly multi-user and parameterized by the imported keyed-duplex bounds, while its commitment guarantee specializes to an explicit per-output collision bound with especially strong terms on full chunks and on short-message trunk-local paths. Together, these results provide a complete proof framework for TreeWrap and a concrete target instantiation for further evaluation.
+The concrete $`\mathsf{TW128}`$ instantiation shows that this proof strategy leads to a practically parameterized scheme based on twelve-round Keccak, 8064-byte chunks, 256-bit leaf tags, and a 256-bit final tag. Its AE guarantees remain explicitly multi-user and parameterized by the imported keyed-duplex bounds, while its commitment guarantee specializes to an explicit per-output collision bound with especially strong terms on full chunks and on short-message trunk-local paths. Together, these results provide a complete proof framework for TreeWrap and a concrete target instantiation for further evaluation.
 
 ## References
 
