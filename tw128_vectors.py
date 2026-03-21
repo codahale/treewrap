@@ -8,6 +8,8 @@ from pathlib import Path
 
 from tw128 import decrypt, encrypt
 
+_CHUNK = 8128
+
 
 def _pattern(length: int, start: int) -> bytes:
     return bytes((start + i) & 0xFF for i in range(length))
@@ -69,43 +71,43 @@ def _vector_specs() -> list[dict[str, object]]:
         },
         {
             "name": "chunk_minus_1",
-            "description": "Plaintext length B-1 = 8063 bytes.",
+            "description": "Plaintext length B-1 = 8127 bytes.",
             "key": _pattern(32, 0x12),
             "nonce": _pattern(16, 0x23),
             "ad": _pattern(23, 0x34),
-            "plaintext": _pattern(8063, 0x45),
+            "plaintext": _pattern(_CHUNK - 1, 0x45),
         },
         {
             "name": "chunk_exact",
-            "description": "Plaintext length B = 8064 bytes.",
+            "description": "Plaintext length B = 8128 bytes.",
             "key": _pattern(32, 0x56),
             "nonce": _pattern(16, 0x67),
             "ad": _pattern(24, 0x78),
-            "plaintext": _pattern(8064, 0x89),
+            "plaintext": _pattern(_CHUNK, 0x89),
         },
         {
             "name": "chunk_plus_1",
-            "description": "Plaintext length B+1 = 8065 bytes.",
+            "description": "Plaintext length B+1 = 8129 bytes.",
             "key": _pattern(32, 0x9A),
             "nonce": _pattern(16, 0xAB),
             "ad": _pattern(25, 0xBC),
-            "plaintext": _pattern(8065, 0xCD),
+            "plaintext": _pattern(_CHUNK + 1, 0xCD),
         },
         {
             "name": "two_chunks_exact",
-            "description": "Plaintext length 2B = 16128 bytes.",
+            "description": "Plaintext length 2B = 16256 bytes.",
             "key": _pattern(32, 0x21),
             "nonce": _pattern(16, 0x43),
             "ad": _pattern(26, 0x65),
-            "plaintext": _pattern(16128, 0x87),
+            "plaintext": _pattern(2 * _CHUNK, 0x87),
         },
         {
             "name": "two_chunks_plus_1",
-            "description": "Plaintext length 2B+1 = 16129 bytes.",
+            "description": "Plaintext length 2B+1 = 16257 bytes.",
             "key": _pattern(32, 0xA1),
             "nonce": _pattern(16, 0xC3),
             "ad": _pattern(27, 0xE5),
-            "plaintext": _pattern(16129, 0x07),
+            "plaintext": _pattern(2 * _CHUNK + 1, 0x07),
         },
     ]
 

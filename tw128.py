@@ -8,7 +8,7 @@ This is the `TrunkWrap + later LeafWrap` design from the current paper draft:
     r        = 1344          (168 bytes)
     k        = 256           (32 bytes)
     nonce    ∈ {0,1}^128     (16 bytes)
-    B        = 64512 bits    (8064 bytes)
+    B        = 65024 bits    (8128 bytes)
     t_leaf   = 256           (32 bytes)
     τ        = 256           (32 bytes)
     ν        = right_encode  (used only for IV derivation)
@@ -45,7 +45,7 @@ _R = 168
 _C = 32
 _K = 32
 _NONCE = 16
-_CHUNK = 8064
+_CHUNK = 8128
 _TLEAF = 32
 _TAG = 32
 

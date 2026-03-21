@@ -6,7 +6,7 @@ We introduce TreeWrap, a permutation-based authenticated-encryption construction
 
 We analyze TreeWrap in two settings. For authenticated encryption, we prove multi-user IND-CPA, INT-CTXT, and IND-CCA2 bounds in the keyed-duplex model of Mennink. This AE analysis is largely modular: the leaf-layer proof identifies $`\mathsf{LeafWrap}`$ with a reduced MonkeySpongeWrap transcript and imports the corresponding keyed-duplex/IXIF replacement, while the trunk layer is handled by a direct keyed-duplex/IXIF analysis. The main TreeWrap-specific AE step is a freshness lemma showing that, in the IXIF world, either a fresh trunk prefix or a fresh remaining chunk forces a fresh final tag path, except for the explicit leaf-tag collision and final-tag guessing terms. For commitment, we prove a CMT-4 bound in the public-permutation model by flattening the leaf and trunk layers into duplex and sponge transcripts, respectively. This yields a per-ciphertext commitment bound whose local term depends on the actual chunk lengths rather than only on the leaf-tag length.
 
-We also give a concrete instantiation, $`\mathsf{TW128}`$, based on $`\mathrm{Keccak\text{-}p}[1600,12]`$ with 256-bit capacity, 8064-byte chunks, 256-bit leaf tags, and a 256-bit final tag. The resulting generic security target is 128 bits, with explicit multi-user AE bounds and explicit per-output CMT-4 bounds.
+We also give a concrete instantiation, $`\mathsf{TW128}`$, based on $`\mathrm{Keccak\text{-}p}[1600,12]`$ with 256-bit capacity, 8128-byte chunks, 256-bit leaf tags, and a 256-bit final tag. The resulting generic security target is 128 bits, with explicit multi-user AE bounds and explicit per-output CMT-4 bounds.
 
 ## 1. Introduction
 
@@ -109,7 +109,7 @@ single-root sponge bound of [BDPVA08]. Theorem 5.4 then composes these two
 cases: a TreeWrap commitment collision either arises at the first differing
 remaining chunk handled by $`\mathsf{LeafWrap}`$ or at the trunk-local transcript.
 
-The remainder of the paper is organized as follows. Section 2 fixes notation, the keyed-duplex model, and the encoding conventions. Section 3 defines $`\mathsf{LeafWrap}`$, $`\mathsf{TrunkWrap}`$, and $`\mathsf{TreeWrap}`$, together with the AEAD wrapper. Section 4 gives the multi-user security experiments, the resource translation, and the imported external bounds. Section 5 states the main AE and CMT-4 theorems. Section 6 gives the imported AE adaptation sketches, and Section 7 contains the TreeWrap-specific proofs. Section 8 instantiates the construction as $`\mathsf{TW128}`$ using $`\mathrm{Keccak\text{-}p}[1600,12]`$, SP 800-185 encodings, 8064-byte chunks, 256-bit leaf tags, and a 256-bit final tag.
+The remainder of the paper is organized as follows. Section 2 fixes notation, the keyed-duplex model, and the encoding conventions. Section 3 defines $`\mathsf{LeafWrap}`$, $`\mathsf{TrunkWrap}`$, and $`\mathsf{TreeWrap}`$, together with the AEAD wrapper. Section 4 gives the multi-user security experiments, the resource translation, and the imported external bounds. Section 5 states the main AE and CMT-4 theorems. Section 6 gives the imported AE adaptation sketches, and Section 7 contains the TreeWrap-specific proofs. Section 8 instantiates the construction as $`\mathsf{TW128}`$ using $`\mathrm{Keccak\text{-}p}[1600,12]`$, SP 800-185 encodings, 8128-byte chunks, 256-bit leaf tags, and a 256-bit final tag.
 
 ## 2. Preliminaries
 
@@ -2088,7 +2088,7 @@ $`\mathrm{Adv}^{\mathsf{cmt}\text{-}4}`$.
 We instantiate TreeWrap as a concrete octet-oriented scheme $`\mathsf{TW128}`$
 based on the twelve-round Keccak permutation from [FIPS202]. The goal of this
 instantiation is a 128-bit security target with a 256-bit final tag, a 256-bit
-leaf tag, and a 48-rate-block chunk size. The choice of
+leaf tag, and an empirically tuned chunk size of 8128 bytes. The choice of
 $`\mathrm{Keccak\text{-}p}[1600,12]`$ is not novel to TreeWrap: it follows the
 software-oriented KangarooTwelve and TurboSHAKE precedent of [K12, RFC9861],
 which likewise uses the twelve-round permutation rather than full-round
@@ -2098,7 +2098,9 @@ constructions, i.e. in settings that rely directly on public-permutation
 quality rather than on hidden-key assumptions. For TreeWrap, the motivation is
 correspondingly pragmatic: strong software throughput together with
 straightforward SIMD-friendly parallel implementations on current AMD64 and
-ARM64 processors.
+ARM64 processors. The chunk size is chosen on the same pragmatic basis: it is
+not forced by the proof model, but selected as a concrete software parameter
+after backend tuning rather than from permutation-count arithmetic alone.
 
 The parameter choices are:
 
@@ -2109,7 +2111,7 @@ The parameter choices are:
 - key length: $`k = 256`$;
 - IV space: $`\mathcal{IV} = \{0,1\}^{1344}`$;
 - nonce space: $`\mathcal{U} = \{0,1\}^{128}`$;
-- chunk size: $`B = 64512`$ bits $`= 8064`$ bytes $`= 48 \cdot 168`$ bytes;
+- chunk size: $`B = 65024`$ bits $`= 8128`$ bytes;
 - leaf tag size: $`t_{\mathsf{leaf}} = 256`$;
 - final tag size: $`\tau = 256`$;
 - associated-data phase trailer: $`\lambda_{\mathsf{ad}} = \mathtt{00}`$;
@@ -2190,37 +2192,37 @@ leaf CMT-4 analysis unchanged apart from the already negligible ideal
 collision tail.
 
 For the leaf resource accounting of Section 4.5, a full remaining chunk has
-length $`64512`$ bits, so
+length $`65024`$ bits, so
 
 ```math
-\omega_r(64512) = \left\lceil \frac{64512+1}{1344} \right\rceil = 49,
+\omega_r(65024) = \left\lceil \frac{65024+1}{1344} \right\rceil = 49,
 \qquad
-\omega_r(64512) + s_{\mathsf{leaf}} = 50.
+\omega_r(65024) + s_{\mathsf{leaf}} = 50.
 ```
 
 Hence the full-chunk leaf local CMT-4 term of Lemma 7.2 is
 
 ```math
-\epsilon_{\mathsf{lw}}^{\flat}(64512,N)
+\epsilon_{\mathsf{lw}}^{\flat}(65024,N)
 =
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(N+100,2)
 +
-2^{-64768},
+2^{-65280},
 ```
 
 because
 
 ```math
-M_{\mathsf{lw}}(64512,N)
+M_{\mathsf{lw}}(65024,N)
 =
-N + 2 \left(\left\lceil \frac{64512+1}{1344} \right\rceil + 1\right)
+N + 2 \left(\left\lceil \frac{65024+1}{1344} \right\rceil + 1\right)
 =
 N + 100,
 ```
 
 since the exact-rate chunk still incurs one additional padded body block and
 one blank squeeze per local transcript. If the final remaining chunk has length
-$`\lambda`$ bits, where $`0 < \lambda \le 64512`$ and $`\lambda`$ is a
+$`\lambda`$ bits, where $`0 < \lambda \le 65024`$ and $`\lambda`$ is a
 multiple of $`8`$, then the corresponding local term is
 
 ```math
@@ -2343,7 +2345,7 @@ In particular:
 
 - for a one-chunk full-block comparison with empty associated data on both
   sides, one has $`M_{\mathsf{tr}}^{\flat}(\Theta,N)=N+100`$ and
-  $`\delta_{\mathsf{tr}}(\Theta)=2^{-64768}`$.
+  $`\delta_{\mathsf{tr}}(\Theta)=2^{-65280}`$.
 
 The rooted-forest part itself is
 
@@ -2438,10 +2440,10 @@ sharpened per-chunk local collision terms.
   ```
 
   In particular, if the leaf term is nonzero and the first differing
-  remaining chunk is a full 8064-byte chunk, then the leaf contribution is
+  remaining chunk is a full 8128-byte chunk, then the leaf contribution is
 
   ```math
-  \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(N+100,2) + 2^{-64768},
+  \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(N+100,2) + 2^{-65280},
   ```
 
   while the empty-message and one-chunk cases are governed entirely by the
@@ -2476,21 +2478,21 @@ As a concrete illustration, consider first a single-user deployment with
 $`\mu = 1`$, empty associated data, $`2^{20}`$ encryption queries, and a
 $`2^{20}`$-byte plaintext in each query. This corresponds to a total wrapped
 plaintext volume of $`2^{40}`$ bytes (one tebibyte). Each message decomposes
-into $`131`$ chunks, so each message contributes one trunk evaluation on chunk
-$`0`$ and $`130`$ leaf evaluations on chunks $`1,\ldots,130`$. The
+into $`130`$ chunks, so each message contributes one trunk evaluation on chunk
+$`0`$ and $`129`$ leaf evaluations on chunks $`1,\ldots,129`$. The
 leaf-side call count per message is
 
 ```math
-129 \cdot 50 + 3 = 6453,
+128 \cdot 50 + 2 = 6402,
 ```
 
-because the first $`129`$ leaf chunks are full 8064-byte chunks and the final
-leaf chunk has length $`256`$ bytes. The induced resources are therefore
+because the first $`128`$ leaf chunks are full 8128-byte chunks and the final
+leaf chunk has length $`64`$ bytes. The induced resources are therefore
 
 ```math
-\chi_{\mathsf{leaf},e} = 136{,}314{,}880,
+\chi_{\mathsf{leaf},e} = 135{,}266{,}304,
 \qquad
-\sigma^{\mathsf{leaf}}_e = 6{,}766{,}460{,}928,
+\sigma^{\mathsf{leaf}}_e = 6{,}712{,}983{,}552,
 \qquad
 q^{\mathsf{tr}}_e = 2^{20},
 \qquad
@@ -2500,8 +2502,8 @@ q^{\mathsf{tr}}_e = 2^{20},
 Here the trunk count follows from
 $`\sigma_{\mathsf{tr}}(\epsilon,P) = 49 + 25 + 1 = 75`$ per message: one
 full first chunk costs $`49`$ body calls, the absorbed vector of
-$`130`$ leaf tags costs
-$`\lceil (130 \cdot 256 + 9)/1344 \rceil = 25`$ absorb calls, and the final
+$`129`$ leaf tags costs
+$`\lceil (129 \cdot 256 + 9)/1344 \rceil = 25`$ absorb calls, and the final
 squeeze contributes one more call.
 
 If one further grants the adversary a primitive-query budget of
@@ -2509,7 +2511,7 @@ $`N = 2^{40}`$ and a decryption/final-forgery cap of
 $`q_d = q_f = 2^{32}`$, then
 
 ```math
-2 \sigma^{\mathsf{leaf}}_e = 13{,}532{,}921{,}856 < 2^{34},
+2 \sigma^{\mathsf{leaf}}_e = 13{,}425{,}967{,}104 < 2^{34},
 \qquad
 2 \sigma^{\mathsf{tr}}_e = 157{,}286{,}400 < 2^{28},
 ```
@@ -2525,11 +2527,8 @@ so both leading imported terms use $`\nu_{1344,256}^{2M} \le 2`$. Hence the lead
 ```
 
 and the same estimate applies to the leading trunk-side imported term of
-Corollary 4.6. The next visible imported term is
-
-```math
-\frac{\mu N}{2^{256}} = 2^{-216},
-```
+Corollary 4.6. In this single-user example the pairwise-user term
+$`\binom{\mu}{2}/2^{256}`$ vanishes identically, because $`\mu = 1`$,
 
 while the explicit TW128 guessing term is only
 
@@ -2566,10 +2565,10 @@ then the leading leaf-side and trunk-side imported terms both become
 \frac{4(2^{126}+1)}{2^{256}} \approx 2^{-128},
 ```
 
-while the corresponding visible multi-user term is still only
+while the pairwise-user term still vanishes for the same reason:
 
 ```math
-\frac{\mu N}{2^{256}} = 2^{-130}
+\frac{\binom{\mu}{2}}{2^{256}} = 0
 \qquad
 (\text{for } \mu = 1).
 ```
@@ -2589,7 +2588,7 @@ primitive-query or forgery budgets.
 
 TreeWrap shows that a chunk-parallel permutation-based AEAD can be analyzed cleanly by splitting the construction into a trunk transcript and a family of leaf transcripts. On the AE side, this decomposition lets the proof reuse the keyed-duplex/IXIF machinery of [Men23] for both `TrunkWrap` and the leaf family while isolating the one TreeWrap-specific step needed for integrity: a fresh remaining chunk yields a fresh hidden leaf tag except with the expected guessing probability, while fresh trunk prefixes are handled directly at the trunk layer. On the commitment side, the same decomposition supports a separate public-permutation analysis in which the trunk-local and leaf local transcripts are flattened and bounded by rooted-forest sponge arguments.
 
-The concrete $`\mathsf{TW128}`$ instantiation shows that this proof strategy leads to a practically parameterized scheme based on twelve-round Keccak, 8064-byte chunks, 256-bit leaf tags, and a 256-bit final tag. Its AE guarantees remain explicitly multi-user and parameterized by the imported keyed-duplex bounds, while its commitment guarantee specializes to an explicit per-output collision bound with especially strong terms on full chunks and on short-message trunk-local paths. Together, these results provide a complete proof framework for TreeWrap and a concrete target instantiation for further evaluation.
+The concrete $`\mathsf{TW128}`$ instantiation shows that this proof strategy leads to a practically parameterized scheme based on twelve-round Keccak, 8128-byte chunks, 256-bit leaf tags, and a 256-bit final tag. Its AE guarantees remain explicitly multi-user and parameterized by the imported keyed-duplex bounds, while its commitment guarantee specializes to an explicit per-output collision bound with especially strong terms on full chunks and on short-message trunk-local paths. Together, these results provide a complete proof framework for TreeWrap and a concrete target instantiation for further evaluation.
 
 ## References
 
