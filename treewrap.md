@@ -183,12 +183,12 @@ Thus $`\mathsf{IXIF}[\mathrm{ro}]`$ keeps the same control flow as the keyed dup
 
 TreeWrap reserves suffix $`0`$ for the trunk call and uses positive suffixes for `LeafWrap` calls on the remaining chunks, so $`V_{\mathsf{tr}}(U) := \mathsf{iv}(U,0)`$ and $`V_i(U) := \mathsf{iv}(U,i)`$ for $`i \ge 1`$. In concrete instantiations, $`\mathsf{iv}`$ may itself be built from an injective integer encoding such as $`\mathrm{right\_encode}`$; Section 8 does this for $`\mathsf{TW128}`$.
 
-**Trunk phase framing.** Fix two distinct nonempty bitstrings $`\delta_{\mathsf{ad}}, \delta_{\mathsf{tc}} \in \{0,1\}^+`$. For the trunk transcript, these serve as phase trailers for the associated-data phase and the leaf-tag phase, respectively. We write
+**Trunk phase framing.** Fix two distinct nonempty bitstrings $`\lambda_{\mathsf{ad}}, \lambda_{\mathsf{tc}} \in \{0,1\}^+`$. For the trunk transcript, these serve as phase trailers for the associated-data phase and the leaf-tag phase, respectively. We write
 
 ```math
-\mathrm{pad}^{\mathsf{ad}}_{10^r*}(Z) := \mathrm{pad}_{10^r*}(Z \| \delta_{\mathsf{ad}}),
+\mathrm{pad}^{\mathsf{ad}}_{10^r*}(Z) := \mathrm{pad}_{10^r*}(Z \| \lambda_{\mathsf{ad}}),
 \qquad
-\mathrm{pad}^{\mathsf{tc}}_{10^r*}(Z) := \mathrm{pad}_{10^r*}(Z \| \delta_{\mathsf{tc}}).
+\mathrm{pad}^{\mathsf{tc}}_{10^r*}(Z) := \mathrm{pad}_{10^r*}(Z \| \lambda_{\mathsf{tc}}).
 ```
 
 When leaf calls are present on chunks $`i \ge 1`$, the final trunk phase absorbs the string
@@ -202,9 +202,9 @@ Because the leaf tags have fixed length $`t_{\mathsf{leaf}}`$ and the message le
 **Overhead notation.** For later resource accounting, write
 
 ```math
-d_{\mathsf{ad}} := |\delta_{\mathsf{ad}}|,
+d_{\mathsf{ad}} := |\lambda_{\mathsf{ad}}|,
 \qquad
-d_{\mathsf{tc}} := |\delta_{\mathsf{tc}}|.
+d_{\mathsf{tc}} := |\lambda_{\mathsf{tc}}|.
 ```
 
 **Padding and framing.** For any block length $`s \in \mathbb{N}`$ and any bitstring $`Z \in \{0,1\}^*`$, we write
@@ -221,7 +221,7 @@ for the unique padded decomposition of $`Z`$ into $`s`$-bit blocks under the $`\
 
 LeafWrap embeds each padded message or ciphertext block as $`Z_j \| 1 \| 0^{c-1}`$. These are full-state blocks of length $`b = r + c`$ and provide a dedicated transcript format for the body-processing phase. By contrast, the trunk absorb phases process associated-data blocks and leaf-tag blocks as $`W_j \| 0^c`$, that is, as ordinary rate-$`r`$ sponge blocks with an all-zero capacity suffix.
 
-**Domain separation.** TreeWrap separates leaf and trunk calls in three ways. First, the proofs rely on disjoint IV namespaces: the trunk uses $`V_{\mathsf{tr}}(U) = \mathsf{iv}(U,0)`$, while leaf calls on chunks $`i \ge 1`$ use $`V_i(U) = \mathsf{iv}(U,i)`$. Second, within the trunk transcript, the optional associated-data phase and the optional leaf-tag phase are terminated by distinct trailers $`\delta_{\mathsf{ad}}`$ and $`\delta_{\mathsf{tc}}`$. Third, even if the rate parts happen to coincide, the absorbed full-state blocks differ in format across layers: the trunk body and leaf body phases use the suffix $`1 \| 0^{c-1}`$, whereas the trunk absorb phases use $`0^c`$. Thus even if an adversary were somehow to link a trunk IV to a leaf IV, the absorb-style and body-style transcripts would still diverge at every body-processing step because their capacity-part framing bits differ. The later reductions use the IV separation as the primary argument and the block-format distinction as secondary transcript-format separation.
+**Domain separation.** TreeWrap separates leaf and trunk calls in three ways. First, the proofs rely on disjoint IV namespaces: the trunk uses $`V_{\mathsf{tr}}(U) = \mathsf{iv}(U,0)`$, while leaf calls on chunks $`i \ge 1`$ use $`V_i(U) = \mathsf{iv}(U,i)`$. Second, within the trunk transcript, the optional associated-data phase and the optional leaf-tag phase are terminated by distinct trailers $`\lambda_{\mathsf{ad}}`$ and $`\lambda_{\mathsf{tc}}`$. Third, even if the rate parts happen to coincide, the absorbed full-state blocks differ in format across layers: the trunk body and leaf body phases use the suffix $`1 \| 0^{c-1}`$, whereas the trunk absorb phases use $`0^c`$. Thus even if an adversary were somehow to link a trunk IV to a leaf IV, the absorb-style and body-style transcripts would still diverge at every body-processing step because their capacity-part framing bits differ. The later reductions use the IV separation as the primary argument and the block-format distinction as secondary transcript-format separation.
 
 ## 3. The TreeWrap Construction
 
@@ -249,7 +249,7 @@ We write the resulting primitive as
 \mathsf{TreeWrap}_{p,b,r,c,k,\mathcal{IV},\mathcal{U},\mathsf{iv},B,t_{\mathsf{leaf}},\tau}.
 ```
 
-and fix the trunk-phase trailers $`\delta_{\mathsf{ad}}`$ and $`\delta_{\mathsf{tc}}`$ from Section 2.4.
+and fix the trunk-phase trailers $`\lambda_{\mathsf{ad}}`$ and $`\lambda_{\mathsf{tc}}`$ from Section 2.4.
 
 When these parameters are fixed by context, we write simply $`\mathsf{TreeWrap}`$, $`\mathsf{TreeWrap.ENC}`$, and $`\mathsf{TreeWrap.DEC}`$.
 
@@ -701,6 +701,22 @@ The CMT-4 advantage is
 We now record the lower-level resources induced by TreeWrap queries at the
 leaf and trunk layers.
 
+For readability, the main resource symbols used below are:
+
+| Symbol | Meaning |
+| --- | --- |
+| $`\chi_{\mathsf{leaf}}(X)`$ | number of remaining chunks of $`X`$ handled by `LeafWrap` |
+| $`\sigma_{\mathsf{leaf}}(X)`$ | total leaf duplex calls on those remaining chunks |
+| $`q^{\mathsf{tr}}_e, q^{\mathsf{tr}}_d`$ | number of trunk evaluations on the encryption and decryption sides |
+| $`\sigma^{\mathsf{tr}}_e, \sigma^{\mathsf{tr}}_d`$ | total trunk duplex calls on the encryption and decryption sides |
+| $`\Omega_{\mathsf{lw},d}, \Omega^{\mathsf{tr}}_d`$ | decryption-side overwrite counts for the leaf and trunk families |
+| $`q_f`$ | final forgery-candidate count in the multi-forgery INT-CTXT game |
+| $`q_*`$ | generic decryption-side wrapper count: $`q_f`$ in INT-CTXT and $`q_d`$ in IND-CCA2 |
+
+Throughout Sections 4--8, lower-case $`\sigma`$ denotes a duplex-call count,
+while upper-case $`\Sigma`$ is reserved for a concatenated leaf-tag suffix in
+the trunk-local proofs.
+
 **Lemma 4.1 (Derived Internal-Keyed-Context Discipline).** Suppose the
 adversary is nonce-respecting at the TreeWrap encryption layer on a per-user
 basis. Then
@@ -880,10 +896,12 @@ specializes to
 Here $`\nu_{r,c}^{X}`$ is the multicollision limit function imported from
 [Men23, Section 4.2]. The parameter $`\nu_{\mathsf{fix}}`$ is retained in the
 argument list only to keep the shorthand aligned with the full [Men23]
-resource tuple; it does not appear in this low-complexity branch. The
-simplified branch is valid in the regime $`M + N \le 0.1 \cdot 2^c`$; if this
-side condition is not met, one may instead use the corresponding general
-branch.
+resource tuple; it does not appear in this low-complexity branch. This
+shorthand is exactly the low-complexity branch of [Men23, Theorem 1, Eq. (5)];
+the alternative [Men23, Theorem 2, Eq. (6)] introduces additional
+$`\nu_{\mathsf{fix}}`$-dependent terms that are not used here. The simplified
+branch is valid in the regime $`M + N \le 0.1 \cdot 2^c`$; if this side
+condition is not met, one may instead use the corresponding general branch.
 
 For the reduced MonkeySpongeWrap-style analysis of the leaf family,
 define the decryption-side overwrite count
@@ -1019,11 +1037,11 @@ the trunk bidirectional real-to-IXIF replacement term can be instantiated as
 \mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{tr}}_e+\sigma^{\mathsf{tr}}_d,q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d,\mu,q^{\mathsf{tr}}_d,\Omega^{\mathsf{tr}}_d,\max(\Omega^{\mathsf{tr}}_d+q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d-1,0),N).
 ```
 
-### 4.7 Rooted-Forest Sponge Collision Bound
+### 4.8 Rooted-Forest Sponge Collision Bound
 
 For the trunk-local CMT-4 analysis, we only need a bad-event bound for rooted transcript merging, not a full indifferentiability statement. We therefore import the single-root random-permutation sponge counting argument of [BDPVA08, Eq. (6)] and record the corresponding $`\rho`$-root extension directly.
 
-**Lemma 4.7 (Rooted-Forest Sponge Collision Bound).** Fix $`\rho \ge 1`$ public roots. For each root, consider the rooted sponge tree obtained by following absorb/squeeze paths from that root as in [BDPVA08]. Let $`R_i`$ be the set of rooted nodes exposed after $`i`$ successful transcript or primitive-query extensions, and let $`O_i`$ be the set of already fixed full states encountered along those rooted paths. Define the bad event $`\mathsf{Merge}_{\rho}(M)`$ to be the event that, during the first $`M`$ such extensions, a new forward or inverse step lands on a previously exposed rooted node or previously fixed full state in a way that merges two distinct rooted transcripts. Then
+**Lemma 4.8 (Rooted-Forest Sponge Collision Bound).** Fix $`\rho \ge 1`$ public roots. For each root, consider the rooted sponge tree obtained by following absorb/squeeze paths from that root as in [BDPVA08]. Let $`R_i`$ be the set of rooted nodes exposed after $`i`$ successful transcript or primitive-query extensions, and let $`O_i`$ be the set of already fixed full states encountered along those rooted paths. Define the bad event $`\mathsf{Merge}_{\rho}(M)`$ to be the event that, during the first $`M`$ such extensions, a new forward or inverse step lands on a previously exposed rooted node or previously fixed full state in a way that merges two distinct rooted transcripts. Then
 
 ```math
 \Pr[\mathsf{Merge}_{\rho}(M)] \le f_{P,\rho}(M),
@@ -1057,7 +1075,7 @@ f_{P,\rho}(M)
 
 for every $`i \ge 0`$. Repeating the one-root bad-event count with these cardinalities yields the displayed product bound. Here the numerator bounds the probability that the next capacity slice avoids the at most $`\rho+i`$ exposed rooted nodes, while the denominator conditions on avoiding the at most $`i`$ previously fixed full states. Applying the same quadratic relaxation as in [BDPVA08, Eq. (6)] gives the displayed explicit rooted-forest collision bound. For $`\rho = 1`$, the product expression specializes to the original single-root counting bound and the quadratic term recovers exactly [BDPVA08, Eq. (6)].
 
-### 4.8 Imported Flat Duplex Bound
+### 4.9 Imported Flat Duplex Bound
 
 For the local CMT-4 analysis, the duplexing-sponge lemma of [BDPVA11, Lemma 3] allows us to reuse the same rooted-sponge bound for the flattened encryption-side LeafWrap transcript. This use is purely structural: the duplexing-sponge equivalence identifies the duplex transcript with the corresponding sponge transcript for every fixed input history, independent of how the adversary chooses keys, IVs, or message blocks. For an $`\ell`$-bit chunk body, define
 
@@ -1083,8 +1101,8 @@ This is the concrete local CMT-4 term used below.
 
 For authenticated encryption, we instantiate the imported [Men23] terms using
 Section 4.6. For commitment, the leaf local term is the explicit
-flat-duplex quantity of Section 4.8, while the trunk-local term combines the
-rooted-forest sponge count of Lemma 4.7 with an explicit ideal-output
+flat-duplex quantity of Section 4.9, while the trunk-local term combines the
+rooted-forest sponge count of Lemma 4.8 with an explicit ideal-output
 collision tail on the observed trunk output.
 
 - Let $`\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}`$ be the explicit imported
@@ -1102,9 +1120,9 @@ collision tail on the observed trunk output.
   tag guessing event, contributing at most $`2^{-\tau}`$ per final forgery
   candidate.
 - Let $`\epsilon_{\mathsf{lw}}^{\flat}(\ell,N)`$ be the explicit leaf
-  flat-duplex term of Section 4.8.
+  flat-duplex term of Section 4.9.
 - Let $`\mathrm{Sponge}^{(i)}_{\mathsf{forest}}`$ be the explicit rooted-forest
-  sponge term of Lemma 4.7.
+  sponge term of Lemma 4.8.
 
 ### 5.1 IND-CPA Theorem
 
@@ -1309,7 +1327,7 @@ reduces either to a leaf collision on the full local output pair
 $`(Y_j,T_j)`$ at the first differing remaining chunk or to a collision on the
 observed trunk-local output. The same pointwise estimate therefore remains
 valid after conditioning on the adversary's adaptively generated prior
-transcript, because Lemma 4.7 and Section 4.8 bound bad rooted extensions
+transcript, because Lemma 4.8 and Section 4.9 bound bad rooted extensions
 relative to the already exposed rooted nodes and full states. Consequently, if
 $`\Theta`$ denotes the random realized output pair of a CMT-4 adversary
 $`\mathcal{A}`$, then conditioning first on the realized prior transcript and
@@ -1447,9 +1465,9 @@ For the trunk layer, let $`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\math
 denote the same transcript as $`\mathsf{TrunkWrap}[p]`$, but with the keyed
 duplex replaced by $`\mathsf{IXIF}[\mathrm{ro}_{\mathsf{tr}}]`$. A trunk evaluation in this
 ideal world still consists of an optional absorb phase on
-$`A \| \delta_{\mathsf{ad}}`$, an optional first-chunk body phase on
+$`A \| \lambda_{\mathsf{ad}}`$, an optional first-chunk body phase on
 $`X_0`$, an optional absorb phase on
-$`T_1 \| \cdots \| T_m \| \delta_{\mathsf{tc}}`$, and one final squeeze phase.
+$`T_1 \| \cdots \| T_m \| \lambda_{\mathsf{tc}}`$, and one final squeeze phase.
 Because this is already a keyed-duplex family under the contexts
 $`(\delta,\mathsf{iv}(U,0))`$, Corollaries 4.6 and 4.7 apply directly in the
 encryption-only and bidirectional settings, respectively. These imported
@@ -1801,7 +1819,7 @@ let $`\ell := |Y|`$ and assume $`M_{\mathsf{lw}}(\ell,N) < 2^c`$. Then either
 the two flattened local transcripts collide under the duplexing-sponge
 reduction of [BDPVA11] in the presence of at most $`N`$ primitive queries, or
 two distinct ideal local transcript histories produce the same full local
-output pair $`(Y,T)`$. By Section 4.8, the first event is bounded by
+output pair $`(Y,T)`$. By Section 4.9, the first event is bounded by
 
 ```math
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{lw}}(\ell,N),2),
@@ -1826,11 +1844,11 @@ Hence
 ```
 
 **Proof.** This is exactly the encryption-side flat-duplex argument already
-used in Section 4.8, now restricted to chunks $`j \ge 1`$. The
+used in Section 4.9, now restricted to chunks $`j \ge 1`$. The
 duplexing-sponge identity of [BDPVA11] is purely structural, so it applies in
 the public-permutation setting regardless of how the adversary chooses keys,
 derived leaf IVs, or the bodies of those chunks. The resulting rooted-sponge bad event
-is bounded by the explicit leaf term of Section 4.8, and the residual
+is bounded by the explicit leaf term of Section 4.9, and the residual
 ideal collision probability is the full-output term
 $`2^{-(\ell+t_{\mathsf{leaf}})}`$.
 
@@ -1845,9 +1863,9 @@ Let
 denote the trunk-local encryption transcript viewed in the flattened sponge
 model: the keyed initialization is determined by $`(K,\mathsf{iv}(U,0))`$,
 the absorbed transcript consists of an optional associated-data phase on
-$`A \| \delta_{\mathsf{ad}}`$, an optional first-chunk body phase on
+$`A \| \lambda_{\mathsf{ad}}`$, an optional first-chunk body phase on
 $`P_0`$ using the same body framing as $`\mathsf{LeafWrap}`$, an optional
-leaf-tag phase on $`\Sigma \| \delta_{\mathsf{tc}}`$, and a final squeeze
+leaf-tag phase on $`\Sigma \| \lambda_{\mathsf{tc}}`$, and a final squeeze
 phase. Its observed output is $`T`$ when $`P_0 = \epsilon`$ and the pair
 $`(Y_0,T)`$ when $`P_0 \ne \epsilon`$.
 
@@ -1910,7 +1928,7 @@ $`(K_1,\mathsf{iv}(U_1,0))`$ and $`(K_2,\mathsf{iv}(U_2,0))`$.
 
 The total number of primitive and flattened transcript calls is bounded by
 $`M_{\mathsf{tr}}^{\flat}(\Theta,N)`$, and the number of public roots is
-exactly $`\rho`$. Hence Lemma 4.7 bounds the rooted-forest bad event by
+exactly $`\rho`$. Hence Lemma 4.8 bounds the rooted-forest bad event by
 
 ```math
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{tr}}^{\flat}(\Theta,N),\rho).
@@ -1919,7 +1937,7 @@ exactly $`\rho`$. Hence Lemma 4.7 bounds the rooted-forest bad event by
 Conditioned on the complement of that bad event, distinct trunk-local inputs
 yield distinct rooted transcript histories. This injectivity comes from the
 combination of root separation through the IV derivation, explicit phase
-trailers $`\delta_{\mathsf{ad}}`$ and $`\delta_{\mathsf{tc}}`$, and the body
+trailers $`\lambda_{\mathsf{ad}}`$ and $`\lambda_{\mathsf{tc}}`$, and the body
 framing $`\widetilde{X}_j \| 1 \| 0^{c-1}`$ that separates the first-chunk
 body phase from the absorb-style phases. Therefore a collision on the observed
 trunk output can only occur through an ideal-output collision on that observed
@@ -2041,8 +2059,8 @@ The parameter choices are:
 - chunk size: $`B = 64512`$ bits $`= 8064`$ bytes $`= 48 \cdot 168`$ bytes;
 - leaf tag size: $`t_{\mathsf{leaf}} = 256`$;
 - final tag size: $`\tau = 256`$;
-- associated-data phase trailer: $`\delta_{\mathsf{ad}} = \mathtt{00}`$;
-- leaf-tag phase trailer: $`\delta_{\mathsf{tc}} = \mathtt{01}`$;
+- associated-data phase trailer: $`\lambda_{\mathsf{ad}} = \mathtt{00}`$;
+- leaf-tag phase trailer: $`\lambda_{\mathsf{tc}} = \mathtt{01}`$;
 - IV-suffix encoding: $`\nu = \mathrm{right\_encode}`$ from [SP800185].
 
 Although $`\mathrm{right\_encode}`$ is specified on bit strings in [SP800185],
@@ -2052,8 +2070,8 @@ associated-data input, and an octet-string plaintext, and returns an
 octet-string ciphertext of length $`|P| + 32`$ bytes;
 $`\mathsf{TW128.DEC}`$ has the corresponding octet-string ciphertext
 interface. The trunk phase trailers
-$`\delta_{\mathsf{ad}} = \mathtt{00}`$ and
-$`\delta_{\mathsf{tc}} = \mathtt{01}`$ are therefore also interpreted as
+$`\lambda_{\mathsf{ad}} = \mathtt{00}`$ and
+$`\lambda_{\mathsf{tc}} = \mathtt{01}`$ are therefore also interpreted as
 single octets. This matches the intended software interface and keeps the
 framing layer aligned with the byte-oriented presentation of SP 800-185.
 For the multi-user AE proofs, the user index is encoded separately by the
