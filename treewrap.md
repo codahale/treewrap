@@ -21,6 +21,34 @@ Accordingly, TreeWrap uses keyed IV namespaces and duplex padding/framing in
 place of Sakura coding, and it targets authenticated encryption and commitment
 rather than hashing.
 
+### 1.1 Design Rationale
+
+TreeWrap is guided by four design goals.
+
+First, short-message latency matters. The construction therefore keeps the
+associated data, the first chunk, and the final tag in one serial
+`TrunkWrap` transcript. This is not only an implementation choice: it also
+ensures that every nonempty message contributes a body phase to the trunk
+transcript, so the one-chunk integrity path reduces directly to trunk-prefix
+freshness.
+
+Second, long-message throughput matters. Chunks after the first are therefore
+handled by independent `LeafWrap` calls under disjoint IVs, so the bulk of a
+long message can be processed in parallel and returned to the trunk only as a
+vector of short hidden tags.
+
+Third, proof modularity matters. The leaf layer is deliberately kept as close
+as possible to the reduced MonkeySpongeWrap transcript already analyzed in
+[Men23], while the trunk layer is a direct keyed-duplex family. This split is
+what lets the authenticated-encryption analysis reuse the imported KD/IXIF
+machinery rather than re-proving a monolithic new duplex mode from scratch.
+
+Fourth, one of the attractions of duplex-based designs is that they admit a
+natural commitment story. The same transcript structure that supports the AE
+proofs can also be flattened into public-permutation histories, giving a direct
+route to a CMT-4 analysis within the same permutation-based framework rather
+than through a separate authenticator family.
+
 On the AE side, most of the proof work is a modular application of [Men23]
 rather than a new keyed-duplex argument. The genuinely new technical pieces
 are the TreeWrap-specific authenticity freshness split of Lemma 7.1 and the
