@@ -470,15 +470,27 @@ It takes $`(K,V,X,m) \in \{0,1\}^k \times \mathcal{IV} \times \{0,1\}^* \times
 
 ```text
 Algorithm LeafWrap[p](K, V, X, m):
-    (X~_1, ..., X~_w) <- pad*_{10^r*}(X)
     Y* <- ε
     T* <- ε
     instantiate KD[p]_(K) with α = 0
     KD.init(1, V)
-    for j = 1 to w:
-        flag <- (m = dec)
-        Z~_j <- KD.duplex(flag, X~_j || 1 || 0^{c-1})
-        Y* <- Y* || (Z~_j xor X~_j)
+    if m = enc:
+        (X~_1, ..., X~_w) <- pad*_{10^r*}(X)
+        for j = 1 to w:
+            Z~_j <- KD.duplex(false, X~_j || 1 || 0^{c-1})
+            Y* <- Y* || (Z~_j xor X~_j)
+    else:
+        parse X as X_1 || ... || X_u || X_vis
+        with |X_j| = r for j = 1,...,u and |X_vis| = d, where 0 <= d < r
+        for j = 1 to u:
+            Z~_j <- KD.duplex(true, X_j || 1 || 0^{c-1})
+            Y* <- Y* || (Z~_j xor X_j)
+        let Z~_{u+1} be the squeeze output of the next overwrite call
+        Y_vis <- left_d(Z~_{u+1} xor X_vis)
+        Y~_{u+1} <- Y_vis || 1 || 0^{r-d-1}
+        X~_{u+1} <- Z~_{u+1} xor Y~_{u+1}
+        complete the next overwrite call with X~_{u+1} || 1 || 0^{c-1}
+        Y* <- Y* || Y_vis
     for j = 1 to ceil(t_leaf / r):
         T* <- T* || KD.duplex(false, 0^b)
     Y <- left_|X|(Y*)
@@ -486,12 +498,13 @@ Algorithm LeafWrap[p](K, V, X, m):
     return (Y, T)
 ```
 
-Here the body-loop flag is set explicitly by $`\mathsf{flag} \gets [m =
-\mathsf{dec}]`$: encryption uses $`\mathsf{flag} = \mathsf{false}`$, while
-decryption uses $`\mathsf{flag} = \mathsf{true}`$. Thus encryption XOR-absorbs
-the padded body blocks and decryption runs the corresponding overwrite
-transcript. This is the transcript-level object used throughout the later
-reductions.
+Encryption XOR-absorbs the padded body blocks directly. Decryption uses the
+same overwrite transcript on all fully visible $`r`$-bit body blocks, and on
+the final body step reconstructs the unique hidden full ciphertext block
+consistent with the visible ciphertext suffix, the next squeeze output, and
+$`\mathrm{pad}10^*`$ before completing the overwrite update. When $`d = 0`$,
+this last step reconstructs the hidden all-padding block. This is the
+transcript-level object used throughout the later reductions.
 
 #### 3.2.2 Inversion
 
@@ -510,19 +523,36 @@ then
 In other words, the encryption and decryption modes of LeafWrap invert the body
 transformation while reproducing the same leaf tag.
 
-**Proof sketch.** In the $`j`$th body step of encryption, the ciphertext block
-is $`Y_j = X_j \oplus Z_j`$, where $`Z_j`$ is the corresponding duplex squeeze
-output. Decryption feeds the same framed block $`Y_j \| 1 \| 0^{c-1}`$ with
-overwrite flag $`\mathsf{true}`$, so the absorbed full-state input becomes
+**Proof sketch.** Let $`\widetilde X_1,\ldots,\widetilde X_w`$ be the padded
+plaintext blocks and let
+$`\widetilde Y_j := \widetilde Z_j \oplus \widetilde X_j`$ be the corresponding
+full ciphertext blocks in the encryption transcript. For every fully visible
+body block, decryption feeds the same framed block
+$`\widetilde Y_j \| 1 \| 0^{c-1}`$ with overwrite flag $`\mathsf{true}`$, so the
+absorbed full-state input becomes
 
 ```math
-[\mathsf{true}] \cdot (Z_j \| 0^{b-r}) \oplus (Y_j \| 1 \| 0^{c-1})
+[\mathsf{true}] \cdot (\widetilde Z_j \| 0^{b-r})
+\oplus
+(\widetilde Y_j \| 1 \| 0^{c-1})
 =
-X_j \| 1 \| 0^{c-1},
+\widetilde X_j \| 1 \| 0^{c-1},
 ```
 
-which is exactly the framed encryption-side body block. Thus the entire body
-transcript, and therefore the subsequent tag-squeezing transcript, is
+which is exactly the framed encryption-side body block. On the final body step,
+only the visible suffix $`Y_{\mathrm{vis}} = \mathrm{left}_d(\widetilde Y_w)`$
+is returned to the caller, where $`d < r`$ and $`d = 0`$ covers the hidden
+all-padding case. Decryption first obtains the same next squeeze output
+$`\widetilde Z_w`$, reconstructs
+$`X_{\mathrm{vis}} = \mathrm{left}_d(\widetilde Z_w \oplus Y_{\mathrm{vis}})`$,
+sets
+$`\widetilde X_w = X_{\mathrm{vis}} \| 1 \| 0^{r-d-1}`$,
+reconstructs
+$`\widetilde Y_w = \widetilde Z_w \oplus \widetilde X_w`$,
+and then performs the overwrite update with
+$`\widetilde Y_w \| 1 \| 0^{c-1}`$. The same algebra therefore yields
+$`\widetilde X_w \| 1 \| 0^{c-1}`$ on the final step as well. Thus the entire
+body transcript, and therefore the subsequent tag-squeezing transcript, is
 reproduced exactly.
 
 ### 3.3 TrunkWrap
@@ -563,13 +593,9 @@ Algorithm TrunkWrap.init[p](K, V, A):
 
 ```text
 Algorithm TrunkWrap.body(KD, X, m):
-    (X~_1, ..., X~_w) <- pad*_{10^r*}(X)
-    Y* <- ε
-    for j = 1 to w:
-        flag <- (m = dec)
-        Z~_j <- KD.duplex(flag, X~_j || 1 || 0^{c-1})
-        Y* <- Y* || (Z~_j xor X~_j)
-    Y <- left_|X|(Y*)
+    let Y be the output of the LeafWrap body-phase transcript on X and m,
+        executed using the current keyed-duplex object KD in place of a fresh
+        initialization
     return (Y, KD)
 ```
 
@@ -721,9 +747,11 @@ be the canonical chunk decomposition. The encryption algorithm computes
 ```
 
 for each $`i = 1,\ldots,n-1`$. By Lemma 3.1, decryption reproduces the same
-leaf tags $`T_i`$ and recovers each remaining chunk $`P_i`$ from $`Y_i`$. The
-trunk body phase uses exactly the same keyed-duplex framing and overwrite
-algebra as LeafWrap, so the same argument shows that `TrunkWrap.body` recovers
+leaf tags $`T_i`$ and recovers each remaining chunk $`P_i`$ from $`Y_i`$,
+including the final truncated body block through the same hidden-tail
+reconstruction. The trunk body phase is defined to use exactly the same
+body-processing transcript as LeafWrap, starting from the current trunk duplex
+state, so the same argument shows that `TrunkWrap.body` recovers
 $`P_0`$ from $`Y_0`$ while reproducing the same post-body trunk state. Hence
 both the optional associated-data phase and the optional leaf-tag absorb phase
 of `TrunkWrap` are identical in wrapping and unwrapping, and both procedures
