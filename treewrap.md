@@ -1001,6 +1001,10 @@ current TreeWrap proof, except that only remaining chunks are included. Distinct
 encryption-side leaf keyed contexts eliminate encryption/encryption
 subpath repetition, while decryption-side leaf queries may repeat keyed
 contexts and contribute at most $`\chi_{\mathsf{leaf},d}`$ repeated subpaths.
+Because $`\mathsf{iv}`$ is injective, a raw IV identifies a unique
+$`(U,j)`$ pair; same-user decryption-side repeats of that pair are
+accounted for by $`L`$, while across distinct users a fixed raw IV can
+appear under at most $`\mu`$ user labels, giving $`Q_{IV} \le \mu`$.
 The same path-counting argument as in [Men23, Theorem 7] then yields the
 stated bound on $`\nu_{\mathsf{fix}}`$. This bound is slightly conservative,
 but that does not affect the concrete theorems here because
