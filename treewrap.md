@@ -1537,8 +1537,8 @@ replacements do not share an ideal transcript engine. Throughout
 Sections 6.2 and 6.3, the imported duplex bounds are used exactly in the form
 fixed in Section 4.6, namely the $`\mu`$-user, low-complexity branch of
 [Men23]. The two KD/IXIF hops compose sequentially because the leaf and trunk
-keyed-duplex families operate on disjoint keyed-duplex families under separate IV namespaces and their ideal
-replacements are driven by independent random oracles. In the leaf hop, a
+layers are distinct keyed-duplex families under separate IV namespaces, and
+their ideal replacements are driven by independent random oracles. In the leaf hop, a
 leaf distinguisher forwards leaf calls to its own oracle while evaluating the
 trunk internally via $`p`$; the trunk is identical in both worlds and
 contributes no gap. In the trunk hop, a trunk distinguisher has
@@ -1845,8 +1845,13 @@ same prefix, or because one transcript reaches its padding block before the
 other. In either case the differing padded block itself witnesses freshness of
 the next path, and freshness then propagates to all later extensions by the
 prefix property of IXIF paths. Hence the hidden leaf tag $`T_j`$ is
-uniform except with probability $`2^{-t_{\mathsf{leaf}}}`$ that it collides
-with some previously exposed leaf tag for that keyed path. On the complement of
+uniform on a fresh IXIF squeeze path. By per-user nonce-respecting behavior
+and the keyed-context discipline of Lemma 4.1, at most one prior encryption
+query produced a leaf tag under the same keyed context
+$`(\delta,\mathsf{iv}(U,j))`$, and the INT-CTXT experiment exposes no
+decryption-side leaf tags to the adversary. Therefore the collision target
+set has size at most one, and $`T_j`$ collides with the single previously
+exposed leaf tag with probability at most $`2^{-t_{\mathsf{leaf}}}`$. On the complement of
 that collision event, the absorbed leaf-tag phase of the trunk transcript
 differs at or before the first block containing $`T_j`$, so the final trunk
 squeeze path is fresh and the adversary must still guess the final tag,
