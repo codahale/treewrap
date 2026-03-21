@@ -26,7 +26,7 @@ rather than a new keyed-duplex argument. The genuinely new technical pieces
 are the TreeWrap-specific authenticity freshness split of Lemma 7.1 and the
 public-permutation CMT-4 analysis of Section 7.
 
-The proof strategy follows the same decomposition. The AE analysis is carried out in the multi-user keyed-duplex model of [Men23]. At the leaf layer, Lemma 6.1 identifies the $`\mathsf{LeafWrap}`$ family on chunks $`i \ge 1`$ with a reduced MonkeySpongeWrap transcript, and Theorem 6.2 imports the corresponding KD/IXIF replacement. A TreeWrap-specific freshness lemma then handles the interaction between fresh leaf tags and the trunk transcript. At the trunk layer, Corollary 4.6 gives a direct keyed-duplex/IXIF replacement for $`\mathsf{TrunkWrap}`$. These ingredients yield the IND-CPA and INT-CTXT theorems, and Theorem 5.3 derives IND-CCA2 from them by a BN00-style game hop using the multi-forgery integrity notion of Section 4.2.
+The proof strategy follows the same decomposition. The AE analysis is carried out in the multi-user keyed-duplex model of [Men23]. At the leaf layer, Lemma 6.1 identifies the $`\mathsf{LeafWrap}`$ family on chunks $`i \ge 1`$ with a reduced MonkeySpongeWrap transcript, and Theorem 6.2 imports the corresponding KD/IXIF replacement. A TreeWrap-specific freshness lemma then handles the interaction between fresh leaf tags and the trunk transcript. At the trunk layer, Corollaries 4.6 and 4.7 give the encryption-side and bidirectional keyed-duplex/IXIF replacements for $`\mathsf{TrunkWrap}`$. These ingredients yield the IND-CPA and INT-CTXT theorems, and Theorem 5.3 derives IND-CCA2 from them by a BN00-style game hop using the multi-forgery integrity notion of Section 4.2.
 
 The commitment analysis is deliberately separate from the keyed AE path.
 Because the CMT-4 adversary chooses both candidate keys and nonces, the proof
@@ -962,22 +962,24 @@ $`\Omega^{\mathsf{tr}}_d = \sum_{b=1}^{q_*} \beta_r(Y^{(b)})`$. The same
 Men23 path-counting argument then gives the stated bound on
 $`\nu_{\mathsf{fix}}`$.
 
-**Corollary 4.6 (Imported TrunkWrap KD/IXIF Bound).** If
-$`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d + N \le 0.1 \cdot 2^c`$, then
-the trunk real-to-IXIF replacement term can be instantiated as
-
-```math
-\epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,N)
-:=
-\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{tr}}_e+\sigma^{\mathsf{tr}}_d,q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d,\mu,q^{\mathsf{tr}}_d,\Omega^{\mathsf{tr}}_d,\max(\Omega^{\mathsf{tr}}_d+q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d-1,0),N).
-```
-
-The corresponding encryption-side term is
+**Corollary 4.6 (Imported TrunkWrap Encryption-Side KD/IXIF Bound).** If
+$`\sigma^{\mathsf{tr}}_e + N \le 0.1 \cdot 2^c`$, then the trunk
+encryption-side real-to-IXIF replacement term can be instantiated as
 
 ```math
 \epsilon_{\mathsf{tr}}^{\mathsf{enc}}(\mu,q^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_e,N)
 :=
 \mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{tr}}_e,q^{\mathsf{tr}}_e,\mu,0,0,0,N).
+```
+
+**Corollary 4.7 (Imported TrunkWrap Bidirectional KD/IXIF Bound).** If
+$`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d + N \le 0.1 \cdot 2^c`$, then
+the trunk bidirectional real-to-IXIF replacement term can be instantiated as
+
+```math
+\epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,N)
+:=
+\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{tr}}_e+\sigma^{\mathsf{tr}}_d,q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d,\mu,q^{\mathsf{tr}}_d,\Omega^{\mathsf{tr}}_d,\max(\Omega^{\mathsf{tr}}_d+q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d-1,0),N).
 ```
 
 ### 4.7 Rooted-Forest Sponge Collision Bound
@@ -1054,7 +1056,7 @@ collision tail on the observed trunk output.
   leaf bidirectional KD/IXIF term of Corollary 4.5.
 - Let $`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$ and
   $`\epsilon_{\mathsf{tr}}^{\mathsf{ae}}`$ be the explicit imported trunk
-  KD/IXIF terms of Corollary 4.6.
+  KD/IXIF terms of Corollaries 4.6 and 4.7, respectively.
 - By Lemma 7.1 together with the keyed-context discipline of Lemma 4.1, the
   only additional explicit integrity failures beyond these imported KD/IXIF
   terms are the event that a fresh leaf tag collides with the unique
@@ -1412,7 +1414,8 @@ $`A \| \delta_{\mathsf{ad}}`$, an optional first-chunk body phase on
 $`X_0`$, an optional absorb phase on
 $`T_1 \| \cdots \| T_m \| \delta_{\mathsf{tc}}`$, and one final squeeze phase.
 Because this is already a keyed-duplex family under the contexts
-$`(\delta,\mathsf{iv}(U,0))`$, Corollary 4.6 applies directly. These imported
+$`(\delta,\mathsf{iv}(U,0))`$, Corollaries 4.6 and 4.7 apply directly in the
+encryption-only and bidirectional settings, respectively. These imported
 statements are the only ingredients used in the AE sketches below, together
 with the TreeWrap-specific freshness lemma of Section 7.1. The leaf and trunk
 ideal families use independent random oracles
@@ -1520,7 +1523,7 @@ the leaf layer, and Corollary 4.5 therefore yields
 \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N).
 ```
 
-For the second hop, Corollary 4.6 yields
+For the second hop, Corollary 4.7 yields
 
 ```math
 \left| \Pr[H_1(\mathcal{A}) = 1] - \Pr[H_2(\mathcal{A}) = 1] \right|
