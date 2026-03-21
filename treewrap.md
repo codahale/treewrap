@@ -54,6 +54,48 @@ rather than a new keyed-duplex argument. The genuinely new technical pieces
 are the TreeWrap-specific authenticity freshness split of Lemma 7.1 and the
 public-permutation CMT-4 analysis of Section 7.
 
+### 1.2 Related Work
+
+At the structural level, TreeWrap is closest to KangarooTwelve [K12] and to
+tree-style hash modes such as ParallelHash [SP800185]. These constructions use
+a serial top-level transcript together with parallel subcomputations on long
+inputs. TreeWrap borrows that efficiency pattern, but moves it from the
+unkeyed hashing/XOF setting to keyed authenticated encryption. The main
+difference is therefore not only keyed initialization but also framing: rather
+than Sakura-style tree coding, TreeWrap uses derived keyed IVs together with
+duplex padding and phase trailers to separate the trunk and leaf transcripts.
+
+Among keyed Keccak-family designs, Keyak [Keyak16] is the closest relative in
+spirit. Both designs use `Keccak-p[1600,12]`, both exploit parallel local
+processing, and both ultimately authenticate the whole message through a serial
+top-level transcript. The modes are nevertheless quite different. Keyak is a
+session-oriented full-state keyed-duplex design built around the Motorist mode,
+with persistent parallel pistons and a knot operation that feeds chaining
+values back across lanes. TreeWrap instead targets one-shot AEAD, keeps the
+leaf calls as separate keyed transcripts under derived IVs, and uses an
+explicit trunk transcript for the associated data, first chunk, and final tag.
+This makes TreeWrap less integrated than Motorist, but substantially more
+modular from the perspective of proof reuse.
+
+Closer to the modern permutation-based AEAD landscape, Xoodyak [Xoo20] and
+Ascon [Ascon21, SP800232] are serial duplex-based designs that prioritize
+compactness and lightweight deployment over chunk-parallel throughput. Xoodyak
+offers a versatile Cyclist interface over Xoodoo[12], while Ascon is now the
+standardized NIST lightweight AEAD family. TreeWrap differs from both by making
+parallel message decomposition a first-class design goal: it keeps the
+associated data and the first chunk on the trunk path, and pushes only the
+remaining chunks into independent leaf transcripts.
+
+On the proof side, the closest antecedent is [Men23]. The leaf layer is
+deliberately kept close to the reduced MonkeySpongeWrap transcript analyzed
+there, while the trunk layer remains a direct keyed-duplex family so that both
+halves fit the same KD/IXIF framework. The commitment analysis instead follows
+the encryption-based CMT-4 notion of [BH22] and the public-permutation
+flattening/counting lineage of [BDPVA08, BDPVA11]. In this sense, the novelty
+of TreeWrap is not a new generic duplex theorem, but a construction that
+combines imported keyed-duplex bounds with a separate chunk-length-sensitive
+commitment analysis.
+
 The proof strategy follows the same decomposition. The AE analysis is carried out in the multi-user keyed-duplex model of [Men23]. At the leaf layer, Lemma 6.1 identifies the $`\mathsf{LeafWrap}`$ family on chunks $`i \ge 1`$ with a reduced MonkeySpongeWrap transcript, and Theorem 6.2 imports the corresponding KD/IXIF replacement. A TreeWrap-specific freshness lemma then handles the interaction between fresh leaf tags and the trunk transcript. At the trunk layer, Corollaries 4.6 and 4.7 give the encryption-side and bidirectional keyed-duplex/IXIF replacements for $`\mathsf{TrunkWrap}`$. These ingredients yield the IND-CPA and INT-CTXT theorems, and Theorem 5.3 derives IND-CCA2 from them by a BN00-style game hop using the multi-forgery integrity notion of Section 4.2.
 
 The commitment analysis is deliberately separate from the keyed AE path.
@@ -2557,12 +2599,20 @@ The concrete $`\mathsf{TW128}`$ instantiation shows that this proof strategy lea
 
 [BN00] Mihir Bellare and Chanathip Namprempre. *Authenticated Encryption: Relations among Notions and Analysis of the Generic Composition Paradigm*. In Tatsuaki Okamoto, editor, *Advances in Cryptology -- ASIACRYPT 2000*, volume 1976 of *Lecture Notes in Computer Science*, pages 531-545. Springer, 2000.
 
+[Ascon21] Christoph Dobraunig, Maria Eichlseder, Florian Mendel, and Martin Schläffer. *Ascon v1.2: Lightweight Authenticated Encryption and Hashing*. *Journal of Cryptology*, 34(3): Article 33, 2021. <https://doi.org/10.1007/s00145-021-09398-9>
+
 [FIPS202] National Institute of Standards and Technology. *SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions*. Federal Information Processing Standards Publication 202, 2015. <https://doi.org/10.6028/NIST.FIPS.202>
 
 [K12] Guido Bertoni, Joan Daemen, Michaël Peeters, Gilles Van Assche, Ronny Van Keer, and Benoît Viguier. *KangarooTwelve: Fast Hashing Based on Keccak-p*. In Pooya Farshim and Steven Guilley, editors, *Applied Cryptography and Network Security*, volume 10892 of *Lecture Notes in Computer Science*, pages 400-418. Springer, 2018. <https://doi.org/10.1007/978-3-319-93387-0_21>
+
+[Keyak16] Guido Bertoni, Joan Daemen, Michaël Peeters, Gilles Van Assche, and Ronny Van Keer. *CAESAR Submission: Keyak v2*. Document version 2.2, September 15, 2016. <https://keccak.team/files/Keyakv2-doc2.2.pdf>
 
 [RFC9861] Benoit Viguier, David Wong, Gilles Van Assche, Quynh Dang, and Joan Daemen. *KangarooTwelve and TurboSHAKE*. RFC 9861, 2025. <https://www.rfc-editor.org/rfc/rfc9861.html>
 
 [SP800185] John Kelsey, Shu-jen Chang, and Ray Perlner. *SHA-3 Derived Functions: cSHAKE, KMAC, TupleHash, and ParallelHash*. NIST Special Publication 800-185, 2016. <https://doi.org/10.6028/NIST.SP.800-185>
 
+[SP800232] Meltem Sönmez Turan, Kerry McKay, Jinkeon Kang, John Kelsey, and Donghoon Chang. *Ascon-Based Lightweight Cryptography Standards for Constrained Devices: Authenticated Encryption, Hash, and Extendable Output Functions*. NIST Special Publication 800-232, 2025. <https://doi.org/10.6028/NIST.SP.800-232>
+
 [Men23] Bart Mennink. *Understanding the Duplex and Its Security*. *IACR Transactions on Symmetric Cryptology*, 2023(2): 1-46, 2023.
+
+[Xoo20] Joan Daemen, Seth Hoffert, Michaël Peeters, Gilles Van Assche, and Ronny Van Keer. *Xoodyak, a Lightweight Cryptographic Scheme*. *IACR Transactions on Symmetric Cryptology*, 2020(S1): 60-87, 2020. <https://doi.org/10.13154/tosc.v2020.is1.60-87>
