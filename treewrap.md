@@ -1758,12 +1758,31 @@ deferred to Section 7.
 
 ### 6.1 Imported Leaf and Trunk Adaptations
 
-The leaf analysis identifies $`\mathsf{LeafWrap}`$ with the reduced
-MonkeySpongeWrap transcript obtained by excising the vacuous local
-associated-data phase, and then imports the corresponding KD/IXIF replacement
-from [Men23]. The trunk transcript is handled directly as a keyed-duplex family
-under the keyed contexts $`(\delta,\mathsf{iv}(U,0))`$ and therefore uses
-Corollary 4.6 without any additional reduction.
+The leaf analysis proceeds through an explicit reduced MonkeySpongeWrap family.
+For later use, write the framed full-state blocks of a leaf call as
+
+```math
+M_j(X) := \widetilde{X}_j \| 1 \| 0^{c-1}
+```
+
+for padded message blocks. Define
+
+```math
+\mathsf{MSW}^{\mathsf{red}}[p](K,V,X,m) \to (Y,T)
+```
+
+to be the reduced MonkeySpongeWrap family obtained from [Men23] by deleting the
+local associated-data phase and retaining only:
+
+- keyed-duplex initialization $`\mathsf{KD.init}(1,V)`$;
+- the middle body phase on the framed full-state blocks $`M_1(X),\ldots,M_w(X)`$,
+  with overwrite enabled exactly when $`m=\mathsf{dec}`$;
+- the final $`s_{\mathsf{leaf}}`$ blank squeezes that produce the hidden leaf
+  tag.
+
+The trunk transcript is handled directly as a keyed-duplex family under the
+keyed contexts $`(\delta,\mathsf{iv}(U,0))`$ and therefore uses Corollaries 4.6
+and 4.7 without any additional reduction.
 
 Let $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}]`$ denote
 the same leaf transcript as $`\mathsf{LeafWrap}[p]`$, but with the keyed duplex
@@ -1777,13 +1796,7 @@ $`\mathsf{IXIF}[\mathrm{ro}_{\mathsf{leaf}}]`$ of Section 2.3.2. Thus
 has exactly the same padding, framing bits, mode flag, and output convention as
 $`\mathsf{LeafWrap}[p]`$; only the transcript engine changes.
 
-For later use, write the framed full-state blocks of a leaf call as
-
-```math
-M_j(X) := \widetilde{X}_j \| 1 \| 0^{c-1}
-```
-
-for padded message blocks. If $`\pi_0`$ denotes the IXIF path immediately after
+If $`\pi_0`$ denotes the IXIF path immediately after
 
 ```math
 \mathsf{IXIF.init}(1,V),
@@ -1812,7 +1825,7 @@ Hence encryption-side and decryption-side leaf calls append the same framed
 message blocks precisely when they induce the same recovered plaintext
 transcript. The imported support is summarized by the following two statements.
 
-**Lemma 6.1 (Leaf / Reduced MonkeySpongeWrap Transcript Correspondence).** Fix
+**Lemma 6.1 (Leaf / Reduced MonkeySpongeWrap Family Correspondence).** Fix
 parameters $`p,b,r,c,k,t_{\mathsf{leaf}}`$. For any inputs $`K`$, $`V`$, and
 $`X`$, the keyed-duplex transcript of
 
@@ -1826,13 +1839,16 @@ with initialization
 \mathsf{KD.init}(1,V)
 ```
 
-is identical to the reduced MonkeySpongeWrap transcript on nonce $`V`$ and
-input string $`X`$ obtained by excising the vacuous local associated-data
-phase, with the middle phase parameterized by $`m`$. Thus $`m = \mathsf{enc}`$
-gives the reduced encryption transcript, $`m = \mathsf{dec}`$ gives the
-corresponding reduced decryption-side transcript with overwrite enabled in the
-middle phase, and the returned pair $`(Y,T)`$ is exactly the body/tag pair
-determined by that reduced transcript.
+is identical to the transcript of
+
+```math
+\mathsf{MSW}^{\mathsf{red}}[p](K,V,X,m).
+```
+
+Thus $`m = \mathsf{enc}`$ gives the reduced encryption transcript, $`m =
+\mathsf{dec}`$ gives the corresponding reduced decryption-side transcript with
+overwrite enabled in the middle phase, and the returned pair $`(Y,T)`$ is
+exactly the body/tag pair determined by that reduced family.
 
 This excision does not alter the structural preconditions used by [Men23]:
 every reduced leaf transcript still makes at least one padded body call after
@@ -1842,21 +1858,23 @@ call because $`t_{\mathsf{leaf}} > 0`$ implies $`s_{\mathsf{leaf}} \ge 1`$.
 **Theorem 6.2 (Ported Leaf KD/IXIF Replacement).** For every distinguisher
 $`\mathcal{D}_{\mathsf{LW}}`$ attacking a family of leaf transcripts under the
 keyed-context discipline induced by TreeWrap, there exists a distinguisher
-$`\mathcal{D}_{\mathsf{MSW}}`$ against the corresponding reduced
-MonkeySpongeWrap transcript family such that
+$`\mathcal{D}_{\mathsf{MSW}^{\mathsf{red}}}`$ against the corresponding reduced
+MonkeySpongeWrap family such that
 
 ```math
 \mathrm{Adv}^{\mathsf{real}\text{-}\mathsf{ixif}}_{\mathsf{LeafWrap}}(\mathcal{D}_{\mathsf{LW}})
 =
-\mathrm{Adv}^{\mathsf{real}\text{-}\mathsf{ixif}}_{\mathsf{MonkeySpongeWrap}}(\mathcal{D}_{\mathsf{MSW}}),
+\mathrm{Adv}^{\mathsf{real}\text{-}\mathsf{ixif}}_{\mathsf{MSW}^{\mathsf{red}}}(\mathcal{D}_{\mathsf{MSW}^{\mathsf{red}}}),
 ```
 
 with matching transcript resources after interpreting each leaf call as the
-corresponding reduced MonkeySpongeWrap call on the same leaf IV $`V`$.
+corresponding call to $`\mathsf{MSW}^{\mathsf{red}}`$ on the same leaf IV $`V`$.
 Consequently, the leaf real-to-IXIF replacement is bounded by the corresponding
 KD/IXIF term imported from [Men23], with the unused local associated-data
-resources deleted from the accounting. In TreeWrap, the relevant keyed contexts
-are $`(\delta,V_i)`$ with $`V_i = \mathsf{iv}(U,i)`$ and $`i \ge 1`$.
+resources deleted from the accounting. This is exactly the reduced family whose
+wrapper-level resources are translated in Lemma 4.2 and bounded in
+Corollaries 4.4 and 4.5. In TreeWrap, the relevant keyed contexts are
+$`(\delta,V_i)`$ with $`V_i = \mathsf{iv}(U,i)`$ and $`i \ge 1`$.
 
 For the trunk layer, let
 $`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{tr}}]`$ denote the
