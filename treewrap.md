@@ -1316,8 +1316,9 @@ the trunk bidirectional real-to-IXIF replacement term can be instantiated as
 
 For the trunk-local CMT-4 analysis, we only need a bad-event bound for rooted
 transcript merging, not a full indifferentiability statement. We therefore
-import the single-root random-permutation sponge counting argument of [BDPVA08,
-Eq. (6)] and record the corresponding $`\rho`$-root extension directly.
+adapt the single-root random-permutation sponge counting argument of
+[BDPVA08, Eq. (6)] to the present rooted-forest setting and record the
+resulting $`\rho`$-root lemma explicitly.
 
 **Lemma 4.8 (Rooted-Forest Sponge Collision Bound).** Fix $`\rho \ge 1`$ public
 roots. For each root, consider the rooted sponge tree obtained by following
@@ -1368,9 +1369,9 @@ and, when $`Q_0+M < 2^c`$, by
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(Q_0+M,\rho).
 ```
 
-**Proof sketch.** Exactly as in the single-root counting of [BDPVA08], each
-safe extension contributes at most one new rooted node and at most one new full
-state. Hence, inductively,
+**Proof.** For $`i \ge 0`$, let $`E_i`$ denote the event that the first $`i`$
+extensions are safe, i.e. that no event in $`\mathsf{Merge}_{\rho}(i)`$ has
+occurred. We first show by induction on $`i`$ that, on $`E_i`$,
 
 ```math
 |R_i| \le \rho + i,
@@ -1378,20 +1379,63 @@ state. Hence, inductively,
 |O_i| \le i,
 ```
 
-for every $`i \ge 0`$. Repeating the one-root bad-event count with these
-cardinalities yields the displayed product bound. Here the numerator bounds the
-probability that the next capacity slice avoids the at most $`\rho+i`$ exposed
-rooted nodes, while the denominator conditions on avoiding the at most $`i`$
-previously fixed full states. Applying the same quadratic relaxation as in
-[BDPVA08, Eq. (6)] gives the displayed explicit rooted-forest collision bound.
-The continuation form is the same argument started from a fixed safe prefix of
-length $`Q_0`$: after conditioning on that prefix, one still has
-$`|R_{Q_0+i}| \le \rho + Q_0 + i`$ and $`|O_{Q_0+i}| \le Q_0 + i`$, so the next
-$`M`$ steps are bounded by the tail product from $`i=Q_0`$ through
-$`i=Q_0+M-1`$.
-For $`\rho = 1`$, the product expression specializes to the original
-single-root counting bound and the quadratic term recovers exactly [BDPVA08,
-Eq. (6)].
+The base case $`i=0`$ is immediate from the $`\rho`$ public roots and the
+absence of fixed full states before any extension. For the inductive step,
+assume $`E_i`$ and the displayed bounds. A safe forward or inverse extension
+can expose at most one new rooted node and at most one new full state, so on
+$`E_{i+1}`$ we have
+$`|R_{i+1}| \le |R_i|+1 \le \rho+i+1`$ and
+$`|O_{i+1}| \le |O_i|+1 \le i+1`$, as claimed.
+
+Now condition on $`E_i`$ and consider the next extension. Let $`B_i`$ be the
+set of full states whose exposure at step $`i+1`$ would immediately merge the
+new transcript into an already exposed rooted transcript. Every state in
+$`B_i`$ lies above one of the exposed rooted nodes in $`R_i`$, so
+
+```math
+|B_i| \le 2^r |R_i| \le 2^r(\rho+i).
+```
+
+Moreover, every previously fixed full state lies on an already exposed rooted
+path, so $`O_i \subseteq B_i`$. Because the underlying object is a random
+permutation, conditioning on $`E_i`$ makes the next forward or inverse
+extension uniform over the still-unfixed full states, of which there are
+$`2^b-|O_i|`$. Therefore
+
+```math
+\Pr[E_{i+1}\mid E_i]
+\ge
+\frac{2^b-|B_i|}{2^b-|O_i|}
+\ge
+\frac{2^b-2^r(\rho+i)}{2^b-i}
+=
+\frac{1-(\rho+i)2^{-c}}{1-i2^{-b}}.
+```
+
+Applying the chain rule and multiplying these conditional safe probabilities
+for $`i=0,\ldots,M-1`$ gives
+
+```math
+\Pr[E_M]
+\ge
+\prod_{i=0}^{M-1} \frac{1-(\rho+i)2^{-c}}{1-i2^{-b}},
+```
+
+which is equivalent to the displayed product bound on
+$`\Pr[\mathsf{Merge}_{\rho}(M)] = 1-\Pr[E_M]`$.
+
+For the continuation form, condition on any safe prefix of length $`Q_0`$.
+Exactly the same argument applies from that point onward: after $`i`$
+additional safe extensions one still has
+$`|R_{Q_0+i}| \le \rho+Q_0+i`$ and
+$`|O_{Q_0+i}| \le Q_0+i`$, so the next $`M`$ steps are bounded by the tail
+product from $`i=Q_0`$ through $`i=Q_0+M-1`$.
+
+Finally, applying the same elementary quadratic relaxation as in
+[BDPVA08, Eq. (6)] to this product yields the explicit bound
+$`\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M,\rho)`$. For $`\rho=1`$, the
+product expression specializes to the original single-root counting bound and
+the quadratic term recovers exactly [BDPVA08, Eq. (6)].
 
 ### 4.9 Imported Flat Duplex Bound
 
