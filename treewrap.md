@@ -1415,7 +1415,13 @@ two compared local LeafWrap transcripts, each of which consists of $`\lceil
 When Theorem 5.4 conditions on a realized prior primitive transcript with at
 most $`N`$ primitive queries, the continuation form of Lemma 4.8 is applied
 with those prior queries contributing the $`N`$ term and the two compared local
-transcripts contributing the remainder. Since a local collision comparison
+transcripts contributing the remainder. In the first-differing-leaf branch of
+Theorem 5.4, this is justified by an order-of-exposure argument: after fixing
+the adversary's prior primitive transcript, one may expose the two local leaf
+transcripts at the first differing remaining index $`j^\star`$ before exposing
+the common trunk transcript or any identical leaf transcripts at other indices,
+because the event $`(Y_{j^\star},T_{1,j^\star})=(Y_{j^\star},T_{2,j^\star})`$
+depends only on those two local transcripts. Since a local collision comparison
 involves at most two distinct roots $`(K,V)`$ and $`(K',V')`$, we set
 
 ```math
@@ -2239,9 +2245,13 @@ used in Section 4.9, now restricted to chunks $`j \ge 1`$. The duplexing-sponge
 identity of [BDPVA11] is purely structural, so it applies in the
 public-permutation setting regardless of how the adversary chooses keys,
 derived leaf IVs, or the bodies of those chunks. The resulting rooted-sponge
-bad event is bounded by the explicit leaf term of Section 4.9, and the residual
-ideal collision probability is the full-output term
-$`2^{-(\ell+t_{\mathsf{leaf}})}`$.
+bad event is bounded by the explicit leaf term of Section 4.9. In the TreeWrap
+application, the relevant local transcripts are exposed first at the
+first-differing remaining index $`j^\star`$, before the common trunk transcript
+or any identical leaf transcripts at other indices are revealed, so the only
+continuation budget charged here is the prior primitive transcript plus these
+two local transcripts. The residual ideal collision probability is the
+full-output term $`2^{-(\ell+t_{\mathsf{leaf}})}`$.
 
 ### 7.3 Flat TrunkWrap Collision Bound
 
@@ -2398,7 +2408,10 @@ then there are two subcases.
    (Y_{j^\star},T_{1,j^\star}) = (Y_{j^\star},T_{2,j^\star}).
    ```
 
-   Then Lemma 7.2 applies directly and contributes exactly
+   By the order-of-exposure convention of Section 4.9, we expose these two
+   local leaf transcripts before the common trunk transcript or any identical
+   leaf transcripts at other indices. Then Lemma 7.2 applies directly and
+   contributes exactly
    $`\epsilon_{\mathsf{leaf}}^{\mathsf{first}}(\Theta,N)`$.
 
 2. The two local outputs at $`j^\star`$ differ. Because the full ciphertext
