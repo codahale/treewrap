@@ -1187,7 +1187,10 @@ every leaf contributes at least one body-phase call.
 
 **Lemma 4.2 (Leaf Resource Translation).** The reduced leaf families induced by
 TreeWrap admit the following valid resource assignments in the notation of
-[Men23]:
+[Men23]. These are exactly the resource assignments used in the proof of
+[Men23, Theorem 7] for `MonkeySpongeWrap`, specialized to the reduced family
+$`\mathsf{MSW}^{\mathsf{red}}`$ of Section 6.1 and re-expressed in the present
+wrapper-level notation:
 
 - for the encryption-only family relevant to IND-CPA, one may take
 
@@ -1211,20 +1214,30 @@ TreeWrap admit the following valid resource assignments in the notation of
   \nu_{\mathsf{fix}} \le \max\!\bigl(\Omega_{\mathsf{lw},d} + \chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d} - 1, 0\bigr).
   ```
 
-**Proof sketch.** This is the same reduced `LeafWrap` bookkeeping as in the
-current TreeWrap proof, except that only remaining chunks are included.
-Distinct encryption-side leaf keyed contexts eliminate encryption/encryption
-subpath repetition, while decryption-side leaf queries may repeat keyed
-contexts and contribute at most $`\chi_{\mathsf{leaf},d}`$ repeated subpaths.
-Because $`\mathsf{iv}`$ is injective, a raw IV identifies a unique $`(U,j)`$
-pair; same-user decryption-side repeats of that pair are accounted for by
-$`L`$, while across distinct users a fixed raw IV can appear under at most
-$`\mu`$ user labels, giving $`Q_{IV} \le \mu`$. The same path-counting argument
-as in [Men23, Theorem 7] then yields the stated bound on
-$`\nu_{\mathsf{fix}}`$. This bound is slightly conservative, but that does not
-affect the concrete theorems here because $`\nu_{\mathsf{fix}}`$ does not
-appear in the low-complexity branch of [Men23, Theorem 1, Eq. (5)] instantiated
-in Section 4.6.
+**Proof sketch.** By Lemma 6.1 and Theorem 6.2, every leaf transcript is
+exactly a transcript of the reduced `MonkeySpongeWrap` family
+$`\mathsf{MSW}^{\mathsf{red}}`$ under the keyed contexts
+$`(\delta,\mathsf{iv}(U,j))`$ for $`j \ge 1`$. The present quantities
+$`\chi_{\mathsf{leaf},e}`$, $`\chi_{\mathsf{leaf},d}`$,
+$`\sigma^{\mathsf{leaf}}_e`$, and $`\sigma^{\mathsf{leaf}}_d`$ are precisely
+the `Men23` query-count and duplex-call parameters $`q_e`$, $`q_d`$,
+$`\sigma_e`$, and $`\sigma_d`$ for that reduced family. The assignments
+$`Q_{IV} \le \mu`$, $`L \le \chi_{\mathsf{leaf},d}`$, and
+$`\Omega \le \Omega_{\mathsf{lw},d}`$ are therefore inherited verbatim from the
+resource accounting in the proof of [Men23, Theorem 7] and its accompanying
+Remark 5; they are imported bookkeeping choices for the reduced
+`MonkeySpongeWrap` family, not fresh local derivations for TreeWrap. The
+excision of the unused local AD phase is conservative here: it removes transcript
+history and therefore cannot increase any of the imported resource measures.
+The displayed bound on
+$`\nu_{\mathsf{fix}}`$ is the same path-counting upper bound, specialized to the
+reduced family and slightly conservatively rewritten in the current notation.
+This conservatism does not affect the concrete theorems here because
+$`\nu_{\mathsf{fix}}`$ does not appear in the low-complexity branch of
+[Men23, Theorem 1, Eq. (5)] instantiated in Section 4.6. For the bidirectional
+leaf term itself, Corollary 4.5 below imports the already-simplified expression
+from the proof of [Men23, Theorem 7] directly, so these upper bounds are not
+separately substituted into the raw generic KD expression.
 
 **Corollary 4.4 (Imported Leaf Encryption-Side KD/IXIF Bound).** If
 $`\sigma^{\mathsf{leaf}}_e + N \le 0.1 \cdot 2^c`$, then the encryption-side
@@ -1244,8 +1257,33 @@ as
 ```math
 \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N)
 :=
-\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{leaf}}_e+\sigma^{\mathsf{leaf}}_d,\chi_{\mathsf{leaf},e}+\chi_{\mathsf{leaf},d},\mu,\chi_{\mathsf{leaf},d},\Omega_{\mathsf{lw},d},\max\!\bigl(\Omega_{\mathsf{lw},d}+\chi_{\mathsf{leaf},e}+\chi_{\mathsf{leaf},d}-1,0\bigr),N).
+\frac{2\nu_{r,c}^{2\sigma^{\mathsf{leaf}}}(N+1)}{2^c}
++
+\frac{\sigma^{\mathsf{leaf}}_d N + (\sigma^{\mathsf{leaf}}_d)^2}{2^c}
++
+\frac{q^{\mathsf{leaf}}(\sigma^{\mathsf{leaf}}-q^{\mathsf{leaf}})}{2^b-q^{\mathsf{leaf}}}
++
+\frac{2\binom{\sigma^{\mathsf{leaf}}}{2}}{2^b}
++
+\frac{q^{\mathsf{leaf}}(\sigma^{\mathsf{leaf}}-q^{\mathsf{leaf}})}{2^{\min\{c+k,b\}}}
++
+\frac{\mu N}{2^k}
++
+\frac{\binom{\mu}{2}}{2^k},
 ```
+
+where
+
+```math
+\sigma^{\mathsf{leaf}} := \sigma^{\mathsf{leaf}}_e + \sigma^{\mathsf{leaf}}_d,
+\qquad
+q^{\mathsf{leaf}} := \chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d}.
+```
+
+This is a conservative specialization of the low-complexity expression
+obtained in the proof of [Men23, Theorem 7, Eq. (34)], specialized to the
+reduced family $`\mathsf{MSW}^{\mathsf{red}}`$ and rewritten in the present
+notation.
 
 **Lemma 4.3 (TrunkWrap Resource Translation).** The trunk families induced by
 TreeWrap admit the following valid resource assignments in the notation of
@@ -1324,11 +1362,10 @@ resulting $`\rho`$-root lemma explicitly.
 roots. For each root, consider the rooted sponge tree obtained by following
 absorb/squeeze paths from that root as in [BDPVA08]. Let $`R_i`$ be the set of
 rooted nodes exposed after $`i`$ successful transcript or primitive-query
-extensions, and let $`O_i`$ be the set of already fixed full states encountered
-along those rooted paths. Define the bad event $`\mathsf{Merge}_{\rho}(M)`$ to
-be the event that, during the first $`M`$ such extensions, a new forward or
-inverse step lands on a previously exposed rooted node or previously fixed full
-state in a way that merges two distinct rooted transcripts. Then
+extensions. Define the bad event $`\mathsf{Merge}_{\rho}(M)`$ to be the event
+that, during the first $`M`$ such extensions, a new forward or inverse step
+lands on a previously exposed rooted node or previously fixed full state in a
+way that merges two distinct rooted transcripts. Then
 
 ```math
 \Pr[\mathsf{Merge}_{\rho}(M)] \le f_{P,\rho}(M),
@@ -1339,31 +1376,33 @@ where
 ```math
 f_{P,\rho}(M)
 :=
-1 - \prod_{i=0}^{M-1} \frac{1-(\rho+i)2^{-c}}{1-i2^{-b}}.
+1 - \prod_{i=0}^{M-1}
+\left(1 - \frac{(\rho+i)2^{-c}}{1-i2^{-b}}\right).
 ```
 
-Moreover, in the regime $`M < 2^c`$,
+Moreover, when $`\rho+M-1 < 2^c`$,
 
 ```math
 f_{P,\rho}(M)
 \le
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M,\rho)
 :=
-\frac{(1-2^{-r})M^2 + (2\rho-1+2^{-r})M}{2^{c+1}}.
+\frac{M(2\rho+M-1)}{2^{c+1}(1-M2^{-b})}.
 ```
 
-Consequently, after fixing any prior primitive-query transcript that has already
-exposed $`Q_0`$ rooted extensions without triggering $`\mathsf{Merge}_{\rho}`$,
+Consequently, after fixing any safe prior transcript prefix of $`Q_0`$
+successful transcript or primitive-query extensions,
 the conditional probability that a merge occurs during the next $`M`$
 extensions is bounded by
 
 ```math
-1 - \prod_{i=Q_0}^{Q_0+M-1} \frac{1-(\rho+i)2^{-c}}{1-i2^{-b}}
+1 - \prod_{i=Q_0}^{Q_0+M-1}
+\left(1 - \frac{(\rho+i)2^{-c}}{1-i2^{-b}}\right)
 \le
 f_{P,\rho}(Q_0+M),
 ```
 
-and, when $`Q_0+M < 2^c`$, by
+and, when $`\rho+Q_0+M-1 < 2^c`$, by
 
 ```math
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(Q_0+M,\rho).
@@ -1374,42 +1413,46 @@ extensions are safe, i.e. that no event in $`\mathsf{Merge}_{\rho}(i)`$ has
 occurred. We first show by induction on $`i`$ that, on $`E_i`$,
 
 ```math
-|R_i| \le \rho + i,
-\qquad
-|O_i| \le i,
+|R_i| \le \rho + i.
 ```
 
-The base case $`i=0`$ is immediate from the $`\rho`$ public roots and the
-absence of fixed full states before any extension. For the inductive step,
-assume $`E_i`$ and the displayed bounds. A safe forward or inverse extension
-can expose at most one new rooted node and at most one new full state, so on
-$`E_{i+1}`$ we have
-$`|R_{i+1}| \le |R_i|+1 \le \rho+i+1`$ and
-$`|O_{i+1}| \le |O_i|+1 \le i+1`$, as claimed.
+The base case $`i=0`$ is immediate from the $`\rho`$ public roots. For the
+inductive step, assume $`E_i`$ and expose one more safe extension. Such an
+extension can add at most one new rooted node, so on $`E_{i+1}`$ we have
+$`|R_{i+1}| \le |R_i|+1 \le \rho+i+1`$, as claimed.
 
-Now condition on $`E_i`$ and consider the next extension. Let $`B_i`$ be the
-set of full states whose exposure at step $`i+1`$ would immediately merge the
-new transcript into an already exposed rooted transcript. Every state in
-$`B_i`$ lies above one of the exposed rooted nodes in $`R_i`$, so
+Now condition on $`E_i`$ and fix the direction of the next extension. Let
+$`O_i`$ be the set of full states already fixed on the sampled side of that next
+forward or inverse step. This includes off-path states fixed by prior
+primitive queries. After $`i`$ successful extensions, at most $`i`$ such states
+are unavailable, so
+
+```math
+|O_i| \le i.
+```
+
+Let $`B_i`$ be the set of currently unfixed full states on that sampled side
+whose exposure at step $`i+1`$ would immediately merge the new transcript into
+an already exposed rooted transcript. Each exposed rooted node in $`R_i`$
+forbids at most $`2^r`$ such predecessor/continuation states, so
 
 ```math
 |B_i| \le 2^r |R_i| \le 2^r(\rho+i).
 ```
 
-Moreover, every previously fixed full state lies on an already exposed rooted
-path, so $`O_i \subseteq B_i`$. Because the underlying object is a random
-permutation, conditioning on $`E_i`$ makes the next forward or inverse
-extension uniform over the still-unfixed full states, of which there are
-$`2^b-|O_i|`$. Therefore
+Because the underlying object is a random permutation, conditioning on
+$`E_i`$ makes the unknown endpoint of the next forward or inverse extension
+uniform over the still-unfixed full states on the sampled side, of which there
+are $`2^b-|O_i|`$. Therefore
 
 ```math
 \Pr[E_{i+1}\mid E_i]
 \ge
-\frac{2^b-|B_i|}{2^b-|O_i|}
+1 - \frac{|B_i|}{2^b-|O_i|}
 \ge
-\frac{2^b-2^r(\rho+i)}{2^b-i}
+1 - \frac{2^r(\rho+i)}{2^b-i}
 =
-\frac{1-(\rho+i)2^{-c}}{1-i2^{-b}}.
+1 - \frac{(\rho+i)2^{-c}}{1-i2^{-b}}.
 ```
 
 Applying the chain rule and multiplying these conditional safe probabilities
@@ -1418,7 +1461,8 @@ for $`i=0,\ldots,M-1`$ gives
 ```math
 \Pr[E_M]
 \ge
-\prod_{i=0}^{M-1} \frac{1-(\rho+i)2^{-c}}{1-i2^{-b}},
+\prod_{i=0}^{M-1}
+\left(1 - \frac{(\rho+i)2^{-c}}{1-i2^{-b}}\right),
 ```
 
 which is equivalent to the displayed product bound on
@@ -1427,15 +1471,27 @@ $`\Pr[\mathsf{Merge}_{\rho}(M)] = 1-\Pr[E_M]`$.
 For the continuation form, condition on any safe prefix of length $`Q_0`$.
 Exactly the same argument applies from that point onward: after $`i`$
 additional safe extensions one still has
-$`|R_{Q_0+i}| \le \rho+Q_0+i`$ and
-$`|O_{Q_0+i}| \le Q_0+i`$, so the next $`M`$ steps are bounded by the tail
+$`|R_{Q_0+i}| \le \rho+Q_0+i`$, so the next $`M`$ steps are bounded by the tail
 product from $`i=Q_0`$ through $`i=Q_0+M-1`$.
 
-Finally, applying the same elementary quadratic relaxation as in
-[BDPVA08, Eq. (6)] to this product yields the explicit bound
-$`\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M,\rho)`$. For $`\rho=1`$, the
-product expression specializes to the original single-root counting bound and
-the quadratic term recovers exactly [BDPVA08, Eq. (6)].
+Finally, apply the elementary relaxation $`1-\prod_i(1-a_i)\le\sum_i a_i`$ and
+use $`1-i2^{-b}\ge 1-M2^{-b}`$ for $`0\le i<M`$. Under the displayed
+side condition $`\rho+M-1<2^c`$, every factor in the product is nonnegative.
+Hence
+
+```math
+f_{P,\rho}(M)
+\le
+\sum_{i=0}^{M-1}\frac{(\rho+i)2^{-c}}{1-i2^{-b}}
+\le
+\frac{2^{-c}}{1-M2^{-b}}
+\sum_{i=0}^{M-1}(\rho+i)
+=
+\frac{M(2\rho+M-1)}{2^{c+1}(1-M2^{-b})},
+```
+
+which is the stated explicit bound. For $`\rho=1`$ and $`M \ll 2^b`$, this has
+the same leading $`M^2/2^{c+1}`$ asymptotics as [BDPVA08, Eq. (6)].
 
 ### 4.9 Imported Flat Duplex Bound
 
@@ -1703,9 +1759,9 @@ N + \sigma_{\mathsf{tr}}(A_1,P_1) + \sigma_{\mathsf{tr}}(A_2,P_2),
 \delta_{\mathsf{tr}}(\Theta).
 ```
 
-Assume $`M_{\mathsf{tr}}^{\flat}(\Theta,N) < 2^c`$ and, when
+Assume $`\rho+M_{\mathsf{tr}}^{\flat}(\Theta,N)-1 < 2^c`$ and, when
 $`\epsilon_{\mathsf{leaf}}^{\mathsf{first}}(\Theta,N) \ne 0`$, assume also
-$`M_{\mathsf{lw}}(|P_{1,j^\star}|,N) < 2^c`$. Then, for every fixed output pair
+$`M_{\mathsf{lw}}(|P_{1,j^\star}|,N)+1 < 2^c`$. Then, for every fixed output pair
 $`\Theta`$ and every realized prior primitive-query transcript of the
 adversary consistent with $`\Theta`$, the conditional collision probability
 over the remaining random permutation choices satisfies
@@ -2277,7 +2333,7 @@ If
 =(Y,T),
 ```
 
-let $`\ell := |Y|`$ and assume $`M_{\mathsf{lw}}(\ell,N) < 2^c`$. Then either
+let $`\ell := |Y|`$ and assume $`M_{\mathsf{lw}}(\ell,N)+1 < 2^c`$. Then either
 the two flattened local transcripts collide under the duplexing-sponge
 reduction of [BDPVA11] in the presence of at most $`N`$ primitive queries, or
 two distinct ideal local transcript histories produce the same full local
@@ -2376,7 +2432,7 @@ M_{\mathsf{tr}}^{\flat}(\Theta,N)
 N + \sigma_{\mathsf{tr}}(A_1,P_1) + \sigma_{\mathsf{tr}}(A_2,P_2),
 ```
 
-and assume $`M_{\mathsf{tr}}^{\flat}(\Theta,N) < 2^c`$. Then
+and assume $`\rho+M_{\mathsf{tr}}^{\flat}(\Theta,N)-1 < 2^c`$. Then
 
 ```math
 \Pr[\mathsf{TrunkWrap}^{\flat}[p](\Xi_1)=\mathsf{TrunkWrap}^{\flat}[p](\Xi_2)]
@@ -2775,7 +2831,7 @@ The rooted-forest part itself is
 ```math
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M,\rho)
 =
-\frac{(1-2^{-1344})M^2 + (2\rho-1+2^{-1344})M}{2^{257}},
+\frac{M(2\rho+M-1)}{2^{257}(1-M2^{-1600})},
 ```
 
 which is extremely close to $`M^2/2^{257}`$ at all practical scales. Thus the
@@ -2855,9 +2911,9 @@ canonical chunk count at most $`2^{1208}`$.
   $`\epsilon_{\mathsf{leaf}}^{\mathsf{first}}(\Theta,N)`$ extracted from
   $`\Theta`$ exactly as in Theorem 5.4, where $`j^\star`$ denotes the first
   differing later index when it exists, if
-  $`M_{\mathsf{tr}}^{\flat}(\Theta,N) < 2^{256}`$ and, when
+  $`\rho(\Theta)+M_{\mathsf{tr}}^{\flat}(\Theta,N)-1 < 2^{256}`$ and, when
   $`\epsilon_{\mathsf{leaf}}^{\mathsf{first}}(\Theta,N) \ne 0`$, also
-  $`M_{\mathsf{lw}}(\ell_{j^\star},N) < 2^{256}`$, then
+  $`M_{\mathsf{lw}}(\ell_{j^\star},N)+1 < 2^{256}`$, then
 
   ```math
   \Pr_p[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)]
