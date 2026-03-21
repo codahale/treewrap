@@ -1351,6 +1351,23 @@ f_{P,\rho}(M)
 \frac{(1-2^{-r})M^2 + (2\rho-1+2^{-r})M}{2^{c+1}}.
 ```
 
+Consequently, after fixing any prior primitive-query transcript that has already
+exposed $`Q_0`$ rooted extensions without triggering $`\mathsf{Merge}_{\rho}`$,
+the conditional probability that a merge occurs during the next $`M`$
+extensions is bounded by
+
+```math
+1 - \prod_{i=Q_0}^{Q_0+M-1} \frac{1-(\rho+i)2^{-c}}{1-i2^{-b}}
+\le
+f_{P,\rho}(Q_0+M),
+```
+
+and, when $`Q_0+M < 2^c`$, by
+
+```math
+\mathrm{Sponge}^{(i)}_{\mathsf{forest}}(Q_0+M,\rho).
+```
+
 **Proof sketch.** Exactly as in the single-root counting of [BDPVA08], each
 safe extension contributes at most one new rooted node and at most one new full
 state. Hence, inductively,
@@ -1367,6 +1384,11 @@ probability that the next capacity slice avoids the at most $`\rho+i`$ exposed
 rooted nodes, while the denominator conditions on avoiding the at most $`i`$
 previously fixed full states. Applying the same quadratic relaxation as in
 [BDPVA08, Eq. (6)] gives the displayed explicit rooted-forest collision bound.
+The continuation form is the same argument started from a fixed safe prefix of
+length $`Q_0`$: after conditioning on that prefix, one still has
+$`|R_{Q_0+i}| \le \rho + Q_0 + i`$ and $`|O_{Q_0+i}| \le Q_0 + i`$, so the next
+$`M`$ steps are bounded by the tail product from $`i=Q_0`$ through
+$`i=Q_0+M-1`$.
 For $`\rho = 1`$, the product expression specializes to the original
 single-root counting bound and the quadratic term recovers exactly [BDPVA08,
 Eq. (6)].
@@ -1390,8 +1412,11 @@ N + 2 \left(\left\lceil \frac{\ell+1}{r} \right\rceil + s_{\mathsf{leaf}}\right)
 This quantity counts the adversary's primitive-query budget together with the
 two compared local LeafWrap transcripts, each of which consists of $`\lceil
 (\ell+1)/r \rceil`$ body calls and $`s_{\mathsf{leaf}}`$ blank squeeze calls.
-Since a local collision comparison involves at most two distinct roots
-$`(K,V)`$ and $`(K',V')`$, we set
+When Theorem 5.4 conditions on a realized prior primitive transcript with at
+most $`N`$ primitive queries, the continuation form of Lemma 4.8 is applied
+with those prior queries contributing the $`N`$ term and the two compared local
+transcripts contributing the remainder. Since a local collision comparison
+involves at most two distinct roots $`(K,V)`$ and $`(K',V')`$, we set
 
 ```math
 \epsilon_{\mathsf{lw}}^{\flat}(\ell,N)
@@ -1615,9 +1640,9 @@ N + \sigma_{\mathsf{tr}}(A_1,P_1) + \sigma_{\mathsf{tr}}(A_2,P_2),
 Assume $`M_{\mathsf{tr}}^{\flat}(\Theta,N) < 2^c`$ and, when
 $`\epsilon_{\mathsf{leaf}}^{\mathsf{first}}(\Theta,N) \ne 0`$, assume also
 $`M_{\mathsf{lw}}(|P_{1,j^\star}|,N) < 2^c`$. Then, for every fixed output pair
-$`\Theta`$ and every realized prior transcript of the adversary's primitive and
-wrapper-oracle queries consistent with $`\Theta`$, the conditional collision
-probability over the remaining random permutation choices satisfies
+$`\Theta`$ and every realized prior primitive-query transcript of the
+adversary consistent with $`\Theta`$, the conditional collision probability
+over the remaining random permutation choices satisfies
 
 ```math
 \Pr\!\bigl[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)\bigr]
@@ -1628,16 +1653,18 @@ probability over the remaining random permutation choices satisfies
 ```
 
 Equivalently, for every fixed output profile $`\Theta`$ and every fixed prior
-transcript, the corresponding TreeWrap commitment collision probability reduces
-either to a leaf collision on the full local output pair $`(Y_j,T_j)`$ at the
-first differing remaining chunk or to a collision on the observed trunk-local
-output. The same pointwise estimate therefore remains valid after conditioning
-on the adversary's adaptively generated prior transcript, because Lemma 4.8 and
-Section 4.9 bound bad rooted extensions relative to the already exposed rooted
-nodes and full states. Consequently, if $`\Theta`$ denotes the random realized
-output pair of a CMT-4 adversary $`\mathcal{A}`$, then conditioning first on
-the realized prior transcript and then averaging over the joint distribution of
-that transcript and $`\Theta`$ gives
+primitive transcript, the corresponding TreeWrap commitment collision
+probability reduces either to a leaf collision on the full local output pair
+$`(Y_j,T_j)`$ at the first differing remaining chunk or to a collision on the
+observed trunk-local output. The same pointwise estimate therefore remains
+valid after conditioning on the adversary's adaptively generated prior primitive
+transcript, because the continuation form of Lemma 4.8 together with the
+definitions of $`M_{\mathsf{lw}}`$ in Section 4.9 and
+$`M_{\mathsf{tr}}^{\flat}`$ above bounds bad rooted extensions relative to the
+already exposed rooted nodes and full states. Consequently, if $`\Theta`$
+denotes the random realized output pair of a CMT-4 adversary $`\mathcal{A}`$,
+then conditioning first on the realized prior primitive transcript and then
+averaging over the joint distribution of that transcript and $`\Theta`$ gives
 
 ```math
 \mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}(\mathcal{A})
@@ -2167,6 +2194,8 @@ the two flattened local transcripts collide under the duplexing-sponge
 reduction of [BDPVA11] in the presence of at most $`N`$ primitive queries, or
 two distinct ideal local transcript histories produce the same full local
 output pair $`(Y,T)`$. By Section 4.9, the first event is bounded by
+the continuation form of Lemma 4.8 evaluated on the total extension budget
+$`M_{\mathsf{lw}}(\ell,N)`$:
 
 ```math
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{lw}}(\ell,N),2),
@@ -2275,7 +2304,8 @@ and $`(K_2,\mathsf{iv}(U_2,0))`$.
 
 The total number of primitive and flattened transcript calls is bounded by
 $`M_{\mathsf{tr}}^{\flat}(\Theta,N)`$, and the number of public roots is
-exactly $`\rho`$. Hence Lemma 4.8 bounds the rooted-forest bad event by
+exactly $`\rho`$. Hence the continuation form of Lemma 4.8 bounds the
+rooted-forest bad event by
 
 ```math
 \mathrm{Sponge}^{(i)}_{\mathsf{forest}}(M_{\mathsf{tr}}^{\flat}(\Theta,N),\rho).
