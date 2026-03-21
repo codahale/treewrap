@@ -1444,7 +1444,12 @@ allows us to reuse the same rooted-sponge bound for the flattened
 encryption-side LeafWrap transcript. This use is purely structural: the
 duplexing-sponge equivalence identifies the duplex transcript with the
 corresponding sponge transcript for every fixed input history, independent of
-how the adversary chooses keys, IVs, or message blocks. For an $`\ell`$-bit
+how the adversary chooses keys, IVs, or message blocks. In particular, our body
+phase does not absorb rate bits alone: each padded body block is deterministically
+mapped to the full-state input $`\widetilde{X}_j \| 1 \| 0^{c-1}`$. This is
+still an ordinary duplex transcript over fixed full-state inputs, so the same
+flattening applies verbatim to the framed transcript family used by
+$`\mathsf{LeafWrap}`$ and the trunk body phase. For an $`\ell`$-bit
 chunk body, define
 
 ```math
@@ -2288,7 +2293,9 @@ Hence
 used in Section 4.9, now restricted to chunks $`j \ge 1`$. The duplexing-sponge
 identity of [BDPVA11] is purely structural, so it applies in the
 public-permutation setting regardless of how the adversary chooses keys,
-derived leaf IVs, or the bodies of those chunks. The resulting rooted-sponge
+derived leaf IVs, or the bodies of those chunks; here the body inputs are the
+framed full-state blocks $`M_j(X)=\widetilde{X}_j \| 1 \| 0^{c-1}`$ defined
+above. The resulting rooted-sponge
 bad event is bounded by the explicit leaf term of Section 4.9. In the TreeWrap
 application, the relevant local transcripts are exposed first at the
 first-differing remaining index $`j^\star`$, before the common trunk transcript
