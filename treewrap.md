@@ -1478,7 +1478,16 @@ $`\mathrm{ro}_{\mathsf{leaf}}`$ and $`\mathrm{ro}_{\mathsf{tr}}`$, so the two
 replacements do not share an ideal transcript engine. Throughout
 Sections 6.2 and 6.3, the imported duplex bounds are used exactly in the form
 fixed in Section 4.6, namely the $`\mu`$-user, low-complexity branch of
-[Men23].
+[Men23]. Consequently the two KD/IXIF hops compose sequentially. In the leaf
+hop, the untouched trunk transcript together with the adversary's primitive
+access to $`p,p^{-1}`$ is only side information to the imported leaf
+distinguisher. In the trunk hop, the already-idealized leaf family driven by
+$`\mathrm{ro}_{\mathsf{leaf}}`$ and the same primitive transcript are only side
+information to the imported trunk distinguisher. Because
+$`\mathrm{ro}_{\mathsf{leaf}}`$ and $`\mathrm{ro}_{\mathsf{tr}}`$ are sampled
+independently and neither ideal family is defined through $`p`$, the second
+hop does not feed the trunk replacement an ideal object coupled back through
+the shared permutation transcript.
 
 ### 6.2 IND-CPA Sketch
 
