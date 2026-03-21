@@ -1575,10 +1575,9 @@ $`2`$ when translated back to the absolute distinguishing gap.
 \Theta := ((K_1,U_1,A_1,P_1),(K_2,U_2,A_2,P_2))
 ```
 
-be any fixed distinct output pair in the support of a CMT-4 adversary's output
-distribution. If $`|P_1| \ne |P_2|`$, then the corresponding collision
-probability is zero because TreeWrap is length preserving. Otherwise let $`n :=
-\chi(P_1) = \chi(P_2)`$, let
+be any fixed distinct pair of AEAD tuples. If $`|P_1| \ne |P_2|`$, then the
+corresponding collision probability is zero because TreeWrap is length
+preserving. Otherwise let $`n := \chi(P_1) = \chi(P_2)`$, let
 
 ```math
 P_\nu = P_{\nu,0} \| \cdots \| P_{\nu,n-1},
@@ -1673,11 +1672,13 @@ valid after conditioning on the adversary's adaptively generated prior primitive
 transcript, because the continuation form of Lemma 4.8 together with the
 definitions of $`M_{\mathsf{lw}}`$ in Section 4.9 and
 $`M_{\mathsf{tr}}^{\flat}`$ above bounds bad rooted extensions relative to the
-already exposed rooted nodes and full states. Consequently, if these same side
-conditions hold for every realized output pair $`\Theta`$ in the support of a
-CMT-4 adversary $`\mathcal{A}`$ with $`|P_1| = |P_2|`$, then conditioning first
-on the realized prior primitive transcript and then averaging over the joint
-distribution of that transcript and $`\Theta`$ gives
+already exposed rooted nodes and full states.
+
+As an immediate averaged consequence, let $`\mathcal{A}`$ be a CMT-4 adversary
+such that these same side conditions hold for every realized output pair
+$`\Theta`$ in the support of its output distribution with $`|P_1| = |P_2|`$.
+Then conditioning first on the realized prior primitive transcript and then
+averaging over the joint distribution of that transcript and $`\Theta`$ gives
 
 ```math
 \mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}(\mathcal{A})
