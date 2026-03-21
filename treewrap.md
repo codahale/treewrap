@@ -2439,8 +2439,11 @@ The parameter choices are:
 - leaf-tag phase trailer: $`\lambda_{\mathsf{tc}} = \mathtt{01}`$;
 - IV-suffix encoding: $`\nu = \mathrm{right\_encode}`$ from [SP800185].
 
-Although $`\mathrm{right\_encode}`$ is specified on bit strings in [SP800185],
-$`\mathsf{TW128}`$ operates on octet strings throughout. Concretely,
+Here $`\chi(P) := \lceil |P| / B \rceil`$ denotes the canonical chunk count of
+the plaintext under the concrete chunk size $`B = 65024`$. Also,
+$`\mathrm{right\_encode}`$ in [SP800185] is the integer encoder applied here to
+the suffix value $`j`$. The concrete `TW128` interface itself operates on octet
+strings throughout. Concretely,
 $`\mathsf{TW128.ENC}`$ takes a 32-byte key, a 16-byte nonce, an octet-string
 associated-data input, and an octet-string plaintext, and returns an
 octet-string ciphertext of length $`|P| + 32`$ bytes; $`\mathsf{TW128.DEC}`$
