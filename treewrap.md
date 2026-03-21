@@ -1516,22 +1516,33 @@ Because this is already a keyed-duplex family under the contexts
 $`(\delta,\mathsf{iv}(U,0))`$, Corollaries 4.6 and 4.7 apply directly in the
 encryption-only and bidirectional settings, respectively. These imported
 statements are the only ingredients used in the AE sketches below, together
-with the TreeWrap-specific freshness lemma of Section 7.1. The leaf and trunk
-ideal families use independent random oracles
+with the TreeWrap-specific freshness lemma of Section 7.1.
+
+The leaf and trunk ideal families use independent random oracles
 $`\mathrm{ro}_{\mathsf{leaf}}`$ and $`\mathrm{ro}_{\mathsf{tr}}`$, so the two
 replacements do not share an ideal transcript engine. Throughout
 Sections 6.2 and 6.3, the imported duplex bounds are used exactly in the form
 fixed in Section 4.6, namely the $`\mu`$-user, low-complexity branch of
-[Men23]. Consequently the two KD/IXIF hops compose sequentially. In the leaf
-hop, the untouched trunk transcript together with the adversary's primitive
-access to $`p,p^{-1}`$ is only side information to the imported leaf
-distinguisher. In the trunk hop, the already-idealized leaf family driven by
-$`\mathrm{ro}_{\mathsf{leaf}}`$ and the same primitive transcript are only side
-information to the imported trunk distinguisher. Because
-$`\mathrm{ro}_{\mathsf{leaf}}`$ and $`\mathrm{ro}_{\mathsf{tr}}`$ are sampled
-independently and neither ideal family is defined through $`p`$, the second
-hop does not feed the trunk replacement an ideal object coupled back through
-the shared permutation transcript.
+[Men23]. The two KD/IXIF hops compose sequentially because the leaf and trunk
+keyed-duplex families operate on disjoint keyed-duplex families under separate IV namespaces and their ideal
+replacements are driven by independent random oracles. In the leaf hop, a
+leaf distinguisher forwards leaf calls to its own oracle while evaluating the
+trunk internally via $`p`$; the trunk is identical in both worlds and
+contributes no gap. In the trunk hop, a trunk distinguisher has
+$`\mathrm{ro}_{\mathsf{leaf}}`$ hardwired and evaluates the already-idealized
+leaf family internally to obtain the leaf tags, then feeds those tags as
+ordinary inputs to its trunk oracle. Because
+$`\mathrm{ro}_{\mathsf{leaf}}`$ is independent of both $`p`$ and
+$`\mathrm{ro}_{\mathsf{tr}}`$, the leaf tags are deterministic functions of
+$`\mathrm{ro}_{\mathsf{leaf}}`$ and the query inputs, and are therefore fixed
+values from the trunk oracle's perspective. The imported trunk bound
+(Corollary 4.6 or 4.7) thus holds for every fixed realization of
+$`\mathrm{ro}_{\mathsf{leaf}}`$, and hence also in expectation. In the
+bidirectional setting, decryption-side leaf calls are likewise evaluated
+internally via $`\mathrm{ro}_{\mathsf{leaf}}`$ before the resulting trunk
+query is forwarded; the Men23 bound permits the distinguisher arbitrary
+internal computation, so this does not violate any precondition of
+Corollary 4.7.
 
 ### 6.2 IND-CPA Sketch
 
