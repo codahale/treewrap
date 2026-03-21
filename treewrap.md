@@ -1307,13 +1307,13 @@ from [Men23]. The trunk transcript is handled directly as a keyed-duplex family
 under the keyed contexts $`(\delta,\mathsf{iv}(U,0))`$ and therefore uses
 Corollary 4.6 without any additional reduction.
 
-Let $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}]`$ denote the same
+Let $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}]`$ denote the same
 leaf transcript as $`\mathsf{LeafWrap}[p]`$, but with the keyed duplex
 $`\mathsf{KD}[p]`$ replaced by the ideal interface
-$`\mathsf{IXIF}[\mathrm{ro}]`$ of Section 2.3.2. Thus
+$`\mathsf{IXIF}[\mathrm{ro}_{\mathsf{leaf}}]`$ of Section 2.3.2. Thus
 
 ```math
-\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}](K,V,X,m) \to (Y,T)
+\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}](K,V,X,m) \to (Y,T)
 ```
 
 has exactly the same padding, framing bits, mode flag, and output convention as
@@ -1404,9 +1404,9 @@ associated-data resources deleted from the accounting. In TreeWrap, the
 relevant keyed contexts are $`(\delta,V_i)`$ with
 $`V_i = \mathsf{iv}(U,i)`$ and $`i \ge 1`$.
 
-For the trunk layer, let $`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}]`$
+For the trunk layer, let $`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{tr}}]`$
 denote the same transcript as $`\mathsf{TrunkWrap}[p]`$, but with the keyed
-duplex replaced by $`\mathsf{IXIF}[\mathrm{ro}]`$. A trunk evaluation in this
+duplex replaced by $`\mathsf{IXIF}[\mathrm{ro}_{\mathsf{tr}}]`$. A trunk evaluation in this
 ideal world still consists of an optional absorb phase on
 $`A \| \delta_{\mathsf{ad}}`$, an optional first-chunk body phase on
 $`X_0`$, an optional absorb phase on
@@ -1414,7 +1414,10 @@ $`T_1 \| \cdots \| T_m \| \delta_{\mathsf{tc}}`$, and one final squeeze phase.
 Because this is already a keyed-duplex family under the contexts
 $`(\delta,\mathsf{iv}(U,0))`$, Corollary 4.6 applies directly. These imported
 statements are the only ingredients used in the AE sketches below, together
-with the TreeWrap-specific freshness lemma of Section 7.1. Throughout
+with the TreeWrap-specific freshness lemma of Section 7.1. The leaf and trunk
+ideal families use independent random oracles
+$`\mathrm{ro}_{\mathsf{leaf}}`$ and $`\mathrm{ro}_{\mathsf{tr}}`$, so the two
+replacements do not share an ideal transcript engine. Throughout
 Sections 6.2 and 6.3, the imported duplex bounds are used exactly in the form
 fixed in Section 4.6, namely the $`\mu`$-user, low-complexity branch of
 [Men23].
@@ -1429,7 +1432,7 @@ and $`p^{-1}`$.
 - $`H_0^b`$ is the real IND-CPA experiment.
 - $`H_1^b`$ is obtained from $`H_0^b`$ by replacing, for each encryption
   query $`(\delta,U,A,P_0,P_1)`$, every leaf call on chunks
-  $`i \ge 1`$ by $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}]`$ under the
+  $`i \ge 1`$ by $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}]`$ under the
   derived keyed contexts $`(\delta,V_i)`$ with
   $`V_i = \mathsf{iv}(U,i)`$, while keeping the trunk transcript real.
 - $`H_2^b`$ is obtained from $`H_1^b`$ by replacing the trunk evaluation
@@ -1438,7 +1441,7 @@ and $`p^{-1}`$.
   \mathsf{TrunkWrap}[p](K[\delta], \mathsf{iv}(U,0), A, P_{b,0}, T_1, \ldots, T_{n-1})
   ```
 
-  by $`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}]`$ on the same keyed
+  by $`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{tr}}]`$ on the same keyed
   context and transcript inputs.
 
 For the first hop, Lemma 4.1 shows that a per-user nonce-respecting TreeWrap
@@ -1474,11 +1477,13 @@ bit except through public lengths and message structure. More explicitly:
 - for $`n > 1`$, it consists of those trunk paths together with independent
   fresh leaf body and tag paths.
 
-The IXIF oracle used for the leaf and trunk replacements is sampled
-independently of the real permutation $`p`$, so the primitive transcript is
-unchanged across the hybrids and remains shared between $`H_2^0`$ and
-$`H_2^1`$. This independence is load-bearing: without it, the primitive oracle
-could couple the two final games through the shared permutation transcript.
+The ideal leaf oracle $`\mathrm{ro}_{\mathsf{leaf}}`$ and the ideal trunk
+oracle $`\mathrm{ro}_{\mathsf{tr}}`$ are sampled independently of the real
+permutation $`p`$ and independently of one another, so the primitive
+transcript is unchanged across the hybrids and remains shared between
+$`H_2^0`$ and $`H_2^1`$. This independence is load-bearing: without it, the
+primitive oracle or a shared ideal transcript engine could couple the two
+final games.
 Consequently, the entire view of $`\mathcal{A}`$ in $`H_2^0`$ and $`H_2^1`$ is
 identical up to public lengths, and therefore
 
@@ -1498,11 +1503,11 @@ primitive access to $`p`$ and $`p^{-1}`$.
 - $`H_0`$ is the real INT-CTXT experiment.
 - $`H_1`$ is obtained from $`H_0`$ by replacing, for each wrapper query with
   user index $`\delta`$ and nonce $`U`$, every leaf encryption-side and
-  decryption-side call by $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}]`$
+  decryption-side call by $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}]`$
   under the keyed contexts $`(\delta,\mathsf{iv}(U,j))`$ with $`j \ge 1`$,
   while keeping the trunk transcript real.
 - $`H_2`$ is obtained from $`H_1`$ by replacing every trunk evaluation by
-  $`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}]`$ on the same trunk keyed
+  $`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{tr}}]`$ on the same trunk keyed
   context and transcript inputs, both on encryption and on decryption-side
   recomputation.
 
