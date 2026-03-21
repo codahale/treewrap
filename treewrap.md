@@ -1602,6 +1602,17 @@ where $`T_{\nu,j}`$ is the hidden leaf tag produced by the $`\nu`$-th tuple at
 remaining chunk index $`j \ge 1`$. Set
 
 ```math
+\Pi_\nu
+:=
+\begin{cases}
+\epsilon, & \text{if } n = 0,\\
+(K_\nu,U_\nu,A_\nu,P_{\nu,0}), & \text{if } n \ge 1,
+\end{cases}
+\qquad
+\nu \in \{1,2\},
+```
+
+```math
 \epsilon_{\mathsf{leaf}}^{\mathsf{first}}(\Theta,N)
 :=
 \begin{cases}
@@ -1625,7 +1636,8 @@ N + \sigma_{\mathsf{tr}}(A_1,P_1) + \sigma_{\mathsf{tr}}(A_2,P_2),
 :=
 \begin{cases}
 2^{-\tau}, & \text{if } n = 0,\\
-2^{-(|Y_0|+\tau)}, & \text{if } n \ge 1,
+2^{-(|Y_0|+\tau)}, & \text{if } n \ge 1 \text{ and } \Pi_1 \ne \Pi_2,\\
+2^{-\tau}, & \text{if } n \ge 1 \text{ and } \Pi_1 = \Pi_2,
 \end{cases}
 ```
 
@@ -1661,10 +1673,11 @@ valid after conditioning on the adversary's adaptively generated prior primitive
 transcript, because the continuation form of Lemma 4.8 together with the
 definitions of $`M_{\mathsf{lw}}`$ in Section 4.9 and
 $`M_{\mathsf{tr}}^{\flat}`$ above bounds bad rooted extensions relative to the
-already exposed rooted nodes and full states. Consequently, if $`\Theta`$
-denotes the random realized output pair of a CMT-4 adversary $`\mathcal{A}`$,
-then conditioning first on the realized prior primitive transcript and then
-averaging over the joint distribution of that transcript and $`\Theta`$ gives
+already exposed rooted nodes and full states. Consequently, if these same side
+conditions hold for every realized output pair $`\Theta`$ in the support of a
+CMT-4 adversary $`\mathcal{A}`$ with $`|P_1| = |P_2|`$, then conditioning first
+on the realized prior primitive transcript and then averaging over the joint
+distribution of that transcript and $`\Theta`$ gives
 
 ```math
 \mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}(\mathcal{A})
@@ -2247,8 +2260,8 @@ output is $`T`$ when $`P_0 = \epsilon`$ and the pair $`(Y_0,T)`$ when $`P_0 \ne
 \epsilon`$.
 
 **Lemma 7.3 (Flat TrunkWrap Collision Bound).** Let $`\Theta`$ be as in Theorem
-5.4, and extract $`n`$, $`\Sigma_\nu`$, and $`\delta_{\mathsf{tr}}(\Theta)`$
-exactly as there. Let
+5.4, and extract $`n`$, $`\Sigma_\nu`$, $`\Pi_\nu`$, and
+$`\delta_{\mathsf{tr}}(\Theta)`$ exactly as there. Let
 
 ```math
 \Xi_\nu
@@ -2319,8 +2332,11 @@ trailers $`\lambda_{\mathsf{ad}}`$ and $`\lambda_{\mathsf{tc}}`$, and the body
 framing $`\widetilde{X}_j \| 1 \| 0^{c-1}`$ that separates the first-chunk body
 phase from the absorb-style phases. Therefore a collision on the observed trunk
 output can only occur through an ideal-output collision on that observed
-output: $`2^{-\tau}`$ when $`n = 0`$, and $`2^{-(|Y_0|+\tau)}`$ when $`n \ge
-1`$. This is exactly the term $`\delta_{\mathsf{tr}}(\Theta)`$.
+output: $`2^{-\tau}`$ when $`n = 0`$; $`2^{-(|Y_0|+\tau)}`$ when $`n \ge 1`$ and
+the trunk-local prefixes differ, so the observed pair $`(Y_0,T)`$ must collide;
+and $`2^{-\tau}`$ when $`n \ge 1`$ and the trunk-local prefixes agree, so
+$`Y_0`$ is already fixed identically and only the final tag can collide. This
+is exactly the term $`\delta_{\mathsf{tr}}(\Theta)`$.
 
 ### 7.4 Proof of Theorem 5.4
 
@@ -2391,7 +2407,9 @@ then there are two subcases.
    suffixes satisfy $`\Sigma_1 \ne \Sigma_2`$, so the trunk-local inputs
    $`\Xi_1`$ and $`\Xi_2`$ are distinct. The common final ciphertext therefore
    implies a collision on distinct observed trunk outputs, which Lemma 7.3
-   bounds by $`\epsilon_{\mathsf{tr}}^{\mathsf{flat}}(\Theta,N)`$.
+   bounds by $`\epsilon_{\mathsf{tr}}^{\mathsf{flat}}(\Theta,N)`$; here
+   $`\Pi_1=\Pi_2`$, so the residual ideal-output term inside
+   $`\delta_{\mathsf{tr}}(\Theta)`$ is the final-tag term $`2^{-\tau}`$.
 
 Finally, if no such later index $`j^\star`$ exists, then every leaf input
 agrees, the trunk-local prefixes agree by assumption, and therefore all local
@@ -2648,7 +2666,8 @@ and
 =
 \begin{cases}
 2^{-256}, & \text{if } \chi(P_1)=0,\\
-2^{-(|Y_0|+256)}, & \text{if } \chi(P_1)\ge1.
+2^{-(|Y_0|+256)}, & \text{if } \chi(P_1)\ge1 \text{ and } (K_1,U_1,A_1,P_{1,0}) \ne (K_2,U_2,A_2,P_{2,0}),\\
+2^{-256}, & \text{if } \chi(P_1)\ge1 \text{ and } (K_1,U_1,A_1,P_{1,0}) = (K_2,U_2,A_2,P_{2,0}).
 \end{cases}
 ```
 
@@ -2665,7 +2684,8 @@ In particular:
 
 - for a one-chunk full-block comparison with empty associated data on both
   sides, one has $`M_{\mathsf{tr}}^{\flat}(\Theta,N)=N+100`$ and
-  $`\delta_{\mathsf{tr}}(\Theta)=2^{-65280}`$.
+  $`\delta_{\mathsf{tr}}(\Theta)=2^{-65280}`$ whenever the trunk-local
+  prefixes differ.
 
 The rooted-forest part itself is
 
