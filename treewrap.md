@@ -39,7 +39,7 @@ single-root sponge bound of [BDPVA08]. Theorem 5.4 then composes these two
 cases: a TreeWrap commitment collision either arises at the first differing
 later leaf or at the trunk-local transcript.
 
-The remainder of the paper is organized as follows. Section 2 fixes notation, the keyed-duplex model, and the encoding conventions. Section 3 defines $`\mathsf{LeafWrap}`$, $`\mathsf{TrunkWrap}`$, and $`\mathsf{TreeWrap}`$, together with the AEAD wrapper. Section 4 gives the multi-user security experiments, the resource translation, and the imported external bounds. Section 5 states the main AE and CMT-4 theorems. Section 6 gives the imported AE adaptation sketches, and Section 7 contains the TreeWrap-specific proofs. Section 8 instantiates the construction as $`\mathsf{TW128}`$ using $`\mathrm{Keccak\text{-}p}[1600,12]`$, SP 800-185 encodings, 8064-byte chunks, 256-bit leaf tags, and a 256-bit final tag.
+The remainder of the paper is organized as follows. Section 2 fixes notation, the keyed-duplex model, and the encoding conventions. Section 3 defines $`\mathsf{LeafWrap}`$, $`\mathsf{TrunkWrap}`$, and $`\mathsf{TreeWrap}`$, together with the AEAD wrapper. Section 4 gives the multi-user security experiments, the resource translation, and the imported external bounds. Section 5 states the main AE and CMT-4 theorems. Section 6 gives the imported AE adaptation sketches, and Section 7 contains the TreeWrap-specific proofs. Section 8 instantiates the construction as $`\mathsf{TW128}`$ using $`\mathrm{Keccak\text{-}p}[1600,12]`$, SP 800-185 encodings, 8064-byte chunks, 256-bit later-leaf tags, and a 256-bit final tag.
 
 ## 2. Preliminaries
 
@@ -398,7 +398,7 @@ TreeWrap is nonce-based and not nonce-misuse resistant. If the same key and
 nonce are reused, then all derived later-leaf IVs repeat and the trunk IV also
 repeats. Later chunks therefore exhibit the usual two-time-pad failure
 immediately, and the same is true of the first chunk whenever the associated
-data prefix also repeats. This design therefore targets the standard
+data transcript also repeats. This design therefore targets the standard
 nonce-respecting model rather than nonce-misuse resistance. Achieving NMR would
 require a different construction, such as an SIV-style two-pass design, which
 would work against the present single-pass chunked interface. In practice,
