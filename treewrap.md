@@ -924,6 +924,8 @@ specializes to
 +
 \frac{2 \nu_{r,c}^{2(M-L)}(N+1)}{2^c}
 +
+\frac{\binom{L+\Omega+1}{2}}{2^c}
++
 \frac{(M-L-Q)Q}{2^b-Q}
 +
 \frac{M(M-L-1)}{2^b}
@@ -932,7 +934,7 @@ specializes to
 +
 \frac{Q_{IV}N}{2^k}
 +
-\frac{\mu}{2^k}.
+\frac{\binom{\mu}{2}}{2^k}.
 ```
 
 Here $`\nu_{r,c}^{X}`$ is the multicollision limit function imported from
