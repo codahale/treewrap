@@ -1059,8 +1059,8 @@ collision tail on the observed trunk output.
   KD/IXIF terms of Corollaries 4.6 and 4.7, respectively.
 - By Lemma 7.1 together with the keyed-context discipline of Lemma 4.1, the
   only additional explicit integrity failures beyond these imported KD/IXIF
-  terms are the event that a fresh leaf tag collides with the unique
-  prior leaf tag on the same keyed path, contributing at most
+  terms are the event that a fresh leaf tag matches some previously exposed
+  leaf tag on the same keyed path, contributing at most
   $`2^{-t_{\mathsf{leaf}}}`$ per final forgery candidate, and the final trunk-
   tag guessing event, contributing at most $`2^{-\tau}`$ per final forgery
   candidate.
@@ -1667,7 +1667,7 @@ exactly one of the following cases holds.
 2. **Fresh leaf.**
    Some remaining chunk $`X_j`$ with $`j \ge 1`$ is fresh in its keyed context
    $`(\delta,\mathsf{iv}(U,j))`$. Then either its hidden leaf tag
-   collides with the unique prior leaf tag for that transcript path,
+   matches some previously exposed leaf tag for that transcript path,
    costing at most $`2^{-t_{\mathsf{leaf}}}`$, or the leaf-tag absorb phase
    of the trunk transcript is fresh, so the adversary must again predict a
    fresh $`\tau`$-bit trunk tag, costing $`2^{-\tau}`$.
@@ -1714,7 +1714,7 @@ other. In either case the differing padded block itself witnesses freshness of
 the next path, and freshness then propagates to all later extensions by the
 prefix property of IXIF paths. Hence the hidden leaf tag $`T_j`$ is
 uniform except with probability $`2^{-t_{\mathsf{leaf}}}`$ that it collides
-with the unique prior leaf tag for that keyed path. On the complement of
+with some previously exposed leaf tag for that keyed path. On the complement of
 that collision event, the absorbed leaf-tag phase of the trunk transcript
 differs at or before the first block containing $`T_j`$, so the final trunk
 squeeze path is fresh and the adversary must still guess the final tag,
