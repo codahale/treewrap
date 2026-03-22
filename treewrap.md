@@ -983,6 +983,7 @@ For readability, the main resource symbols used below are:
 | $`\sigma_{\mathsf{leaf}}(X)`$ | total leaf duplex calls on those remaining chunks |
 | $`q^{\mathsf{tr}}_e, q^{\mathsf{tr}}_d`$ | number of trunk evaluations on the encryption and decryption sides |
 | $`\sigma^{\mathsf{tr}}_e, \sigma^{\mathsf{tr}}_d`$ | total trunk duplex calls on the encryption and decryption sides |
+| $`Q_{\mathsf{IV,leaf}}, Q_{\mathsf{IV,tr}}`$ | induced maximum raw-IV initialization multiplicities for the bidirectional leaf and trunk families |
 | $`L_{\mathsf{tr}}`$ | induced repeated-subpath count for the bidirectional trunk family |
 | $`\Omega_{\mathsf{lw},d}, \Omega^{\mathsf{tr}}_d`$ | decryption-side overwrite counts for the leaf and trunk families |
 | $`q_f`$ | final forgery-candidate count in the multi-forgery INT-CTXT game |
@@ -1141,6 +1142,12 @@ q^{\mathsf{tr}}_d := q_*,
 \Omega^{\mathsf{tr}}_d := \sum_{b=1}^{q_*} \Omega_{\mathsf{tr},d}(Y^{(b)}).
 ```
 
+For the bidirectional leaf family, let $`Q_{\mathsf{IV,leaf}}`$ denote the
+induced maximum number of leaf initialization calls for a single raw IV. Because
+decryption may repeat a leaf keyed context $`(\delta,\mathsf{iv}(U,j))`$ many
+times for fixed $`j \ge 1`$, we keep this Men23 resource parameter explicit as
+well.
+
 For the bidirectional trunk family, let $`L_{\mathsf{tr}}`$ denote the induced
 number of trunk duplexing calls whose subpaths repeat prior trunk subpaths in
 the same keyed context. This is exactly the Men23 resource parameter $`L`$ for
@@ -1204,10 +1211,12 @@ every leaf contributes at least one body-phase call.
 
 **Lemma 4.2 (Leaf Resource Translation).** The reduced leaf families induced by
 TreeWrap admit the following valid resource assignments in the notation of
-[Men23]. These are exactly the resource assignments used in the proof of
-[Men23, Theorem 7] for `MonkeySpongeWrap`, specialized to the reduced family
-$`\mathsf{MSW}^{\mathsf{red}}`$ of Section 6.1 and re-expressed in the present
-wrapper-level notation:
+[Men23]. For the encryption-only family, these coincide with the resource
+assignments used in the proof of [Men23, Theorem 7] for `MonkeySpongeWrap`,
+specialized to the reduced family $`\mathsf{MSW}^{\mathsf{red}}`$ of Section 6.1
+and re-expressed in the present wrapper-level notation. For the bidirectional
+family, we keep the raw-IV multiplicity explicit rather than substituting the
+coarser upper bound $`Q_{IV} \le \mu`$:
 
 - for the encryption-only family relevant to IND-CPA, one may take
 
@@ -1225,7 +1234,7 @@ wrapper-level notation:
   ```math
   M = \sigma^{\mathsf{leaf}}_e + \sigma^{\mathsf{leaf}}_d,\quad
   Q = \chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d},\quad
-  Q_{IV} \le \mu,\quad
+  Q_{IV} = Q_{\mathsf{IV,leaf}},\quad
   L \le \chi_{\mathsf{leaf},d},\quad
   \Omega = \Omega_{\mathsf{lw},d},\quad
   \nu_{\mathsf{fix}} \le \max\!\bigl(\Omega_{\mathsf{lw},d} + \chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d} - 1, 0\bigr).
@@ -1238,23 +1247,25 @@ $`(\delta,\mathsf{iv}(U,j))`$ for $`j \ge 1`$. The present quantities
 $`\chi_{\mathsf{leaf},e}`$, $`\chi_{\mathsf{leaf},d}`$,
 $`\sigma^{\mathsf{leaf}}_e`$, and $`\sigma^{\mathsf{leaf}}_d`$ are precisely
 the `Men23` query-count and duplex-call parameters $`q_e`$, $`q_d`$,
-$`\sigma_e`$, and $`\sigma_d`$ for that reduced family. The assignments
-$`Q_{IV} \le \mu`$, $`L \le \chi_{\mathsf{leaf},d}`$, and
-$`\Omega \le \Omega_{\mathsf{lw},d}`$ are therefore inherited verbatim from the
-resource accounting in the proof of [Men23, Theorem 7] and its accompanying
-Remark 5; they are imported bookkeeping choices for the reduced
-`MonkeySpongeWrap` family, not fresh local derivations for TreeWrap. The
-excision of the unused local AD phase is conservative here: it removes transcript
-history and therefore cannot increase any of the imported resource measures.
-The displayed bound on
+$`\sigma_e`$, and $`\sigma_d`$ for that reduced family. On the encryption side,
+per-user nonce-respecting behavior still gives $`Q_{IV} \le \mu`$ exactly as in
+the proof of [Men23, Theorem 7]. In the bidirectional family, however,
+decryption-side nonce reuse can repeat a raw leaf IV $`\mathsf{iv}(U,j)`$, so
+the coarse substitution $`Q_{IV} \le \mu`$ used in the displayed `Men23`
+bookkeeping is not valid here. We therefore keep the exact induced multiplicity
+$`Q_{\mathsf{IV,leaf}}`$ explicit. The remaining assignments
+$`L \le \chi_{\mathsf{leaf},d}`$ and $`\Omega = \Omega_{\mathsf{lw},d}`$ are
+the same path-counting and overwrite-counting bounds imported from the proof of
+[Men23, Theorem 7] and its accompanying Remark 5, specialized to the reduced
+family. The displayed bound on
 $`\nu_{\mathsf{fix}}`$ is the same path-counting upper bound, specialized to the
 reduced family and slightly conservatively rewritten in the current notation.
 This conservatism does not affect the concrete theorems here because
 $`\nu_{\mathsf{fix}}`$ does not appear in the low-complexity branch of
 [Men23, Theorem 1, Eq. (5)] instantiated in Section 4.6. For the bidirectional
-leaf term itself, Corollary 4.5 below imports the already-simplified expression
-from the proof of [Men23, Theorem 7] directly, so these upper bounds are not
-separately substituted into the raw generic KD expression.
+leaf term itself, Corollary 4.5 below uses the same simplification as
+[Men23, Theorem 7, Eq. (34)] but keeps the $`Q_{IV}N/2^k`$ term explicit as
+$`Q_{\mathsf{IV,leaf}}N/2^k`$ rather than substituting $`Q_{IV} \le \mu`$.
 
 **Corollary 4.4 (Imported Leaf Encryption-Side KD/IXIF Bound).** If
 $`\sigma^{\mathsf{leaf}}_e + N \le 0.1 \cdot 2^c`$, then the encryption-side
@@ -1272,7 +1283,7 @@ then the bidirectional leaf real-to-IXIF replacement term can be instantiated
 as
 
 ```math
-\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N)
+\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,Q_{\mathsf{IV,leaf}},N)
 :=
 \frac{2\nu_{r,c}^{2\sigma^{\mathsf{leaf}}}(N+1)}{2^c}
 +
@@ -1284,7 +1295,7 @@ as
 +
 \frac{q^{\mathsf{leaf}}(\sigma^{\mathsf{leaf}}-q^{\mathsf{leaf}})}{2^{\min\{c+k,b\}}}
 +
-\frac{\mu N}{2^k}
+\frac{Q_{\mathsf{IV,leaf}} N}{2^k}
 +
 \frac{\binom{\mu}{2}}{2^k},
 ```
@@ -1297,10 +1308,23 @@ where
 q^{\mathsf{leaf}} := \chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d}.
 ```
 
-This is a conservative specialization of the low-complexity expression
+This is the same conservative specialization as the low-complexity expression
 obtained in the proof of [Men23, Theorem 7, Eq. (34)], specialized to the
 reduced family $`\mathsf{MSW}^{\mathsf{red}}`$ and rewritten in the present
-notation.
+notation, except that the raw-IV multiplicity term is kept explicit as
+$`Q_{\mathsf{IV,leaf}} N / 2^k`$ rather than further upper bounded by
+$`\mu N / 2^k`$.
+
+For a fully wrapper-level explicit instantiation, one may conservatively bound
+
+```math
+Q_{\mathsf{IV,leaf}} \le \mu + q_*.
+```
+
+Indeed, per-user nonce-respecting permits at most one encryption-side leaf
+initialization for a fixed raw IV and user label, contributing at most
+$`\mu`$ such initializations in total, while each decryption-side wrapper query
+contributes at most one additional initialization for that same raw IV.
 
 **Lemma 4.3 (TrunkWrap Resource Translation).** The trunk families induced by
 TreeWrap admit the following valid resource assignments in the notation of
@@ -1709,7 +1733,7 @@ $`q_f`$ final forgery candidates,
 \le
 \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},N)
 +
-\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N_{\mathsf{leaf}}^{\mathsf{ae}})
+\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,Q_{\mathsf{IV,leaf}},N_{\mathsf{leaf}}^{\mathsf{ae}})
 +
 \frac{q_f}{2^{t_{\mathsf{leaf}}}}
 +
@@ -1763,7 +1787,7 @@ decryption-side resources of each INT-CTXT reduction,
 +
 2 \cdot \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},N)
 +
-2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N_{\mathsf{leaf}}^{\mathsf{ae}})
+2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,Q_{\mathsf{IV,leaf}},N_{\mathsf{leaf}}^{\mathsf{ae}})
 +
 \frac{2 q_d}{2^{t_{\mathsf{leaf}}}}
 +
@@ -2189,7 +2213,7 @@ Hence
 ```math
 \left| \Pr[H_0(\mathcal{A}) = 1] - \Pr[H_1(\mathcal{A}) = 1] \right|
 \le
-\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N_{\mathsf{leaf}}^{\mathsf{ae}}).
+\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,Q_{\mathsf{IV,leaf}},N_{\mathsf{leaf}}^{\mathsf{ae}}).
 ```
 
 For the second hop, Corollary 4.7 yields
@@ -3013,7 +3037,7 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   \le
   \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,\mu+q^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
   +
-  \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N_{\mathsf{leaf}}^{\mathsf{ae}})
+  \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,\mu+q_f,N_{\mathsf{leaf}}^{\mathsf{ae}})
   +
   \frac{2 q_f}{2^{256}}.
   ```
@@ -3029,7 +3053,7 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   +
   2 \cdot \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,\mu+q^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
   +
-  2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N_{\mathsf{leaf}}^{\mathsf{ae}})
+  2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,\mu+q_d,N_{\mathsf{leaf}}^{\mathsf{ae}})
   +
   \frac{4 q_d}{2^{256}}.
   ```
