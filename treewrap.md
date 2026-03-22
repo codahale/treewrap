@@ -13,7 +13,7 @@ is then absorbed back into the trunk transcript before the final tag is
 squeezed. This decomposition is intended to preserve the short-message latency
 of a single serial keyed duplex while still supporting parallel processing of
 the remaining chunks. In that sense, TreeWrap can be read as transporting the
-efficiency pattern of KangarooTwelve [K12] into the keyed setting and the AEAD
+efficiency pattern of KangarooTwelve [BDPVAVKV18] into the keyed setting and the AEAD
 problem domain.
 
 We analyze TreeWrap in two settings. For authenticated encryption, we prove
@@ -51,7 +51,7 @@ enough to analyze both in the keyed AE setting and in the public-permutation
 commitment setting.
 
 At a design level, this is deliberately close in spirit to KangarooTwelve
-[K12]: a serial trunk handles the short-message path and the global framing,
+[BDPVAVKV18]: a serial trunk handles the short-message path and the global framing,
 while remaining chunks can be processed in parallel and fed back as short
 chaining values. The point of departure is that TreeWrap brings this efficiency
 pattern into a keyed-duplex AEAD setting rather than an unkeyed tree-hashing
@@ -94,7 +94,7 @@ public-permutation CMT-4 analysis of Section 7.
 
 ### 1.2 Related Work
 
-At the structural level, TreeWrap is closest to KangarooTwelve [K12] and to
+At the structural level, TreeWrap is closest to KangarooTwelve [BDPVAVKV18] and to
 tree-style hash modes such as ParallelHash [SP800185]. These constructions use
 a serial top-level transcript together with parallel subcomputations on long
 inputs. TreeWrap borrows that efficiency pattern, but moves it from the unkeyed
@@ -103,7 +103,7 @@ therefore not only keyed initialization but also framing: rather than
 Sakura-style tree coding, TreeWrap uses derived keyed IVs together with duplex
 padding and phase trailers to separate the trunk and leaf transcripts.
 
-Among keyed Keccak-family designs, Keyak [Keyak16] is the closest relative in
+Among keyed Keccak-family designs, Keyak [BDPVAVK16] is the closest relative in
 spirit. Both designs use `Keccak-p[1600,12]`, both exploit parallel local
 processing, and both ultimately authenticate the whole message through a serial
 top-level transcript. The modes are nevertheless quite different in three
@@ -120,8 +120,8 @@ can be dispatched in parallel as hardware resources allow, scaling from
 embedded targets up to wide SIMD pipelines without changing the mode
 definition.
 
-Closer to the modern permutation-based AEAD landscape, Xoodyak [Xoo20] and
-Ascon [Ascon21, SP800232] are serial duplex-based designs that prioritize
+Closer to the modern permutation-based AEAD landscape, Xoodyak [DHPVAVK20] and
+Ascon [DEMS21, SP800232] are serial duplex-based designs that prioritize
 compactness and lightweight deployment over chunk-parallel throughput. Xoodyak
 offers a versatile Cyclist interface over Xoodoo[12], while Ascon is now the
 standardized NIST lightweight AEAD family. TreeWrap differs from both by making
@@ -129,14 +129,14 @@ parallel message decomposition a first-class design goal: it keeps the
 associated data and the first chunk on the trunk path, and pushes only the
 remaining chunks into independent leaf transcripts.
 
-Outside the permutation-based family, AEGIS-128L and AEGIS-256 [AEGIS13]
+Outside the permutation-based family, AEGIS-128L and AEGIS-256 [WP13]
 achieve very high throughput on platforms with AES-NI or similar hardware
 acceleration. TreeWrap differs in two ways: it does not require dedicated
 hardware instructions, since Keccak-p is a bitwise construction that performs
 well in pure software and in SIMD pipelines; and its duplex-based structure
 admits a direct CMT-4 commitment analysis within the present framework, whereas
 recent analysis of AEGIS-family commitment shows security at most at the
-CMT-1 level [AEGISKC23].
+CMT-1 level [IR23].
 
 On the proof side, the closest antecedent is [Men23]. The leaf layer is
 deliberately kept close to the reduced MonkeySpongeWrap transcript analyzed
@@ -180,7 +180,7 @@ experiments, the resource translation, and the imported external bounds.
 Section 5 states the main AE and CMT-4 theorems. Section 6 gives the imported
 AE adaptation sketches, and Section 7 contains the TreeWrap-specific proofs.
 Section 8 instantiates the construction as $`\mathsf{TW128}`$ using
-$`\mathrm{Keccak\text{-}p}[1600,12]`$, SP 800-185 encodings, 8128-byte chunks,
+$`\mathrm{Keccak\text{-}p}[1600,12]`$, SP 800-185 encodings [SP800185], 8128-byte chunks,
 256-bit leaf tags, and a 256-bit final tag.
 
 ## 2. Preliminaries
@@ -2714,7 +2714,7 @@ based on the twelve-round Keccak permutation from [FIPS202]. The goal of this
 instantiation is a 128-bit security target with a 256-bit final tag, a 256-bit
 leaf tag, and an empirically tuned chunk size of 8128 bytes. The choice of
 $`\mathrm{Keccak\text{-}p}[1600,12]`$ is not novel to TreeWrap: it follows the
-software-oriented KangarooTwelve and TurboSHAKE precedent of [K12, RFC9861],
+software-oriented KangarooTwelve and TurboSHAKE precedent of [BDPVAVKV18, RFC9861],
 which likewise uses the twelve-round permutation rather than full-round
 $`\mathrm{Keccak\text{-}f}[1600]`$. This is the same permutation choice the
 Keccak designers are currently advancing for high-speed unkeyed hash and XOF
@@ -3304,6 +3304,16 @@ Applications*. In Ali Miri and Serge Vaudenay, editors, *Selected Areas in
 Cryptography -- SAC 2011*, volume 7118 of *Lecture Notes in Computer Science*,
 pages 320-337. Springer, 2012.
 
+[BDPVAVK16] Guido Bertoni, Joan Daemen, Michaël Peeters, Gilles Van Assche, and
+Ronny Van Keer. *CAESAR Submission: Keyak v2*. Document version 2.2, September
+15, 2016. <https://keccak.team/files/Keyakv2-doc2.2.pdf>
+
+[BDPVAVKV18] Guido Bertoni, Joan Daemen, Michaël Peeters, Gilles Van Assche, Ronny Van
+Keer, and Benoît Viguier. *KangarooTwelve: Fast Hashing Based on Keccak-p*. In
+Pooya Farshim and Steven Guilley, editors, *Applied Cryptography and Network
+Security*, volume 10892 of *Lecture Notes in Computer Science*, pages 400-418.
+Springer, 2018. <https://doi.org/10.1007/978-3-319-93387-0_21>
+
 [BH22] Mihir Bellare and Viet Tung Hoang. *Efficient Schemes for Committing
 Authenticated Encryption*. In Orr Dunkelman and Stefan Dziembowski, editors,
 *Advances in Cryptology -- EUROCRYPT 2022, Part II*, volume 13276 of *Lecture
@@ -3314,33 +3324,27 @@ Relations among Notions and Analysis of the Generic Composition Paradigm*. In
 Tatsuaki Okamoto, editor, *Advances in Cryptology -- ASIACRYPT 2000*, volume
 1976 of *Lecture Notes in Computer Science*, pages 531-545. Springer, 2000.
 
-[Ascon21] Christoph Dobraunig, Maria Eichlseder, Florian Mendel, and Martin
+[DEMS21] Christoph Dobraunig, Maria Eichlseder, Florian Mendel, and Martin
 Schläffer. *Ascon v1.2: Lightweight Authenticated Encryption and Hashing*.
 *Journal of Cryptology*, 34(3): Article 33, 2021.
 <https://doi.org/10.1007/s00145-021-09398-9>
 
-[AEGIS13] Hongjun Wu and Bart Preneel. *AEGIS: A Fast Authenticated Encryption
-Algorithm*. *IACR Cryptology ePrint Archive*, Paper 2013/695, 2013.
-<https://eprint.iacr.org/2013/695>
-
-[AEGISKC23] Takanori Isobe and Mostafizar Rahman. *Key Committing Security
-Analysis of AEGIS*. *IACR Cryptology ePrint Archive*, Paper 2023/1495, 2023.
-<https://eprint.iacr.org/2023/1495>
+[DHPVAVK20] Joan Daemen, Seth Hoffert, Michaël Peeters, Gilles Van Assche, and
+Ronny Van Keer. *Xoodyak, a Lightweight Cryptographic Scheme*. *IACR
+Transactions on Symmetric Cryptology*, 2020(S1): 60-87, 2020.
+<https://doi.org/10.13154/tosc.v2020.is1.60-87>
 
 [FIPS202] National Institute of Standards and Technology. *SHA-3 Standard:
 Permutation-Based Hash and Extendable-Output Functions*. Federal Information
 Processing Standards Publication 202, 2015.
 <https://doi.org/10.6028/NIST.FIPS.202>
 
-[K12] Guido Bertoni, Joan Daemen, Michaël Peeters, Gilles Van Assche, Ronny Van
-Keer, and Benoît Viguier. *KangarooTwelve: Fast Hashing Based on Keccak-p*. In
-Pooya Farshim and Steven Guilley, editors, *Applied Cryptography and Network
-Security*, volume 10892 of *Lecture Notes in Computer Science*, pages 400-418.
-Springer, 2018. <https://doi.org/10.1007/978-3-319-93387-0_21>
+[IR23] Takanori Isobe and Mostafizar Rahman. *Key Committing Security
+Analysis of AEGIS*. *IACR Cryptology ePrint Archive*, Paper 2023/1495, 2023.
+<https://eprint.iacr.org/2023/1495>
 
-[Keyak16] Guido Bertoni, Joan Daemen, Michaël Peeters, Gilles Van Assche, and
-Ronny Van Keer. *CAESAR Submission: Keyak v2*. Document version 2.2, September
-15, 2016. <https://keccak.team/files/Keyakv2-doc2.2.pdf>
+[Men23] Bart Mennink. *Understanding the Duplex and Its Security*. *IACR
+Transactions on Symmetric Cryptology*, 2023(2): 1-46, 2023.
 
 [RFC9861] Benoit Viguier, David Wong, Gilles Van Assche, Quynh Dang, and Joan
 Daemen. *KangarooTwelve and TurboSHAKE*. RFC 9861, 2025.
@@ -3355,10 +3359,6 @@ Donghoon Chang. *Ascon-Based Lightweight Cryptography Standards for Constrained
 Devices: Authenticated Encryption, Hash, and Extendable Output Functions*. NIST
 Special Publication 800-232, 2025. <https://doi.org/10.6028/NIST.SP.800-232>
 
-[Men23] Bart Mennink. *Understanding the Duplex and Its Security*. *IACR
-Transactions on Symmetric Cryptology*, 2023(2): 1-46, 2023.
-
-[Xoo20] Joan Daemen, Seth Hoffert, Michaël Peeters, Gilles Van Assche, and
-Ronny Van Keer. *Xoodyak, a Lightweight Cryptographic Scheme*. *IACR
-Transactions on Symmetric Cryptology*, 2020(S1): 60-87, 2020.
-<https://doi.org/10.13154/tosc.v2020.is1.60-87>
+[WP13] Hongjun Wu and Bart Preneel. *AEGIS: A Fast Authenticated Encryption
+Algorithm*. *IACR Cryptology ePrint Archive*, Paper 2013/695, 2013.
+<https://eprint.iacr.org/2013/695>
