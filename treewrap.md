@@ -162,8 +162,9 @@ Section 4.2.
 The commitment analysis is deliberately separate from the keyed AE path.
 Because the CMT-4 adversary chooses both candidate keys and nonces, the proof
 does not use the keyed [Men23] bounds. Instead, it flattens the construction
-into public permutation transcripts. Lemma 7.2 handles the leaf wrapper via the
-duplexing-sponge viewpoint of [BDPVA11], yielding a per-chunk collision term on
+into public permutation transcripts. Lemma 4.9 records the local flattening
+step for framed duplex body calls, in the flattening lineage of [BDPVA11].
+Lemma 7.2 then handles the leaf wrapper, yielding a per-chunk collision term on
 the full local output pair $`(Y_i,T_i)`$. Lemma 7.3 handles the trunk-local
 transcript via a rooted-forest counting extension of the single-root sponge
 bound of [BDPVA08]. Theorem 5.4 then composes these two cases: a TreeWrap
@@ -1515,20 +1516,77 @@ f_{P,\rho}(M)
 which is the stated explicit bound. For $`\rho=1`$ and $`M \ll 2^b`$, this has
 the same leading $`M^2/2^{c+1}`$ asymptotics as [BDPVA08, Eq. (6)].
 
-### 4.9 Imported Flat Duplex Bound
+### 4.9 Flat Duplex Bound
 
-For the local CMT-4 analysis, the duplexing-sponge lemma of [BDPVA11, Lemma 3]
-allows us to reuse the same rooted-sponge bound for the flattened
-encryption-side LeafWrap transcript. This use is purely structural: the
-duplexing-sponge equivalence identifies the duplex transcript with the
-corresponding sponge transcript for every fixed input history, independent of
-how the adversary chooses keys, IVs, or message blocks. In particular, our body
-phase does not absorb rate bits alone: each padded body block is deterministically
-mapped to the full-state input $`\widetilde{X}_j \| 1 \| 0^{c-1}`$. This is
-still an ordinary duplex transcript over fixed full-state inputs, so the same
-flattening applies verbatim to the framed transcript family used by
-$`\mathsf{LeafWrap}`$ and the trunk body phase. For an $`\ell`$-bit
-chunk body, define
+For the local CMT-4 analysis, we first record the flattening fact needed for
+the encryption-side keyed-duplex transcript.
+
+**Lemma 4.9 (Flattening Framed Duplex Body Calls).** Fix any keyed-duplex
+transcript whose body phase absorbs a sequence of deterministically chosen
+full-state inputs
+
+```math
+M_j(X) := \widetilde{X}_j \| 1 \| 0^{c-1},
+```
+
+and whose non-body absorb phases use inputs of the form $`W_j \| 0^c`$. Then,
+for every fixed input history with initial state $`S_0`$ and ordered full-state
+inputs $`B_1,\ldots,B_m`$, the corresponding sequence of duplex forward calls
+
+```math
+V_{i+1} := p(S_i),
+\qquad
+S_{i+1} := V_{i+1} \oplus B_{i+1},
+```
+
+coincides exactly with the flattened recurrence
+
+```math
+T_0 := S_0,
+\qquad
+U_{i+1} := p(T_i),
+\qquad
+T_{i+1} := U_{i+1} \oplus B_{i+1}.
+```
+
+In particular, the public-permutation bad events of the duplex transcript are
+bounded by the same rooted-sponge counting bound as for the flattened
+transcript.
+
+**Proof sketch.** Consider an encryption-side transcript, so every duplex call
+uses $`\mathsf{flag} = \mathsf{false}`$. Write $`B_1,\ldots,B_m`$ for the
+ordered sequence of full-state inputs supplied to
+$`\mathsf{KD}[p]_K.\mathsf{duplex}`$, where each body-phase input has the
+framed form $`M_j(X)=\widetilde{X}_j \| 1 \| 0^{c-1}`$ and each non-body absorb
+input has the form $`W_j \| 0^c`$. Let $`S_i`$ denote the keyed-duplex state
+just before the $`(i+1)`$st duplex call. By the local duplex definition of
+Section 2.3.1, the $`(i+1)`$st call computes
+
+```math
+V_{i+1} := p(S_i),
+\qquad
+Z_{i+1} := \mathrm{left}_r(V_{i+1}),
+\qquad
+S_{i+1} = V_{i+1} \oplus B_{i+1}.
+```
+
+Now define a flattened sponge transcript by the same initial state
+$`T_0 := S_0`$ and the recurrence
+
+```math
+U_{i+1} := p(T_i),
+\qquad
+T_{i+1} := U_{i+1} \oplus B_{i+1},
+```
+
+with output $`\mathrm{left}_r(U_{i+1})`$ at step $`i+1`$. Induction on $`i`$
+gives $`T_i = S_i`$ and $`U_{i+1} = V_{i+1}`$ for every step, so the two
+transcripts expose exactly the same sequence of primitive evaluations and the
+same outer outputs. Hence any public-permutation merge event for the original
+duplex transcript is exactly a rooted-sponge merge event for the flattened
+transcript.
+
+For an $`\ell`$-bit chunk body, define
 
 ```math
 M_{\mathsf{lw}}(\ell,N)
@@ -2356,8 +2414,8 @@ If
 ```
 
 let $`\ell := |Y|`$ and assume $`M_{\mathsf{lw}}(\ell,N)+1 < 2^c`$. Then either
-the two flattened local transcripts collide under the duplexing-sponge
-reduction of [BDPVA11] in the presence of at most $`N`$ primitive queries, or
+the two flattened local transcripts merge in the rooted-sponge model in the
+presence of at most $`N`$ primitive queries, or
 two distinct ideal local transcript histories produce the same full local
 output pair $`(Y,T)`$. By Section 4.9, the first event is bounded by
 the continuation form of Lemma 4.8 evaluated on the total extension budget
@@ -2386,13 +2444,11 @@ Hence
 ```
 
 **Proof.** This is exactly the encryption-side flat-duplex argument already
-used in Section 4.9, now restricted to chunks $`j \ge 1`$. The duplexing-sponge
-identity of [BDPVA11] is purely structural, so it applies in the
-public-permutation setting regardless of how the adversary chooses keys,
-derived leaf IVs, or the bodies of those chunks; here the body inputs are the
-framed full-state blocks $`M_j(X)=\widetilde{X}_j \| 1 \| 0^{c-1}`$ defined
-above. The resulting rooted-sponge
-bad event is bounded by the explicit leaf term of Section 4.9. In the TreeWrap
+used in Section 4.9, now restricted to chunks $`j \ge 1`$. By Lemma 4.9, the
+framed body transcript of `LeafWrap` flattens to an equivalent rooted sponge
+transcript on the same sequence of full-state inputs. The resulting
+rooted-sponge bad event is bounded by the explicit leaf term of Section 4.9.
+In the TreeWrap
 application, the relevant local transcripts are exposed first at the
 first-differing remaining index $`j^\star`$, before the common trunk transcript
 or any identical leaf transcripts at other indices are revealed, so the only
@@ -2469,10 +2525,11 @@ and assume $`\rho+M_{\mathsf{tr}}^{\flat}(\Theta,N)-1 < 2^c`$. Then
 **Proof.** This is an encryption-only local comparison, so the trunk flat term
 is cleaner than the bidirectional AE trunk import. Every encryption-side trunk
 call uses flag $`\mathsf{false}`$, including the first-chunk body phase, so the
-entire transcript is a serial absorb-then-squeeze duplex history. By the
-duplexing-sponge identity of [BDPVA11], flattening this history yields a rooted
-sponge transcript with public roots determined by $`(K_1,\mathsf{iv}(U_1,0))`$
-and $`(K_2,\mathsf{iv}(U_2,0))`$.
+entire transcript is a serial sequence of $`\mathsf{flag}=\mathsf{false}`$
+duplex forward calls. By Lemma 4.9, flattening this sequence yields a rooted
+sponge transcript with
+public roots determined by $`(K_1,\mathsf{iv}(U_1,0))`$ and
+$`(K_2,\mathsf{iv}(U_2,0))`$.
 
 The total number of primitive and flattened transcript calls is bounded by
 $`M_{\mathsf{tr}}^{\flat}(\Theta,N)`$, and the number of public roots is
