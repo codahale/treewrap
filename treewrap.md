@@ -129,13 +129,14 @@ parallel message decomposition a first-class design goal: it keeps the
 associated data and the first chunk on the trunk path, and pushes only the
 remaining chunks into independent leaf transcripts.
 
-Outside the permutation-based family, AEGIS-128L and AEGIS-256 [AEGIS] achieve
-very high throughput on platforms with AES-NI or similar hardware acceleration.
-TreeWrap differs in two ways: it does not require dedicated hardware
-instructions, since Keccak-p is a bitwise construction that performs well in
-pure software and in SIMD pipelines; and its duplex-based structure admits a
-direct CMT-4 commitment analysis, whereas commitment for AEGIS-family designs
-remains an active area of investigation.
+Outside the permutation-based family, AEGIS-128L and AEGIS-256 [AEGIS13]
+achieve very high throughput on platforms with AES-NI or similar hardware
+acceleration. TreeWrap differs in two ways: it does not require dedicated
+hardware instructions, since Keccak-p is a bitwise construction that performs
+well in pure software and in SIMD pipelines; and its duplex-based structure
+admits a direct CMT-4 commitment analysis within the present framework, whereas
+AEGIS-family commitment behavior has required separate recent analysis
+[AEGISKC23].
 
 On the proof side, the closest antecedent is [Men23]. The leaf layer is
 deliberately kept close to the reduced MonkeySpongeWrap transcript analyzed
@@ -3207,6 +3208,14 @@ Tatsuaki Okamoto, editor, *Advances in Cryptology -- ASIACRYPT 2000*, volume
 Schläffer. *Ascon v1.2: Lightweight Authenticated Encryption and Hashing*.
 *Journal of Cryptology*, 34(3): Article 33, 2021.
 <https://doi.org/10.1007/s00145-021-09398-9>
+
+[AEGIS13] Hongjun Wu and Bart Preneel. *AEGIS: A Fast Authenticated Encryption
+Algorithm*. *IACR Cryptology ePrint Archive*, Paper 2013/695, 2013.
+<https://eprint.iacr.org/2013/695>
+
+[AEGISKC23] Takanori Isobe and Mostafizar Rahman. *Key Committing Security
+Analysis of AEGIS*. *IACR Cryptology ePrint Archive*, Paper 2023/1495, 2023.
+<https://eprint.iacr.org/2023/1495>
 
 [FIPS202] National Institute of Standards and Technology. *SHA-3 Standard:
 Permutation-Based Hash and Extendable-Output Functions*. Federal Information
