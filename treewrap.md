@@ -3226,25 +3226,41 @@ primitive-query or forgery budgets.
 
 To complement the concrete bound calculations above, we also measured
 $`\mathsf{TW128}`$ in optimized prototype implementations on two representative
-software targets: Apple M4 Pro (`darwin/arm64`, 4.06 GHz) and Intel Emerald
-Rapids (`linux/amd64`). Table 1 reports cycles per byte for both encryption and
-decryption over a range of message sizes.
+software targets: Apple M4 Pro (`darwin/arm64`) and Intel Emerald Rapids
+(`linux/amd64`). The measurements below are end-to-end Go benchmark results
+for the optimized $`\mathsf{TW128}`$ prototype and, for context, Go's
+standard-library AES-128-GCM implementation on the same platforms.
 
-| Platform | Operation | 1 B | 64 B | 8 KiB | 32 KiB | 64 KiB | 1 MiB | 16 MiB |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| M4 Pro | encrypt | 605 | 9.61 | 1.71 | 1.64 | 1.18 | 0.74 | 0.74 |
-| M4 Pro | decrypt | 605 | 9.59 | 1.63 | 1.56 | 1.18 | 0.74 | 0.73 |
-| Emerald Rapids | encrypt | 782 | 12.34 | 2.24 | 2.16 | 0.95 | 0.48 | 0.47 |
-| Emerald Rapids | decrypt | 783 | 12.35 | 2.24 | 2.15 | 0.95 | 0.48 | 0.47 |
+Table 1 reports short-message latency.
 
-These figures show the expected profile of the design. Very short messages are
-dominated by the fixed trunk work and therefore have high per-byte cost, but
-once several remaining chunks are available the throughput improves sharply and
-then plateaus. Encryption and decryption are effectively identical at large
-message sizes, indicating that the decrypt-side tail reconstruction does not
-create a meaningful steady-state penalty. On the M4 Pro, the long-message
-plateau of roughly $`0.74`$ cycles/byte corresponds to about $`5.1`$ GiB/s at
-the measured clock rate.
+| Platform | Operation | 1 B (ns/op) | 64 B (ns/op) |
+| --- | --- | ---: | ---: |
+| M4 Pro | TW128 encrypt | 153.8 | 153.9 |
+| M4 Pro | AES-128-GCM seal | 207.2 | 219.8 |
+| Emerald Rapids | TW128 encrypt | 340.4 | 344.3 |
+| Emerald Rapids | AES-128-GCM seal | 351.1 | 403.1 |
+
+Table 2 reports representative throughput points.
+
+| Platform | Operation | 8 KiB (MB/s) | 64 KiB (MB/s) | 1 MiB (MB/s) | 16 MiB (MB/s) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| M4 Pro | TW128 encrypt | 2326.91 | 3410.14 | 5360.60 | 5380.68 |
+| M4 Pro | AES-128-GCM seal | 7234.61 | 8754.33 | 8917.25 | 8921.59 |
+| Emerald Rapids | TW128 encrypt | 1028.95 | 2421.03 | 4838.75 | 4934.75 |
+| Emerald Rapids | AES-128-GCM seal | 4100.75 | 4918.17 | 5045.80 | 5040.00 |
+
+These figures show the expected profile of the design. Short messages are
+dominated by the fixed trunk work, and in this benchmark setup
+$`\mathsf{TW128}`$ has lower end-to-end latency than the AES-128-GCM baseline
+on both tested platforms. Once several remaining chunks are available, the
+throughput improves sharply and then plateaus.
+
+At larger message sizes AES-GCM reaches higher throughput, especially on ARM64,
+but the AMD64 results are still encouraging: on Emerald Rapids,
+$`\mathsf{TW128}`$ reaches about $`4.9`$ GB/s at $`16`$ MiB versus about
+$`5.0`$ GB/s for the AES-128-GCM baseline. That is a useful point of reference
+because the `TW128` prototype relies on software Keccak on `amd64`, without any
+dedicated Keccak instruction set.
 
 These measurements also help explain the choice of $`B = 8128`$ bytes for
 $`\mathsf{TW128}`$. That value was selected empirically across the optimized
