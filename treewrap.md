@@ -34,7 +34,7 @@ lengths rather than only on the leaf-tag length.
 We also give a concrete instantiation, $`\mathsf{TW128}`$, based on
 $`\mathrm{Keccak\text{-}p}[1600,12]`$ with 256-bit capacity, 8128-byte chunks,
 256-bit leaf tags, and a 256-bit final tag. The resulting generic security
-target is 128 bits, with explicit multi-user AE bounds and explicit per-output
+target is 128 bits, together with multi-user AE bounds and explicit per-output
 CMT-4 bounds.
 
 ## 1. Introduction
@@ -1837,7 +1837,7 @@ N + \sigma_{\mathsf{tr}}(A_1,P_1) + \sigma_{\mathsf{tr}}(A_2,P_2),
 :=
 \begin{cases}
 2^{-\tau}, & \text{if } n = 0,\\
-2^{-(|Y_0|+\tau)}, & \text{if } n \ge 1 \text{ and } \Pi_1 \ne \Pi_2,\\
+2^{-(|P_{1,0}|+\tau)}, & \text{if } n \ge 1 \text{ and } \Pi_1 \ne \Pi_2,\\
 2^{-\tau}, & \text{if } n \ge 1 \text{ and } \Pi_1 = \Pi_2,
 \end{cases}
 ```
@@ -2314,8 +2314,9 @@ analysis.
 **Lemma 7.1 (TreeWrap Authenticity Freshness Split).** Fix any final IXIF game
 obtained after replacing the real trunk and leaf families by their IXIF
 counterparts. Let $`(Y,T)`$ be any valid fresh forgery candidate, and let $`Y =
-Y_0 \| \cdots \| Y_{n-1}`$ be its canonical chunk decomposition. Then exactly
-one of the following cases holds.
+Y_0 \| \cdots \| Y_{n-1}`$ be its canonical chunk decomposition. Then the
+following ordered split applies: if the trunk transcript is fresh, use case 1;
+otherwise, if some leaf transcript is fresh, use case 2; otherwise use case 3.
 
 1. **Fresh trunk transcript.**
    Either $`n = 0`$ and the associated-data string $`A`$ is fresh in the trunk
@@ -2558,9 +2559,10 @@ trailers $`\lambda_{\mathsf{ad}}`$ and $`\lambda_{\mathsf{tc}}`$, and the body
 framing $`\widetilde{X}_j \| 1 \| 0^{c-1}`$ that separates the first-chunk body
 phase from the absorb-style phases. Therefore a collision on the observed trunk
 output can only occur through an ideal-output collision on that observed
-output: $`2^{-\tau}`$ when $`n = 0`$; $`2^{-(|Y_0|+\tau)}`$ when $`n \ge 1`$ and
-the trunk-local prefixes differ, so the observed pair $`(Y_0,T)`$ must collide;
-and $`2^{-\tau}`$ when $`n \ge 1`$ and the trunk-local prefixes agree, so
+output: $`2^{-\tau}`$ when $`n = 0`$; $`2^{-(|P_{1,0}|+\tau)}`$ when
+$`n \ge 1`$ and the trunk-local prefixes differ, so the observed pair
+$`(Y_0,T)`$ of total length $`|P_{1,0}|+\tau`$ must collide; and $`2^{-\tau}`$
+when $`n \ge 1`$ and the trunk-local prefixes agree, so
 $`Y_0`$ is already fixed identically and only the final tag can collide. This
 is exactly the term $`\delta_{\mathsf{tr}}(\Theta)`$.
 
@@ -2895,7 +2897,7 @@ and
 =
 \begin{cases}
 2^{-256}, & \text{if } \chi(P_1)=0,\\
-2^{-(|Y_0|+256)}, & \text{if } \chi(P_1)\ge1 \text{ and } (K_1,U_1,A_1,P_{1,0}) \ne (K_2,U_2,A_2,P_{2,0}),\\
+2^{-(|P_{1,0}|+256)}, & \text{if } \chi(P_1)\ge1 \text{ and } (K_1,U_1,A_1,P_{1,0}) \ne (K_2,U_2,A_2,P_{2,0}),\\
 2^{-256}, & \text{if } \chi(P_1)\ge1 \text{ and } (K_1,U_1,A_1,P_{1,0}) = (K_2,U_2,A_2,P_{2,0}).
 \end{cases}
 ```
