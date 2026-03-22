@@ -415,7 +415,17 @@ Let $`\mathsf{TreeWrap}`$ be parameterized by:
 - a leaf tag size $`t_{\mathsf{leaf}}`$,
 - a tag size $`\tau`$.
 
-These parameters satisfy $`c + r = b`$ and $`k \le b`$.
+These parameters satisfy
+
+```math
+c + r = b,
+\qquad
+k \le b,
+\qquad
+t_{\mathsf{leaf}} > 0,
+\qquad
+\tau > 0.
+```
 
 We write the resulting primitive as
 
