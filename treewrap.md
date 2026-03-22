@@ -3222,6 +3222,36 @@ $`\mathsf{TW128}`$ the practical AE margin is not volume-limited at realistic
 scales; the visible edge of the bound appears only under astronomically large
 primitive-query or forgery budgets.
 
+### 8.3 Prototype Performance
+
+To complement the concrete bound calculations above, we also measured
+$`\mathsf{TW128}`$ in optimized prototype implementations on two representative
+software targets: Apple M4 Pro (`darwin/arm64`, 4.06 GHz) and Intel Emerald
+Rapids (`linux/amd64`). Table 1 reports cycles per byte for both encryption and
+decryption over a range of message sizes.
+
+| Platform | Operation | 1 B | 64 B | 8 KiB | 32 KiB | 64 KiB | 1 MiB | 16 MiB |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| M4 Pro | encrypt | 605 | 9.61 | 1.71 | 1.64 | 1.18 | 0.74 | 0.74 |
+| M4 Pro | decrypt | 605 | 9.59 | 1.63 | 1.56 | 1.18 | 0.74 | 0.73 |
+| Emerald Rapids | encrypt | 782 | 12.34 | 2.24 | 2.16 | 0.95 | 0.48 | 0.47 |
+| Emerald Rapids | decrypt | 783 | 12.35 | 2.24 | 2.15 | 0.95 | 0.48 | 0.47 |
+
+These figures show the expected profile of the design. Very short messages are
+dominated by the fixed trunk work and therefore have high per-byte cost, but
+once several remaining chunks are available the throughput improves sharply and
+then plateaus. Encryption and decryption are effectively identical at large
+message sizes, indicating that the decrypt-side tail reconstruction does not
+create a meaningful steady-state penalty. On the M4 Pro, the long-message
+plateau of roughly $`0.74`$ cycles/byte corresponds to about $`5.1`$ GiB/s at
+the measured clock rate.
+
+These measurements also help explain the choice of $`B = 8128`$ bytes for
+$`\mathsf{TW128}`$. That value was selected empirically across the optimized
+ARM64 and AVX-512 backends rather than from permutation-count arithmetic alone:
+the best practical chunk size is shaped not only by the number of duplex calls
+per chunk, but also by backend-specific vectorization and tail-handling costs.
+
 ## 9. Conclusion
 
 TreeWrap shows that a chunk-parallel permutation-based AEAD can be analyzed
