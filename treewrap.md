@@ -135,8 +135,8 @@ acceleration. TreeWrap differs in two ways: it does not require dedicated
 hardware instructions, since Keccak-p is a bitwise construction that performs
 well in pure software and in SIMD pipelines; and its duplex-based structure
 admits a direct CMT-4 commitment analysis within the present framework, whereas
-AEGIS-family commitment behavior has required separate recent analysis
-[AEGISKC23].
+recent analysis of AEGIS-family commitment shows security at most at the
+CMT-1 level [AEGISKC23].
 
 On the proof side, the closest antecedent is [Men23]. The leaf layer is
 deliberately kept close to the reduced MonkeySpongeWrap transcript analyzed
