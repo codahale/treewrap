@@ -1659,19 +1659,32 @@ observed trunk output.
 - Let $`\mathrm{Sponge}^{(i)}_{\mathsf{forest}}`$ be the explicit rooted-forest
   sponge term of Lemma 4.8.
 
+For the AE hybrids, define the primitive-query budgets seen by the leaf hop as
+
+```math
+N_{\mathsf{leaf}}^{\mathsf{enc}} := N + \sigma^{\mathsf{tr}}_e,
+\qquad
+N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d.
+```
+
+These reflect that, in the leaf KD/IXIF replacement, the reduction must realize
+the unchanged real trunk transcript internally via primitive calls. By
+contrast, the trunk hop hardwires the already-idealized leaf family and
+therefore uses the adversary's original primitive-query budget $`N`$.
+
 ### 5.1 IND-CPA Theorem
 
 **Theorem 5.1 (IND-CPA).** Assume $`\sigma^{\mathsf{tr}}_e + N \le 0.1 \cdot
-2^c`$ and $`\sigma^{\mathsf{leaf}}_e + N \le 0.1 \cdot 2^c`$. Then for every
-per-user nonce-respecting IND-CPA adversary $`\mathcal{A}`$ against the
-$`\mu`$-user TreeWrap experiment,
+2^c`$ and $`\sigma^{\mathsf{leaf}}_e + N_{\mathsf{leaf}}^{\mathsf{enc}} \le
+0.1 \cdot 2^c`$. Then for every per-user nonce-respecting IND-CPA adversary
+$`\mathcal{A}`$ against the $`\mu`$-user TreeWrap experiment,
 
 ```math
 \mathrm{Adv}^{\mathsf{ind}\text{-}\mathsf{cpa}}_{\mathsf{TreeWrap}}(\mathcal{A})
 \le
 \epsilon_{\mathsf{tr}}^{\mathsf{enc}}(\mu,q^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_e,N)
 +
-\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N).
+\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N_{\mathsf{leaf}}^{\mathsf{enc}}).
 ```
 
 Equivalently, in the low-total-complexity regime inherited from [Men23],
@@ -1686,17 +1699,17 @@ most one chunk.
 
 **Theorem 5.2 (INT-CTXT).** Assume $`\sigma^{\mathsf{tr}}_e +
 \sigma^{\mathsf{tr}}_d + N \le 0.1 \cdot 2^c`$ and $`\sigma^{\mathsf{leaf}}_e +
-\sigma^{\mathsf{leaf}}_d + N \le 0.1 \cdot 2^c`$. Then for every per-user
-nonce-respecting multi-forgery INT-CTXT adversary $`\mathcal{A}`$ against the
-$`\mu`$-user TreeWrap experiment outputting at most $`q_f`$ final forgery
-candidates,
+\sigma^{\mathsf{leaf}}_d + N_{\mathsf{leaf}}^{\mathsf{ae}} \le 0.1 \cdot 2^c`$.
+Then for every per-user nonce-respecting multi-forgery INT-CTXT adversary
+$`\mathcal{A}`$ against the $`\mu`$-user TreeWrap experiment outputting at most
+$`q_f`$ final forgery candidates,
 
 ```math
 \mathrm{Adv}^{\mathsf{int}\text{-}\mathsf{ctxt}}_{\mathsf{TreeWrap}}(\mathcal{A})
 \le
 \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},N)
 +
-\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N)
+\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N_{\mathsf{leaf}}^{\mathsf{ae}})
 +
 \frac{q_f}{2^{t_{\mathsf{leaf}}}}
 +
@@ -1746,11 +1759,11 @@ decryption-side resources of each INT-CTXT reduction,
 \le
 \epsilon_{\mathsf{tr}}^{\mathsf{enc}}(\mu,q^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_e,N)
 +
-\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N)
+\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N_{\mathsf{leaf}}^{\mathsf{enc}})
 +
 2 \cdot \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},N)
 +
-2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N)
+2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N_{\mathsf{leaf}}^{\mathsf{ae}})
 +
 \frac{2 q_d}{2^{t_{\mathsf{leaf}}}}
 +
@@ -2044,9 +2057,13 @@ Section 4.6, namely the $`\mu`$-user, low-complexity branch of [Men23]. The two
 KD/IXIF hops compose sequentially because the leaf and trunk layers are
 distinct keyed-duplex families under separate IV namespaces, and their ideal
 replacements are driven by independent random oracles. In the leaf hop, a leaf
-distinguisher forwards leaf calls to its own oracle while evaluating the trunk
-internally via $`p`$; the trunk is identical in both worlds and contributes no
-gap. In the trunk hop, a trunk distinguisher has
+distinguisher forwards leaf calls to its own oracle while realizing the
+unchanged trunk transcript internally via direct primitive calls to $`p`$; this
+adds exactly $`\sigma^{\mathsf{tr}}_e`$ primitive queries in the encryption-only
+setting and $`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d`$ in the
+bidirectional setting to the primitive-query parameter of the imported leaf
+bound, but it contributes no distinguishing gap because the trunk is identical
+in both worlds. In the trunk hop, a trunk distinguisher has
 $`\mathrm{ro}_{\mathsf{leaf}}`$ hardwired and evaluates the already-idealized
 leaf family internally to obtain the leaf tags, then feeds those tags as
 ordinary inputs to its trunk oracle. Because $`\mathrm{ro}_{\mathsf{leaf}}`$ is
@@ -2058,7 +2075,9 @@ realization of $`\mathrm{ro}_{\mathsf{leaf}}`$, and hence also in expectation.
 In the bidirectional setting, decryption-side leaf calls are likewise evaluated
 internally via $`\mathrm{ro}_{\mathsf{leaf}}`$ before the resulting trunk query
 is forwarded; the Men23 bound permits the distinguisher arbitrary internal
-computation, so this does not violate any precondition of Corollary 4.7.
+computation, so this does not violate any precondition of Corollary 4.7. By
+contrast with the leaf hop, this trunk simulation requires no additional
+primitive queries beyond the adversary's own $`N`$.
 
 ### 6.2 IND-CPA Sketch
 
@@ -2084,11 +2103,13 @@ $`p^{-1}`$.
 
 For the first hop, Lemma 4.1 shows that a per-user nonce-respecting TreeWrap
 adversary induces a nonce-respecting family of leaf encryption queries, so
-Corollary 4.4 applies. Thus the first replacement changes the overall
-left-right distinguishing gap by at most
+Corollary 4.4 applies. The corresponding leaf distinguisher must additionally
+realize the unchanged trunk transcript via $`p`$, so its primitive-query budget
+is $`N_{\mathsf{leaf}}^{\mathsf{enc}} = N + \sigma^{\mathsf{tr}}_e`$. Thus the
+first replacement changes the overall left-right distinguishing gap by at most
 
 ```math
-\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N).
+\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N_{\mathsf{leaf}}^{\mathsf{enc}}).
 ```
 
 For the second hop, Corollary 4.6 applies to the trunk family, so the second
@@ -2158,9 +2179,17 @@ For the first hop, Lemma 4.1 gives the required keyed-context discipline at the
 leaf layer, and Corollary 4.5 therefore yields
 
 ```math
+N_{\mathsf{leaf}}^{\mathsf{ae}} = N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d
+```
+
+as the relevant primitive-query budget for the leaf distinguisher, because the
+unchanged trunk transcript is still realized directly via $`p`$ in this hop.
+Hence
+
+```math
 \left| \Pr[H_0(\mathcal{A}) = 1] - \Pr[H_1(\mathcal{A}) = 1] \right|
 \le
-\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N).
+\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N_{\mathsf{leaf}}^{\mathsf{ae}}).
 ```
 
 For the second hop, Corollary 4.7 yields
@@ -2931,34 +2960,43 @@ trunk-local contribution also matches the intended 128-bit generic target.
 
 Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the
 concrete parameterized security statements for $`\mathsf{TW128}`$. On the AE
-side, these remain $`\mu`$-user, $`N`$-query formulas: the imported KD/IXIF
-terms of Theorems 5.1 and 5.2 retain their explicit dependence on both $`\mu`$
-and $`N`$, so a fully numeric deployment claim must fix concrete caps for those
-quantities and then evaluate the imported [Men23] expressions. The present
-section therefore fixes the algorithmic parameters and the exact terms to be
-evaluated, but does not bake in deployment-specific values of $`\mu`$ or $`N`$.
-Under any such concrete caps satisfying the low-complexity side conditions of
-Section 4.6, the dominant generic terms remain capacity-limited and target the
-intended 128-bit level, while the commitment bound inherits the same 128-bit
-target through the combination of the 256-bit final tag and the sharpened
-per-chunk local collision terms.
+side, these remain explicit $`\mu`$-user formulas: the imported trunk terms are
+evaluated at the adversary's primitive-query budget $`N`$, while the imported
+leaf terms are evaluated at the enlarged leaf-hop budgets
+$`N_{\mathsf{leaf}}^{\mathsf{enc}}`$ and $`N_{\mathsf{leaf}}^{\mathsf{ae}}`$.
+Thus a fully numeric deployment claim must fix concrete caps for $`\mu`$,
+$`N`$, and the induced trunk and leaf transcript resources, and then evaluate
+the imported [Men23] expressions. The present section therefore fixes the
+algorithmic parameters and the exact terms to be evaluated, but does not bake
+in deployment-specific resource caps. Under any such concrete caps satisfying
+the low-complexity side conditions of Section 4.6, the dominant generic terms
+remain capacity-limited and target the intended 128-bit level, while the
+commitment bound inherits the same 128-bit target through the combination of
+the 256-bit final tag and the sharpened per-chunk local collision terms.
 
 **Corollary 8.1 (TW128 Security).** Let $`\mathcal{A}`$ be an adversary against
 $`\mathsf{TW128}`$ in the corresponding $`\mu`$-user experiment, and let the
 induced lower-level resources be as in Sections 4.5 and 4.6. Throughout this
 corollary, all wrapper inputs are assumed to lie in the defined domain of
 $`\mathsf{TW128}`$; equivalently, every queried or extracted message has
-canonical chunk count at most $`2^{1208}`$.
+canonical chunk count at most $`2^{1208}`$. As in Section 5, write
+
+```math
+N_{\mathsf{leaf}}^{\mathsf{enc}} := N + \sigma^{\mathsf{tr}}_e,
+\qquad
+N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d.
+```
 
 - If $`\sigma^{\mathsf{tr}}_e + N \le 0.1 \cdot 2^{256}`$ and
-  $`\sigma^{\mathsf{leaf}}_e + N \le 0.1 \cdot 2^{256}`$, then
+  $`\sigma^{\mathsf{leaf}}_e + N_{\mathsf{leaf}}^{\mathsf{enc}} \le
+  0.1 \cdot 2^{256}`$, then
 
   ```math
   \mathrm{Adv}^{\mathsf{ind}\text{-}\mathsf{cpa}}_{\mathsf{TW128}}(\mathcal{A})
   \le
   \epsilon_{\mathsf{tr}}^{\mathsf{enc}}(\mu,q^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_e,N)
   +
-  \epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N),
+  \epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N_{\mathsf{leaf}}^{\mathsf{enc}}),
   ```
 
   where the imported [Men23] terms are evaluated with
@@ -2967,15 +3005,15 @@ canonical chunk count at most $`2^{1208}`$.
 
 - If $`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d + N \le 0.1 \cdot 2^{256}`$
   and
-  $`\sigma^{\mathsf{leaf}}_e + \sigma^{\mathsf{leaf}}_d + N \le 0.1 \cdot 2^{256}`$,
-  then
+  $`\sigma^{\mathsf{leaf}}_e + \sigma^{\mathsf{leaf}}_d +
+  N_{\mathsf{leaf}}^{\mathsf{ae}} \le 0.1 \cdot 2^{256}`$, then
 
   ```math
   \mathrm{Adv}^{\mathsf{int}\text{-}\mathsf{ctxt}}_{\mathsf{TW128}}(\mathcal{A})
   \le
   \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,\mu+q^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
   +
-  \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N)
+  \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N_{\mathsf{leaf}}^{\mathsf{ae}})
   +
   \frac{2 q_f}{2^{256}}.
   ```
@@ -2987,11 +3025,11 @@ canonical chunk count at most $`2^{1208}`$.
   \le
   \epsilon_{\mathsf{tr}}^{\mathsf{enc}}(\mu,q^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_e,N)
   +
-  \epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N)
+  \epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N_{\mathsf{leaf}}^{\mathsf{enc}})
   +
   2 \cdot \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,\mu+q^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
   +
-  2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N)
+  2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,N_{\mathsf{leaf}}^{\mathsf{ae}})
   +
   \frac{4 q_d}{2^{256}}.
   ```
