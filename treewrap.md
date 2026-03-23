@@ -1734,6 +1734,18 @@ $`1`$ to the cost, and every induced query to the prefix-sponge view is charged
 exactly by the corresponding sponge-query cost at effective parameters
 $`(\hat r,\hat c)`$.
 
+Concretely, in the terminology of [BDPVA08, Section 3.5], a direct query to
+$`p`$ or $`p^{-1}`$ costs $`1`$, while a prefix-sponge query on an absorbed
+prefix of $`h`$ blocks with requested output length $`\ell`$ costs
+
+```math
+h + \left\lceil \frac{\ell}{\hat r} \right\rceil.
+```
+
+Throughout TreeWrap, every visible body block, hidden leaf tag, and final trunk
+tag has output length at most $`\hat r`$, so every induced query of prefix
+length $`h`$ costs exactly $`h+1`$.
+
 Writing
 
 ```math
@@ -2916,22 +2928,22 @@ collapse these local transcripts into the total schedule length. A later leaf
 transcript on a nonempty chunk of length $`\lambda`$ bits makes one visible-body
 query to the prefix-sponge view at each prefix length
 $`1,\ldots,\omega_r(\lambda)`$, and one hidden-tag query at the final prefix
-length $`\omega_r(\lambda)`$. Hence its exact local prefix-sponge cost is
+length $`\omega_r(\lambda)+1`$. Hence its exact local prefix-sponge cost is
 
 ```math
 \Phi_{\mathsf{leaf}}(\lambda)
 :=
 \sum_{h=1}^{\omega_r(\lambda)} (h+1)
 +
-(\omega_r(\lambda)+1)
+(\omega_r(\lambda)+2)
 =
-\frac{\omega_r(\lambda)^2 + 5\omega_r(\lambda) + 2}{2}.
+\frac{\omega_r(\lambda)^2 + 5\omega_r(\lambda) + 4}{2}.
 ```
 
 For a full remaining chunk this gives
 
 ```math
-\Phi_{\mathsf{leaf}}(65024) = \frac{49^2 + 5 \cdot 49 + 2}{2} = 1324.
+\Phi_{\mathsf{leaf}}(65024) = \frac{49^2 + 5 \cdot 49 + 4}{2} = 1325.
 ```
 
 For the trunk side, the Section 4.5 bookkeeping specializes to
@@ -3013,7 +3025,7 @@ prefix-sponge cost is
 :=
 \sum_{h=\alpha_r(A)+1}^{\alpha_r(A)+\beta_r(P)} (h+1)
 +
-(\alpha_r(A)+\beta_r(P)+\gamma_r(P)+1)
+(\alpha_r(A)+\beta_r(P)+\gamma_r(P)+2)
 ```
 
 ```math
@@ -3024,7 +3036,7 @@ prefix-sponge cost is
 +
 \gamma_r(P)
 +
-1.
+2.
 ```
 
 Thus:
@@ -3032,13 +3044,13 @@ Thus:
 - the empty-message path contributes
 
   ```math
-  \Phi_{\mathsf{tr}}(A,\epsilon) = \alpha_r(A) + 1;
+  \Phi_{\mathsf{tr}}(A,\epsilon) = \alpha_r(A) + 2;
   ```
 
 - a one-chunk full-block message with empty associated data contributes
 
   ```math
-  \Phi_{\mathsf{tr}}(\epsilon,P) = \frac{49 \cdot 54}{2} + 1 = 1324;
+  \Phi_{\mathsf{tr}}(\epsilon,P) = \frac{49 \cdot 54}{2} + 2 = 1325;
   ```
 
 - a message of $`n`$ full chunks with empty associated data contributes
@@ -3046,7 +3058,7 @@ Thus:
   ```math
   \Phi_{\mathsf{tr}}(\epsilon,P)
   =
-  1324
+  1325
   +
   \left\lceil \frac{(n-1)256+9}{1344} \right\rceil.
   ```
@@ -3082,7 +3094,7 @@ M_{\Theta}^{\mathsf{loc}}
 N
 +
 2 \left(
-1324 n
+1325 n
 +
 \left\lceil \frac{(n-1)256+9}{1344} \right\rceil
 \right).
@@ -3104,7 +3116,7 @@ which is extremely close to $`(M_{\Theta}^{\mathsf{loc}})^2 / 2^{256}`$ at all
 practical scales. Thus the imported commitment term remains capacity-limited at
 the intended 128-bit generic target. For the full-chunk empty-AD family above
 with $`N = 0`$, this leading imported term does not reach the $`2^{-128}`$
-scale until $`n`$ is about $`6.97 \times 10^{15}`$ chunks, i.e. about
+scale until $`n`$ is about $`6.96 \times 10^{15}`$ chunks, i.e. about
 $`49`$ EiB per message.
 
 The remaining TreeWrap-specific tail of Theorem 5.4 specializes to
@@ -3399,13 +3411,13 @@ chunks are full, and the final later chunk has length $`512`$ bytes. Hence
 ```math
 \Phi_{\mathsf{tr}}(\epsilon,P)
 =
-1324
+1325
 +
 \left\lceil \frac{132{,}104 \cdot 256 + 9}{1344} \right\rceil
 =
-1324 + 25{,}163
+1325 + 25{,}163
 =
-26{,}487,
+26{,}488,
 ```
 
 while the later-leaf family contributes
@@ -3415,21 +3427,21 @@ while the later-leaf family contributes
 +
 \Phi_{\mathsf{leaf}}(4096)
 =
-132{,}103 \cdot 1324 + 19
+132{,}103 \cdot 1325 + 20
 =
-174{,}904{,}391.
+175{,}036{,}495.
 ```
 
 Thus one encryption induces the exact local prefix-sponge cost
 
 ```math
-26{,}487 + 174{,}904{,}391 = 174{,}930{,}878,
+26{,}488 + 175{,}036{,}495 = 175{,}062{,}983,
 ```
 
 and the compared pair induces
 
 ```math
-M_{\Theta}^{\mathsf{loc}} = 349{,}861{,}756.
+M_{\Theta}^{\mathsf{loc}} = 350{,}125{,}966.
 ```
 
 The imported TW128 sponge term is therefore approximately
@@ -3437,7 +3449,7 @@ The imported TW128 sponge term is therefore approximately
 ```math
 \epsilon_{\mathsf{ideal}}(M_{\Theta}^{\mathsf{loc}})
 \approx
-\frac{(349{,}861{,}756)^2}{2^{256}}
+\frac{(350{,}125{,}966)^2}{2^{256}}
 \approx
 2^{-199.2},
 ```
