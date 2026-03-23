@@ -159,7 +159,7 @@ commitment analysis under a canonical TreeWrap schedule.
 The proof strategy follows the same decomposition. The AE analysis is carried
 out in the multi-user keyed-duplex model of [Men23]. At the leaf layer, Lemma
 A.1 identifies the $`\mathsf{LeafWrap}`$ family on chunks $`i \ge 1`$ with a
-reduced MonkeySpongeWrap transcript, and Theorem A.2 ports the corresponding
+reduced MonkeySpongeWrap transcript and thereby imports the corresponding
 KD/IXIF replacement bound. A TreeWrap-specific freshness lemma then handles the
 interaction between fresh leaf tags and the trunk transcript. At the trunk
 layer, the corresponding trunk terms
@@ -1515,8 +1515,8 @@ $`\mathsf{TrunkWrap}`$ is already a keyed-duplex family under the contexts
 $`(\delta,\mathsf{iv}(U,0))`$, so the corresponding trunk terms
 $`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$ and
 $`\epsilon_{\mathsf{tr}}^{\mathsf{ae}}`$ of Section 4.6 apply directly.
-Appendix A.1 gives the explicit transcript correspondence and the ported leaf
-KD/IXIF replacement theorem.
+Appendix A.1 gives the explicit transcript correspondence and the resulting
+leaf KD/IXIF handoff.
 
 ### 5.2 IND-CPA Sketch
 
@@ -2133,19 +2133,19 @@ deferred to Section 6.
 ### A.1 Imported Leaf and Trunk Adaptations
 
 The leaf analysis proceeds through an explicit reduced MonkeySpongeWrap family.
-For later use, write the framed full-state blocks of a leaf call as
+Write the framed full-state blocks of a leaf call as
 
 ```math
 M_j(X) := \widetilde{X}_j \| 1 \| 0^{c-1}
 ```
 
-for padded message blocks. Define
+for padded message blocks, and let
 
 ```math
 \mathsf{MSW}^{\mathsf{red}}[p](K,V,X,m) \to (Y,T)
 ```
 
-to be the reduced MonkeySpongeWrap family obtained from [Men23] by deleting the
+be the reduced MonkeySpongeWrap family obtained from [Men23] by deleting the
 local associated-data phase and retaining only:
 
 - keyed-duplex initialization $`\mathsf{KD.init}(1,V)`$;
@@ -2153,12 +2153,6 @@ local associated-data phase and retaining only:
   with overwrite enabled exactly when $`m=\mathsf{dec}`$;
 - the final $`s_{\mathsf{leaf}}`$ blank squeezes that produce the hidden leaf
   tag.
-
-The trunk transcript is handled directly as a keyed-duplex family under the
-keyed contexts $`(\delta,\mathsf{iv}(U,0))`$ and therefore uses the trunk terms
-$`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$ and
-$`\epsilon_{\mathsf{tr}}^{\mathsf{ae}}`$ from Section 4.6 without any
-additional reduction.
 
 Let $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}]`$ denote
 the same leaf transcript as $`\mathsf{LeafWrap}[p]`$, but with the keyed duplex
@@ -2199,7 +2193,7 @@ M_j(X).
 
 Hence encryption-side and decryption-side leaf calls append the same framed
 message blocks precisely when they induce the same recovered plaintext
-transcript. The imported support is summarized by the following two statements.
+transcript.
 
 **Lemma A.1 (Leaf / Reduced MonkeySpongeWrap Family Correspondence).** Fix
 parameters $`p,b,r,c,k,t_{\mathsf{leaf}}`$. For any inputs $`K`$, $`V`$, and
@@ -2231,9 +2225,9 @@ every reduced leaf transcript still makes at least one padded body call after
 initialization, even when $`X = \epsilon`$, and at least one subsequent squeeze
 call because $`t_{\mathsf{leaf}} > 0`$ implies $`s_{\mathsf{leaf}} \ge 1`$.
 
-**Theorem A.2 (Ported Leaf KD/IXIF Replacement).** For every distinguisher
-$`\mathcal{D}_{\mathsf{LW}}`$ attacking a family of leaf transcripts under the
-keyed-context discipline induced by TreeWrap, there exists a distinguisher
+Therefore, for every distinguisher $`\mathcal{D}_{\mathsf{LW}}`$ attacking a
+family of leaf transcripts under the keyed-context discipline induced by
+TreeWrap, there exists a distinguisher
 $`\mathcal{D}_{\mathsf{MSW}^{\mathsf{red}}}`$ against the corresponding reduced
 MonkeySpongeWrap family such that
 
@@ -2275,32 +2269,18 @@ replacements do not share an ideal transcript engine. Throughout Sections A.2
 and A.3, the imported duplex bounds are used exactly in the form fixed in
 Section 4.6, namely the $`\mu`$-user, low-complexity branch of [Men23]. The two
 KD/IXIF hops compose sequentially because the leaf and trunk layers are
-distinct keyed-duplex families under separate IV namespaces, and their ideal
-replacements are driven by independent random oracles. In the leaf hop, a leaf
-distinguisher forwards leaf calls to its own oracle while realizing the
-unchanged trunk transcript internally via direct primitive calls to $`p`$; this
-adds exactly $`\sigma^{\mathsf{tr}}_e`$ primitive queries in the encryption-only
-setting and $`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d`$ in the
-bidirectional setting to the primitive-query parameter of the imported leaf
-bound, but it contributes no distinguishing gap because the trunk is identical
-in both worlds. In the trunk hop, a trunk distinguisher has
-$`\mathrm{ro}_{\mathsf{leaf}}`$ hardwired and evaluates the already-idealized
-leaf family internally to obtain the leaf tags, then feeds those tags as
-ordinary inputs to its trunk oracle. Because $`\mathrm{ro}_{\mathsf{leaf}}`$ is
-independent of both $`p`$ and $`\mathrm{ro}_{\mathsf{tr}}`$, the leaf tags are
-deterministic functions of $`\mathrm{ro}_{\mathsf{leaf}}`$ and the query
-inputs, and are therefore fixed values from the trunk oracle's perspective. The
-imported trunk bound depends only on the induced trunk resource measures and
-not on any distributional property of these fixed trunk inputs. It therefore
-holds for every fixed realization of
-$`\mathrm{ro}_{\mathsf{leaf}}`$, and hence also in expectation.
-In the bidirectional setting, decryption-side leaf calls are likewise evaluated
-internally via $`\mathrm{ro}_{\mathsf{leaf}}`$ before the resulting trunk query
-is forwarded; the Men23 bound permits the distinguisher arbitrary internal
-computation, so this does not violate any precondition of the bidirectional
-trunk term of Section 4.6. By contrast with the leaf hop, this trunk simulation
-requires no additional
-primitive queries beyond the adversary's own $`N`$.
+distinct keyed-duplex families under separate IV namespaces and independent
+random oracles. In the leaf hop, the reduction realizes the unchanged trunk
+transcript internally via direct primitive calls to $`p`$; this adds exactly
+$`\sigma^{\mathsf{tr}}_e`$ primitive queries in the encryption-only setting and
+$`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d`$ in the bidirectional
+setting to the imported leaf budget. In the trunk hop, the already-idealized
+leaf family is hardwired via $`\mathrm{ro}_{\mathsf{leaf}}`$, so the resulting
+leaf tags are fixed inputs from the trunk oracle's perspective; the imported
+trunk bound depends only on the induced trunk resource measures and therefore
+continues to hold for every fixed realization of
+$`\mathrm{ro}_{\mathsf{leaf}}`$, and hence in expectation. This trunk simulation
+requires no primitive queries beyond the adversary's own $`N`$.
 
 ### A.2 IND-CPA Sketch
 
