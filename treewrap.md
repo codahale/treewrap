@@ -2289,20 +2289,13 @@ challenge bit $`b \in \{0,1\}`$ define the following three games. In all three
 games, $`\mathcal{A}`$ additionally retains primitive access to $`p`$ and
 $`p^{-1}`$.
 
-- $`H_0^b`$ is the real IND-CPA experiment.
-- $`H_1^b`$ is obtained from $`H_0^b`$ by replacing, for each encryption
-  query $`(\delta,U,A,P_0,P_1)`$, every leaf call on chunks
-  $`i \ge 1`$ by $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}]`$ under the
-  derived keyed contexts $`(\delta,V_i)`$ with
-  $`V_i = \mathsf{iv}(U,i)`$, while keeping the trunk transcript real.
-- $`H_2^b`$ is obtained from $`H_1^b`$ by replacing the trunk evaluation
-
-  ```math
-  \mathsf{TrunkWrap}[p](K[\delta], \mathsf{iv}(U,0), A, P_{b,0}, T_1, \ldots, T_{n-1})
-  ```
-
-  by $`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{tr}}]`$ on the same keyed
-  context and transcript inputs.
+$`H_0^b`$ is the real IND-CPA experiment. Game $`H_1^b`$ replaces every leaf
+call on chunks $`i \ge 1`$ by
+$`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}]`$ under the
+derived keyed contexts $`(\delta,\mathsf{iv}(U,i))`$, while keeping the trunk
+transcript real. Game $`H_2^b`$ then replaces the remaining trunk evaluation by
+$`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{tr}}]`$ on the same
+trunk keyed context and transcript inputs.
 
 For the first hop, Lemma 4.1 shows that a per-user nonce-respecting TreeWrap
 adversary induces a nonce-respecting family of leaf encryption queries, so the
@@ -2336,32 +2329,17 @@ a fresh IXIF path. Consequently the distribution of $`C_b`$ depends only on the
 public chunk structure and visible block lengths of the query, not on the
 challenge bit $`b`$.
 
-**Proof.** By Lemma 4.1, per-user nonce respect together with injectivity of
-$`\mathsf{iv}`$ gives pairwise distinct keyed contexts across all encryption
-queries: the trunk contexts are $`(\delta,\mathsf{iv}(U,0))`$, the leaf
-contexts are $`(\delta,\mathsf{iv}(U,j))`$ for $`j \ge 1`$, and no trunk keyed
-context equals any leaf keyed context. Thus every trunk transcript in
-$`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{tr}}]`$ and every
-leaf transcript in
-$`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}]`$ starts from a
-fresh IXIF root.
-
-Now follow the canonical TreeWrap schedule of Section 4.7. Each later stage is
-obtained by appending deterministic transcript inputs to one of these fresh
-roots. Hence every body-phase IXIF response and every squeeze response that
-contributes to a visible output block is generated on a fresh IXIF path. For a
-visible body block, the returned ciphertext block is obtained by XORing the
-corresponding plaintext block with the leftmost visible part of a fresh uniform
-$`r`$-bit IXIF response, and is therefore uniformly distributed on strings of
-that visible length. Likewise, the final trunk tag is the leftmost $`\tau`$ bits
-of a fresh uniform IXIF response on the final trunk squeeze path and is
-therefore uniform on $`\{0,1\}^{\tau}`$.
-
-Because the left-right query requires $`|P_0| = |P_1|`$, the chunk count
-$`\chi(P_b)`$, the per-chunk visible lengths, and the resulting visible block
-layout are all public and identical for $`b=0`$ and $`b=1`$. Therefore the
-distribution of the returned ciphertext depends only on this public chunk
-structure and visible block layout, not on the challenge bit.
+**Proof.** By Lemma 4.1, per-user nonce respect and injectivity of
+$`\mathsf{iv}`$ give pairwise distinct keyed contexts across all encryption
+queries, both between trunk transcripts and among all leaf transcripts. Hence
+every trunk and leaf transcript in $`H_2^b`$ starts from a fresh IXIF root.
+Following the canonical TreeWrap schedule of Section 4.7, each visible body
+block and the final trunk tag is therefore produced on a fresh IXIF path and
+is uniform on strings of its visible length. Since the left-right oracle
+requires $`|P_0| = |P_1|`$, the chunk count, visible block layout, and all
+visible lengths are identical in worlds $`b=0`$ and $`b=1`$. Thus the
+distribution of the returned ciphertext depends only on this public structure,
+not on the challenge bit.
 
 The ideal leaf oracle $`\mathrm{ro}_{\mathsf{leaf}}`$ and the ideal trunk
 oracle $`\mathrm{ro}_{\mathsf{tr}}`$ are sampled independently of the real
