@@ -32,6 +32,9 @@ imported from the random-permutation sponge indifferentiability bound. The
 remaining TreeWrap-specific work is a short injectivity argument and a
 tag-routed endgame. This extends ordinary key commitment to full commitment of
 the AEAD tuple without introducing a separate authenticator family.
+This commitment proof exposes one framing bit in the prefix-sponge view, but
+the imported random-permutation sponge bound still leaves the concrete
+$`\mathsf{TW128}`$ commitment term at the intended 128-bit birthday scale.
 
 We also give a concrete instantiation, $`\mathsf{TW128}`$, based on
 $`\mathrm{Keccak\text{-}p}[1600,12]`$ with 256-bit capacity, 8128-byte chunks,
@@ -1685,6 +1688,12 @@ Thus every visible body block, every hidden leaf tag, and the final trunk tag
 is associated with one query to $`\mathsf{PS}_{\hat r}[p]`$ on the current
 prefix of the relevant local trunk or leaf block string.
 
+The framing bit that distinguishes body blocks from absorb blocks is therefore
+counted inside the absorbed prefix rather than inside the hidden suffix. This
+is why the wrapper uses $`\hat c = c-1`$. The imported [BDPVA08] denominator is
+still $`2^{\hat c+1}`$, so the leading capacity term remains $`2^{-c}`$ even
+though one bit has moved from the hidden suffix into the effective rate.
+
 **Lemma 4.9 (TreeWrap Schedule as Prefix-Sponge Queries).** For every fixed
 tuple $`(K,U,A,P)`$, the flattened transcript
 $`\mathsf{TW}^{\flat}[p](K,U,A,P)`$ induces a deterministically defined family
@@ -3049,6 +3058,10 @@ This is exactly the 256-bit final-tag scale. In the concrete octet-oriented
 format one could sharpen the leaf branch further, because any nonempty later
 chunk contributes at least one visible octet before its hidden leaf tag, but
 the generic expression above already specializes cleanly for $`\mathsf{TW128}`$.
+Likewise, although the commitment wrapper uses the effective hidden suffix
+$`\hat c = 255`$, the imported sponge denominator is $`2^{\hat c+1}=2^{256}`$,
+so the leading $`\mathsf{TW128}`$ commitment term still lands at the intended
+128-bit birthday scale.
 
 Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the
 concrete parameterized security statements for $`\mathsf{TW128}`$. On the AE
