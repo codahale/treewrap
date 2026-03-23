@@ -2913,9 +2913,28 @@ a multiple of $`8`$, then its leaf contribution is
 \left\lceil \frac{\lambda+1}{1344} \right\rceil + 1.
 ```
 
-This is the only leaf-side quantity needed by the new commitment theorem: it
-enters through the aggregate schedule cost
-$`\sigma_{\mathsf{tw}}(A,P)=\sigma_{\mathsf{tr}}(A,P)+\sigma_{\mathsf{leaf}}(P)`$.
+For the concrete commitment accounting, however, it is more informative not to
+collapse these local transcripts into the total schedule length. A later leaf
+transcript on a nonempty chunk of length $`\lambda`$ bits makes one visible-body
+query to the prefix-sponge view at each prefix length
+$`1,\ldots,\omega_r(\lambda)`$, and one hidden-tag query at the final prefix
+length $`\omega_r(\lambda)`$. Hence its exact local prefix-sponge cost is
+
+```math
+\Phi_{\mathsf{leaf}}(\lambda)
+:=
+\sum_{h=1}^{\omega_r(\lambda)} (h+1)
++
+(\omega_r(\lambda)+1)
+=
+\frac{\omega_r(\lambda)^2 + 5\omega_r(\lambda) + 2}{2}.
+```
+
+For a full remaining chunk this gives
+
+```math
+\Phi_{\mathsf{leaf}}(65024) = \frac{49^2 + 5 \cdot 49 + 2}{2} = 1324.
+```
 
 For the trunk side, the Section 4.5 bookkeeping specializes to
 
@@ -2987,64 +3006,108 @@ parameters
 \hat c = c-1 = 255.
 ```
 
+Only the first-chunk body phase and the final trunk tag contribute
+output-bearing prefix-sponge queries in the trunk. Hence the exact local trunk
+prefix-sponge cost is
+
+```math
+\Phi_{\mathsf{tr}}(A,P)
+:=
+\sum_{h=\alpha_r(A)+1}^{\alpha_r(A)+\beta_r(P)} (h+1)
++
+(\alpha_r(A)+\beta_r(P)+\gamma_r(P)+1)
+```
+
+```math
+=
+\alpha_r(A)(\beta_r(P)+1)
++
+\frac{\beta_r(P)(\beta_r(P)+5)}{2}
++
+\gamma_r(P)
++
+1.
+```
+
+Thus:
+
+- the empty-message path contributes
+
+  ```math
+  \Phi_{\mathsf{tr}}(A,\epsilon) = \alpha_r(A) + 1;
+  ```
+
+- a one-chunk full-block message with empty associated data contributes
+
+  ```math
+  \Phi_{\mathsf{tr}}(\epsilon,P) = \frac{49 \cdot 54}{2} + 1 = 1324;
+  ```
+
+- a message of $`n`$ full chunks with empty associated data contributes
+
+  ```math
+  \Phi_{\mathsf{tr}}(\epsilon,P)
+  =
+  1324
+  +
+  \left\lceil \frac{(n-1)256+9}{1344} \right\rceil.
+  ```
+
 For any fixed distinct equal-length tuple pair
 $`\Theta=((K_1,U_1,A_1,P_1),(K_2,U_2,A_2,P_2))`$ and prior primitive-query
-budget $`N`$, write
+budget $`N`$, the exact local prefix-sponge cost of the compared pair is
 
 ```math
-S_\nu := \sigma_{\mathsf{tw}}(A_\nu,P_\nu)
-\qquad
-(\nu \in \{1,2\}).
-```
-
-Then the generic cost estimate of Section 4.9 gives that the total
-prefix-sponge cost of the compared pair is at most
-
-```math
+M_{\Theta}^{\mathsf{loc}}
+:=
 N
 +
-\frac{S_1(S_1+3)}{2}
+\Phi_{\mathsf{tr}}(A_1,P_1)
 +
-\frac{S_2(S_2+3)}{2}.
+\Phi_{\mathsf{tr}}(A_2,P_2)
++
+\sum_{j=1}^{\chi(P_1)-1} \Phi_{\mathsf{leaf}}(|P_{1,j}|)
++
+\sum_{j=1}^{\chi(P_2)-1} \Phi_{\mathsf{leaf}}(|P_{2,j}|).
 ```
 
-Evaluated at this concrete upper bound, the imported TW128 ideality term
-satisfies
+This is the exact [BDPVA08] cost of the output-bearing query family induced by
+Lemma 4.9 for the concrete $`\mathsf{TW128}`$ wrapper. Unlike the generic
+schedule-collapse upper bound of Section 4.9, it grows linearly with the
+number of later chunks at fixed chunk size. In particular, for empty
+associated data and equal-length messages of $`n`$ full chunks on both sides,
+it simplifies to
 
 ```math
-\epsilon_{\mathsf{ideal}}\!\left(
+M_{\Theta}^{\mathsf{loc}}
+=
 N
 +
-\frac{S_1(S_1+3)}{2}
+2 \left(
+1324 n
 +
-\frac{S_2(S_2+3)}{2}
-\right)
+\left\lceil \frac{(n-1)256+9}{1344} \right\rceil
+\right).
+```
+
+Evaluated at this exact local cost, the imported TW128 ideality term satisfies
+
+```math
+\epsilon_{\mathsf{ideal}}(M_{\Theta}^{\mathsf{loc}})
 \lesssim
 \frac{
-(1-2^{-1345})
-\left(
-N
+(1-2^{-1345})(M_{\Theta}^{\mathsf{loc}})^2
 +
-\frac{S_1(S_1+3)}{2}
-+
-\frac{S_2(S_2+3)}{2}
-\right)^2
-+
-(1+2^{-1345})
-\left(
-N
-+
-\frac{S_1(S_1+3)}{2}
-+
-\frac{S_2(S_2+3)}{2}
-\right)
+(1+2^{-1345})M_{\Theta}^{\mathsf{loc}}
 }{2^{256}},
 ```
 
-which is extremely close to
-$`\left(N + \frac{S_1(S_1+3)}{2} + \frac{S_2(S_2+3)}{2}\right)^2 / 2^{256}`$
-at all practical scales. Thus the imported commitment term remains
-capacity-limited at the intended 128-bit generic target.
+which is extremely close to $`(M_{\Theta}^{\mathsf{loc}})^2 / 2^{256}`$ at all
+practical scales. Thus the imported commitment term remains capacity-limited at
+the intended 128-bit generic target. For the full-chunk empty-AD family above
+with $`N = 0`$, this leading imported term does not reach the $`2^{-128}`$
+scale until $`n`$ is about $`6.97 \times 10^{15}`$ chunks, i.e. about
+$`49`$ EiB per message.
 
 The remaining TreeWrap-specific tail of Theorem 5.4 specializes to
 
@@ -3144,24 +3207,26 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   for any realized prior primitive transcript $`\mathcal{T}_0`$ of at most
   $`N`$ queries, writing
 
-  ```math
-  S_\nu := \sigma_{\mathsf{tw}}(A_\nu,P_\nu)
-  \qquad
-  (\nu \in \{1,2\}),
-  ```
-
   one has
+
+  ```math
+  M_{\Theta}^{\mathsf{loc}}
+  :=
+  N
+  +
+  \Phi_{\mathsf{tr}}(A_1,P_1)
+  +
+  \Phi_{\mathsf{tr}}(A_2,P_2)
+  +
+  \sum_{j=1}^{\chi(P_1)-1} \Phi_{\mathsf{leaf}}(|P_{1,j}|)
+  +
+  \sum_{j=1}^{\chi(P_2)-1} \Phi_{\mathsf{leaf}}(|P_{2,j}|),
+  ```
 
   ```math
   \Pr_p[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)]
   \le
-  \epsilon_{\mathsf{ideal}}\!\left(
-  N
-  +
-  \frac{S_1(S_1+3)}{2}
-  +
-  \frac{S_2(S_2+3)}{2}
-  \right)
+  \epsilon_{\mathsf{ideal}}(M_{\Theta}^{\mathsf{loc}})
   +
   \frac{1}{2^{256}}.
   ```
@@ -3170,38 +3235,17 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   low-complexity regime by
 
   ```math
-  \epsilon_{\mathsf{ideal}}\!\left(
-  N
-  +
-  \frac{S_1(S_1+3)}{2}
-  +
-  \frac{S_2(S_2+3)}{2}
-  \right)
+  \epsilon_{\mathsf{ideal}}(M_{\Theta}^{\mathsf{loc}})
   \lesssim
   \frac{
-  (1-2^{-1345})
-  \left(
-  N
+  (1-2^{-1345})(M_{\Theta}^{\mathsf{loc}})^2
   +
-  \frac{S_1(S_1+3)}{2}
-  +
-  \frac{S_2(S_2+3)}{2}
-  \right)^2
-  +
-  (1+2^{-1345})
-  \left(
-  N
-  +
-  \frac{S_1(S_1+3)}{2}
-  +
-  \frac{S_2(S_2+3)}{2}
-  \right)
+  (1+2^{-1345})M_{\Theta}^{\mathsf{loc}}
   }{2^{256}},
   ```
 
-  which is essentially
-  $`\left(N + \frac{S_1(S_1+3)}{2} + \frac{S_2(S_2+3)}{2}\right)^2 / 2^{256}`$
-  at practical scales, while the explicit TreeWrap-specific tail is already
+  which is essentially $`(M_{\Theta}^{\mathsf{loc}})^2 / 2^{256}`$ at
+  practical scales, while the explicit TreeWrap-specific tail is already
   dominated by $`2^{-256}`$.
 
 ### 8.2 Worked TW128 Examples
@@ -3338,6 +3382,63 @@ that is, when $`q_f`$ approaches $`2^{128}`$. In other words, for
 $`\mathsf{TW128}`$ the practical AE margin is not volume-limited at realistic
 scales; the visible edge of the bound appears only under astronomically large
 primitive-query or forgery budgets.
+
+The commitment side has a different concrete profile. Consider
+two distinct equal-length $`1`$ GiB messages with empty associated data and no
+prior primitive queries ($`N=0`$). Each message decomposes into
+$`132{,}105`$ chunks: the first chunk is full, the next $`132{,}103`$ later
+chunks are full, and the final later chunk has length $`512`$ bytes. Hence
+
+```math
+\Phi_{\mathsf{tr}}(\epsilon,P)
+=
+1324
++
+\left\lceil \frac{132{,}104 \cdot 256 + 9}{1344} \right\rceil
+=
+1324 + 25{,}163
+=
+26{,}487,
+```
+
+while the later-leaf family contributes
+
+```math
+132{,}103 \cdot \Phi_{\mathsf{leaf}}(65024)
++
+\Phi_{\mathsf{leaf}}(4096)
+=
+132{,}103 \cdot 1324 + 19
+=
+174{,}904{,}391.
+```
+
+Thus one encryption induces the exact local prefix-sponge cost
+
+```math
+26{,}487 + 174{,}904{,}391 = 174{,}930{,}878,
+```
+
+and the compared pair induces
+
+```math
+M_{\Theta}^{\mathsf{loc}} = 349{,}861{,}756.
+```
+
+The imported TW128 sponge term is therefore approximately
+
+```math
+\epsilon_{\mathsf{ideal}}(M_{\Theta}^{\mathsf{loc}})
+\approx
+\frac{(349{,}861{,}756)^2}{2^{256}}
+\approx
+2^{-199.2},
+```
+
+while the explicit TreeWrap-specific tail remains exactly $`2^{-256}`$. So even
+at the gigabyte-per-ciphertext scale, the concrete commitment bound is still
+dominated by an imported term that sits roughly seventy bits below the
+$`2^{-128}`$ threshold.
 
 ### 8.3 Prototype Performance
 
