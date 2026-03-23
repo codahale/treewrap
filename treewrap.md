@@ -1675,11 +1675,12 @@ of the corresponding framed full-state block.
 
 **Lemma 6.2 (Canonical-Schedule Injectivity for TreeWrap).** For any fixed
 distinct tuple pair $`\Theta`$ with $`|P_1|=|P_2|`$, the two compared
-flattened encryptions cannot induce exactly the same canonical-schedule input
+flattened encryptions cannot induce exactly the same canonical-schedule query
 family. Equivalently, there exists at least one canonical schedule stage at
 which the two sides either present different absorbed $`\hat r`$-bit blocks to
 the prefix-sponge view of Section 4.9, or one side performs an absorb step
-that the other omits.
+while the other has already advanced to a squeeze query on its current
+absorbed prefix.
 
 More concretely, at least one of the following cases holds.
 
@@ -1694,8 +1695,8 @@ More concretely, at least one of the following cases holds.
    If $`(K_1,U_1)=(K_2,U_2)`$ but $`A_1 \ne A_2`$, then the padded block
    sequences of $`A_1\|\lambda_{\mathsf{ad}}`$ and
    $`A_2\|\lambda_{\mathsf{ad}}`$ either differ at some associated-data absorb
-   step, or exactly one side omits the associated-data phase and the two
-   schedules therefore diverge at the first post-initialization trunk stage.
+   step, or exactly one side has empty associated data and the two schedules
+   therefore diverge at the first post-initialization trunk stage.
 
 3. **Different first-chunk body phase.**
    If $`(K_1,U_1,A_1)=(K_2,U_2,A_2)`$ but $`P_{1,0} \ne P_{2,0}`$, then the
@@ -1724,20 +1725,21 @@ two strings, and the corresponding $`\hat r`$-bit prefixes therefore differ at
 some trunk absorb step because the formatting with $`\lambda_{\mathsf{ad}}`$
 is injective.
 
-Otherwise, exactly one side omits the associated-data phase; without loss of
+Otherwise, exactly one side has empty associated data; without loss of
 generality, let $`A_1 \ne \epsilon`$ and $`A_2 = \epsilon`$. On side $`1`$, the
 first post-initialization trunk absorb step is the first associated-data block,
 whose prefix-sponge input has the form $`W \| 0`$ because associated-data uses
 $`0^c`$ framing. On side $`2`$, the associated-data phase is absent, so the
 next canonical trunk stage is either the first-chunk body phase, whose
 prefix-sponge input has the form $`W' \| 1`$ because body blocks use
-$`1 \| 0^{c-1}`$ framing, or the final squeeze stage if $`n=0`$, whose
-prefix-sponge input is $`0^{\hat r}`$. In the former subcase the absorbed
-prefixes differ immediately by the framing bit; in the latter subcase the
-nonzero first associated-data block on side $`1`$ differs from the zero squeeze
-block on side $`2`$ because $`\mathrm{pad}10^*`$ guarantees at least one
-nonzero bit in the padded associated-data block. Thus case 2 holds in all
-branches.
+$`1 \| 0^{c-1}`$ framing, or the final squeeze query if $`n=0`$. In the former
+subcase the absorbed prefixes differ immediately by the framing bit. In the
+latter subcase, side $`1`$ extends the current prefix by a nonzero
+associated-data block, while side $`2`$ already issues the final trunk-tag
+query on the shorter prefix accumulated so far. These cannot belong to the
+same canonical-schedule query family: by $`\mathrm{pad}10^*`$, the first
+associated-data block on side $`1`$ is nonempty and must be absorbed before
+that side can reach its final squeeze. Thus case 2 holds in all branches.
 
 Assume next that $`(K_1,U_1,A_1)=(K_2,U_2,A_2)`$. If
 $`P_{1,0} \ne P_{2,0}`$, then the framed trunk body encodings of the first
