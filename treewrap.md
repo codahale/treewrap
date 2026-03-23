@@ -2362,16 +2362,14 @@ Fix a per-user nonce-respecting INT-CTXT adversary $`\mathcal{A}`$, and define
 three games. In all three games, $`\mathcal{A}`$ additionally retains primitive
 access to $`p`$ and $`p^{-1}`$.
 
-- $`H_0`$ is the real INT-CTXT experiment.
-- $`H_1`$ is obtained from $`H_0`$ by replacing, for each wrapper query with
-  user index $`\delta`$ and nonce $`U`$, every leaf encryption-side and
-  decryption-side call by $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}]`$
-  under the keyed contexts $`(\delta,\mathsf{iv}(U,j))`$ with $`j \ge 1`$,
-  while keeping the trunk transcript real.
-- $`H_2`$ is obtained from $`H_1`$ by replacing every trunk evaluation by
-  $`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{tr}}]`$ on the same trunk keyed
-  context and transcript inputs, both on encryption and on decryption-side
-  recomputation.
+$`H_0`$ is the real INT-CTXT experiment. Game $`H_1`$ replaces every leaf
+encryption-side and decryption-side call by
+$`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}]`$ under the
+derived keyed contexts $`(\delta,\mathsf{iv}(U,j))`$ with $`j \ge 1`$, while
+keeping the trunk transcript real. Game $`H_2`$ then replaces every remaining
+trunk evaluation by $`\mathsf{TrunkWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{tr}}]`$
+on the same trunk keyed context and transcript inputs, both on encryption and
+on decryption-side recomputation.
 
 For the first hop, Lemma 4.1 gives the required keyed-context discipline at the
 leaf layer, and the bidirectional leaf term of Section 4.6 therefore yields
@@ -2398,33 +2396,15 @@ For the second hop, the bidirectional trunk term of Section 4.6 yields
 \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},N).
 ```
 
-It remains to bound the forgery probability in $`H_2`$. Let
-
-```math
-F = \bigl\{(\delta^{(1)},U^{(1)},A^{(1)},C^{(1)}),\ldots,(\delta^{(q_f)},U^{(q_f)},A^{(q_f)},C^{(q_f)})\bigr\}
-```
-
-denote the final forgery set output by $`\mathcal{A}`$, and for each $`d \in
-[1,q_f]`$ write
-
-```math
-C^{(d)} = Y^{(d)} \| T^{(d)}.
-```
-
-For each candidate, apply Lemma 6.1. In the final IXIF game, every valid fresh
-candidate either forces a fresh final trunk-tag path, costing $`2^{-\tau}`$,
-or else its final trunk-tag path is not fresh and therefore some earliest later
-leaf transcript must collide with the unique prior hidden leaf tag on that
-keyed path, costing at most $`2^{-t_{\mathsf{leaf}}}`$. Thus, for each fixed
-candidate index $`d`$,
-
-```math
-\Pr[(\delta^{(d)},U^{(d)},A^{(d)},C^{(d)}) \text{ is a valid fresh forgery in } H_2]
-\le
-2^{-\min\{t_{\mathsf{leaf}},\tau\}}.
-```
-
-Taking a union bound over the at most $`q_f`$ final candidates gives
+It remains to bound the forgery probability in $`H_2`$. Apply Lemma 6.1 to
+each final candidate output by $`\mathcal{A}`$. In the final IXIF game, every
+valid fresh candidate either forces a fresh final trunk-tag path, costing
+$`2^{-\tau}`$, or else its final trunk-tag path is not fresh and the earliest
+later divergent leaf transcript must collide with the unique prior hidden leaf
+tag on that keyed path, costing at most $`2^{-t_{\mathsf{leaf}}}`$. Hence each
+fixed candidate succeeds with probability at most
+$`2^{-\min\{t_{\mathsf{leaf}},\tau\}}`$, and a union bound over the at most
+$`q_f`$ final candidates gives
 
 ```math
 \Pr[H_2(\mathcal{A}) = 1]
