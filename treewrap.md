@@ -3028,22 +3028,9 @@ per chunk, but also by backend-specific vectorization and tail-handling costs.
 
 ### C.1 LeafWrap
 
-LeafWrap is the wrapper used for chunks after the first. It has no local
-associated-data phase: authentication of those chunks is driven entirely by the
-body transcript and the hidden leaf tag, while global associated data is
-incorporated only by the trunk transcript that processes the first chunk.
-
-Conceptually, $`\mathsf{LeafWrap}[p]`$ is the message-processing core of
-$`\mathsf{MonkeySpongeWrap}[p]`$ from [Men23] with the associated-data phase
-removed and the two directions presented as a single symmetric transcript
-function parameterized by $`m \in \{\mathsf{enc},\mathsf{dec}\}`$. This
-omission of per-chunk associated data is deliberate: it keeps the local
-transcript as close as possible to the reduced MonkeySpongeWrap form used in
-the imported proof and routes all associated-data binding through the trunk
-layer instead.
-
-This is a TreeWrap-native construction defined directly in terms of the keyed
-duplex transcript. We denote it by
+LeafWrap is the keyed-duplex wrapper used on chunks $`i \ge 1`$. It has no
+local associated-data phase; associated data is handled only by the trunk.
+Its interface is
 
 ```math
 \mathsf{LeafWrap}[p].
@@ -3083,13 +3070,9 @@ Algorithm LeafWrap[p](K, V, X, m):
     return (Y, T)
 ```
 
-Encryption XOR-absorbs the padded body blocks directly. Decryption uses the
-same overwrite transcript on all fully visible $`r`$-bit body blocks, and on
-the final body step reconstructs the unique hidden full ciphertext block
-consistent with the visible ciphertext suffix, the next squeeze output, and
-$`\mathrm{pad}10^*`$ before completing the overwrite update. When $`d = 0`$,
-this last step reconstructs the hidden all-padding block. This is the
-transcript-level object used throughout the later reductions.
+Decryption uses the same overwrite transcript on every fully visible body
+block and reconstructs the hidden final full block before completing the last
+overwrite update.
 
 **Lemma C.1 (LeafWrap Inversion).** For any fixed $`K`$ and $`V`$, if
 
@@ -3106,62 +3089,24 @@ then
 In other words, the encryption and decryption modes of LeafWrap invert the body
 transformation while reproducing the same leaf tag.
 
-**Proof sketch.** Let $`\widetilde X_1,\ldots,\widetilde X_w`$ be the padded
-plaintext blocks and let
-$`\widetilde Y_j := \widetilde Z_j \oplus \widetilde X_j`$ be the corresponding
-full ciphertext blocks in the encryption transcript. For every fully visible
-body block, decryption feeds the same framed block
-$`\widetilde Y_j \| 1 \| 0^{c-1}`$ with overwrite flag $`\mathsf{true}`$, so the
-absorbed full-state input becomes
-
-```math
-[\mathsf{true}] \cdot (\widetilde Z_j \| 0^{b-r})
-\oplus
-(\widetilde Y_j \| 1 \| 0^{c-1})
-=
-\widetilde X_j \| 1 \| 0^{c-1},
-```
-
-which is exactly the framed encryption-side body block. On the final body step,
-only the visible suffix $`Y_{\mathrm{vis}} = \mathrm{left}_d(\widetilde Y_w)`$
-is returned to the caller, where $`d < r`$ and $`d = 0`$ covers the hidden
-all-padding case. Decryption first obtains the same next squeeze output
-$`\widetilde Z_w`$, reconstructs
-$`X_{\mathrm{vis}} = \mathrm{left}_d(\widetilde Z_w \oplus Y_{\mathrm{vis}})`$,
-sets
-$`\widetilde X_w = X_{\mathrm{vis}} \| 1 \| 0^{r-d-1}`$,
-reconstructs
-$`\widetilde Y_w = \widetilde Z_w \oplus \widetilde X_w`$,
-and then performs the overwrite update with
-$`\widetilde Y_w \| 1 \| 0^{c-1}`$. The same algebra therefore yields
-$`\widetilde X_w \| 1 \| 0^{c-1}`$ on the final step as well. Thus the entire
-body transcript, and therefore the subsequent tag-squeezing transcript, is
-reproduced exactly.
+**Proof sketch.** On every fully visible body block, the overwrite update
+recovers exactly the framed encryption-side block
+$`\widetilde X_j \| 1 \| 0^{c-1}`$. On the final body step, the visible suffix,
+the next squeeze output, and $`\mathrm{pad}10^*`$ determine the unique hidden
+full block consistent with the encryption transcript, including the $`d=0`$
+all-padding case. Hence decryption reproduces the entire encryption-side body
+transcript and therefore the same subsequent tag squeezes.
 
 ### C.2 TrunkWrap
 
-TreeWrap handles the empty-message path, the first chunk, and the final
-authentication tag through a second keyed-duplex transcript, denoted by
+TrunkWrap is the serial keyed-duplex transcript used for the empty-message
+path, the first chunk, the optional absorbed leaf-tag vector, and the final
+authentication tag. We factor it into initialization, body processing, and
+finalization:
 
 ```math
 \mathsf{TrunkWrap}[p].
 ```
-
-In the single-key setting, it is factored into three procedures:
-
-- initialization on the trunk IV $`\mathsf{iv}(U,0)`$ with an optional
-  associated-data absorb phase,
-- body processing for the first chunk,
-- finalization by optional absorption of the later hidden leaf tags followed
-  by squeezing the final tag.
-
-`TrunkWrap` is therefore a single serial keyed-duplex transcript that may
-contain up to four nonempty regions after initialization:
-
-1. an optional associated-data absorb phase,
-2. an optional first-chunk body phase,
-3. an optional leaf-tag absorb phase,
-4. the final squeeze phase.
 
 ```text
 Algorithm TrunkWrap.init[p](K, V, A):
@@ -3211,26 +3156,14 @@ Algorithm TrunkWrap.finalize(KD, T_1, ..., T_m; output length ell):
     return left_ell(T*)
 ```
 
-The associated-data phase may be omitted entirely when $`A = \epsilon`$, and
-the leaf-tag absorb phase may be omitted when there are no leaf calls on chunks
-$`i \ge 1`$. The trunk body phase uses the same $`1 \| 0^{c-1}`$ framing as
-$`\mathsf{LeafWrap}`$, while the absorb phases use $`0^c`$ framing. On the
-keyed side, `TrunkWrap` is again a direct keyed-duplex transcript to which the
-generic KD/IXIF reduction of [Men23] applies. On the flat side, the trunk
-transcript can be flattened to a public-permutation transcript and then
-rewrapped as prefix-sponge queries for the CMT-4 analysis.
+The trunk body phase uses the same $`1 \| 0^{c-1}`$ framing as
+$`\mathsf{LeafWrap}`$, while the absorb phases use $`0^c`$ framing.
 
 ### C.3 TreeWrap
 
-TreeWrap uses `TrunkWrap` for the empty-message path and the first chunk, and
-uses `LeafWrap` only for remaining chunks. The hidden leaf tags are then fed
-back into the trunk transcript before the final squeeze.
-
-Placing chunk $`0`$ inside the trunk is not only a latency optimization. It is
-also what makes the $`n = 1`$ integrity path reduce directly to trunk-prefix
-freshness: every nonempty message contributes a body phase to the trunk
-transcript, so one-chunk forgeries are handled by the same trunk argument as
-the empty-message and multi-chunk cases.
+TreeWrap uses `TrunkWrap` for the empty-message path and chunk $`0`$, uses
+`LeafWrap` for chunks $`i \ge 1`$, and feeds the hidden leaf tags back into the
+trunk transcript before the final squeeze.
 
 Its interface is
 
@@ -3266,22 +3199,6 @@ the trunk transcript and therefore depends on the associated-data prefix $`A`$
 as well as on $`(K,U,X_0)`$; later ciphertext body chunks $`Y_i`$ for $`i \ge
 1`$ depend only on their local LeafWrap inputs.
 
-TreeWrap is nonce-based and not nonce-misuse resistant. If the same key and
-nonce are reused, then all derived leaf IVs repeat and the trunk IV also
-repeats. Later chunks therefore exhibit the usual two-time-pad failure
-immediately, and the same is true of the first chunk whenever the associated
-data transcript also repeats. This design therefore targets the standard
-nonce-respecting model rather than nonce-misuse resistance. Achieving NMR would
-require a different construction, such as an SIV-style two-pass design, which
-would work against the present single-pass chunked interface. In practice,
-implementations should use any standard per-key nonce-generation strategy, such
-as a persistent counter or uniformly random 128-bit nonces subject to the usual
-birthday-bound collision risk. For the concrete $`\mathsf{TW128}`$
-instantiation, the 1088-bit rate-side IV payload leaves ample room for a wider
-nonce encoding as well: moving from 128-bit to 256-bit nonces would only change
-the concrete IV embedding, not the duplex rate, capacity, or permutation-call
-counts.
-
 ### C.4 AEAD Wrapper
 
 We now package TreeWrap as a conventional AEAD interface.
@@ -3312,45 +3229,21 @@ Algorithm TreeWrap.DEC(K, U, A, C):
         return ⊥
 ```
 
-Correctness of TreeWrap follows from the corresponding inversion property of
-LeafWrap together with deterministic final tag derivation.
-
 **Lemma C.2 (TreeWrap Correctness).** For all valid inputs $`(K,U,A,P)`$,
 
 ```math
 \mathsf{TreeWrap.DEC}(K,U,A,\mathsf{TreeWrap.ENC}(K,U,A,P)) = P.
 ```
 
-**Proof sketch.** If $`P = \epsilon`$, then both procedures execute only
-`TrunkWrap.init` on $`(K,\mathsf{iv}(U,0),A)`$ followed by
-`TrunkWrap.finalize`, so they derive the same tag and return the empty string.
-
-Assume now $`P \ne \epsilon`$ and let
-
-```math
-P = P_0 \| \cdots \| P_{n-1}
-```
-
-be the canonical chunk decomposition. The encryption algorithm computes
-
-```math
-(Y_0,D_0) \gets \mathsf{TrunkWrap.body}(D_0,P_0,\mathsf{enc}),
-\qquad
-(Y_i,T_i) \gets \mathsf{LeafWrap}[p](K,\mathsf{iv}(U,i),P_i,\mathsf{enc})
-```
-
-for each $`i = 1,\ldots,n-1`$. By Lemma C.1, decryption reproduces the same
-leaf tags $`T_i`$ and recovers each remaining chunk $`P_i`$ from $`Y_i`$,
-including the final truncated body block through the same hidden-tail
-reconstruction. The trunk body phase is defined to use exactly the same
-body-processing transcript as LeafWrap, starting from the current trunk duplex
-state, so the same argument shows that `TrunkWrap.body` recovers $`P_0`$ from
-$`Y_0`$ while reproducing the same post-body trunk state. Hence both the
-optional associated-data phase and the optional leaf-tag absorb phase of
-`TrunkWrap` are identical in wrapping and unwrapping, and both procedures use
-the same trunk IV $`\mathsf{iv}(U,0)`$. Therefore they derive the same final
-tag via `TrunkWrap.finalize`, tag verification succeeds, and the recovered
-plaintext is exactly $`P`$.
+**Proof sketch.** The empty-message case is immediate because both procedures
+run only `TrunkWrap.init` and `TrunkWrap.finalize` on the same inputs. For
+nonempty messages, `TrunkWrap.body` uses the same body-processing transcript as
+`LeafWrap`, starting from the current trunk duplex state, so the first chunk is
+inverted exactly as in Lemma C.1. The remaining chunks are inverted directly by
+Lemma C.1, reproducing the same hidden leaf tags. Both sides therefore feed the
+same associated-data transcript, first-chunk body transcript, leaf-tag absorb
+transcript, and final squeeze transcript into the trunk state, so they derive
+the same final tag and recover the original plaintext.
 
 ## Appendix D. Imported Men23 Resource Translation
 
