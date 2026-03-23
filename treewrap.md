@@ -2168,8 +2168,10 @@ ordinary inputs to its trunk oracle. Because $`\mathrm{ro}_{\mathsf{leaf}}`$ is
 independent of both $`p`$ and $`\mathrm{ro}_{\mathsf{tr}}`$, the leaf tags are
 deterministic functions of $`\mathrm{ro}_{\mathsf{leaf}}`$ and the query
 inputs, and are therefore fixed values from the trunk oracle's perspective. The
-imported trunk bound (Corollary 4.6 or 4.7) thus holds for every fixed
-realization of $`\mathrm{ro}_{\mathsf{leaf}}`$, and hence also in expectation.
+imported trunk bound (Corollary 4.6 or 4.7) depends only on the induced trunk
+resource measures and not on any distributional property of these fixed trunk
+inputs. It therefore holds for every fixed realization of
+$`\mathrm{ro}_{\mathsf{leaf}}`$, and hence also in expectation.
 In the bidirectional setting, decryption-side leaf calls are likewise evaluated
 internally via $`\mathrm{ro}_{\mathsf{leaf}}`$ before the resulting trunk query
 is forwarded; the Men23 bound permits the distinguisher arbitrary internal
@@ -2652,10 +2654,13 @@ whose prefix-sponge input has the form $`W \| 0`$ because associated-data uses
 $`0^c`$ framing. On side $`2`$, the associated-data phase is absent, so the
 next canonical trunk stage is either the first-chunk body phase, whose
 prefix-sponge input has the form $`W' \| 1`$ because body blocks use
-$`1 \| 0^{c-1}`$ framing, or the final squeeze stage if $`n=0`$. In the former
-subcase the absorbed prefixes differ immediately by the framing bit; in the
-latter subcase side $`1`$ performs an absorb step that side $`2`$ omits before
-the next caller-visible output is produced. Thus case 2 holds in all branches.
+$`1 \| 0^{c-1}`$ framing, or the final squeeze stage if $`n=0`$, whose
+prefix-sponge input is $`0^{\hat r}`$. In the former subcase the absorbed
+prefixes differ immediately by the framing bit; in the latter subcase the
+nonzero first associated-data block on side $`1`$ differs from the zero squeeze
+block on side $`2`$ because $`\mathrm{pad}10^*`$ guarantees at least one
+nonzero bit in the padded associated-data block. Thus case 2 holds in all
+branches.
 
 Assume next that $`(K_1,U_1,A_1)=(K_2,U_2,A_2)`$. If
 $`P_{1,0} \ne P_{2,0}`$, then the framed trunk body encodings of the first
@@ -3100,6 +3105,12 @@ N
 \right).
 ```
 
+Thus Section 4.9 continues to provide the generic theorem-level upper bound in
+terms of $`M_{\mathsf{tw}}^{\max}(\mathcal{A},N)`$, while the present
+$`\mathsf{TW128}`$ specialization replaces that coarse schedule-collapse bound
+by the tighter exact local cost $`M_{\Theta}^{\mathsf{loc}}`$ on each realized
+output pair.
+
 Evaluated at this exact local cost, the imported TW128 ideality term satisfies
 
 ```math
@@ -3151,6 +3162,9 @@ the low-complexity side conditions of Section 4.6, the dominant generic terms
 remain capacity-limited and target the intended 128-bit level, while the
 commitment bound becomes the sum of one imported capacity-limited sponge term
 and one short explicit tag-dominated tail.
+In particular, the pairwise-user term $`\binom{\mu}{2}/2^{256}`$ remains below
+the $`2^{-128}`$ scale until $`\mu`$ is on the order of $`2^{64}`$ users, so
+it is negligible throughout any realistic deployment regime.
 
 **Corollary 8.1 (TW128 Security).** Let $`\mathcal{A}`$ be an adversary against
 $`\mathsf{TW128}`$ in the corresponding $`\mu`$-user experiment, and let the
