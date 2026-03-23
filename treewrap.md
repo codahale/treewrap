@@ -1299,26 +1299,16 @@ low-complexity regime $`M \ll 2^{\hat c}`$, one may use the approximation
 \frac{(1-2^{-\hat r})M^2 + (1+2^{-\hat r})M}{2^{\hat c+1}}.
 ```
 
-For a CMT-4 adversary $`\mathcal{A}`$ that makes at most $`N`$ primitive
-queries, write
-
-```math
-M_{\mathsf{tw}}^{\max}(\mathcal{A},N)
-:=
-\max_{\Theta \in \mathrm{Supp}(\mathcal{A})} M_{\mathsf{tw}}(\Theta,N),
-```
-
-where the support ranges over all tuple pairs that can be output by
-$`\mathcal{A}`$ after at most $`N`$ primitive queries.
-
 **Lemma 4.10 (Imported Sponge Ideality for the CMT-4 Experiment).** Let
 $`\mathcal{A}`$ be any CMT-4 adversary that makes at most $`N`$ primitive
-queries. Consider the real CMT-4 experiment and the idealized experiment in
-which, after $`\mathcal{A}`$ outputs its tuple pair, the two compared
-encryptions are answered by ideal random-oracle outputs on the prefix-sponge
-query families furnished by Lemma 4.9. Then the change in the success
-probability of $`\mathcal{A}`$ is at most
-$`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))`$.
+queries, and let $`M_*`$ be any number such that every tuple pair
+$`\Theta`$ output by $`\mathcal{A}`$ after at most $`N`$ primitive queries
+satisfies $`M_{\mathsf{tw}}(\Theta,N) \le M_*`$. Consider the real CMT-4
+experiment and the idealized experiment in which, after $`\mathcal{A}`$
+outputs its tuple pair, the two compared encryptions are answered by ideal
+random-oracle outputs on the prefix-sponge query families furnished by
+Lemma 4.9. Then the change in the success probability of $`\mathcal{A}`$ is
+at most $`\epsilon_{\mathsf{ideal}}(M_*)`$.
 
 **Proof sketch.** Lemma 4.9 turns the compared flattened encryptions into a
 family of adaptive queries to a block-aligned sponge view at effective
@@ -1326,13 +1316,12 @@ parameters $`(\hat r,\hat c)`$, together with the adversary's direct
 permutation queries. A distinguisher can therefore run $`\mathcal{A}`$ on the
 real permutation, wait until $`\mathcal{A}`$ outputs its tuple pair, and then
 realize the two compared encryptions via the corresponding prefix-sponge query
-families. The resulting total sponge-query cost is bounded by
-$`M_{\mathsf{tw}}^{\max}(\mathcal{A},N)`$ by construction. This is exactly the
-type of public-permutation interaction controlled by the random-permutation
-sponge indifferentiability theorem of [BDPVA08, Theorem 2], so we use that
-theorem as an imported black-box replacement step and write the resulting
-advantage bound as
-$`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))`$.
+families. The resulting total sponge-query cost is bounded by $`M_*`$ by
+assumption. This is exactly the type of public-permutation interaction
+controlled by the random-permutation sponge indifferentiability theorem of
+[BDPVA08, Theorem 2], so we use that theorem as an imported black-box
+replacement step and write the resulting advantage bound as
+$`\epsilon_{\mathsf{ideal}}(M_*)`$.
 
 ### 4.10 Main Theorems
 
@@ -1359,10 +1348,11 @@ contrast, the trunk hop hardwires the already-idealized leaf family and
 therefore uses the adversary's original primitive-query budget $`N`$.
 
 For commitment, Lemma 4.10 supplies the imported experiment-level sponge term
-$`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))`$, where
-$`M_{\mathsf{tw}}^{\max}(\mathcal{A},N)`$ is the adversary-level prefix-sponge
-cost cap from Section 4.9. Section 6 then supplies the remaining
-TreeWrap-specific tail through schedule injectivity and the tag endgame.
+$`\epsilon_{\mathsf{ideal}}(M_*)`$ under the explicit assumption that every
+tuple pair output by the adversary after at most $`N`$ primitive queries
+induces prefix-sponge cost at most $`M_*`$. Section 6 then supplies the
+remaining TreeWrap-specific tail through schedule injectivity and the tag
+endgame.
 
 #### 4.10.1 IND-CPA Theorem
 
@@ -1481,12 +1471,15 @@ $`2`$ when translated back to the absolute distinguishing gap.
 #### 4.10.4 CMT-4 Theorem
 
 **Theorem 4.14 (CMT-4).** Let $`\mathcal{A}`$ be a CMT-4 adversary against
-TreeWrap that makes at most $`N`$ primitive queries. Then
+TreeWrap that makes at most $`N`$ primitive queries, and let $`M_*`$ be any
+number such that every tuple pair $`\Theta`$ output by $`\mathcal{A}`$ after
+at most $`N`$ primitive queries satisfies $`M_{\mathsf{tw}}(\Theta,N) \le M_*`$.
+Then
 
 ```math
 \mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}(\mathcal{A})
 \le
-\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))
+\epsilon_{\mathsf{ideal}}(M_*)
 +
 \frac{1}{2^{\min\{t_{\mathsf{leaf}}+1,\tau\}}}.
 ```
@@ -1830,7 +1823,9 @@ and combining this with the trunk-divergence branch proves the stated bound.
 ### 6.4 Proof of Theorem 4.14
 
 Fix a CMT-4 adversary $`\mathcal{A}`$ making at most $`N`$ primitive queries,
-and compare two games.
+and let $`M_*`$ be any cap such that every tuple pair $`\Theta`$ output by
+$`\mathcal{A}`$ after at most $`N`$ primitive queries satisfies
+$`M_{\mathsf{tw}}(\Theta,N) \le M_*`$. Compare two games.
 
 - In the real game, after $`\mathcal{A}`$ outputs its distinct tuple pair,
   TreeWrap encryptions are computed from the real permutation.
@@ -1845,7 +1840,7 @@ the post-output encryption computation in the real game is exactly the
 flattened prefix-sponge computation associated with the two compared
 encryptions. Lemma 4.10 therefore bounds the change in success probability
 between the two games by
-$`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))`$.
+$`\epsilon_{\mathsf{ideal}}(M_*)`$.
 
 It remains to bound success in the ideal post-output game. Condition on the
 realized tuple pair
@@ -1868,7 +1863,7 @@ tail yields Theorem 4.14:
 ```math
 \mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}(\mathcal{A})
 \le
-\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))
+\epsilon_{\mathsf{ideal}}(M_*)
 +
 \frac{1}{2^{\min\{t_{\mathsf{leaf}}+1,\tau\}}}.
 ```
@@ -2058,16 +2053,18 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   ```
 
 - For any CMT-4 adversary $`\mathcal{A}`$ against $`\mathsf{TW128}`$ making at
-  most $`N`$ primitive queries, let
-  $`M_{\mathsf{loc}}^{\max}(\mathcal{A},N)`$ be the exact local prefix-sponge
-  cost cap induced by the concrete $`\mathsf{TW128}`$ functions
-  $`\Phi_{\mathsf{leaf}}`$, $`\Phi_{\mathsf{tr}}`$, and $`M_{\Theta}^{\mathsf{loc}}`$
-  defined in Appendix B.1. Then
+  most $`N`$ primitive queries, let $`M_*^{\mathsf{loc}}`$ be any number such
+  that every tuple pair $`\Theta`$ output by $`\mathcal{A}`$ after at most
+  $`N`$ primitive queries satisfies
+  $`M_{\Theta}^{\mathsf{loc}} \le M_*^{\mathsf{loc}}`$, where the exact local
+  cost $`M_{\Theta}^{\mathsf{loc}}`$ is defined from the concrete
+  $`\mathsf{TW128}`$ functions $`\Phi_{\mathsf{leaf}}`$ and
+  $`\Phi_{\mathsf{tr}}`$ in Appendix B.1. Then
 
   ```math
   \mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TW128}}(\mathcal{A})
   \le
-  \epsilon_{\mathsf{ideal}}(M_{\mathsf{loc}}^{\max}(\mathcal{A},N))
+  \epsilon_{\mathsf{ideal}}(M_*^{\mathsf{loc}})
   +
   \frac{1}{2^{256}}.
   ```
@@ -2076,17 +2073,17 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   low-complexity regime by
 
   ```math
-  \epsilon_{\mathsf{ideal}}(M_{\mathsf{loc}}^{\max}(\mathcal{A},N))
+  \epsilon_{\mathsf{ideal}}(M_*^{\mathsf{loc}})
   \lesssim
   \frac{
-  (1-2^{-1345})(M_{\mathsf{loc}}^{\max}(\mathcal{A},N))^2
+  (1-2^{-1345})(M_*^{\mathsf{loc}})^2
   +
-  (1+2^{-1345})M_{\mathsf{loc}}^{\max}(\mathcal{A},N)
+  (1+2^{-1345})M_*^{\mathsf{loc}}
   }{2^{256}},
   ```
 
   which is essentially
-  $`(M_{\mathsf{loc}}^{\max}(\mathcal{A},N))^2 / 2^{256}`$ at practical
+  $`(M_*^{\mathsf{loc}})^2 / 2^{256}`$ at practical
   scales, while the explicit TreeWrap-specific tail is already dominated by
   $`2^{-256}`$.
 
