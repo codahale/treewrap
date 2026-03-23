@@ -3228,23 +3228,18 @@ same path-counting and overwrite-counting bounds imported from the proof of
 [Men23, Theorem 7] and its accompanying remark, specialized to the reduced
 family.
 
-The displayed bound on $`\nu_{\mathsf{fix}}`$ in the leaf/bidirectional row of
-the resource-substitution table in Section 4.6 is the same
-path-counting upper bound, conservatively rewritten in the present notation.
-This conservatism does not affect the low-complexity branch used in the main
-paper because $`\nu_{\mathsf{fix}}`$ does not appear in
-$`\mathrm{KD}^{(i)}_{\mathsf{Men23}}`$. Likewise, the bidirectional leaf term
-$`\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}`$ keeps the
-raw-IV multiplicity term explicit as $`Q_{\mathsf{IV,leaf}} N / 2^k`$ rather
-than substituting $`\mu N / 2^k`$.
-
-For a fully wrapper-level explicit instantiation, one may conservatively bound
+The displayed bound on $`\nu_{\mathsf{fix}}`$ in Section 4.6 is the same
+path-counting upper bound, conservatively rewritten in the present notation;
+this conservatism is harmless in the low-complexity branch because
+$`\nu_{\mathsf{fix}}`$ does not appear in
+$`\mathrm{KD}^{(i)}_{\mathsf{Men23}}`$. For fully wrapper-level explicit
+instantiations, one may conservatively bound
 
 ```math
 Q_{\mathsf{IV,leaf}} \le \mu + q_*.
 ```
 
-Indeed, per-user nonce-respecting permits at most one encryption-side leaf
+Per-user nonce-respecting permits at most one encryption-side leaf
 initialization for a fixed raw IV and user label, contributing at most
 $`\mu`$ such initializations in total, while each decryption-side wrapper query
 contributes at most one additional initialization for that same raw IV.
@@ -3274,7 +3269,7 @@ induced initialization multiplicity explicit as $`Q_{IV}=Q_{\mathsf{IV,tr}}`$.
 The overwrite contribution is exactly the first-chunk body cost, so
 $`\Omega^{\mathsf{tr}}_d = \sum_{b=1}^{q_*} \beta_r(Y^{(b)})`$.
 
-For a fully wrapper-level explicit instantiation, one may conservatively bound
+For fully wrapper-level explicit instantiations, one may conservatively bound
 
 ```math
 Q_{\mathsf{IV,tr}} \le \mu + q^{\mathsf{tr}}_d,
@@ -3282,8 +3277,8 @@ Q_{\mathsf{IV,tr}} \le \mu + q^{\mathsf{tr}}_d,
 L_{\mathsf{tr}} \le \sigma^{\mathsf{tr}}_d.
 ```
 
-The first inequality is immediate because each decryption query contributes at
-most one additional trunk initialization under a fixed raw IV. The second holds
+The first inequality holds because each decryption query contributes at most
+one additional trunk initialization under a fixed raw IV. The second holds
 because repeated trunk subpaths arise only from decryption-side trunk duplexing
 calls.
 
