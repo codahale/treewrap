@@ -665,29 +665,22 @@ In the AEAD experiments below, $`\mathsf{TreeWrap}_p`$ denotes TreeWrap
 instantiated with the sampled permutation $`p`$; the active user key on a query
 with index $`\delta`$ is $`K[\delta]`$.
 
+Thus Sections 4.1--4.3 use the standard multi-user AEAD experiments, augmented
+only by primitive access to $`p`$ and $`p^{-1}`$ and by the per-user nonce
+discipline fixed above.
+
 ### 4.1 IND-CPA
 
-We use the standard left-right indistinguishability experiment for
-nonce-respecting adversaries.
+For IND-CPA, we use the standard left-right experiment for nonce-respecting
+adversaries in the shared sampled world above. The adversary receives the
+left-right oracle
 
-```text
-Experiment IND-CPA_b^TreeWrap(A):
-    p <- Perm(b)
-    K <- ({0,1}^k)^μ
-
-    Oracle LR(δ, U, A, P_0, P_1):
-        require |P_0| = |P_1|
-        return TreeWrap_p.ENC(K[δ], U, A, P_b)
-
-    Oracle Perm(S):
-        return p(S)
-
-    Oracle PermInv(S):
-        return p^{-1}(S)
-
-    b' <- A^LR,Perm,PermInv
-    return b'
+```math
+\mathsf{LR}(\delta,U,A,P_0,P_1) := \mathsf{TreeWrap}_p.\mathsf{ENC}(K[\delta],U,A,P_b)
 ```
+
+subject to the length condition $`|P_0| = |P_1|`$, together with primitive
+access to $`\mathsf{Perm}`$ and $`\mathsf{PermInv}`$.
 
 The IND-CPA advantage is
 
@@ -705,28 +698,20 @@ record all fresh decryption attempts of the adversary and output them together,
 rather than paying an additional index-guessing loss to select one candidate in
 advance.
 
-```text
-Experiment INT-CTXT^TreeWrap(A):
-    p <- Perm(b)
-    K <- ({0,1}^k)^μ
-    Seen <- ∅
+In this experiment, the adversary receives the encryption oracle
 
-    Oracle Enc(δ, U, A, P):
-        C <- TreeWrap_p.ENC(K[δ], U, A, P)
-        Seen <- Seen ∪ {(δ, U, A, C)}
-        return C
-
-    Oracle Perm(S):
-        return p(S)
-
-    Oracle PermInv(S):
-        return p^{-1}(S)
-
-    F <- A^Enc,Perm,PermInv
-    return [∃ (δ, U, A, C) in F :
-              TreeWrap_p.DEC(K[δ], U, A, C) != ⊥
-              and (δ, U, A, C) notin Seen]
+```math
+\mathsf{Enc}(\delta,U,A,P) := \mathsf{TreeWrap}_p.\mathsf{ENC}(K[\delta],U,A,P),
 ```
+
+and we maintain a set
+$`\mathsf{Seen} \subseteq \{(\delta,U,A,C)\}`$ of all tuples returned by this
+oracle during the experiment.
+The adversary also retains primitive access to $`\mathsf{Perm}`$ and
+$`\mathsf{PermInv}`$. At the end of the interaction it outputs a final set
+$`F`$ of candidate tuples, and the experiment returns `1` iff some
+$`(\delta,U,A,C) \in F`$ decrypts successfully under $`K[\delta]`$ and does not
+belong to $`\mathsf{Seen}`$.
 
 The INT-CTXT advantage is
 
@@ -742,34 +727,19 @@ number of forgery candidates in that final output set across all users.
 
 ### 4.3 IND-CCA2
 
-Chosen-ciphertext privacy is defined by the following left-right experiment
-with decryption access.
+Chosen-ciphertext privacy uses the standard left-right experiment with
+decryption access in the same shared sampled world. The left-right oracle is
+the same as in Section 4.1, but its returned ciphertexts are additionally
+recorded in a set $`\mathsf{Seen}`$. The adversary also receives
 
-```text
-Experiment IND-CCA2_b^TreeWrap(A):
-    p <- Perm(b)
-    K <- ({0,1}^k)^μ
-    Seen <- ∅
-
-    Oracle LR(δ, U, A, P_0, P_1):
-        require |P_0| = |P_1|
-        C <- TreeWrap_p.ENC(K[δ], U, A, P_b)
-        Seen <- Seen ∪ {(δ, U, A, C)}
-        return C
-
-    Oracle Dec(δ, U, A, C):
-        require (δ, U, A, C) notin Seen
-        return TreeWrap_p.DEC(K[δ], U, A, C)
-
-    Oracle Perm(S):
-        return p(S)
-
-    Oracle PermInv(S):
-        return p^{-1}(S)
-
-    b' <- A^LR,Dec,Perm,PermInv
-    return b'
+```math
+\mathsf{Dec}(\delta,U,A,C) :=
+\mathsf{TreeWrap}_p.\mathsf{DEC}(K[\delta],U,A,C),
 ```
+
+subject to the exact replay restriction against prior left-right outputs
+$`(\delta,U,A,C) \notin \mathsf{Seen}`$, together with primitive access to
+$`\mathsf{Perm}`$ and $`\mathsf{PermInv}`$.
 
 The IND-CCA2 advantage is
 
