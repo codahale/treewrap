@@ -2602,8 +2602,9 @@ of the corresponding framed full-state block.
 distinct tuple pair $`\Theta`$ with $`|P_1|=|P_2|`$, the two compared
 flattened encryptions cannot induce exactly the same canonical-schedule input
 family. Equivalently, there exists at least one canonical schedule stage at
-which the two sides present different absorbed $`\hat r`$-bit blocks to the
-prefix-sponge view of Section 4.9.
+which the two sides either present different absorbed $`\hat r`$-bit blocks to
+the prefix-sponge view of Section 4.9, or one side performs an absorb step
+that the other omits.
 
 More concretely, at least one of the following cases holds.
 
@@ -2617,8 +2618,9 @@ More concretely, at least one of the following cases holds.
 2. **Different trunk associated-data phase.**
    If $`(K_1,U_1)=(K_2,U_2)`$ but $`A_1 \ne A_2`$, then the padded block
    sequences of $`A_1\|\lambda_{\mathsf{ad}}`$ and
-   $`A_2\|\lambda_{\mathsf{ad}}`$ differ, so the trunk associated-data phase
-   absorbs different blocks at some stage.
+   $`A_2\|\lambda_{\mathsf{ad}}`$ either differ at some associated-data absorb
+   step, or exactly one side omits the associated-data phase and the two
+   schedules therefore diverge at the first post-initialization trunk stage.
 
 3. **Different first-chunk body phase.**
    If $`(K_1,U_1,A_1)=(K_2,U_2,A_2)`$ but $`P_{1,0} \ne P_{2,0}`$, then the
@@ -2641,10 +2643,23 @@ $`I_{K_1,U_1,0} \ne I_{K_2,U_2,0}`$, so case 1 holds.
 
 Assume henceforth that $`(K_1,U_1)=(K_2,U_2)`$. If $`A_1 \ne A_2`$, then the
 strings $`A_1\|\lambda_{\mathsf{ad}}`$ and $`A_2\|\lambda_{\mathsf{ad}}`$ are
-distinct. The associated-data phase absorbs their padded full-state block
-sequences, and the corresponding $`\hat r`$-bit prefixes therefore differ at
-some trunk absorb step because the formatting with
-$`\lambda_{\mathsf{ad}}`$ is injective. This is case 2.
+distinct. If both associated-data phases are nonempty, then the trunk
+associated-data phase absorbs the padded full-state block sequences of these
+two strings, and the corresponding $`\hat r`$-bit prefixes therefore differ at
+some trunk absorb step because the formatting with $`\lambda_{\mathsf{ad}}`$
+is injective.
+
+Otherwise, exactly one side omits the associated-data phase; without loss of
+generality, let $`A_1 \ne \epsilon`$ and $`A_2 = \epsilon`$. On side $`1`$, the
+first post-initialization trunk absorb step is the first associated-data block,
+whose prefix-sponge input has the form $`W \| 0`$ because associated-data uses
+$`0^c`$ framing. On side $`2`$, the associated-data phase is absent, so the
+next canonical trunk stage is either the first-chunk body phase, whose
+prefix-sponge input has the form $`W' \| 1`$ because body blocks use
+$`1 \| 0^{c-1}`$ framing, or the final squeeze stage if $`n=0`$. In the former
+subcase the absorbed prefixes differ immediately by the framing bit; in the
+latter subcase side $`1`$ performs an absorb step that side $`2`$ omits before
+the next caller-visible output is produced. Thus case 2 holds in all branches.
 
 Assume next that $`(K_1,U_1,A_1)=(K_2,U_2,A_2)`$. If
 $`P_{1,0} \ne P_{2,0}`$, then the framed trunk body encodings of the first
