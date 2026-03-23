@@ -657,9 +657,25 @@ Algorithm TrunkWrap.init[p](K, V, A):
 
 ```text
 Algorithm TrunkWrap.body(KD, X, m):
-    let Y be the output of the LeafWrap body-phase transcript on X and m,
-        executed using the current keyed-duplex object KD in place of a fresh
-        initialization
+    Y* <- ε
+    if m = enc:
+        (X~_1, ..., X~_w) <- pad*_{10^r*}(X)
+        for j = 1 to w:
+            Z~_j <- KD.duplex(false, X~_j || 1 || 0^{c-1})
+            Y* <- Y* || (Z~_j xor X~_j)
+    else:
+        parse X as X_1 || ... || X_u || X_vis
+        with |X_j| = r for j = 1,...,u and |X_vis| = d, where 0 <= d < r
+        for j = 1 to u:
+            Z~_j <- KD.duplex(true, X_j || 1 || 0^{c-1})
+            Y* <- Y* || (Z~_j xor X_j)
+        let Z~_{u+1} be the squeeze output of the next overwrite call
+        Y_vis <- left_d(Z~_{u+1} xor X_vis)
+        Y~_{u+1} <- Y_vis || 1 || 0^{r-d-1}
+        X~_{u+1} <- Z~_{u+1} xor Y~_{u+1}
+        complete the next overwrite call with X~_{u+1} || 1 || 0^{c-1}
+        Y* <- Y* || Y_vis
+    Y <- left_|X|(Y*)
     return (Y, KD)
 ```
 
@@ -1460,6 +1476,13 @@ initialization for a fixed raw IV and user label, contributing at most
 $`\mu`$ such initializations in total, while each decryption query contributes
 at most one additional trunk initialization.
 
+Likewise, because repeated trunk subpaths arise only from decryption-side trunk
+duplexing calls, one always has
+
+```math
+L_{\mathsf{tr}} \le \sigma^{\mathsf{tr}}_d.
+```
+
 ### 4.7 Canonical TreeWrap Schedule
 
 For the later TreeWrap-specific arguments on both the AE and commitment sides,
@@ -1846,13 +1869,12 @@ $`q_f`$ final forgery candidates,
 +
 \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,Q_{\mathsf{IV,leaf}},N_{\mathsf{leaf}}^{\mathsf{ae}})
 +
-\frac{q_f}{2^{t_{\mathsf{leaf}}}}
-+
-\frac{q_f}{2^{\tau}}.
+\frac{q_f}{2^{\min\{t_{\mathsf{leaf}},\tau\}}}.
 ```
 
-The explicit $`2^{-t_{\mathsf{leaf}}}`$ tail appears only when a fresh later
-chunk induces a hidden leaf tag collision. Every $`n = 0`$ or $`n = 1`$ forgery
+The explicit tail is governed by the larger of the two canonical-schedule
+endgame costs: $`2^{-t_{\mathsf{leaf}}}`$ appears only when a fresh later chunk
+induces a hidden leaf tag collision, while every $`n = 0`$ or $`n = 1`$ forgery
 is governed entirely by the trunk term and the final $`2^{-\tau}`$ trunk-tag
 guess.
 
@@ -1906,9 +1928,7 @@ decryption-side resources of each INT-CTXT reduction,
 +
 2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,Q_{\mathsf{IV,leaf}},N_{\mathsf{leaf}}^{\mathsf{ae}})
 +
-\frac{2 q_d}{2^{t_{\mathsf{leaf}}}}
-+
-\frac{2 q_d}{2^{\tau}},
+\frac{2 q_d}{2^{\min\{t_{\mathsf{leaf}},\tau\}}},
 ```
 
 with the resource parameters inherited from the reductions as described above.
@@ -1945,9 +1965,7 @@ permutation choices satisfies
 \le
 \epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}(\Theta,N))
 +
-\frac{1}{2^{t_{\mathsf{leaf}}+1}}
-+
-\frac{1}{2^{\tau}}.
+\frac{1}{2^{\min\{t_{\mathsf{leaf}}+1,\tau\}}}.
 ```
 
 The first term is the imported random-permutation sponge replacement term of
@@ -1958,10 +1976,9 @@ some visible body block already differs, in which case the ciphertexts cannot
 collide, or all visible body blocks agree, in which case collision requires
 either a divergent later leaf path to match on a visible body bit and on the
 hidden leaf tag, or a final trunk-tag match on a divergent trunk path. These
-two branches cost at
-most $`2^{-(t_{\mathsf{leaf}}+1)}`$ and $`2^{-\tau}`$, respectively, because a
-later leaf branch must already match at least one visible body bit before its
-hidden tag can also match.
+exclusive branches cost at most $`2^{-(t_{\mathsf{leaf}}+1)}`$ and
+$`2^{-\tau}`$, respectively, because a later leaf branch must already match at
+least one visible body bit before its hidden tag can also match.
 
 As an immediate averaged consequence, let $`\mathcal{A}`$ be a CMT-4 adversary
 that makes at most $`N`$ primitive queries. Conditioning first on the realized
@@ -1976,9 +1993,7 @@ the adversary's output pair $`\Theta`$ gives
 \left(
 \epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}(\Theta,N))
 +
-\frac{1}{2^{t_{\mathsf{leaf}}+1}}
-+
-\frac{1}{2^{\tau}}
+\frac{1}{2^{\min\{t_{\mathsf{leaf}}+1,\tau\}}}
 \right)
 \right],
 ```
@@ -2316,7 +2331,7 @@ candidate index $`d`$,
 ```math
 \Pr[(\delta^{(d)},U^{(d)},A^{(d)},C^{(d)}) \text{ is a valid fresh forgery in } H_2]
 \le
-2^{-t_{\mathsf{leaf}}} + 2^{-\tau}.
+2^{-\min\{t_{\mathsf{leaf}},\tau\}}.
 ```
 
 Taking a union bound over the at most $`q_f`$ final candidates gives
@@ -2324,7 +2339,7 @@ Taking a union bound over the at most $`q_f`$ final candidates gives
 ```math
 \Pr[H_2(\mathcal{A}) = 1]
 \le
-\frac{q_f}{2^{t_{\mathsf{leaf}}}} + \frac{q_f}{2^{\tau}}.
+\frac{q_f}{2^{\min\{t_{\mathsf{leaf}},\tau\}}}.
 ```
 
 Combining this bound with the two hybrid transitions yields Theorem 5.2.
@@ -2469,17 +2484,19 @@ Then every such candidate satisfies one of the following:
    $`(\delta,\mathsf{iv}(U,j^\star))`$, costing at most
    $`2^{-t_{\mathsf{leaf}}}`$.
 
+When $`n \le 1`$, only case 1 can arise.
+
 Consequently each valid fresh candidate succeeds with probability at most
 
 ```math
-2^{-t_{\mathsf{leaf}}} + 2^{-\tau},
+2^{-\min\{t_{\mathsf{leaf}},\tau\}},
 ```
 
 and a union bound over at most $`q_f`$ final candidates contributes the explicit
 tail
 
 ```math
-\frac{q_f}{2^{t_{\mathsf{leaf}}}} + \frac{q_f}{2^{\tau}}.
+\frac{q_f}{2^{\min\{t_{\mathsf{leaf}},\tau\}}}.
 ```
 
 **Proof.** Fix one final candidate and compare its decryption-side canonical
@@ -2522,11 +2539,15 @@ $`(\delta,\mathsf{iv}(U,j^\star))`$. By Lemma 4.1 there is at most one such
 prior encryption-side tag target, and the INT-CTXT experiment exposes no
 decryption-side leaf tags to the adversary. Therefore the collision target set
 has size at most one, and the probability of this hidden leaf-tag collision is
-at most $`2^{-t_{\mathsf{leaf}}}`$.
+at most $`2^{-t_{\mathsf{leaf}}}`$. Equality of the full vectors
+$`\Sigma = \Sigma^\star`$ also forces every later divergent leaf tag to match,
+but charging the earliest index $`j^\star`$ alone is sufficient because the
+probability of a conjunction is at most the probability of any one conjunct.
 
-Thus every valid fresh candidate lies either in case 1 or in case 2, yielding
-the stated per-candidate bound. Applying a union bound over the at most $`q_f`$
-final candidates gives the displayed tail.
+Thus every valid fresh candidate lies either in case 1 or in case 2, and these
+cases are mutually exclusive by definition of the final trunk-tag path. This
+yields the stated per-candidate bound. Applying a union bound over the at most
+$`q_f`$ final candidates gives the displayed tail.
 
 ### 7.2 Canonical-Schedule Injectivity for TreeWrap
 
@@ -2646,9 +2667,7 @@ comparison schedule. Then the probability that the two compared encryptions
 produce the same ciphertext is at most
 
 ```math
-\frac{1}{2^{t_{\mathsf{leaf}}+1}}
-+
-\frac{1}{2^{\tau}}.
+\frac{1}{2^{\min\{t_{\mathsf{leaf}}+1,\tau\}}}.
 ```
 
 More precisely:
@@ -2691,10 +2710,10 @@ full ciphertext collision can occur only if the final trunk tags also agree,
 costing at most $`2^{-\tau}`$.
 
 These two subbranches are disjoint. Therefore the later-leaf branch is bounded
-by
+by the larger of the two costs, namely
 
 ```math
-2^{-(t_{\mathsf{leaf}}+1)} + 2^{-\tau},
+2^{-\min\{t_{\mathsf{leaf}}+1,\tau\}},
 ```
 
 and combining this with the trunk-divergence branch proves the stated bound.
@@ -2727,7 +2746,7 @@ collision tail: either the divergence is already visible in the ciphertext
 body, in which case collision is impossible, or collision requires either a
 divergent later leaf path to match on a visible body bit and on the hidden leaf
 tag, or a final trunk-tag match on a divergent trunk path, costing at most
-$`2^{-(t_{\mathsf{leaf}}+1)} + 2^{-\tau}`$.
+$`2^{-\min\{t_{\mathsf{leaf}}+1,\tau\}}`$.
 
 Combining the imported ideality term with this ideal-world tail yields the
 pointwise estimate of Theorem 5.4:
@@ -2737,9 +2756,7 @@ pointwise estimate of Theorem 5.4:
 \le
 \epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}(\Theta,N))
 +
-\frac{1}{2^{t_{\mathsf{leaf}}+1}}
-+
-\frac{1}{2^{\tau}}.
+\frac{1}{2^{\min\{t_{\mathsf{leaf}}+1,\tau\}}}.
 ```
 
 For the averaged experiment bound, condition first on the realized prior
@@ -3023,16 +3040,15 @@ capacity-limited at the intended 128-bit generic target.
 The remaining TreeWrap-specific tail of Theorem 5.4 specializes to
 
 ```math
-\frac{1}{2^{t_{\mathsf{leaf}}+1}} + \frac{1}{2^{\tau}}
+\frac{1}{2^{\min\{t_{\mathsf{leaf}}+1,\tau\}}}
 =
-\frac{1}{2^{257}} + \frac{1}{2^{256}}.
+\frac{1}{2^{256}}.
 ```
 
-This tail is already dominated by the 256-bit final-tag term. In the concrete
-octet-oriented format one could sharpen the leaf branch further, because any
-nonempty later chunk contributes at least one visible octet before its hidden
-leaf tag, but the coarser generic expression above is sufficient and keeps the
-TW128 statement aligned with Theorem 5.4.
+This is exactly the 256-bit final-tag scale. In the concrete octet-oriented
+format one could sharpen the leaf branch further, because any nonempty later
+chunk contributes at least one visible octet before its hidden leaf tag, but
+the generic expression above already specializes cleanly for $`\mathsf{TW128}`$.
 
 Substituting these parameters into Theorems 5.1, 5.2, and 5.4 yields the
 concrete parameterized security statements for $`\mathsf{TW128}`$. On the AE
@@ -3087,11 +3103,11 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   ```math
   \mathrm{Adv}^{\mathsf{int}\text{-}\mathsf{ctxt}}_{\mathsf{TW128}}(\mathcal{A})
   \le
-  \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,\mu+q^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
+  \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,\mu+q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_d,N)
   +
   \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,\mu+q_f,N_{\mathsf{leaf}}^{\mathsf{ae}})
   +
-  \frac{2 q_f}{2^{256}}.
+  \frac{q_f}{2^{256}}.
   ```
 
 - Consequently, under the same side conditions, IND-CCA2 specializes to
@@ -3103,11 +3119,11 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   +
   \epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N_{\mathsf{leaf}}^{\mathsf{enc}})
   +
-  2 \cdot \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,\mu+q^{\mathsf{tr}}_d,L_{\mathsf{tr}},N)
+  2 \cdot \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,\mu+q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_d,N)
   +
   2 \cdot \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,\mu+q_d,N_{\mathsf{leaf}}^{\mathsf{ae}})
   +
-  \frac{4 q_d}{2^{256}}.
+  \frac{2 q_d}{2^{256}}.
   ```
 
 - For any fixed distinct CMT-4 tuple pair
@@ -3133,8 +3149,6 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   +
   \frac{S_2(S_2+3)}{2}
   \right)
-  +
-  \frac{1}{2^{257}}
   +
   \frac{1}{2^{256}}.
   ```
@@ -3259,7 +3273,7 @@ $`\binom{\mu}{2}/2^{256}`$ vanishes identically, because $`\mu = 1`$,
 while the explicit TW128 guessing term is only
 
 ```math
-\frac{2 q_f}{2^{256}} = 2^{-223}.
+\frac{q_f}{2^{256}} = 2^{-224}.
 ```
 
 All remaining visible imported terms carry denominators $`2^{512}`$ or
@@ -3304,10 +3318,10 @@ while the pairwise-user term still vanishes for the same reason:
 Likewise, the explicit integrity-guessing term reaches the same scale only when
 
 ```math
-\frac{2 q_f}{2^{256}} \approx 2^{-128},
+\frac{q_f}{2^{256}} \approx 2^{-128},
 ```
 
-that is, when $`q_f`$ approaches $`2^{127}`$. In other words, for
+that is, when $`q_f`$ approaches $`2^{128}`$. In other words, for
 $`\mathsf{TW128}`$ the practical AE margin is not volume-limited at realistic
 scales; the visible edge of the bound appears only under astronomically large
 primitive-query or forgery budgets.
