@@ -925,7 +925,8 @@ TreeWrap always uses keyed-duplex initialization with $`\alpha = 0`$, the
 low-complexity branch of [Men23, Theorem 1, Eq. (5)] specializes to one
 imported shorthand, which we denote by
 $`\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,M,Q,Q_{IV},L,\Omega,\nu_{\mathsf{fix}},N)`$.
-The explicit formula is reproduced in Appendix D. This branch is valid when
+We use this shorthand purely as a citation handle for that imported bound. This
+branch is valid when
 $`M+N \le 0.1 \cdot 2^c`$.
 
 For TreeWrap, the only genuinely mode-specific work is the translation from
@@ -1531,7 +1532,7 @@ setting. Once both transcript families are idealized, the TreeWrap-specific
 schedule argument of Lemma 6.1 shows that each fresh valid forgery candidate is
 bounded by the mutually exclusive trunk-tag / earliest-leaf-tag split, yielding
 the final $`q_f 2^{-\min\{t_{\mathsf{leaf}},\tau\}}`$ tail. Appendix A.3 gives
-the detailed games and candidate-by-candidate accounting.
+the detailed games and final union-bound accounting.
 
 ### 5.4 IND-CCA2 Sketch
 
