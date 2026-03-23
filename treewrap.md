@@ -162,8 +162,11 @@ A.1 identifies the $`\mathsf{LeafWrap}`$ family on chunks $`i \ge 1`$ with a
 reduced MonkeySpongeWrap transcript, and Theorem A.2 ports the corresponding
 KD/IXIF replacement bound. A TreeWrap-specific freshness lemma then handles the
 interaction between fresh leaf tags and the trunk transcript. At the trunk
-layer, Corollaries 4.6 and 4.7 give the encryption-side and bidirectional
-keyed-duplex/IXIF replacements for $`\mathsf{TrunkWrap}`$. These ingredients
+layer, the corresponding trunk terms
+$`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$ and
+$`\epsilon_{\mathsf{tr}}^{\mathsf{ae}}`$ from Section 4.6 give the
+encryption-side and bidirectional keyed-duplex/IXIF replacements for
+$`\mathsf{TrunkWrap}`$. These ingredients
 yield the IND-CPA and INT-CTXT theorems, and Theorem 4.13 derives IND-CCA2 from
 them by a BN00-style game hop using the multi-forgery integrity notion of
 Section 4.2.
@@ -949,62 +952,28 @@ bidirectional trunk family.
 
 When instantiating [Men23], we keep the full $`\mu`$-user setting. Because
 TreeWrap always uses keyed-duplex initialization with $`\alpha = 0`$, the
-low-complexity branch of [Men23, Theorem 1, Eq. (5)] specializes to
+low-complexity branch of [Men23, Theorem 1, Eq. (5)] specializes to one
+imported shorthand, which we denote by
+$`\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,M,Q,Q_{IV},L,\Omega,\nu_{\mathsf{fix}},N)`$.
+The explicit formula is reproduced in Appendix D. This branch is valid when
+$`M+N \le 0.1 \cdot 2^c`$.
 
-```math
-\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,M,Q,Q_{IV},L,\Omega,\nu_{\mathsf{fix}},N)
-:=
-\frac{(L+\Omega)N}{2^c}
-+
-\frac{2 \nu_{r,c}^{2(M-L)}(N+1)}{2^c}
-+
-\frac{\binom{L+\Omega+1}{2}}{2^c}
-+
-\frac{(M-L-Q)Q}{2^b-Q}
-+
-\frac{M(M-L-1)}{2^b}
-+
-\frac{Q(M-L-Q)}{2^{\min\{c+k,b\}}}
-+
-\frac{Q_{IV}N}{2^k}
-+
-\frac{\binom{\mu}{2}}{2^k}.
-```
+For TreeWrap, the only genuinely mode-specific work is the translation from
+wrapper-level resource measures to the Men23 parameters. The valid
+substitutions are summarized in the following resource-substitution table, with
+justification collected in Appendix D.
 
-Here $`\nu_{r,c}^{X}`$ is the multicollision limit function imported from
-[Men23, Section 4.2], and the displayed branch is valid when
-$`M+N \le 0.1 \cdot 2^c`$. The detailed wrapper-to-Men23 translation is
-collected in Appendix D; the main paper only keeps the resulting instantiations.
+| Family | Setting | $`M`$ | $`Q`$ | $`Q_{IV}`$ | $`L`$ | $`\Omega`$ | $`\nu_{\mathsf{fix}}`$ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| leaf | encryption-only | $`\sigma^{\mathsf{leaf}}_e`$ | $`\chi_{\mathsf{leaf},e}`$ | $`\le \mu`$ | $`0`$ | $`0`$ | $`0`$ |
+| leaf | bidirectional | $`\sigma^{\mathsf{leaf}}_e + \sigma^{\mathsf{leaf}}_d`$ | $`\chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d}`$ | $`Q_{\mathsf{IV,leaf}}`$ | $`\le \chi_{\mathsf{leaf},d}`$ | $`\Omega_{\mathsf{lw},d}`$ | $`\le \max(\Omega_{\mathsf{lw},d} + \chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d} - 1, 0)`$ |
+| trunk | encryption-only | $`\sigma^{\mathsf{tr}}_e`$ | $`q^{\mathsf{tr}}_e`$ | $`\le \mu`$ | $`0`$ | $`0`$ | $`0`$ |
+| trunk | bidirectional | $`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d`$ | $`q^{\mathsf{tr}}_e + q^{\mathsf{tr}}_d`$ | $`Q_{\mathsf{IV,tr}}`$ | $`L_{\mathsf{tr}}`$ | $`\Omega^{\mathsf{tr}}_d`$ | $`\le \max(\Omega^{\mathsf{tr}}_d + q^{\mathsf{tr}}_e + q^{\mathsf{tr}}_d - 1, 0)`$ |
 
-**Proposition 4.2 (Leaf Resource Translation Summary).** For the reduced leaf
-family induced by TreeWrap, valid Men23 resource substitutions are:
+With these substitutions, the four imported TreeWrap error terms are defined as
+follows.
 
-- encryption-only:
-
-  ```math
-  M = \sigma^{\mathsf{leaf}}_e,\quad
-  Q = \chi_{\mathsf{leaf},e},\quad
-  Q_{IV} \le \mu,\quad
-  L = 0,\quad
-  \Omega = 0,\quad
-  \nu_{\mathsf{fix}} = 0;
-  ```
-
-- bidirectional:
-
-  ```math
-  M = \sigma^{\mathsf{leaf}}_e + \sigma^{\mathsf{leaf}}_d,\quad
-  Q = \chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d},\quad
-  Q_{IV} = Q_{\mathsf{IV,leaf}},\quad
-  L \le \chi_{\mathsf{leaf},d},\quad
-  \Omega = \Omega_{\mathsf{lw},d},\quad
-  \nu_{\mathsf{fix}} \le \max\!\bigl(\Omega_{\mathsf{lw},d} + \chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d} - 1, 0\bigr).
-  ```
-
-**Proof sketch.** See Appendix D.1.
-
-**Corollary 4.4 (Imported Leaf Encryption-Side KD/IXIF Bound).** If
-$`\sigma^{\mathsf{leaf}}_e + N \le 0.1 \cdot 2^c`$, then
+If $`\sigma^{\mathsf{leaf}}_e + N \le 0.1 \cdot 2^c`$, define
 
 ```math
 \epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N)
@@ -1012,26 +981,13 @@ $`\sigma^{\mathsf{leaf}}_e + N \le 0.1 \cdot 2^c`$, then
 \mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{leaf}}_e,\chi_{\mathsf{leaf},e},\mu,0,0,0,N).
 ```
 
-**Corollary 4.5 (Imported Leaf Bidirectional KD/IXIF Bound).** If
-$`\sigma^{\mathsf{leaf}}_e + \sigma^{\mathsf{leaf}}_d + N \le 0.1 \cdot 2^c`$,
-then
+If $`\sigma^{\mathsf{leaf}}_e + \sigma^{\mathsf{leaf}}_d + N \le 0.1 \cdot 2^c`$,
+define
 
 ```math
 \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,Q_{\mathsf{IV,leaf}},N)
 :=
-\frac{2\nu_{r,c}^{2\sigma^{\mathsf{leaf}}}(N+1)}{2^c}
-+
-\frac{\sigma^{\mathsf{leaf}}_d N + (\sigma^{\mathsf{leaf}}_d)^2}{2^c}
-+
-\frac{q^{\mathsf{leaf}}(\sigma^{\mathsf{leaf}}-q^{\mathsf{leaf}})}{2^b-q^{\mathsf{leaf}}}
-+
-\frac{2\binom{\sigma^{\mathsf{leaf}}}{2}}{2^b}
-+
-\frac{q^{\mathsf{leaf}}(\sigma^{\mathsf{leaf}}-q^{\mathsf{leaf}})}{2^{\min\{c+k,b\}}}
-+
-\frac{Q_{\mathsf{IV,leaf}} N}{2^k}
-+
-\frac{\binom{\mu}{2}}{2^k},
+\mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{leaf}},q^{\mathsf{leaf}},Q_{\mathsf{IV,leaf}},\chi_{\mathsf{leaf},d},\Omega_{\mathsf{lw},d},\max(\Omega_{\mathsf{lw},d}+q^{\mathsf{leaf}}-1,0),N),
 ```
 
 where
@@ -1042,41 +998,7 @@ where
 q^{\mathsf{leaf}} := \chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d}.
 ```
 
-For a fully wrapper-level explicit instantiation, one may conservatively bound
-
-```math
-Q_{\mathsf{IV,leaf}} \le \mu + q_*.
-```
-
-**Proposition 4.3 (Trunk Resource Translation Summary).** For the trunk family
-induced by TreeWrap, valid Men23 resource substitutions are:
-
-- encryption-only:
-
-  ```math
-  M = \sigma^{\mathsf{tr}}_e,\quad
-  Q = q^{\mathsf{tr}}_e,\quad
-  Q_{IV} \le \mu,\quad
-  L = 0,\quad
-  \Omega = 0,\quad
-  \nu_{\mathsf{fix}} = 0;
-  ```
-
-- bidirectional:
-
-  ```math
-  M = \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d,\quad
-  Q = q^{\mathsf{tr}}_e + q^{\mathsf{tr}}_d,\quad
-  Q_{IV} = Q_{\mathsf{IV,tr}},\quad
-  L = L_{\mathsf{tr}},\quad
-  \Omega = \Omega^{\mathsf{tr}}_d,\quad
-  \nu_{\mathsf{fix}} \le \max(\Omega^{\mathsf{tr}}_d + q^{\mathsf{tr}}_e + q^{\mathsf{tr}}_d - 1,0).
-  ```
-
-**Proof sketch.** See Appendix D.2.
-
-**Corollary 4.6 (Imported TrunkWrap Encryption-Side KD/IXIF Bound).** If
-$`\sigma^{\mathsf{tr}}_e + N \le 0.1 \cdot 2^c`$, then
+If $`\sigma^{\mathsf{tr}}_e + N \le 0.1 \cdot 2^c`$, define
 
 ```math
 \epsilon_{\mathsf{tr}}^{\mathsf{enc}}(\mu,q^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_e,N)
@@ -1084,8 +1006,7 @@ $`\sigma^{\mathsf{tr}}_e + N \le 0.1 \cdot 2^c`$, then
 \mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{tr}}_e,q^{\mathsf{tr}}_e,\mu,0,0,0,N).
 ```
 
-**Corollary 4.7 (Imported TrunkWrap Bidirectional KD/IXIF Bound).** If
-$`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d + N \le 0.1 \cdot 2^c`$, then
+If $`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d + N \le 0.1 \cdot 2^c`$, define
 
 ```math
 \epsilon_{\mathsf{tr}}^{\mathsf{ae}}(\mu,q^{\mathsf{tr}}_e,q^{\mathsf{tr}}_d,\sigma^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},N)
@@ -1093,9 +1014,12 @@ $`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d + N \le 0.1 \cdot 2^c`$, then
 \mathrm{KD}^{(i)}_{\mathsf{Men23}}(\mu,\sigma^{\mathsf{tr}}_e+\sigma^{\mathsf{tr}}_d,q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d,Q_{\mathsf{IV,tr}},L_{\mathsf{tr}},\Omega^{\mathsf{tr}}_d,\max(\Omega^{\mathsf{tr}}_d+q^{\mathsf{tr}}_e+q^{\mathsf{tr}}_d-1,0),N).
 ```
 
-For a fully wrapper-level explicit instantiation, one may conservatively bound
+For fully wrapper-level explicit instantiations, we will use the conservative
+simplifications
 
 ```math
+Q_{\mathsf{IV,leaf}} \le \mu + q_*,
+\qquad
 Q_{\mathsf{IV,tr}} \le \mu + q^{\mathsf{tr}}_d,
 \qquad
 L_{\mathsf{tr}} \le \sigma^{\mathsf{tr}}_d.
@@ -1443,7 +1367,7 @@ $`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))`$.
 ### 4.10 Main Theorems
 
 For authenticated encryption, the theorems below simply instantiate the
-imported [Men23] terms of Corollaries 4.4--4.7. Write
+imported [Men23] terms defined in Section 4.6. Write
 $`\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}`$,
 $`\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}`$,
 $`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$, and
@@ -1486,12 +1410,13 @@ $`\mathcal{A}`$ against the $`\mu`$-user TreeWrap experiment,
 ```
 
 Equivalently, in the low-total-complexity regime inherited from [Men23],
-TreeWrap privacy reduces to the direct trunk KD/IXIF replacement of Corollary
-4.6 together with the reduced leaf KD/IXIF replacement of Corollary 4.4. The
-trunk term governs the entire $`n = 0`$ path, the entire $`n = 1`$ path, and
-the first-chunk prefix of every longer message; the leaf term is charged only
-for chunks $`i \ge 1`$ and therefore vanishes identically on messages of at
-most one chunk.
+TreeWrap privacy reduces to the direct trunk KD/IXIF term
+$`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$ together with the reduced leaf
+KD/IXIF term $`\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}`$ defined in Section
+4.6. The trunk term governs the entire $`n = 0`$ path, the entire $`n = 1`$
+path, and the first-chunk prefix of every longer message; the leaf term is
+charged only for chunks $`i \ge 1`$ and therefore vanishes identically on
+messages of at most one chunk.
 
 #### 4.10.2 INT-CTXT Theorem
 
@@ -1617,7 +1542,9 @@ $`\mathsf{MSW}^{\mathsf{red}}`$ obtained from [Men23] by deleting the unused
 local associated-data phase and retaining only keyed-duplex initialization, the
 framed body transcript, and the final hidden-tag squeezes. On the trunk side,
 $`\mathsf{TrunkWrap}`$ is already a keyed-duplex family under the contexts
-$`(\delta,\mathsf{iv}(U,0))`$, so Corollaries 4.6 and 4.7 apply directly.
+$`(\delta,\mathsf{iv}(U,0))`$, so the corresponding trunk terms
+$`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$ and
+$`\epsilon_{\mathsf{tr}}^{\mathsf{ae}}`$ of Section 4.6 apply directly.
 Appendix A.1 gives the explicit transcript correspondence and the ported leaf
 KD/IXIF replacement theorem.
 
@@ -2258,8 +2185,10 @@ local associated-data phase and retaining only:
   tag.
 
 The trunk transcript is handled directly as a keyed-duplex family under the
-keyed contexts $`(\delta,\mathsf{iv}(U,0))`$ and therefore uses Corollaries 4.6
-and 4.7 without any additional reduction.
+keyed contexts $`(\delta,\mathsf{iv}(U,0))`$ and therefore uses the trunk terms
+$`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$ and
+$`\epsilon_{\mathsf{tr}}^{\mathsf{ae}}`$ from Section 4.6 without any
+additional reduction.
 
 Let $`\mathsf{LeafWrap}^{\mathsf{IXIF}}[\mathrm{ro}_{\mathsf{leaf}}]`$ denote
 the same leaf transcript as $`\mathsf{LeafWrap}[p]`$, but with the keyed duplex
@@ -2349,8 +2278,10 @@ corresponding call to $`\mathsf{MSW}^{\mathsf{red}}`$ on the same leaf IV $`V`$.
 Consequently, the leaf real-to-IXIF replacement is bounded by the corresponding
 KD/IXIF term imported from [Men23], with the unused local associated-data
 resources deleted from the accounting. This is exactly the reduced family whose
-wrapper-level resources are summarized in Proposition 4.2 and bounded in
-Corollaries 4.4 and 4.5. In TreeWrap, the relevant keyed contexts are
+wrapper-level substitutions define
+$`\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}`$ and
+$`\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}`$ in Section 4.6. In TreeWrap, the
+relevant keyed contexts are
 $`(\delta,V_i)`$ with $`V_i = \mathsf{iv}(U,i)`$ and $`i \ge 1`$.
 
 For the trunk layer, let
@@ -2361,9 +2292,11 @@ this ideal world still consists of an optional absorb phase on $`A \|
 \lambda_{\mathsf{ad}}`$, an optional first-chunk body phase on $`X_0`$, an
 optional absorb phase on $`T_1 \| \cdots \| T_m \| \lambda_{\mathsf{tc}}`$, and
 one final squeeze phase. Because this is already a keyed-duplex family under
-the contexts $`(\delta,\mathsf{iv}(U,0))`$, Corollaries 4.6 and 4.7 apply
-directly in the encryption-only and bidirectional settings, respectively. These
-imported statements are the only ingredients used in the AE sketches below,
+the contexts $`(\delta,\mathsf{iv}(U,0))`$, the corresponding trunk terms
+$`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$ and
+$`\epsilon_{\mathsf{tr}}^{\mathsf{ae}}`$ from Section 4.6 apply directly in
+the encryption-only and bidirectional settings, respectively. These imported
+statements are the only ingredients used in the AE sketches below,
 together with the TreeWrap-specific freshness lemma of Section 6.1.
 
 The leaf and trunk ideal families use independent random oracles
@@ -2387,15 +2320,16 @@ ordinary inputs to its trunk oracle. Because $`\mathrm{ro}_{\mathsf{leaf}}`$ is
 independent of both $`p`$ and $`\mathrm{ro}_{\mathsf{tr}}`$, the leaf tags are
 deterministic functions of $`\mathrm{ro}_{\mathsf{leaf}}`$ and the query
 inputs, and are therefore fixed values from the trunk oracle's perspective. The
-imported trunk bound (Corollary 4.6 or 4.7) depends only on the induced trunk
-resource measures and not on any distributional property of these fixed trunk
-inputs. It therefore holds for every fixed realization of
+imported trunk bound depends only on the induced trunk resource measures and
+not on any distributional property of these fixed trunk inputs. It therefore
+holds for every fixed realization of
 $`\mathrm{ro}_{\mathsf{leaf}}`$, and hence also in expectation.
 In the bidirectional setting, decryption-side leaf calls are likewise evaluated
 internally via $`\mathrm{ro}_{\mathsf{leaf}}`$ before the resulting trunk query
 is forwarded; the Men23 bound permits the distinguisher arbitrary internal
-computation, so this does not violate any precondition of Corollary 4.7. By
-contrast with the leaf hop, this trunk simulation requires no additional
+computation, so this does not violate any precondition of the bidirectional
+trunk term of Section 4.6. By contrast with the leaf hop, this trunk simulation
+requires no additional
 primitive queries beyond the adversary's own $`N`$.
 
 ### A.2 IND-CPA Sketch
@@ -2421,8 +2355,9 @@ $`p^{-1}`$.
   context and transcript inputs.
 
 For the first hop, Lemma 4.1 shows that a per-user nonce-respecting TreeWrap
-adversary induces a nonce-respecting family of leaf encryption queries, so
-Corollary 4.4 applies. The corresponding leaf distinguisher must additionally
+adversary induces a nonce-respecting family of leaf encryption queries, so the
+leaf encryption-side term of Section 4.6 applies. The corresponding leaf
+distinguisher must additionally
 realize the unchanged trunk transcript via $`p`$, so its primitive-query budget
 is $`N_{\mathsf{leaf}}^{\mathsf{enc}} = N + \sigma^{\mathsf{tr}}_e`$. Thus the
 first replacement changes the overall left-right distinguishing gap by at most
@@ -2431,8 +2366,9 @@ first replacement changes the overall left-right distinguishing gap by at most
 \epsilon_{\mathsf{leaf}}^{\mathsf{enc}}(\mu,\chi_{\mathsf{leaf},e},\sigma^{\mathsf{leaf}}_e,N_{\mathsf{leaf}}^{\mathsf{enc}}).
 ```
 
-For the second hop, Corollary 4.6 applies to the trunk family, so the second
-replacement changes the overall left-right distinguishing gap by at most
+For the second hop, the trunk encryption-side term of Section 4.6 applies, so
+the second replacement changes the overall left-right distinguishing gap by at
+most
 
 ```math
 \epsilon_{\mathsf{tr}}^{\mathsf{enc}}(\mu,q^{\mathsf{tr}}_e,\sigma^{\mathsf{tr}}_e,N).
@@ -2510,7 +2446,7 @@ access to $`p`$ and $`p^{-1}`$.
   recomputation.
 
 For the first hop, Lemma 4.1 gives the required keyed-context discipline at the
-leaf layer, and Corollary 4.5 therefore yields
+leaf layer, and the bidirectional leaf term of Section 4.6 therefore yields
 
 ```math
 N_{\mathsf{leaf}}^{\mathsf{ae}} = N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d
@@ -2526,7 +2462,7 @@ Hence
 \epsilon_{\mathsf{leaf}}^{\mathsf{ae}}(\mu,\chi_{\mathsf{leaf},e},\chi_{\mathsf{leaf},d},\sigma^{\mathsf{leaf}}_e,\sigma^{\mathsf{leaf}}_d,Q_{\mathsf{IV,leaf}},N_{\mathsf{leaf}}^{\mathsf{ae}}).
 ```
 
-For the second hop, Corollary 4.7 yields
+For the second hop, the bidirectional trunk term of Section 4.6 yields
 
 ```math
 \left| \Pr[H_1(\mathcal{A}) = 1] - \Pr[H_2(\mathcal{A}) = 1] \right|
@@ -2943,7 +2879,8 @@ and a decryption/final-forgery cap of $`q_d = q_f = 2^{32}`$, then
 ```
 
 so both leading imported terms use $`\nu_{1344,256}^{2M} \le 2`$. Hence the
-leading leaf-side imported term of Corollary 4.4 is bounded by
+leading leaf-side imported term
+$`\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}`$ is bounded by
 
 ```math
 \frac{2 \nu_{1344,256}^{2\sigma^{\mathsf{leaf}}_e}(N+1)}{2^{256}}
@@ -2953,8 +2890,9 @@ leading leaf-side imported term of Corollary 4.4 is bounded by
 < 2^{-214},
 ```
 
-and the same estimate applies to the leading trunk-side imported term of
-Corollary 4.6. In this single-user example the pairwise-user term
+and the same estimate applies to the leading trunk-side imported term
+$`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$. In this single-user example the
+pairwise-user term
 $`\binom{\mu}{2}/2^{256}`$ vanishes identically, because $`\mu = 1`$,
 
 while the explicit TW128 guessing term is only
@@ -3469,11 +3407,13 @@ same path-counting and overwrite-counting bounds imported from the proof of
 [Men23, Theorem 7] and its accompanying remark, specialized to the reduced
 family.
 
-The displayed bound on $`\nu_{\mathsf{fix}}`$ in Proposition 4.2 is the same
+The displayed bound on $`\nu_{\mathsf{fix}}`$ in the leaf/bidirectional row of
+the resource-substitution table in Section 4.6 is the same
 path-counting upper bound, conservatively rewritten in the present notation.
 This conservatism does not affect the low-complexity branch used in the main
 paper because $`\nu_{\mathsf{fix}}`$ does not appear in
-$`\mathrm{KD}^{(i)}_{\mathsf{Men23}}`$. Likewise, Corollary 4.5 keeps the
+$`\mathrm{KD}^{(i)}_{\mathsf{Men23}}`$. Likewise, the bidirectional leaf term
+$`\epsilon_{\mathsf{leaf}}^{\mathsf{ae}}`$ keeps the
 raw-IV multiplicity term explicit as $`Q_{\mathsf{IV,leaf}} N / 2^k`$ rather
 than substituting $`\mu N / 2^k`$.
 
