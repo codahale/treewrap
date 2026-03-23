@@ -1778,22 +1778,40 @@ low-complexity regime $`M \ll 2^{\hat c}`$, one may use the approximation
 \frac{(1-2^{-\hat r})M^2 + (1+2^{-\hat r})M}{2^{\hat c+1}}.
 ```
 
-**Lemma 4.10 (Imported Sponge Ideality for Flattened TreeWrap Transcripts).**
-Fix any compared tuple pair $`\Theta`$ and any prior primitive transcript of
-cost at most $`N`$. Replace the permutation-based prefix-sponge answers in the
-query families furnished by Lemma 4.9 by answers from an ideal random oracle on
-the same queried prefixes, truncated to the requested visible lengths. Then the
-change in the joint distribution is at most
-$`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}(\Theta,N))`$.
+For a CMT-4 adversary $`\mathcal{A}`$ that makes at most $`N`$ primitive
+queries, write
+
+```math
+M_{\mathsf{tw}}^{\max}(\mathcal{A},N)
+:=
+\max_{\Theta \in \mathrm{Supp}(\mathcal{A})} M_{\mathsf{tw}}(\Theta,N),
+```
+
+where the support ranges over all tuple pairs that can be output by
+$`\mathcal{A}`$ after at most $`N`$ primitive queries.
+
+**Lemma 4.10 (Imported Sponge Ideality for the CMT-4 Experiment).** Let
+$`\mathcal{A}`$ be any CMT-4 adversary that makes at most $`N`$ primitive
+queries. Consider the real CMT-4 experiment and the idealized experiment in
+which, after $`\mathcal{A}`$ outputs its tuple pair, the two compared
+encryptions are answered by ideal random-oracle outputs on the prefix-sponge
+query families furnished by Lemma 4.9. Then the change in the success
+probability of $`\mathcal{A}`$ is at most
+$`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))`$.
 
 **Proof sketch.** Lemma 4.9 turns the compared flattened encryptions into a
 family of adaptive queries to a block-aligned sponge view at effective
 parameters $`(\hat r,\hat c)`$, together with the adversary's direct
-permutation queries. This is exactly the type of public-permutation interaction
-controlled by the random-permutation sponge indifferentiability theorem of
-[BDPVA08, Theorem 2]. We therefore use that theorem as an imported black-box
-replacement step and write the resulting advantage bound as
-$`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}(\Theta,N))`$.
+permutation queries. A distinguisher can therefore run $`\mathcal{A}`$ on the
+real permutation, wait until $`\mathcal{A}`$ outputs its tuple pair, and then
+realize the two compared encryptions via the corresponding prefix-sponge query
+families. The resulting total sponge-query cost is bounded by
+$`M_{\mathsf{tw}}^{\max}(\mathcal{A},N)`$ by construction. This is exactly the
+type of public-permutation interaction controlled by the random-permutation
+sponge indifferentiability theorem of [BDPVA08, Theorem 2], so we use that
+theorem as an imported black-box replacement step and write the resulting
+advantage bound as
+$`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))`$.
 
 ## 5. Main Results
 
@@ -1823,8 +1841,11 @@ TreeWrap-specific injectivity and tag-endgame arguments.
 - Let $`M_{\mathsf{tw}}(\Theta,N)`$ be the total prefix-sponge cost of
   Section 4.9 for a fixed compared tuple pair $`\Theta`$ and primitive-query
   budget $`N`$.
-- Let $`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}(\Theta,N))`$ be the imported
-  random-permutation sponge term of Lemma 4.10.
+- Let $`M_{\mathsf{tw}}^{\max}(\mathcal{A},N)`$ be the resulting adversary-level
+  deterministic upper bound of Section 4.9 for a CMT-4 adversary
+  $`\mathcal{A}`$ making at most $`N`$ primitive queries.
+- Let $`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))`$ be
+  the imported random-permutation sponge term of Lemma 4.10.
 
 For the AE hybrids, define the primitive-query budgets seen by the leaf hop as
 
@@ -1954,61 +1975,24 @@ $`2`$ when translated back to the absolute distinguishing gap.
 
 ### 5.4 CMT-4 Theorem
 
-**Theorem 5.4 (CMT-4).** Let
-
-```math
-\Theta := ((K_1,U_1,A_1,P_1),(K_2,U_2,A_2,P_2))
-```
-
-be any fixed distinct pair of AEAD tuples. If $`|P_1| \ne |P_2|`$, then the
-corresponding collision probability is zero because TreeWrap is length
-preserving. Assume now $`|P_1| = |P_2|`$, fix any realized prior
-primitive-query transcript of cost at most $`N`$, and let
-$`M_{\mathsf{tw}}(\Theta,N)`$ be the total prefix-sponge cost of Section 4.9
-for the two compared encryptions together with those prior primitive queries.
-Then the conditional collision probability over the remaining random
-permutation choices satisfies
-
-```math
-\Pr\!\bigl[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)\bigr]
-\le
-\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}(\Theta,N))
-+
-\frac{1}{2^{\min\{t_{\mathsf{leaf}}+1,\tau\}}}.
-```
-
-The first term is the imported random-permutation sponge replacement term of
-Lemma 4.10 at effective parameters $`(\hat r,\hat c)=(r+1,c-1)`$. The second
-term is the remaining TreeWrap-specific ideal-world tail established in Section
-7: once the flattened schedules are moved to the ideal sponge world, either
-some visible body block already differs, in which case the ciphertexts cannot
-collide, or all visible body blocks agree, in which case collision requires
-either a divergent later leaf path to match on a visible body bit and on the
-hidden leaf tag, or a final trunk-tag match on a divergent trunk path. These
-exclusive branches cost at most $`2^{-(t_{\mathsf{leaf}}+1)}`$ and
-$`2^{-\tau}`$, respectively, because a later leaf branch must already match at
-least one visible body bit before its hidden tag can also match.
-
-As an immediate averaged consequence, let $`\mathcal{A}`$ be a CMT-4 adversary
-that makes at most $`N`$ primitive queries. Conditioning first on the realized
-prior primitive transcript and then averaging over the joint distribution of
-the adversary's output pair $`\Theta`$ gives
+**Theorem 5.4 (CMT-4).** Let $`\mathcal{A}`$ be a CMT-4 adversary against
+TreeWrap that makes at most $`N`$ primitive queries. Then
 
 ```math
 \mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}(\mathcal{A})
 \le
-\mathbb{E}_{(\mathcal{T}_0,\Theta)}\!\left[
-\mathbf{1}[|P_1|=|P_2|]
-\left(
-\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}(\Theta,N))
+\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))
 +
-\frac{1}{2^{\min\{t_{\mathsf{leaf}}+1,\tau\}}}
-\right)
-\right],
+\frac{1}{2^{\min\{t_{\mathsf{leaf}}+1,\tau\}}}.
 ```
 
-where the indicator simply records the trivial zero-collision branch for
-unequal message lengths.
+The first term is the imported experiment-level random-permutation sponge
+replacement term of Lemma 4.10 at effective parameters
+$`(\hat r,\hat c)=(r+1,c-1)`$. The second term is the remaining TreeWrap-
+specific ideal-world tail established in Section 7: in the ideal post-output
+world, if the adversary's two tuples have unequal message lengths then
+ciphertext collision is impossible, while every distinct equal-length tuple
+pair is bounded by the injectivity-plus-tag endgame of Lemmas 7.2 and 7.3.
 
 ## 6. Imported AE Sketches
 
@@ -2744,50 +2728,49 @@ and combining this with the trunk-divergence branch proves the stated bound.
 
 ### 7.4 Proof of Theorem 5.4
 
-Fix a distinct tuple pair
+Fix a CMT-4 adversary $`\mathcal{A}`$ making at most $`N`$ primitive queries,
+and compare two games.
+
+- In the real game, after $`\mathcal{A}`$ outputs its distinct tuple pair,
+  TreeWrap encryptions are computed from the real permutation.
+- In the ideal post-output game, the same tuple pair is instead evaluated via
+  the ideal sponge answers of Lemma 4.10 on the corresponding prefix-sponge
+  query families.
+
+Because $`\mathcal{A}`$ sees only the primitive oracles before it outputs its
+pair, the prior primitive transcript and the output distribution of
+$`\mathcal{A}`$ are identical in these two games. By Lemma 4.8 and Lemma 4.9,
+the post-output encryption computation in the real game is exactly the
+flattened prefix-sponge computation associated with the two compared
+encryptions. Lemma 4.10 therefore bounds the change in success probability
+between the two games by
+$`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))`$.
+
+It remains to bound success in the ideal post-output game. Condition on the
+realized tuple pair
 
 ```math
-\Theta := ((K_1,U_1,A_1,P_1),(K_2,U_2,A_2,P_2))
+\Theta := ((K_1,U_1,A_1,P_1),(K_2,U_2,A_2,P_2)).
 ```
 
-and a realized prior primitive transcript $`\mathcal{T}_0`$ of at most $`N`$
-queries. If
-$`|P_1| \ne |P_2|`$, then the two ciphertext lengths differ and the collision
-probability is zero. Assume henceforth that $`|P_1| = |P_2|`$.
+If $`|P_1| \ne |P_2|`$, then TreeWrap is length preserving and ciphertext
+collision is impossible. Otherwise the pair is a distinct equal-length tuple
+pair, so Lemma 7.2 guarantees a canonical-schedule input divergence and Lemma
+7.3 bounds the resulting ideal-world collision probability by
+$`2^{-\min\{t_{\mathsf{leaf}}+1,\tau\}}`$. This bound is uniform over all
+realized equal-length output pairs, so it also bounds the unconditional success
+probability of the ideal post-output game.
 
-By Lemma 4.8, we may replace the real compared encryptions by their flattened
-canonical-schedule transcripts without changing the collision event. Lemma 4.9
-then turns those flattened transcripts, together with the prior primitive
-queries, into one family of prefix-sponge queries of total cost
-$`M_{\mathsf{tw}}(\Theta,N)`$. Applying the imported sponge replacement of
-Lemma 4.10 changes the joint distribution by at most
-$`\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}(\Theta,N))`$.
-
-It therefore remains to bound collision in the ideal sponge world. There,
-Lemma 7.2 guarantees that the two equal-length distinct tuples diverge at some
-canonical input stage. Lemma 7.3 then gives the corresponding ideal-world
-collision tail: either the divergence is already visible in the ciphertext
-body, in which case collision is impossible, or collision requires either a
-divergent later leaf path to match on a visible body bit and on the hidden leaf
-tag, or a final trunk-tag match on a divergent trunk path, costing at most
-$`2^{-\min\{t_{\mathsf{leaf}}+1,\tau\}}`$.
-
-Combining the imported ideality term with this ideal-world tail yields the
-pointwise estimate of Theorem 5.4:
+Combining the imported experiment-level replacement step with this ideal-world
+tail yields Theorem 5.4:
 
 ```math
-\Pr[C_1=C_2]
+\mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}(\mathcal{A})
 \le
-\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}(\Theta,N))
+\epsilon_{\mathsf{ideal}}(M_{\mathsf{tw}}^{\max}(\mathcal{A},N))
 +
 \frac{1}{2^{\min\{t_{\mathsf{leaf}}+1,\tau\}}}.
 ```
-
-For the averaged experiment bound, condition first on the realized prior
-primitive transcript and the tuple pair $`\Theta`$ output by the adversary.
-Apply the same pointwise estimate, then average over the joint distribution of
-these random choices. This yields the displayed expectation bound on
-$`\mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TreeWrap}}`$.
 
 ## 8. TW128 Instantiation
 
@@ -3217,10 +3200,10 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   \frac{2 q_d}{2^{256}}.
   ```
 
-- For any fixed distinct CMT-4 tuple pair
-  $`\Theta=((K_1,U_1,A_1,P_1),(K_2,U_2,A_2,P_2))`$ with $`|P_1|=|P_2|`$, and
-  for any realized prior primitive transcript $`\mathcal{T}_0`$ of at most
-  $`N`$ queries, writing
+- For any CMT-4 adversary $`\mathcal{A}`$ against $`\mathsf{TW128}`$ making at
+  most $`N`$ primitive queries, write for each realized equal-length output
+  pair
+  $`\Theta=((K_1,U_1,A_1,P_1),(K_2,U_2,A_2,P_2))`$
 
   one has
 
@@ -3238,10 +3221,18 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   \sum_{j=1}^{\chi(P_2)-1} \Phi_{\mathsf{leaf}}(|P_{2,j}|),
   ```
 
+  and let
+
   ```math
-  \Pr_p[\mathsf{TreeWrap}_p.\mathsf{ENC}(K_1,U_1,A_1,P_1)=\mathsf{TreeWrap}_p.\mathsf{ENC}(K_2,U_2,A_2,P_2)]
+  M_{\mathsf{loc}}^{\max}(\mathcal{A},N)
+  :=
+  \max_{\substack{\Theta \in \mathrm{Supp}(\mathcal{A})\\|P_1|=|P_2|}} M_{\Theta}^{\mathsf{loc}}.
+  ```
+
+  ```math
+  \mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TW128}}(\mathcal{A})
   \le
-  \epsilon_{\mathsf{ideal}}(M_{\Theta}^{\mathsf{loc}})
+  \epsilon_{\mathsf{ideal}}(M_{\mathsf{loc}}^{\max}(\mathcal{A},N))
   +
   \frac{1}{2^{256}}.
   ```
@@ -3250,18 +3241,19 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   low-complexity regime by
 
   ```math
-  \epsilon_{\mathsf{ideal}}(M_{\Theta}^{\mathsf{loc}})
+  \epsilon_{\mathsf{ideal}}(M_{\mathsf{loc}}^{\max}(\mathcal{A},N))
   \lesssim
   \frac{
-  (1-2^{-1345})(M_{\Theta}^{\mathsf{loc}})^2
+  (1-2^{-1345})(M_{\mathsf{loc}}^{\max}(\mathcal{A},N))^2
   +
-  (1+2^{-1345})M_{\Theta}^{\mathsf{loc}}
+  (1+2^{-1345})M_{\mathsf{loc}}^{\max}(\mathcal{A},N)
   }{2^{256}},
   ```
 
-  which is essentially $`(M_{\Theta}^{\mathsf{loc}})^2 / 2^{256}`$ at
-  practical scales, while the explicit TreeWrap-specific tail is already
-  dominated by $`2^{-256}`$.
+  which is essentially
+  $`(M_{\mathsf{loc}}^{\max}(\mathcal{A},N))^2 / 2^{256}`$ at practical
+  scales, while the explicit TreeWrap-specific tail is already dominated by
+  $`2^{-256}`$.
 
 ### 8.2 Worked TW128 Examples
 
@@ -3520,7 +3512,7 @@ The concrete $`\mathsf{TW128}`$ instantiation shows that this proof strategy
 leads to a practically parameterized scheme based on twelve-round Keccak,
 8128-byte chunks, 256-bit leaf tags, and a 256-bit final tag. Its AE guarantees
 remain explicitly multi-user and parameterized by the imported keyed-duplex
-bounds, while its commitment guarantee specializes to an explicit pointwise
+bounds, while its commitment guarantee specializes to an explicit
 collision bound given by one imported capacity-limited sponge term plus a short
 tag-dominated explicit tail. Together, these results give TreeWrap a much
 cleaner proof architecture and a concrete target instantiation for further
