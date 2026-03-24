@@ -794,17 +794,17 @@ Appendix D.
 
 For readability, the main resource symbols used below are:
 
-| Symbol | Meaning |
-| --- | --- |
-| $`\chi_{\mathsf{leaf}}(X)`$ | number of remaining chunks of $`X`$ handled by `LeafWrap` |
-| $`\sigma_{\mathsf{leaf}}(X)`$ | total leaf duplex calls on those remaining chunks |
-| $`q^{\mathsf{tr}}_e, q^{\mathsf{tr}}_d`$ | number of trunk evaluations on the encryption and decryption sides |
-| $`\sigma^{\mathsf{tr}}_e, \sigma^{\mathsf{tr}}_d`$ | total trunk duplex calls on the encryption and decryption sides |
-| $`Q_{\mathsf{IV,leaf}}, Q_{\mathsf{IV,tr}}`$ | induced maximum raw-IV initialization multiplicities for the bidirectional leaf and trunk families |
-| $`L_{\mathsf{tr}}`$ | induced repeated-subpath count for the bidirectional trunk family |
-| $`\Omega_{\mathsf{lw},d}, \Omega^{\mathsf{tr}}_d`$ | decryption-side overwrite counts for the leaf and trunk families |
-| $`q_f`$ | final forgery-candidate count in the multi-forgery INT-CTXT game |
-| $`q_*`$ | generic decryption-side wrapper count: $`q_f`$ in INT-CTXT and $`q_d`$ in IND-CCA2 |
+| Symbol                                             | Meaning                                                                                            |
+|----------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| $`\chi_{\mathsf{leaf}}(X)`$                        | number of remaining chunks of $`X`$ handled by `LeafWrap`                                          |
+| $`\sigma_{\mathsf{leaf}}(X)`$                      | total leaf duplex calls on those remaining chunks                                                  |
+| $`q^{\mathsf{tr}}_e, q^{\mathsf{tr}}_d`$           | number of trunk evaluations on the encryption and decryption sides                                 |
+| $`\sigma^{\mathsf{tr}}_e, \sigma^{\mathsf{tr}}_d`$ | total trunk duplex calls on the encryption and decryption sides                                    |
+| $`Q_{\mathsf{IV,leaf}}, Q_{\mathsf{IV,tr}}`$       | induced maximum raw-IV initialization multiplicities for the bidirectional leaf and trunk families |
+| $`L_{\mathsf{tr}}`$                                | induced repeated-subpath count for the bidirectional trunk family                                  |
+| $`\Omega_{\mathsf{lw},d}, \Omega^{\mathsf{tr}}_d`$ | decryption-side overwrite counts for the leaf and trunk families                                   |
+| $`q_f`$                                            | final forgery-candidate count in the multi-forgery INT-CTXT game                                   |
+| $`q_*`$                                            | generic decryption-side wrapper count: $`q_f`$ in INT-CTXT and $`q_d`$ in IND-CCA2                 |
 
 Throughout Sections 4--7, lower-case $`\sigma`$ denotes a duplex-call count,
 while upper-case $`\Sigma`$ is reserved for concatenated hidden leaf-tag
@@ -934,12 +934,12 @@ wrapper-level resource measures to the Men23 parameters. The valid
 substitutions are summarized in the following resource-substitution table, with
 justification collected in Appendix D.
 
-| Family | Setting | $`M`$ | $`Q`$ | $`Q_{IV}`$ | $`L`$ | $`\Omega`$ | $`\nu_{\mathsf{fix}}`$ |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| leaf | encryption-only | $`\sigma^{\mathsf{leaf}}_e`$ | $`\chi_{\mathsf{leaf},e}`$ | $`\le \mu`$ | $`0`$ | $`0`$ | $`0`$ |
-| leaf | bidirectional | $`\sigma^{\mathsf{leaf}}_e + \sigma^{\mathsf{leaf}}_d`$ | $`\chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d}`$ | $`Q_{\mathsf{IV,leaf}}`$ | $`\le \chi_{\mathsf{leaf},d}`$ | $`\Omega_{\mathsf{lw},d}`$ | $`\le \max(\Omega_{\mathsf{lw},d} + \chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d} - 1, 0)`$ |
-| trunk | encryption-only | $`\sigma^{\mathsf{tr}}_e`$ | $`q^{\mathsf{tr}}_e`$ | $`\le \mu`$ | $`0`$ | $`0`$ | $`0`$ |
-| trunk | bidirectional | $`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d`$ | $`q^{\mathsf{tr}}_e + q^{\mathsf{tr}}_d`$ | $`Q_{\mathsf{IV,tr}}`$ | $`L_{\mathsf{tr}}`$ | $`\Omega^{\mathsf{tr}}_d`$ | $`\le \max(\Omega^{\mathsf{tr}}_d + q^{\mathsf{tr}}_e + q^{\mathsf{tr}}_d - 1, 0)`$ |
+| Family | Setting         | $`M`$                                                   | $`Q`$                                               | $`Q_{IV}`$               | $`L`$                          | $`\Omega`$                 | $`\nu_{\mathsf{fix}}`$                                                                        |
+|--------|-----------------|---------------------------------------------------------|-----------------------------------------------------|--------------------------|--------------------------------|----------------------------|-----------------------------------------------------------------------------------------------|
+| leaf   | encryption-only | $`\sigma^{\mathsf{leaf}}_e`$                            | $`\chi_{\mathsf{leaf},e}`$                          | $`\le \mu`$              | $`0`$                          | $`0`$                      | $`0`$                                                                                         |
+| leaf   | bidirectional   | $`\sigma^{\mathsf{leaf}}_e + \sigma^{\mathsf{leaf}}_d`$ | $`\chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d}`$ | $`Q_{\mathsf{IV,leaf}}`$ | $`\le \chi_{\mathsf{leaf},d}`$ | $`\Omega_{\mathsf{lw},d}`$ | $`\le \max(\Omega_{\mathsf{lw},d} + \chi_{\mathsf{leaf},e} + \chi_{\mathsf{leaf},d} - 1, 0)`$ |
+| trunk  | encryption-only | $`\sigma^{\mathsf{tr}}_e`$                              | $`q^{\mathsf{tr}}_e`$                               | $`\le \mu`$              | $`0`$                          | $`0`$                      | $`0`$                                                                                         |
+| trunk  | bidirectional   | $`\sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{tr}}_d`$     | $`q^{\mathsf{tr}}_e + q^{\mathsf{tr}}_d`$           | $`Q_{\mathsf{IV,tr}}`$   | $`L_{\mathsf{tr}}`$            | $`\Omega^{\mathsf{tr}}_d`$ | $`\le \max(\Omega^{\mathsf{tr}}_d + q^{\mathsf{tr}}_e + q^{\mathsf{tr}}_d - 1, 0)`$           |
 
 With these substitutions, the four imported TreeWrap error terms are defined as
 follows.
@@ -2953,21 +2953,21 @@ standard-library AES-128-GCM implementation on the same platforms.
 
 Table 1 reports short-message latency.
 
-| Platform | Operation | 1 B (ns/op) | 64 B (ns/op) |
-| --- | --- | ---: | ---: |
-| M4 Pro | TW128 encrypt | 153.8 | 153.9 |
-| M4 Pro | AES-128-GCM seal | 207.2 | 219.8 |
-| Emerald Rapids | TW128 encrypt | 340.4 | 344.3 |
-| Emerald Rapids | AES-128-GCM seal | 351.1 | 403.1 |
+| Platform       | Operation        | 1 B (ns/op) | 64 B (ns/op) |
+|----------------|------------------|------------:|-------------:|
+| M4 Pro         | TW128 encrypt    |       153.8 |        153.9 |
+| M4 Pro         | AES-128-GCM seal |       207.2 |        219.8 |
+| Emerald Rapids | TW128 encrypt    |       340.4 |        344.3 |
+| Emerald Rapids | AES-128-GCM seal |       351.1 |        403.1 |
 
 Table 2 reports representative throughput points.
 
-| Platform | Operation | 8 KiB (MB/s) | 64 KiB (MB/s) | 1 MiB (MB/s) | 16 MiB (MB/s) |
-| --- | --- | ---: | ---: | ---: | ---: |
-| M4 Pro | TW128 encrypt | 2326.91 | 3410.14 | 5360.60 | 5380.68 |
-| M4 Pro | AES-128-GCM seal | 7234.61 | 8754.33 | 8917.25 | 8921.59 |
-| Emerald Rapids | TW128 encrypt | 1028.95 | 2421.03 | 4838.75 | 4934.75 |
-| Emerald Rapids | AES-128-GCM seal | 4100.75 | 4918.17 | 5045.80 | 5040.00 |
+| Platform       | Operation        | 8 KiB (MB/s) | 64 KiB (MB/s) | 1 MiB (MB/s) | 16 MiB (MB/s) |
+|----------------|------------------|-------------:|--------------:|-------------:|--------------:|
+| M4 Pro         | TW128 encrypt    |      2326.91 |       3410.14 |      5360.60 |       5380.68 |
+| M4 Pro         | AES-128-GCM seal |      7234.61 |       8754.33 |      8917.25 |       8921.59 |
+| Emerald Rapids | TW128 encrypt    |      1028.95 |       2421.03 |      4838.75 |       4934.75 |
+| Emerald Rapids | AES-128-GCM seal |      4100.75 |       4918.17 |      5045.80 |       5040.00 |
 
 These figures show the expected profile of the design. Short messages are
 dominated by the fixed trunk work, and in this benchmark setup
