@@ -1,4 +1,4 @@
-//go:build amd64 && !purego && !thyrse_disable_avx512
+//go:build amd64 && !purego && !tw128_disable_avx512
 
 #include "textflag.h"
 
