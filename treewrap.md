@@ -1914,7 +1914,10 @@ correspondingly pragmatic: strong software throughput together with
 straightforward SIMD-friendly parallel implementations on current AMD64 and
 ARM64 processors. The chunk size is chosen on the same pragmatic basis: it is
 not forced by the proof model, but selected as a concrete software parameter
-after backend tuning rather than from permutation-count arithmetic alone.
+after backend tuning rather than from permutation-count arithmetic alone. The
+optimized Go library used for the measurements below exposes this
+$`\mathsf{TW128}`$ instantiation directly, so the reported benchmark figures
+are reproducible from the implementation.
 
 The parameter choices are:
 
@@ -2002,6 +2005,8 @@ are defined only on inputs whose canonical chunk count satisfies $`\chi(P) \le
 2^{952}`$. More generally, the same 1088-bit rate-side IV payload budget would easily
 accommodate a 256-bit nonce variant with the same rate, capacity, and
 duplex-call counts; only the concrete IV-embedding map would change.
+
+### 7.1 Concrete Security Bounds
 
 For $`\mathsf{TW128}`$, both the leaf tag and the final trunk tag fit within a
 single $`r = 1344`$-bit squeeze block, so $`s_{\mathsf{leaf}} = s_{\mathsf{tr}}
@@ -2118,12 +2123,58 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   scales, while the explicit TreeWrap-specific tail is already dominated by
   $`2^{-256}`$.
 
-Appendix B collects the detailed TW128 accounting, extended worked examples,
-and the prototype-performance discussion. For orientation, Appendix B.2 shows
+Appendix B collects the detailed TW128 accounting and extended worked examples.
+For orientation, Appendix B.2 shows
 that at a one-tebibyte single-user AE scale the dominant imported terms are
 already below $`2^{-214}`$, while for two equal-length $`1`$ GiB messages the
 imported commitment term is about $`2^{-199.2}`$ and the explicit TreeWrap tail
 remains $`2^{-256}`$.
+
+### 7.2 Performance Measurements
+
+To complement the concrete bound calculations above, we also measured
+$`\mathsf{TW128}`$ in the optimized Go library on two representative software
+targets: Apple M4 Pro (`darwin/arm64`) and Intel Emerald Rapids
+(`linux/amd64`). The measurements below are end-to-end Go benchmark results
+for that library and, for context, Go's standard-library AES-128-GCM
+implementation on the same platforms.
+
+Table 1 reports short-message latency.
+
+| Platform       | Operation        | 1 B (ns/op) | 64 B (ns/op) |
+|----------------|------------------|------------:|-------------:|
+| M4 Pro         | TW128 encrypt    |       153.8 |        153.9 |
+| M4 Pro         | AES-128-GCM seal |       207.2 |        219.8 |
+| Emerald Rapids | TW128 encrypt    |       340.4 |        344.3 |
+| Emerald Rapids | AES-128-GCM seal |       351.1 |        403.1 |
+
+Table 2 reports representative throughput points.
+
+| Platform       | Operation        | 8 KiB (MB/s) | 64 KiB (MB/s) | 1 MiB (MB/s) | 16 MiB (MB/s) |
+|----------------|------------------|-------------:|--------------:|-------------:|--------------:|
+| M4 Pro         | TW128 encrypt    |      2326.91 |       3410.14 |      5360.60 |       5380.68 |
+| M4 Pro         | AES-128-GCM seal |      7234.61 |       8754.33 |      8917.25 |       8921.59 |
+| Emerald Rapids | TW128 encrypt    |      1028.95 |       2421.03 |      4838.75 |       4934.75 |
+| Emerald Rapids | AES-128-GCM seal |      4100.75 |       4918.17 |      5045.80 |       5040.00 |
+
+These figures show the expected profile of the design. Short messages are
+dominated by the fixed trunk work, and in this benchmark setup
+$`\mathsf{TW128}`$ has lower end-to-end latency than the AES-128-GCM baseline
+on both tested platforms. Once several remaining chunks are available, the
+throughput improves sharply and then plateaus.
+
+At larger message sizes AES-GCM reaches higher throughput, especially on ARM64,
+but the AMD64 results are still encouraging: on Emerald Rapids,
+$`\mathsf{TW128}`$ reaches about $`4.9`$ GB/s at $`16`$ MiB versus about
+$`5.0`$ GB/s for the AES-128-GCM baseline. That is a useful point of reference
+because the `TW128` library currently relies on software Keccak on `amd64`,
+without any dedicated Keccak instruction set.
+
+These measurements also help explain the choice of $`B = 8128`$ bytes for
+$`\mathsf{TW128}`$. That value was selected empirically across the optimized
+ARM64 and AVX-512 backends rather than from permutation-count arithmetic alone:
+the best practical chunk size is shaped not only by the number of duplex calls
+per chunk, but also by backend-specific vectorization and tail-handling costs.
 
 ## 8. Conclusion
 
@@ -2147,8 +2198,8 @@ remain explicitly multi-user and parameterized by the imported keyed-duplex
 bounds, while its commitment guarantee specializes to an explicit
 collision bound given by one imported capacity-limited sponge term plus a short
 tag-dominated explicit tail. Together, these results give TreeWrap a much
-cleaner proof architecture and a concrete target instantiation for further
-evaluation.
+cleaner proof architecture and a concrete target instantiation with explicit
+security margins and reproducible software measurements.
 
 ## Appendix A. Imported AE Sketches
 
@@ -2531,7 +2582,7 @@ resource bounds gives the displayed instantiated IND-CCA2 bound. Thus the
 CCA2 proof is only a BN00 wrapper around the already-established
 canonical-schedule privacy and authenticity endgames.
 
-## Appendix B. Extended TW128 Evaluation
+## Appendix B. TW128 Accounting and Worked Examples
 
 ### B.1 TW128 Resource and Cost Accounting
 
@@ -2941,52 +2992,6 @@ while the explicit TreeWrap-specific tail remains exactly $`2^{-256}`$. So even
 at the gigabyte-per-ciphertext scale, the concrete commitment bound is still
 dominated by an imported term that sits roughly seventy bits below the
 $`2^{-128}`$ threshold.
-
-### B.3 Prototype Performance
-
-To complement the concrete bound calculations above, we also measured
-$`\mathsf{TW128}`$ in optimized prototype implementations on two representative
-software targets: Apple M4 Pro (`darwin/arm64`) and Intel Emerald Rapids
-(`linux/amd64`). The measurements below are end-to-end Go benchmark results
-for the optimized $`\mathsf{TW128}`$ prototype and, for context, Go's
-standard-library AES-128-GCM implementation on the same platforms.
-
-Table 1 reports short-message latency.
-
-| Platform       | Operation        | 1 B (ns/op) | 64 B (ns/op) |
-|----------------|------------------|------------:|-------------:|
-| M4 Pro         | TW128 encrypt    |       153.8 |        153.9 |
-| M4 Pro         | AES-128-GCM seal |       207.2 |        219.8 |
-| Emerald Rapids | TW128 encrypt    |       340.4 |        344.3 |
-| Emerald Rapids | AES-128-GCM seal |       351.1 |        403.1 |
-
-Table 2 reports representative throughput points.
-
-| Platform       | Operation        | 8 KiB (MB/s) | 64 KiB (MB/s) | 1 MiB (MB/s) | 16 MiB (MB/s) |
-|----------------|------------------|-------------:|--------------:|-------------:|--------------:|
-| M4 Pro         | TW128 encrypt    |      2326.91 |       3410.14 |      5360.60 |       5380.68 |
-| M4 Pro         | AES-128-GCM seal |      7234.61 |       8754.33 |      8917.25 |       8921.59 |
-| Emerald Rapids | TW128 encrypt    |      1028.95 |       2421.03 |      4838.75 |       4934.75 |
-| Emerald Rapids | AES-128-GCM seal |      4100.75 |       4918.17 |      5045.80 |       5040.00 |
-
-These figures show the expected profile of the design. Short messages are
-dominated by the fixed trunk work, and in this benchmark setup
-$`\mathsf{TW128}`$ has lower end-to-end latency than the AES-128-GCM baseline
-on both tested platforms. Once several remaining chunks are available, the
-throughput improves sharply and then plateaus.
-
-At larger message sizes AES-GCM reaches higher throughput, especially on ARM64,
-but the AMD64 results are still encouraging: on Emerald Rapids,
-$`\mathsf{TW128}`$ reaches about $`4.9`$ GB/s at $`16`$ MiB versus about
-$`5.0`$ GB/s for the AES-128-GCM baseline. That is a useful point of reference
-because the `TW128` prototype relies on software Keccak on `amd64`, without any
-dedicated Keccak instruction set.
-
-These measurements also help explain the choice of $`B = 8128`$ bytes for
-$`\mathsf{TW128}`$. That value was selected empirically across the optimized
-ARM64 and AVX-512 backends rather than from permutation-count arithmetic alone:
-the best practical chunk size is shaped not only by the number of duplex calls
-per chunk, but also by backend-specific vectorization and tail-handling costs.
 
 ## Appendix C. Full Construction and Correctness
 
