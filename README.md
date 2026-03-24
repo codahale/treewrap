@@ -1,5 +1,13 @@
 # TreeWrap
 
+> [!WARNING]
+> TreeWrap/TW128 is an unreviewed research construction. This repository is a
+> research artifact, not a production cryptographic library.
+>
+> The `tw128` package is hazmat code. It is not intended for deployment or real
+> security use, has not been audited or standardized, and should not be used to
+> protect real data.
+
 This repository contains the TreeWrap paper draft and the `TW128` implementation used to evaluate the concrete
 instantiation described there.
 
@@ -74,5 +82,9 @@ python3 tw128_vectors.py --verify tw128_vectors.json
 This repository is primarily a research codebase: the paper, the reference implementation, and the optimized Go library
 are kept together so reviewers and readers can inspect the construction, verify test vectors, and reproduce benchmark
 results from the same source tree.
+
+Nothing in this repository should be treated as a recommendation for production
+cryptography. If you need an AEAD for real systems, use a reviewed,
+standardized, widely deployed construction instead.
 
 The project is dual-licensed under MIT and Apache-2.0; see `LICENSE-MIT` and `LICENSE-APACHE`.

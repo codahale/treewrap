@@ -1,5 +1,13 @@
 // Package tw128 implements TW128, a tree-parallel authenticated encryption algorithm based on keyed duplexes.
 //
+// WARNING: TreeWrap/TW128 is an unreviewed research construction. This package
+// is hazmat code, not a production cryptographic library. It has not been
+// audited, standardized, or hardened for deployment, and it should not be used
+// to protect real data.
+//
+// This package exists to support the accompanying paper, experiments, test
+// vectors, and benchmarks.
+//
 // The trunk duplex handles optional associated-data absorption, encryption of chunk 0, optional absorption
 // of later hidden leaf tags, and squeezing the final authentication tag. Later chunks are processed by
 // independent LeafWrap transcripts under disjoint IVs iv(U, i) for i >= 1.
