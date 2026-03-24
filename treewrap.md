@@ -375,7 +375,7 @@ V_i(U) := \mathsf{iv}(U,i) = v_i(U) \| 0^c.
 
 In concrete instantiations, $`\mathsf{iv}_{\mathsf{rate}}`$ may itself be built
 from an injective integer encoding such as $`\mathrm{right\_encode}`$; Section
-8 does this for $`\mathsf{TW128}`$.
+7 does this for $`\mathsf{TW128}`$.
 
 **Trunk phase framing.** Fix two distinct nonempty bitstrings
 $`\lambda_{\mathsf{ad}}, \lambda_{\mathsf{tc}} \in \{0,1\}^+`$. For the trunk
@@ -1174,8 +1174,8 @@ Define the corresponding block-aligned prefix-sponge view
 as follows. It starts from the all-zero state $`0^b`$. For each absorbed
 $`\hat r`$-bit block $`X`$, it updates the state by
 $`S \leftarrow p(S \oplus (X\|0^{\hat c}))`$. After any absorbed prefix, it may
-return the leftmost $`\ell`$ bits of the current outer $`r`$ bits, for any
-$`0 \le \ell \le r`$.
+return the leftmost $`\ell`$ bits of the corresponding sponge output stream,
+for any $`\ell \ge 0`$.
 
 For a flattened trunk or leaf transcript, the absorbed prefix blocks of
 $`\mathsf{PS}_{\hat r}[p]`$ are defined as follows.
@@ -1252,37 +1252,63 @@ prefix of $`h`$ blocks with requested output length $`\ell`$ costs
 h + \left\lceil \frac{\ell}{\hat r} \right\rceil.
 ```
 
-Throughout TreeWrap, every visible body block, hidden leaf tag, and final trunk
-tag has output length at most $`\hat r`$, so every induced query of prefix
-length $`h`$ costs exactly $`h+1`$.
-
-Writing
+For a later leaf transcript on a nonempty chunk of bitlength $`\lambda`$, the
+visible body contributes one query at each prefix length
+$`1,\ldots,\omega_r(\lambda)`$, each of cost $`h+1`$, and the final hidden leaf
+tag contributes one query at prefix length $`\omega_r(\lambda)+1`$ with output
+length $`t_{\mathsf{leaf}}`$. Hence its exact local prefix-sponge cost is
 
 ```math
-S_\nu := \sigma_{\mathsf{tw}}(A_\nu,P_\nu)
-\qquad
-(\nu \in \{1,2\}),
+\Phi_{\mathsf{leaf}}(\lambda)
+:=
+\sum_{h=1}^{\omega_r(\lambda)} (h+1)
++
+\omega_r(\lambda) + 1 + \left\lceil \frac{t_{\mathsf{leaf}}}{\hat r} \right\rceil.
 ```
 
-one obtains the closed-form upper bound
+For the trunk transcript, the visible first-chunk body contributes one query at
+each prefix length
+$`\alpha_r(A)+1,\ldots,\alpha_r(A)+\beta_r(P)`$, and the final trunk tag
+contributes one query at prefix length
+$`\alpha_r(A)+\beta_r(P)+\gamma_r(P)+1`$ with output length $`\tau`$. Hence its
+exact local prefix-sponge cost is
 
 ```math
-M_{\mathsf{tw}}(\Theta,N)
-\le
+\Phi_{\mathsf{tr}}(A,P)
+:=
+\sum_{h=\alpha_r(A)+1}^{\alpha_r(A)+\beta_r(P)} (h+1)
++
+\alpha_r(A) + \beta_r(P) + \gamma_r(P) + 1
++
+\left\lceil \frac{\tau}{\hat r} \right\rceil.
+```
+
+Defining
+
+```math
+M_{\Theta}^{\mathsf{loc}}
+:=
 N
 +
-\frac{S_1(S_1+3)}{2}
+\sum_{\nu=1}^{2}
+\left(
+\Phi_{\mathsf{tr}}(A_\nu,P_\nu)
 +
-\frac{S_2(S_2+3)}{2}.
+\sum_{j=1}^{\chi(P_\nu)-1} \Phi_{\mathsf{leaf}}(|P_{\nu,j}|)
+\right),
 ```
 
-Indeed, each local trunk or leaf transcript of schedule length $`s`$ induces
-at most one nonempty prefix-sponge query at each prefix length
-$`h \in \{1,\ldots,s\}`$, and each such query has [BDPVA08] cost $`h+1`$
-because its requested output length is at most $`\hat r`$. Hence one local
-transcript contributes at most
-$`\sum_{h=1}^s (h+1) = s(s+3)/2`$, and summing over all local transcripts in
-the two compared encryptions gives the stated estimate.
+we therefore have the exact local-sum identity
+
+```math
+M_{\mathsf{tw}}(\Theta,N) = M_{\Theta}^{\mathsf{loc}}.
+```
+
+Because this accounting keeps the local trunk transcript and all local leaf
+transcripts separate, it preserves the natural linear growth in the number of
+chunks whenever later-leaf transcript sizes stay bounded. Section 7 and
+Appendix B.1 specialize these generic exact local cost functions to
+$`\mathsf{TW128}`$.
 
 Write
 
@@ -1979,8 +2005,9 @@ duplex-call counts; only the concrete IV-embedding map would change.
 
 For $`\mathsf{TW128}`$, both the leaf tag and the final trunk tag fit within a
 single $`r = 1344`$-bit squeeze block, so $`s_{\mathsf{leaf}} = s_{\mathsf{tr}}
-= 1`$. Appendix B.1 records the detailed AE resource arithmetic and the exact
-local prefix-sponge cost formulas used for the commitment corollary. The key
+= 1`$. Appendix B.1 records the detailed AE resource arithmetic and the
+simplified $`\mathsf{TW128}`$ forms of the generic exact local prefix-sponge
+cost formulas from Section 4.9. The key
 concrete facts are that a full later chunk contributes $`50`$ leaf duplex calls
 and exact local prefix-sponge cost $`1325`$, while the exact local trunk cost
 grows only linearly with the number of later chunks.
@@ -2060,9 +2087,10 @@ N_{\mathsf{leaf}}^{\mathsf{ae}} := N + \sigma^{\mathsf{tr}}_e + \sigma^{\mathsf{
   that every tuple pair $`\Theta`$ output by $`\mathcal{A}`$ after at most
   $`N`$ primitive queries satisfies
   $`M_{\Theta}^{\mathsf{loc}} \le M_*^{\mathsf{loc}}`$, where the exact local
-  cost $`M_{\Theta}^{\mathsf{loc}}`$ is defined from the concrete
-  $`\mathsf{TW128}`$ functions $`\Phi_{\mathsf{leaf}}`$ and
-  $`\Phi_{\mathsf{tr}}`$ in Appendix B.1. Then
+  cost $`M_{\Theta}^{\mathsf{loc}}`$ is the $`\mathsf{TW128}`$ specialization
+  of the generic local-sum identity from Section 4.9, with the explicit
+  simplifications of $`\Phi_{\mathsf{leaf}}`$ and $`\Phi_{\mathsf{tr}}`$
+  recorded in Appendix B.1. Then
 
   ```math
   \mathrm{Adv}^{\mathsf{cmt}\text{-}4}_{\mathsf{TW128}}(\mathcal{A})
@@ -2687,11 +2715,10 @@ N
 ```
 
 This is the exact [BDPVA08] cost of the output-bearing query family induced by
-Lemma 4.9 for the concrete $`\mathsf{TW128}`$ wrapper. Unlike the generic
-schedule-collapse upper bound of Section 4.9, it grows linearly with the
-number of later chunks at fixed chunk size. In particular, for empty
-associated data and equal-length messages of $`n`$ full chunks on both sides,
-it simplifies to
+Lemma 4.9 for the concrete $`\mathsf{TW128}`$ wrapper, i.e. the direct
+$`\mathsf{TW128}`$ specialization of the generic exact local-sum identity from
+Section 4.9. In particular, for empty associated data and equal-length
+messages of $`n`$ full chunks on both sides, it simplifies to
 
 ```math
 M_{\Theta}^{\mathsf{loc}}
@@ -2800,10 +2827,9 @@ $`\epsilon_{\mathsf{leaf}}^{\mathsf{enc}}`$ is bounded by
 
 and the same estimate applies to the leading trunk-side imported term
 $`\epsilon_{\mathsf{tr}}^{\mathsf{enc}}`$. In this single-user example the
-pairwise-user term
-$`\binom{\mu}{2}/2^{256}`$ vanishes identically, because $`\mu = 1`$,
-
-while the explicit TW128 guessing term is only
+pairwise-user term $`\binom{\mu}{2}/2^{256}`$ vanishes identically because
+$`\mu = 1`$; even at $`\mu = 2^{32}`$ the same term remains below
+$`2^{-193}`$. The explicit TW128 guessing term is only
 
 ```math
 \frac{q_f}{2^{256}} = 2^{-224}.
@@ -3031,9 +3057,14 @@ transformation while reproducing the same leaf tag.
 recovers exactly the framed encryption-side block
 $`\widetilde X_j \| 1 \| 0^{c-1}`$. On the final body step, the visible suffix,
 the next squeeze output, and $`\mathrm{pad}10^*`$ determine the unique hidden
-full block consistent with the encryption transcript, including the $`d=0`$
-all-padding case. Hence decryption reproduces the entire encryption-side body
-transcript and therefore the same subsequent tag squeezes.
+full block consistent with the encryption transcript. When $`d=0`$, the final
+decryption-side overwrite call has empty visible suffix, so
+$`Y_{\mathsf{vis}}=\epsilon`$ and
+$`\widetilde Y_{u+1} = 1 \| 0^{r-1}`$; hence
+$`\widetilde X_{u+1} = \widetilde Z_{u+1} \oplus (1 \| 0^{r-1})`$, exactly the
+pure-padding block used on the encryption side. Hence decryption reproduces
+the entire encryption-side body transcript and therefore the same subsequent
+tag squeezes.
 
 ### C.2 TrunkWrap
 
