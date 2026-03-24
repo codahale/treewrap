@@ -1912,10 +1912,13 @@ constructions, i.e. in settings that rely directly on public-permutation
 quality rather than on hidden-key assumptions. For TreeWrap, the motivation is
 correspondingly pragmatic: strong software throughput together with
 straightforward SIMD-friendly parallel implementations on current AMD64 and
-ARM64 processors. The chunk size is chosen on the same pragmatic basis: it is
-not forced by the proof model, but selected as a concrete software parameter
-after backend tuning rather than from permutation-count arithmetic alone. The
-optimized Go library used for the measurements below exposes this
+ARM64 processors. In the implementation evaluated below, the ARM64 backend
+uses the ARMv8.2-A FEAT_SHA3 instruction set, while the AMD64 backend uses
+AVX-512 for the vectorized permutation and fused chunk-processing path. The
+chunk size is chosen on the same pragmatic basis: it is not forced by the
+proof model, but selected as a concrete software parameter after backend
+tuning rather than from permutation-count arithmetic alone. The optimized Go
+library used for the measurements below exposes this
 $`\mathsf{TW128}`$ instantiation directly, so the reported benchmark figures
 are reproducible from the implementation.
 
@@ -2137,7 +2140,9 @@ $`\mathsf{TW128}`$ in the optimized Go library on two representative software
 targets: Apple M4 Pro (`darwin/arm64`) and Intel Emerald Rapids
 (`linux/amd64`). The measurements below are end-to-end Go benchmark results
 for that library and, for context, Go's standard-library AES-128-GCM
-implementation on the same platforms.
+implementation on the same platforms. On ARM64, these measurements use the
+backend built around the ARMv8.2-A FEAT_SHA3 instructions; on AMD64, they use
+the AVX-512 backend.
 
 Table 1 reports short-message latency.
 
@@ -2166,9 +2171,9 @@ throughput improves sharply and then plateaus.
 At larger message sizes AES-GCM reaches higher throughput, especially on ARM64,
 but the AMD64 results are still encouraging: on Emerald Rapids,
 $`\mathsf{TW128}`$ reaches about $`4.9`$ GB/s at $`16`$ MiB versus about
-$`5.0`$ GB/s for the AES-128-GCM baseline. That is a useful point of reference
-because the `TW128` library currently relies on software Keccak on `amd64`,
-without any dedicated Keccak instruction set.
+$`5.0`$ GB/s for the AES-128-GCM baseline. That near-parity is a useful AMD64
+reference point: on this target, the AVX-512 $`\mathsf{TW128}`$ backend comes
+close to the AES-128-GCM baseline at high throughput.
 
 These measurements also help explain the choice of $`B = 8128`$ bytes for
 $`\mathsf{TW128}`$. That value was selected empirically across the optimized
