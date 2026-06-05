@@ -1,0 +1,11 @@
+- When adding prose to any of the proof files in this repo, please adhere to the following guidelines:
+  - Stick to standard terminology and phrasing for a formal cryptography paper.
+  - Do not invent or misuse terms. Do not use financial or programming terms.
+
+- Full copies of all referenced works are available in ./refs.
+  - If you add a citation, ensure a copy of the cited work is in ./refs.
+  - Proactively read the cited works to ensure that your citation is accurate.
+
+- Do not refer to identifiers from *.tmp.md files in your commit messages.
+
+- ASK BEFORE SAVING A MEMORY ABOUT THIS REPOSITORY.

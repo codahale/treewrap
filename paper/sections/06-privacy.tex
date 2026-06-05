@@ -1,0 +1,77 @@
+\section{Privacy}
+\label{sec:privacy}
+
+This section proves the random-oracle privacy bound feeding the
+all-in-one AE composition of \Cref{thm:ae}. The public-permutation
+privacy statement follows by the flat-sponge lift of
+\Cref{app:flat-sponge-lift}.
+
+\begin{theorem}[Random-Oracle Privacy]
+\label{thm:priv-ro}
+For every nonce-respecting privacy adversary $\mathcal{B}$ in the
+\TW{} random-oracle model (\Cref{sec:ro-model}),
+\[
+  \Adv^{\mathsf{priv}}_\RO(\mathcal{B})
+  \;\leq\; \KeyGuess_k(\qRO(\mathcal{B}))
+  \;=\; \qRO(\mathcal{B}) / 2^k.
+\]
+Equivalently, the resource-indexed envelope satisfies $\Epspriv(\QRO)
+\leq \KeyGuess_k(\QRO)$.
+\end{theorem}
+
+\begin{proof}
+Let $\mathsf{P}_0$ be the real-side random-oracle privacy game: the
+challenger samples $K \sample \bits^k$, $\mathcal{B}$ has direct access
+to $\ROflat$, and accepted construction-interface queries are answered
+by $\Enc_K^\RO$. Let $\mathsf{P}_1$ be the corresponding ideal-side
+game, augmented with an independent auxiliary sample
+$K \sample \bits^k$: construction-interface queries are answered by
+$\Rand$, which returns a fresh uniformly random byte string of length
+$\|M\| + \tauroot/8$, and direct queries are answered by the same lazy
+$\ROflat$ interface. The auxiliary key is used only for the abort
+predicate below and is ignored by $\Rand$, so the adversary's marginal
+view is the ideal term in the definition of
+$\Adv^{\mathsf{priv}}_\RO(\mathcal{B})$.
+Let $q_e$ be an execution-uniform cap on the number of accepted
+encryption queries made by $\mathcal{B}$, as in
+\Cref{sec:resources}; this cap indexes the finite replacement
+hybrid sequence and will not enter the final privacy bound.
+
+Use the common abort event $\badkey$: a direct
+adversary query $(Y,\ell)$ to $\ROflat$ satisfies
+\[
+  \KeyedTWOut(Y) = (K,\mathcal{C})
+\]
+for this game's key $K$ (the hidden key in $\mathsf{P}_0$, the
+auxiliary key in $\mathsf{P}_1$) and some counted output-point class
+$\mathcal{C}$ of \Cref{tab:keyed-twout}; the requested length $\ell$ is
+ignored.
+
+Let $\mathsf{P}_0^{\mathrm{stop}}$ and
+$\mathsf{P}_1^{\mathrm{stop}}$ be the immediate-abort variants of
+$\mathsf{P}_0$ and $\mathsf{P}_1$ on this event. By the Privacy
+Stopped-Game Advantage Bound (\Cref{lem:priv-stopped-bound}) applied to
+the event $\mathcal{B} \Rightarrow 1$,
+\[
+  \Adv^{\mathsf{priv}}_\RO(\mathcal{B})
+  =
+  \bigl|
+    \Pr[\mathcal{B}^{\mathsf{P}_0} \Rightarrow 1]
+    - \Pr[\mathcal{B}^{\mathsf{P}_1} \Rightarrow 1]
+  \bigr|
+  \leq \KeyGuess_k(\qRO(\mathcal{B})).
+\]
+Taking the supremum over nonce-respecting privacy adversaries with
+$\qRO(\mathcal{B}) \leq \QRO$ gives the envelope statement
+$\Epspriv(\QRO) \leq \KeyGuess_k(\QRO)$.
+\end{proof}
+
+\paragraph{Lineage.}
+The proof is the flat-random-oracle analog of the standard
+SpongeWrap privacy argument: stop on direct reads of hidden-key
+construction transcripts, replace each nonce-respecting encryption
+query by fresh random output under transcript freshness, and bound the
+stop event as an adaptive key test. The \TW{}-specific interfaces are
+Transcript Freshness (\Cref{lem:freshness}) and the privacy accounting
+lemmas
+(\Cref{lem:priv-viable-prefix,lem:priv-one-query-replacement,lem:priv-stopped-bound}).

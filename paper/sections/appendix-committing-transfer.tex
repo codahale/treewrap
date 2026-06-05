@@ -1,0 +1,213 @@
+\section{Committing-Notion Bounds}
+\label{app:committing-transfer}
+
+This appendix establishes the committing-security bounds beyond the
+random-oracle CMTDs-3 theorem of
+\Cref{thm:cmtds3-ro}. The D-notions reduce to
+CMTDs-3 by success-preserving forwarding. The
+E-notions are bounded directly by the same final-root candidate-collision
+argument, with the challenger encryption checks counted as construction
+work in $N$.
+
+\begin{lemma}[Forwarding Reductions]
+\label{lem:cmtds-identity-reductions}
+Fix $s \geq 2$. Let $X$ be either $\mathsf{CMTDs\text{-}3}$ or
+$\mathsf{CMTDs\text{-}4}$. For every
+$s$-way $X$-adversary $\mathcal{A}$ against \TW{}, the forwarding
+reduction $\mathcal{A}^*=\mathcal{A}$ is an $s$-way
+CMTDs-3 adversary satisfying
+\begin{align*}
+  \Adv^X_\TW(\mathcal{A}) &\leq \Advcmtds{3}_\TW(\mathcal{A}^*), \\
+  \Nprim(\mathcal{A}^*) &= \Nprim(\mathcal{A}), \\
+  \Ntot(\mathcal{A}^*) &\leq \Ntot(\mathcal{A}).
+\end{align*}
+\end{lemma}
+
+\begin{proof}
+The CMTDs-3 case is the identity game. A
+CMTDs-4 winner is also a
+CMTDs-3 winner. Indeed, if a winning transcript had
+$(K_i,N_i,A_i)=(K_j,N_j,A_j)$ for some $i \neq j$, determinism of
+$\Dec$ would give
+$M_i=\Dec_{K_i}(N_i,A_i,C \concat T)=M_j$, contradicting the
+pairwise distinctness of the full tuples
+$(K_i,N_i,A_i,M_i)$. Thus a CMTDs-4 winner also has
+pairwise distinct triples and is a CMTDs-3 winner on
+the same output. The forwarding reduction performs no additional
+primitive-interface queries. In the CMTDs-4 case, if
+the target CMTDs-3 game reaches its deterministic
+decryption checks, the source CMTDs-4 game also
+reaches deterministic decryption checks on the same ciphertext and
+tuples; otherwise the target contributes no construction work. Hence
+the target construction cost is at most the source construction cost.
+\end{proof}
+
+\begin{lemma}[CMTDs-1 Key-Precheck Reduction]
+\label{lem:cmtds1-precheck-reduction}
+Fix $s \geq 2$. For every $s$-way CMTDs-1 adversary
+$\mathcal{A}$ against \TW{}, define $\mathcal{A}^*$ as follows. It runs
+$\mathcal{A}$ to obtain $C \concat T$ and tuples
+$(K_i,N_i,A_i,M_i)_{i=1}^s$. If the tuples fail the
+CMTDs-1 syntax, length, or pairwise-$\WiC_1$ checks,
+then $\mathcal{A}^*$ outputs a fixed losing
+CMTDs-3 instance rejected before any decryption
+check. Otherwise, it forwards the same
+$(C \concat T,(K_i,N_i,A_i,M_i)_{i=1}^s)$ to the
+CMTDs-3 challenger. Then
+\begin{align*}
+  \Adv^{\mathsf{CMTDs\text{-}1}}_\TW(\mathcal{A})
+    &\leq \Advcmtds{3}_\TW(\mathcal{A}^*), \\
+  \Nprim(\mathcal{A}^*) &= \Nprim(\mathcal{A}), \\
+  \Ntot(\mathcal{A}^*) &\leq \Ntot(\mathcal{A}).
+\end{align*}
+\end{lemma}
+
+\begin{proof}
+The syntax and pairwise-$\WiC_1$ prechecks are source-game rejection
+checks, and the eager length precheck is success preserving because
+\TW{} decryption returns either $\bot$ or a message of length $\|C\|$.
+Thus no winning CMTDs-1 transcript is discarded. On
+the forwarding branch, pairwise $\WiC_1$-distinctness means the keys
+$K_i$ are pairwise distinct, hence the triples $(K_i,N_i,A_i)$ are
+pairwise distinct. Thus every source winner forwarded by
+$\mathcal{A}^*$ satisfies the target CMTDs-3 syntax,
+length, and triple-distinctness checks, and the target decryption
+checks are the same deterministic checks as in the source game.
+
+The reduction performs no additional primitive-interface queries. On the
+fixed-losing branch, both the source game and target reduction reject
+before construction work. On the forwarding branch, the target
+decryption checks coincide with the source decryption checks. Therefore
+the target construction cost is at most the source construction cost.
+\end{proof}
+
+\begin{lemma}[Random-Oracle CMTs]
+\label{lem:cmts-ro}
+Fix $s \geq 2$ and $\ell \in \{1,3,4\}$. For every $s$-way
+CMTs-$\ell$ adversary $\mathcal{B}$ in the \TW{}
+random-oracle model,
+\[
+  \Advcmts{\ell}_{\RO}(\mathcal{B})
+  \;\leq\; \RootColl_{\tauroot}(\qRO(\mathcal{B}), s)
+  =
+  \frac{\binom{\qRO(\mathcal{B}) + s}{s}}{2^{\tauroot(s - 1)}}.
+\]
+\end{lemma}
+
+\begin{proof}
+Run the random-oracle CMTs-$\ell$ game: after
+$\mathcal{B}$'s direct $\ROflat$ queries, the challenger checks syntax
+and pairwise $\WiC_\ell$-distinctness of the submitted tuples
+$(K_i,N_i,A_i,M_i)_{i=1}^s$, computes
+\[
+  C_i \concat T_i = \Enc_{K_i}^{\RO}(N_i,A_i,M_i),
+\]
+and accepts iff all $C_i \concat T_i$ are equal.
+
+Build the same candidate sequence as in \Cref{thm:cmtds3-ro}. During
+$\mathcal{B}$'s direct oracle phase, append every distinct direct-query
+input whose decoded class is a root-tag output-point class --- $\Rmsg^+$
+(the single-chunk root tag, with the aggregation phase elided when
+$n = 0$) or $\Rtag$ (the multi-chunk root tag) --- immediately before
+the corresponding direct $\ROflat$ lookup first samples that input. This
+predicate depends on the queried input alone through the exact decoder
+of \Cref{lem:bridge-decode}, and by \Cref{cor:output-sep} each input
+decodes to at most one output-point class. Since there is no
+construction oracle before $\mathcal{B}$ outputs its tuples, these
+candidates are first touched at their append steps.
+
+After the tuple output, stop appending challenger candidates if the
+syntax or pairwise-$\WiC_\ell$ check fails. Otherwise, as the challenger
+computes the $s$ deterministic encryption checks, let $R_i$ be the final
+root transcript reached by the $i$-th encryption and append
+$\flatmap(R_i)$ immediately before the root-tag oracle answer is sampled,
+unless that input is already in the sequence. If such an input was
+already touched by a direct query, then \Cref{lem:bridge-decode} and
+\Cref{cor:output-sep} imply that the earlier query was a final-root
+candidate. Earlier challenger lookups outside the final-root class are
+separated by \Cref{cor:output-sep}. An earlier challenger final-root
+lookup either has the same address, in which case that address was
+already appended at its first final-root lookup, or has a different
+address and does not affect first touch for the new candidate. Thus each
+newly appended challenger candidate is first touched at its append step,
+and the sequence length is at most $\qRO(\mathcal{B})+s$.
+
+On a winning execution, the accepted encryptions are all equal. Hence
+their ciphertext-body lengths are equal. Pairwise triple distinctness
+follows from the winning predicates: for $\ell \in \{1,3\}$ it follows
+directly from pairwise $\WiC_\ell$-distinctness, and for $\ell=4$ equal
+triples would force the equal encryption value to decrypt, by correctness
+and determinism, to a single message $M_i = M_j$, so the full tuples
+$(K_i,N_i,A_i,M_i)$ and $(K_j,N_j,A_j,M_j)$ would coincide, contradicting
+pairwise $\WiC_4$-distinctness. Therefore \Cref{cor:triple-sep} makes the
+bridged final-root inputs
+\[
+  \flatmap(R_1),\dots,\flatmap(R_s)
+\]
+pairwise distinct. Since all encryptions are equal, their root tags are
+the same value $T$, so the $\tauroot$-bit projections at these $s$
+distinct final-root candidates are all equal to $T$. The win event is
+contained in the $s$-way candidate-collision event, and
+\Cref{lem:adaptive-candidate-collision} with $Q=\qRO(\mathcal{B})$ and
+$\tau=\tauroot$ gives the claim.
+\end{proof}
+
+\begin{corollary}[Public-Permutation CMTs]
+\label{cor:cmts-pp}
+Fix $s \geq 2$ and $\ell \in \{1,3,4\}$. For every $s$-way
+CMTs-$\ell$ adversary $\mathcal{A}$ against \TW{} with
+$\Nprim$ direct primitive queries and total cost at most $\Ntot$,
+\[
+  \Advcmts{\ell}_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \RootColl_{\tauroot}(\Nprim, s).
+\]
+\end{corollary}
+
+\begin{proof}
+The CMTs-$\ell$ game is a win-event experiment with no
+construction oracle during the adversary's run. Its construction cost
+$N$ counts the deterministic encryption checks performed by the
+challenger after $\mathcal{A}$ outputs its tuples. By the flat-sponge
+lift bound (\Cref{lem:lift-bound}), replacing $(\pi,\pi^{-1})$ by
+$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and the challenger encryption
+checks by their random-oracle counterparts costs at most
+$\Lift_c(\Ntot)$. Let
+$\mathcal{B}_{\mathrm{derived}} =
+\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ be the adversary of
+\Cref{lem:derived-adversary}. The derived-adversary construction gives
+\[
+  \Advcmts{\ell}_\TW(\mathcal{A})
+  \leq \Lift_c(\Ntot)
+    + \Advcmts{\ell}_{\RO}(\mathcal{B}_{\mathrm{derived}}),
+\]
+with $\qRO(\mathcal{B}_{\mathrm{derived}}) \leq \Nprim$. Apply
+\Cref{lem:cmts-ro} and use monotonicity of
+$\RootColl_{\tauroot}(\cdot,s)$.
+\end{proof}
+
+\paragraph{Combined bound.}
+Combining the D-notion forwarding lemmas above with
+\Cref{cor:cmtds3-pp}, and the E-notion bound of \Cref{cor:cmts-pp}, gives
+the same root-collision envelope for all six committing notions of \cite{BH22}: for every
+\[
+  X \in \bigl\{\mathsf{CMTDs\text{-}1},\, \mathsf{CMTDs\text{-}3},\,
+              \mathsf{CMTDs\text{-}4},\, \mathsf{CMTs\text{-}1},\,
+              \mathsf{CMTs\text{-}3},\, \mathsf{CMTs\text{-}4}\bigr\}
+\]
+and every $s$-way $X$-adversary $\mathcal{A}$ against \TW{},
+\[
+  \Adv^X_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot(\mathcal{A}))
+  + \frac{\binom{\Nprim(\mathcal{A}) + s}{s}}{2^{\tauroot(s-1)}}.
+\]
+For the D-notions, the forwarding or key-precheck reduction performs no
+additional primitive-interface queries and no additional construction
+work beyond the source-game decryption checks, so
+$\Nprim(\mathcal{A}^*) = \Nprim(\mathcal{A})$ and
+$\Ntot(\mathcal{A}^*) \leq \Ntot(\mathcal{A})$; the latter enters the
+displayed $\Lift_c$ term through the monotonicity of $\Lift_c$ in its
+argument. For the E-notions, no
+reduction is used: the challenger encryption checks are the source-game
+construction work already counted in $N$ by \Cref{sec:resources}.

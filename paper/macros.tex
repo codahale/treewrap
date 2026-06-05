@@ -1,0 +1,90 @@
+% Scheme.
+\newcommand{\TW}{\textsf{TW128}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Ver}{\mathsf{Ver}}
+\newcommand{\Rand}{\mathsf{Rand}}
+\newcommand{\SE}{\mathsf{SE}}
+\newcommand{\WiC}{\mathsf{WiC}}
+
+% Sponge / duplex / permutation.
+\newcommand{\Keccak}{\textsc{Keccak}-\textit{p}}
+\newcommand{\Sponge}{\mathsf{Sponge}}
+\newcommand{\Duplex}{\mathsf{Duplex}}
+\newcommand{\duplexing}{\mathsf{duplexing}}
+\newcommand{\padten}{\mathsf{pad10^*}}
+\newcommand{\padtenone}{\mathsf{pad10^*1}}
+\newcommand{\RO}{\mathsf{RO}}
+\newcommand{\ROflat}{\RO_{\mathsf{flat}}}
+\newcommand{\flatmap}{\mathsf{flat}}
+\newcommand{\RF}{\mathsf{RF}}
+\newcommand{\KeyedTWOut}{\mathsf{KeyedTWOut}}
+\newcommand{\bridge}{I}
+
+% Resources.
+\newcommand{\qv}{q_{\mathsf{v}}}
+\newcommand{\Qv}{Q_{\mathsf{v}}}
+\newcommand{\qRO}{q_{\RO}}
+\newcommand{\QRO}{Q_{\RO}}
+\newcommand{\Nleaf}{N_{\mathsf{leaf}}}
+\newcommand{\nleaf}{n_{\mathsf{leaf}}}
+\newcommand{\Nprim}{N_{\mathsf{prim}}}
+\newcommand{\Ntot}{N_{\mathsf{tot}}}
+
+% Advantages.
+\newcommand{\Adv}{\mathbf{Adv}}
+\newcommand{\Advpriv}{\Adv^{\mathsf{priv}}}
+\newcommand{\Advintctxt}{\Adv^{\mathsf{int\text{-}ctxt}}}
+\newcommand{\Advcmtds}[1]{\Adv^{\mathsf{CMTDs}\text{-}#1}}
+\newcommand{\Advcmts}[1]{\Adv^{\mathsf{CMTs}\text{-}#1}}
+\newcommand{\Epspriv}{\varepsilon^{\mathsf{priv}}_{\RO}}
+\newcommand{\Epsintctxt}{\varepsilon^{\mathsf{int\text{-}ctxt}}_{\RO}}
+\newcommand{\Advae}{\Adv^{\mathsf{ae}}}
+\newcommand{\Advmuind}{\Adv^{\mathsf{mu\text{-}ind}}}
+
+% Simulator and ideal verification oracles.
+\newcommand{\Sim}{\mathcal{S}}
+\newcommand{\Replay}{\mathsf{Replay}}
+
+% Bad events and loss terms.
+\newcommand{\badkey}{\mathsf{bad}_{\mathsf{key}}}
+\newcommand{\badleaf}{\mathsf{bad}_{\mathsf{leaf}}}
+\newcommand{\Lift}{\mathsf{Lift}}
+\newcommand{\KeyGuess}{\mathsf{KeyGuess}}
+\newcommand{\RootColl}{\mathsf{RootColl}}
+
+% Tags / parameters.
+\newcommand{\tauroot}{\tau_{\mathsf{root}}}
+\newcommand{\tauleaf}{\tau_{\mathsf{leaf}}}
+\newcommand{\prfxroot}{p_{\mathsf{root}}}
+\newcommand{\prfxleaf}{p_{\mathsf{leaf}}}
+
+% Phase suffixes.
+\newcommand{\siginit}{\ensuremath{\sigma_{\mathsf{init}}}}
+\newcommand{\sigadmore}{\ensuremath{\sigma_{\mathsf{ad}}^-}}
+\newcommand{\sigadlast}{\ensuremath{\sigma_{\mathsf{ad}}^+}}
+\newcommand{\sigmsgmore}{\ensuremath{\sigma_{\mathsf{msg}}^-}}
+\newcommand{\sigmsglast}{\ensuremath{\sigma_{\mathsf{msg}}^+}}
+\newcommand{\sigaggmore}{\ensuremath{\sigma_{\mathsf{agg}}^-}}
+\newcommand{\sigagglast}{\ensuremath{\sigma_{\mathsf{agg}}^+}}
+
+% Duplex-call output-point classes.
+\newcommand{\Rinit}{\ensuremath{\mathcal{R}_{\mathsf{init}}}}
+\newcommand{\Rad}{\ensuremath{\mathcal{R}_{\mathsf{ad}}}}
+\newcommand{\Rmsg}{\ensuremath{\mathcal{R}_{\mathsf{msg}}}}
+\newcommand{\Ragg}{\ensuremath{\mathcal{R}_{\mathsf{agg}}}}
+\newcommand{\Linit}{\ensuremath{\mathcal{L}_{\mathsf{init}}}}
+\newcommand{\Lmsg}{\ensuremath{\mathcal{L}_{\mathsf{msg}}}}
+
+% Transcripts.
+\newcommand{\Rtag}{\ensuremath{\mathcal{R}_{\mathsf{tag}}}}
+\newcommand{\Ltag}{\ensuremath{\mathcal{L}_{\mathsf{tag}}}}
+\newcommand{\Flat}{\mathsf{Flat}}
+
+% Misc.
+\newcommand{\Perm}{\mathsf{Perm}}
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\sample}{\mathrel{\mathord{\leftarrow}\mkern1mu\vcenter{\hbox{$\scriptstyle\$$}}}}
+\newcommand{\concat}{\mathbin{\|}}
+\newcommand{\bigconcat}{\mathop{\Big\Vert}\limits}
+\DeclareMathOperator{\leaves}{leaves}

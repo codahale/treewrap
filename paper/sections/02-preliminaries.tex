@@ -1,0 +1,386 @@
+\section{Preliminaries}
+\label{sec:prelims}
+
+\subsection{Notation}
+\label{sec:notation}
+
+\paragraph{Strings.}
+Write $\bits$ for the binary alphabet. For an integer $n \geq 0$, $\bits^n$
+denotes the set of $n$-bit strings, $\bits^* = \bigcup_{n \geq 0} \bits^n$
+the set of all finite-length bit strings, and $\varepsilon$ the empty
+string. For $x \in \bits^*$, $|x|$ is the bit length and $x \concat y$ is
+the concatenation; the bitwise XOR of two equal-length strings $x, y \in
+\bits^n$ is $x \oplus y$. A \emph{byte string} is an element of
+$(\bits^8)^*$; its byte length is denoted $\|x\| = |x|/8$. For an
+integer $0 \leq n < 2^{64}$, $\langle n \rangle_8 \in \bits^{64}$ is its
+eight-byte little-endian encoding. For a finite or infinite bit string
+$x$ and $0 \leq \tau \leq |x|$ when $x$ is finite,
+$\lfloor x \rfloor_\tau \in \bits^\tau$ denotes the leading $\tau$ bits
+of $x$.
+
+\paragraph{Sampling and probability.}
+We write $x \sample S$ for sampling $x$ uniformly at random from a finite
+set $S$, with implicit coins independent across samples. For an event $E$
+in a probability experiment, $\Pr[E]$ denotes its probability.
+
+\paragraph{Sets of maps.}
+For a set $S$, $\Perm(S)$ denotes the set of permutations on $S$; for a
+positive integer $b$, $\Perm(\bits^b)$ is the set of $b$-bit
+permutations.
+
+\paragraph{Adversaries and games.}
+An adversary $\mathcal{A}$ is a (possibly randomized) algorithm. A
+\emph{game} $\mathsf{G}$ is an experiment that samples its private
+randomness, runs $\mathcal{A}$ with access to a specified set of oracles
+$O_1, \dots, O_k$, and returns a Boolean outcome. We write
+$\mathcal{A}^{O_1, \dots, O_k}$ for the adversary's interface and
+$\Pr[\mathsf{G}^{\mathcal{A}} \Rightarrow 1]$ for the probability that
+$\mathsf{G}$ returns~$1$.
+
+\paragraph{Advantages.}
+For an indistinguishability-style experiment with two games $\mathsf{G}_0,
+\mathsf{G}_1$, the distinguishing advantage of $\mathcal{A}$ against a
+scheme $\Pi$ in security notion $\mathsf{X}$ is the symmetric difference
+\[
+  \Adv^{\mathsf{X}}_\Pi(\mathcal{A})
+  = \bigl| \Pr[\mathsf{G}_0^{\mathcal{A}} \Rightarrow 1]
+         - \Pr[\mathsf{G}_1^{\mathcal{A}} \Rightarrow 1] \bigr|.
+\]
+For a one-shot or win-event experiment, $\Adv^{\mathsf{X}}_\Pi(\mathcal{A})
+= \Pr[\mathsf{G}^{\mathcal{A}} \text{ wins}]$.
+
+\paragraph{Concrete security.}
+All bounds in this paper are concrete: each advantage is an explicit
+function of the resource caps introduced in
+\Cref{sec:resources}. We make no use of asymptotic or negligibility
+conventions.
+
+\paragraph{Reference summary.}
+\Cref{tab:notation} summarizes the resource caps and loss terms used
+throughout. The caps are defined formally in \Cref{sec:resources}, the
+loss terms in \Cref{sec:loss-terms}.
+
+\begin{table}[ht]
+  \centering
+  \small
+  \begin{tabular}{l l l}
+    \toprule
+    Symbol & Meaning & Defined \\
+    \midrule
+    $N$        & Construction-interface cost (\Keccak{} calls)       & \cref{sec:resources} \\
+    $\Nprim$   & Direct primitive-interface queries                   & \cref{sec:resources} \\
+    $\Ntot$    & $N + \Nprim$ (total query-sequence cost)             & \cref{sec:resources} \\
+    $\qv$, $\Qv$ & Valid verification queries / cap (INT-CTXT)        & \cref{sec:resources} \\
+    $\qRO$, $\QRO$ & Direct random-oracle queries / cap (RO-model)    & \cref{sec:resources} \\
+    $\nleaf$, $\Nleaf$ & Distinct construction-generated leaf transcripts / cap & \cref{sec:resources} \\
+    \midrule
+    $\Lift_c(\Ntot)$        & $\Ntot(\Ntot+1) / 2^{c+1}$, \cite{BDPV08} flat-sponge loss   & \cref{sec:loss-terms} \\
+    $\KeyGuess_k(Q)$        & $Q / 2^k$, ideal-system key guess                       & \cref{sec:loss-terms} \\
+    $\RootColl_\tau(Q, s)$  & $\binom{Q+s}{s} / 2^{\tau(s-1)}$, $s$-way root-collision & \cref{sec:loss-terms} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Resource caps and loss terms.}
+  \label{tab:notation}
+\end{table}
+
+\subsection{Sponges and Duplexes over \texorpdfstring{\Keccak{}}{Keccak-p}}
+\label{sec:sponge}
+
+\paragraph{The \Keccak{} permutation.}
+The \Keccak{} family of permutations, introduced as part of the Keccak
+design and standardized within FIPS~202~\cite{FIPS202}, is parameterized
+by a state width $b$ and a round count $n_r$; we write $\Keccak[b, n_r]
+\in \Perm(\bits^b)$ for the corresponding permutation. \TW{} uses
+$\Keccak[1600, 12]$, the same primitive as
+KangarooTwelve~\cite{BDPVVV16}, fixed throughout. In the
+public-permutation security model of \Cref{sec:games-pp} and the
+flat-sponge lift of \Cref{app:flat-sponge-lift}, this permutation is
+modeled as a uniformly random element of $\Perm(\bits^{1600})$.
+
+\paragraph{The sponge construction.}
+Following \cite{BDPV08}, fix a permutation $\pi \in \Perm(\bits^b)$, an
+injective padding rule $\mathsf{pad}$, and a rate $1 \leq r \leq b$ with
+capacity $c = b - r$. The sponge function $\Sponge[\pi, \mathsf{pad}, r]
+: \bits^* \times \mathbb{N} \to \bits^*$ maps an input $M$ and an output
+length $\ell$ to an $\ell$-bit string by absorbing $\mathsf{pad}(M)$ into
+the all-zero $b$-bit state in $r$-bit blocks (each separated by an
+application of $\pi$) and squeezing $\ell$ bits in $r$-bit blocks from
+the resulting state. \cite[Theorem~2]{BDPV08} shows that
+$\Sponge[\pi, \padten, r]$ is indifferentiable from a random oracle when
+$\pi$ is uniformly random. We bound its distinguishing advantage by the
+transformation-form expression $\Lift_c(\Ntot) = \Ntot(\Ntot+1) / 2^{c+1}$
+of \cite[Eq.~(4)]{BDPV08}, a conservative upper bound in the
+random-permutation setting (\Cref{sec:loss-terms}).
+
+\paragraph{The duplex construction.}
+The \emph{duplex} construction of \cite{BDPV11} extends the sponge to
+a stateful interface. A duplex object $\Duplex[\pi, \mathsf{pad}, r]$
+is initialized to the all-zero state. Each call $\duplexing(\sigma,
+\ell)$ absorbs an input string $\sigma$ of at most
+$\rho_{\max}(\mathsf{pad}, r)$ bits via $\pi$ and returns the first
+$\ell$ bits of the resulting state. \cite[Lemma~3]{BDPV11}
+establishes the duplex-to-sponge equality: for any call
+sequence $((\sigma_0, \ell_0), \dots, (\sigma_i, \ell_i))$, the $i$-th
+output equals
+\[
+  \Sponge[\pi, \mathsf{pad}, r]\bigl(
+    \sigma_0 \concat \mathsf{pad}_0 \concat \cdots \concat \sigma_i,\,
+    \ell_i\bigr),
+\]
+where $\mathsf{pad}_j = \mathsf{pad}[r](|\sigma_j|)$ is the padding
+appended by the sponge for the $j$-th block. The flattening map is
+injective by \cite[Lemma~4]{BDPV11}: the duplex-call sequence is
+recoverable from the flattened sponge input.
+
+\paragraph{\TW{} instantiation.}
+\TW{} fixes the padding rule $\padtenone{}$ and the rate $r = 1344$, so
+the capacity is $c = 256$ bits. The largest input length per duplex call
+is therefore $\rho_{\max}(\padtenone, 1344) = 1342$ bits.
+
+\paragraph{Bridge to the \texorpdfstring{$H$}{H}-input domain.}
+The indifferentiability theorem of \cite{BDPV08} is stated for the
+simpler $\padten{}$ padding over its unpadded $H$-input domain, while
+\TW{} uses $\padtenone{}$ internally. \cite[Theorem~3]{BDPV11} supplies
+an injective preprocessing bridge $\bridge[r, r_{\max}]$ between the two
+domains. For \TW{}, $r = r_{\max} = 1344$, so the bridge reduces to
+appending $1 \concat 0^q$ with $q$ determined by the input length modulo
+$r_{\max}$; on the bridge image, $q$ is recovered as the trailing-zero
+count. \Cref{sec:ro-model} instantiates this bridge on typed \TW{} duplex
+transcript prefixes as the map $\flatmap(\cdot)$ used by the
+random-oracle proofs of
+\Cref{sec:privacy,sec:authenticity,sec:cmtds3,app:committing-transfer}.
+
+\subsection{Authenticated Encryption with Associated Data}
+\label{sec:ae-defs}
+
+\paragraph{Syntax.}
+A \emph{nonce-based authenticated-encryption scheme with associated
+data} (AEAD scheme) is a pair $\SE = (\Enc, \Dec)$ of deterministic
+algorithms with associated key space $\mathcal{K} \subseteq \bits^*$,
+nonce space $\mathcal{N} \subseteq \bits^*$, associated-data space
+$\mathcal{A} \subseteq \bits^*$, message space $\mathcal{M} \subseteq
+\bits^*$, and ciphertext space $\mathcal{C} \subseteq \bits^*$. The
+encryption algorithm $\Enc : \mathcal{K} \times \mathcal{N} \times
+\mathcal{A} \times \mathcal{M} \to \mathcal{C}$ produces a ciphertext
+$C = \Enc_K(N, A, M)$. The decryption algorithm $\Dec : \mathcal{K}
+\times \mathcal{N} \times \mathcal{A} \times \mathcal{C} \to
+\mathcal{M} \cup \{\bot\}$ returns either a plaintext or the
+rejection symbol $\bot$. The \emph{tag length} is the constant
+$\|\Enc_K(N, A, M)\| - \|M\|$, fixed by the scheme.
+In this generic syntax, $C$ denotes the full AEAD ciphertext, including
+any tag material. The \TW{} algorithm section writes this same value as
+$C \concat T$, with $C$ the ciphertext body and $T$ the root tag.
+
+\paragraph{Correctness.}
+For every $(K, N, A, M) \in \mathcal{K} \times \mathcal{N} \times
+\mathcal{A} \times \mathcal{M}$, $\Dec_K(N, A, \Enc_K(N, A, M)) = M$.
+
+\paragraph{Privacy ($\mathsf{IND}\text{-}\$\text{-}\mathsf{CPA}$).}
+The privacy game samples $K \sample \mathcal{K}$ and gives the
+adversary $\mathcal{A}$ either the real encryption oracle
+$\Enc_K(\cdot, \cdot, \cdot)$ or the random-output oracle $\Rand$
+that, on every query $(N, A, M)$, returns a fresh uniformly random
+byte string of length $\|\Enc_K(N, A, M)\| = \|M\| + \tau/8$ where
+$\tau$ is the scheme's tag length in bits. The adversary is
+\emph{nonce-respecting}: distinct encryption queries must use
+distinct nonces. Define
+\[
+  \Advpriv_\SE(\mathcal{A})
+  = \bigl|
+    \Pr[\mathcal{A}^{\Enc_K} \Rightarrow 1]
+    - \Pr[\mathcal{A}^{\Rand} \Rightarrow 1]
+  \bigr|.
+\]
+
+\paragraph{Ciphertext integrity (INT-CTXT).}
+The INT-CTXT game samples $K \sample \mathcal{K}$ and gives
+$\mathcal{A}$ access to $\Enc_K$ and a verification oracle $\Ver_K$
+that returns $1$ if $\Dec_K(N, A, C) \neq \bot$ and $0$ otherwise.
+Each encryption query records the resulting tuple $(N, A, C)$. The
+adversary wins if some verification query returns $1$ on a tuple
+$(N, A, C)$ not previously recorded by the encryption oracle. No
+nonce uniqueness is imposed on either oracle. Define
+$\Advintctxt_\SE(\mathcal{A})$ as the probability that $\mathcal{A}$
+wins.
+
+\paragraph{All-in-one AE.}
+The all-in-one authenticated-encryption notion of \cite{RS06},
+instantiated for nonce-based AE following \cite{BT16}, combines
+privacy and integrity into a single experiment. The
+challenger samples $K \sample \mathcal{K}$ and grants $\mathcal{A}$
+either the pair $(\Enc_K, \Ver_K)$ or the ideal pair $(\Rand,
+\Replay)$. In the ideal pair, $\Rand$ returns a fresh uniformly
+random byte string of length $\|\Enc_K(N, A, M)\|$ on each accepted
+query $(N,A,M)$ and records the resulting tuple $(N,A,C)$ in a set
+$W$; $\Replay_W(N,A,C)$ returns $1$ if $(N,A,C) \in W$ and $0$
+otherwise. The adversary is nonce-respecting on encryption queries.
+Define
+\[
+  \Advae_\SE(\mathcal{A})
+  = \bigl|
+    \Pr[\mathcal{A}^{\Enc_K, \Ver_K} \Rightarrow 1]
+    - \Pr[\mathcal{A}^{\Rand, \Replay} \Rightarrow 1]
+  \bigr|.
+\]
+
+\begin{lemma}[Bellare--Namprempre Composition]
+\label{lem:bn-composition}
+For every adversary $\mathcal{A}$ against the all-in-one AE security
+of $\SE$, there exist adversaries $\mathcal{A}_{\text{priv}}$ and
+$\mathcal{A}_{\text{int-ctxt}}$ with the same resources as
+$\mathcal{A}$ such that
+\[
+  \Advae_\SE(\mathcal{A})
+  \leq \Advpriv_\SE(\mathcal{A}_{\text{priv}})
+   + \Advintctxt_\SE(\mathcal{A}_{\text{int-ctxt}}).
+\]
+\end{lemma}
+\Cref{lem:bn-composition} is the all-in-one form of the
+privacy-plus-integrity composition theorem of \cite{BN00}. The
+standard proof inserts the hybrid $(\Enc_K, \Replay)$, where
+$\Replay$ accepts exactly the tuples returned by the real encryption
+oracle. The hop from $(\Enc_K, \Ver_K)$ to $(\Enc_K, \Replay)$ is
+bounded by INT-CTXT: the two interfaces differ only if verification
+accepts a tuple not previously returned by encryption. The hop from
+$(\Enc_K, \Replay)$ to $(\Rand, \Replay)$ is bounded by privacy:
+$\mathcal{A}_{\text{priv}}$ runs $\mathcal{A}$, forwards encryption
+queries to its own oracle, records the returned tuples, and answers
+verification queries by replay-table lookup. The lemma is applied in
+the random-oracle model in the proof of \Cref{thm:ae}.
+
+\subsection{Multi-User Indistinguishability}
+\label{sec:mu-ind}
+
+The multi-user indistinguishability notion of \cite[Fig.~3]{BT16} is
+the multi-user lift of the single-user all-in-one notion of
+\Cref{sec:ae-defs}, parameterized by an adversary-determined number
+of users $u$. A challenge bit $b \sample \bits$ selects between the
+real construction interface (real ciphertexts, real verification) and
+an ideal interface (uniform strings of matching length, verification
+that accepts only previously-issued encryption tuples). The adversary
+also accesses an ideal primitive interface, shared between the two
+worlds. The adversary outputs a guess $b'$ and wins if $b' = b$.
+
+\paragraph{Game.}
+The game $\mathsf{G}^{\mathsf{mu\text{-}ind}}_\SE(\mathcal{A})$ of
+\cite[Fig.~3]{BT16} samples $b \sample \bits$ and maintains a user
+counter $v$, a set $V$ of $(d, N)$ pairs already used by encryption,
+and a set $W$ of recorded encryption tuples $(d, N, C, A)$. We write
+the user index as $d$ and the associated-data input as $A$, where
+\cite{BT16} writes $i$ and $H$ respectively, to match the notation of
+\Cref{sec:mu-setting}. The adversary has access to
+\begin{itemize}
+\item $\mathsf{New}()$: increment $v$, sample $K_v \sample
+  \mathcal{K}$.
+\item $\mathsf{Enc}(d, N, M, A)$: reject inactive users and repeated
+  user-nonce pairs. Otherwise compute $C_1 = \Enc_{K_d}(N, A, M)$,
+  sample $C_0 \sample \bits^{8\|C_1\|}$, record $(d, N)$ in $V$ and
+  $(d, N, C_b, A)$ in $W$, and return $C_b$.
+\item $\mathsf{Vf}(d, N, C, A)$: reject if $d \notin \{1, \dots,
+  v\}$; if $(d, N, C, A) \in W$ return $\mathsf{true}$; if $b = 0$
+  return $\mathsf{false}$; else return $[\Dec_{K_d}(N, A, C) \neq
+  \bot]$.
+\item The shared ideal primitive interface.
+\end{itemize}
+The adversary outputs $b' \in \bits$ and the game returns $1$ if
+$b' = b$ and $0$ otherwise. The advantage is
+\[
+  \Advmuind_\SE(\mathcal{A})
+  = \left|2 \Pr[\mathsf{G}^{\mathsf{mu\text{-}ind}}_\SE(\mathcal{A})
+          \text{ returns } 1] - 1\right|.
+\]
+
+\paragraph{Equivalence with the two-game form.}
+By the standard difference-lemma identity,
+\[
+  \Advmuind_\SE(\mathcal{A})
+  = \bigl|
+      \Pr[\mathcal{A}^{\mathsf{Enc}, \mathsf{Vf}, b=1} \Rightarrow 1]
+      - \Pr[\mathcal{A}^{\mathsf{Enc}, \mathsf{Vf}, b=0} \Rightarrow 1]
+    \bigr|,
+\]
+so $\Advmuind_\SE$ coincides with the two-game distinguishing
+advantage between the real $(\Enc, \Ver)$ pair and the ideal
+$(\Rand, \Replay)$ pair, instantiated per user. The single-user case
+$u = 1$ recovers the all-in-one AE notion
+used in \Cref{sec:ae-defs}; in particular, $\Advmuind$ generalizes
+$\Advae$.
+
+\paragraph{Per-user nonce uniqueness.}
+Nonce uniqueness is enforced per user via the set $V$: the same nonce
+may appear under distinct users but not twice under the same user.
+This is strictly weaker than the global nonce-uniqueness requirement
+that would force every $(i, N)$ pair across all users to be unique.
+
+The multi-key committing-security story does not need a separate
+multi-user notion: the $s$-way CMTDs-$\ell$ games of
+\Cref{sec:commit-defs} already grant the adversary full control of
+all $s$ keys, so they are themselves the multi-key committing
+statement.
+
+\subsection{Committing Security}
+\label{sec:commit-defs}
+
+\cite{BH22} formalize a family of committing-security notions for
+nonce-based AEAD schemes, parameterized by how much of the
+encryption input is committed and by whether commitment is
+established through decryption (the D-notions) or through encryption
+agreement (the E-notions). We recall their definitions and the
+$s$-way generalization used throughout this paper.
+
+\paragraph{What-is-committed functions.}
+For $\ell \in \{1, 3, 4\}$, the \emph{what-is-committed} function
+$\WiC_\ell : \mathcal{K} \times \mathcal{N} \times \mathcal{A} \times
+\mathcal{M} \to \bits^*$ projects an encryption input to the portion
+it should commit:
+\[
+\begin{aligned}
+  \WiC_1(K, N, A, M) &= K, \\
+  \WiC_3(K, N, A, M) &= (K, N, A), \\
+  \WiC_4(K, N, A, M) &= (K, N, A, M).
+\end{aligned}
+\]
+
+\paragraph{CMTD-$\ell$ and CMT-$\ell$ (two-key form).}
+Following \cite[Fig.~4]{BH22}, the two-key CMTD-$\ell$
+game samples no key. The adversary outputs a ciphertext $C$ together
+with two tuples $(K_1, N_1, A_1, M_1), (K_2, N_2, A_2, M_2)$ with
+$\WiC_\ell(K_1, N_1, A_1, M_1) \neq \WiC_\ell(K_2, N_2, A_2, M_2)$,
+and wins if $\Dec_{K_i}(N_i, A_i, C) = M_i$ for both $i \in \{1,
+2\}$. The CMT-$\ell$ game has the adversary output the
+two tuples (without $C$) and wins if $\Enc_{K_1}(N_1, A_1, M_1) =
+\Enc_{K_2}(N_2, A_2, M_2)$. No tuple entry is allowed to be $\bot$
+and all entries must lie in the scheme's syntactic domain. Define
+$\Adv^{\mathsf{CMTD}\text{-}\ell}_\SE(\mathcal{A})$ and
+$\Adv^{\mathsf{CMT}\text{-}\ell}_\SE(\mathcal{A})$ as the
+probabilities that the adversary wins the respective game.
+
+\paragraph{$s$-way generalization.}
+For $s \geq 2$, \cite[Fig.~5]{BH22} extends the games to tuples
+$(K_i, N_i, A_i, M_i)_{i=1}^s$ with pairwise distinct
+$\WiC_\ell$-images. The $s$-way CMTDs-$\ell$ game returns $1$ if
+$\Dec_{K_i}(N_i, A_i, C) = M_i$ for every $i$. The $s$-way
+CMTs-$\ell$ game returns $1$ if all encryptions
+$\Enc_{K_i}(N_i, A_i, M_i)$ are equal. The two-tuple case $s = 2$
+recovers CMTD-$\ell$ and CMT-$\ell$. Advantages
+$\Advcmtds{\ell}_\SE(\mathcal{A})$ and
+$\Advcmts{\ell}_\SE(\mathcal{A})$ are the probabilities that the
+adversary wins the respective $s$-way game; the parameter $s$ is
+suppressed from the notation when clear from context. The
+CMTDs-$\ell$ and CMTs-$\ell$
+definitions are instantiated for \TW{} in \Cref{sec:games-pp}, with the
+public-permutation lift deferred to that section.
+
+\paragraph{Relations.}
+\cite[Figs.~4 and~5]{BH22} record six implications among the notions.
+For the D-notions we use:
+\[
+  \mathsf{CMTDs}\text{-}3 \;\Rightarrow\;
+  \mathsf{CMTDs}\text{-}\ell \text{ for } \ell \in \{1, 4\}
+\]
+(the leftward arrow is immediate for $\ell = 1$ since pairwise
+distinct keys imply pairwise distinct $(K, N, A)$ triples; the
+rightward arrow at $\ell = 4$ uses deterministic decryption, as
+recalled in \Cref{app:committing-transfer}). The E-notions are bounded
+directly in \Cref{app:committing-transfer} by the same final-root
+candidate-collision argument, rather than through an encryption reduction.

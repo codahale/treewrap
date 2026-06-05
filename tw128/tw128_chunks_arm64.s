@@ -1,0 +1,417 @@
+// Fused TW128 chunk processing — ARM64 NEON implementation.
+//
+// Each function processes 8 × 8183-byte chunks in a single call using 4× x2
+// pairs (two instances packed into the two D lanes of each V register).
+//
+// The duplex is initialized in Go (initChunks closes the INIT_LAST block), so
+// on entry the state in s.a already holds each leaf's first keystream block.
+// Each chunk is then processed as exactly 49 full rho (167-byte) blocks: 48
+// closed with MSG_MORE and the last closed with MSG_LAST (no ragged tail, since
+// 8183 = 49 × 167). A full block is 20 whole lanes (160 bytes) plus a 7-byte
+// partial in lane 20; the suffix and pad occupy byte 167 (lane 20, byte 7).
+
+//go:build !purego
+
+#include "textflag.h"
+#include "permute_arm64.h"
+
+// ENC_LANES20 encrypts 20 full lanes (V0-V19, 160 bytes) for two instances,
+// absorbing the ciphertext into the rate. SRC0/SRC1 = R2/R3, DST0/DST1 = R5/R6.
+// Temps V25-V27. For each lane VL: V26 = ct = pt ^ ks, VL ^= ct (= pt).
+#define ENC_LANES20 \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V0.B16, V26.B16; VEOR V26.B16, V0.B16, V0.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V1.B16, V26.B16; VEOR V26.B16, V1.B16, V1.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V2.B16, V26.B16; VEOR V26.B16, V2.B16, V2.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V3.B16, V26.B16; VEOR V26.B16, V3.B16, V3.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V4.B16, V26.B16; VEOR V26.B16, V4.B16, V4.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V5.B16, V26.B16; VEOR V26.B16, V5.B16, V5.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V6.B16, V26.B16; VEOR V26.B16, V6.B16, V6.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V7.B16, V26.B16; VEOR V26.B16, V7.B16, V7.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V8.B16, V26.B16; VEOR V26.B16, V8.B16, V8.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V9.B16, V26.B16; VEOR V26.B16, V9.B16, V9.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V10.B16, V26.B16; VEOR V26.B16, V10.B16, V10.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V11.B16, V26.B16; VEOR V26.B16, V11.B16, V11.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V12.B16, V26.B16; VEOR V26.B16, V12.B16, V12.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V13.B16, V26.B16; VEOR V26.B16, V13.B16, V13.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V14.B16, V26.B16; VEOR V26.B16, V14.B16, V14.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V15.B16, V26.B16; VEOR V26.B16, V15.B16, V15.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V16.B16, V26.B16; VEOR V26.B16, V16.B16, V16.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V17.B16, V26.B16; VEOR V26.B16, V17.B16, V17.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V18.B16, V26.B16; VEOR V26.B16, V18.B16, V18.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V19.B16, V26.B16; VEOR V26.B16, V19.B16, V19.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6
+
+// DEC_LANES20 decrypts 20 full lanes (V0-V19) for two instances, absorbing the
+// ciphertext into the rate. For each lane VL: V26 = pt = ct ^ ks (store),
+// VL ^= ct (= pt).
+#define DEC_LANES20 \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V0.B16, V26.B16; VEOR V25.B16, V0.B16, V0.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V1.B16, V26.B16; VEOR V25.B16, V1.B16, V1.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V2.B16, V26.B16; VEOR V25.B16, V2.B16, V2.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V3.B16, V26.B16; VEOR V25.B16, V3.B16, V3.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V4.B16, V26.B16; VEOR V25.B16, V4.B16, V4.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V5.B16, V26.B16; VEOR V25.B16, V5.B16, V5.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V6.B16, V26.B16; VEOR V25.B16, V6.B16, V6.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V7.B16, V26.B16; VEOR V25.B16, V7.B16, V7.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V8.B16, V26.B16; VEOR V25.B16, V8.B16, V8.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V9.B16, V26.B16; VEOR V25.B16, V9.B16, V9.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V10.B16, V26.B16; VEOR V25.B16, V10.B16, V10.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V11.B16, V26.B16; VEOR V25.B16, V11.B16, V11.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V12.B16, V26.B16; VEOR V25.B16, V12.B16, V12.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V13.B16, V26.B16; VEOR V25.B16, V13.B16, V13.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V14.B16, V26.B16; VEOR V25.B16, V14.B16, V14.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V15.B16, V26.B16; VEOR V25.B16, V15.B16, V15.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V16.B16, V26.B16; VEOR V25.B16, V16.B16, V16.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V17.B16, V26.B16; VEOR V25.B16, V17.B16, V17.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V18.B16, V26.B16; VEOR V25.B16, V18.B16, V18.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6; \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V19.B16, V26.B16; VEOR V25.B16, V19.B16, V19.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6
+
+// ENC_PARTIAL7 encrypts the 7-byte partial lane 20 for both instances. It reads
+// 8 bytes (the 8th lies within the chunk for every full block), masks the
+// ciphertext to 7 bytes so byte 7 of the lane (the suffix slot) keeps its
+// keystream, and stores exactly 7 bytes. Temps R9-R13.
+#define ENC_PARTIAL7 \
+	VMOV V20.D[0], R9; MOVD (R2), R10; EOR R9, R10, R11; LSL $8, R11, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[0]; MOVW R11, (R5); LSR $32, R11, R13; MOVH R13, 4(R5); LSR $48, R11, R13; MOVB R13, 6(R5); ADD $7, R2; ADD $7, R5; \
+	VMOV V20.D[1], R9; MOVD (R3), R10; EOR R9, R10, R11; LSL $8, R11, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[1]; MOVW R11, (R6); LSR $32, R11, R13; MOVH R13, 4(R6); LSR $48, R11, R13; MOVB R13, 6(R6); ADD $7, R3; ADD $7, R6
+
+// DEC_PARTIAL7 decrypts the 7-byte partial lane 20 for both instances.
+#define DEC_PARTIAL7 \
+	VMOV V20.D[0], R9; MOVD (R2), R10; EOR R9, R10, R11; LSL $8, R10, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[0]; MOVW R11, (R5); LSR $32, R11, R13; MOVH R13, 4(R5); LSR $48, R11, R13; MOVB R13, 6(R5); ADD $7, R2; ADD $7, R5; \
+	VMOV V20.D[1], R9; MOVD (R3), R10; EOR R9, R10, R11; LSL $8, R10, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[1]; MOVW R11, (R6); LSR $32, R11, R13; MOVH R13, 4(R6); LSR $48, R11, R13; MOVB R13, 6(R6); ADD $7, R3; ADD $7, R6
+
+// MSGMORE_PERMUTE XORs (MSG_MORE 0x1A | pad 0x80) = 0x9A at byte 167 (lane 20,
+// byte 7) for both instances, then runs the 12-round permutation.
+#define MSGMORE_PERMUTE \
+	MOVD $0x9A00000000000000, R9; \
+	VDUP R9, V25.D2; \
+	VEOR V25.B16, V20.B16, V20.B16; \
+	MOVD $tw128_round_consts(SB), R1; \
+	ADD $96, R1; \
+	KECCAK_12_ROUNDS
+
+// ENC_TAIL_LANE0 encrypts lane 0 (the first 8 tail bytes) for both instances.
+#define ENC_TAIL_LANE0 \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V0.B16, V26.B16; VEOR V26.B16, V0.B16, V0.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6
+
+// DEC_TAIL_LANE0 decrypts lane 0 (the first 8 tail bytes) for both instances.
+#define DEC_TAIL_LANE0 \
+	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V0.B16, V26.B16; VEOR V25.B16, V0.B16, V0.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6
+
+// ENC_PARTIAL1 encrypts the final 1-byte partial lane 1 (tail byte 8) for both
+// instances, keeping bytes 1-7 of the lane (the suffix slot is byte 1).
+#define ENC_PARTIAL1 \
+	VMOV V1.D[0], R9; MOVBU (R2), R10; EOR R9, R10, R11; AND $0xFF, R11, R12; EOR R12, R9, R9; VMOV R9, V1.D[0]; MOVB R11, (R5); ADD $1, R2; ADD $1, R5; \
+	VMOV V1.D[1], R9; MOVBU (R3), R10; EOR R9, R10, R11; AND $0xFF, R11, R12; EOR R12, R9, R9; VMOV R9, V1.D[1]; MOVB R11, (R6); ADD $1, R3; ADD $1, R6
+
+// DEC_PARTIAL1 decrypts the final 1-byte partial lane 1 (tail byte 8).
+#define DEC_PARTIAL1 \
+	VMOV V1.D[0], R9; MOVBU (R2), R10; EOR R9, R10, R11; AND $0xFF, R10, R12; EOR R12, R9, R9; VMOV R9, V1.D[0]; MOVB R11, (R5); ADD $1, R2; ADD $1, R5; \
+	VMOV V1.D[1], R9; MOVBU (R3), R10; EOR R9, R10, R11; AND $0xFF, R10, R12; EOR R12, R9, R9; VMOV R9, V1.D[1]; MOVB R11, (R6); ADD $1, R3; ADD $1, R6
+
+// MSGLAST_PERMUTE XORs MSG_LAST 0x1E at byte 9 (lane 1, byte 1) and pad 0x80 at
+// byte 167 (lane 20, byte 7) for both instances, then runs the permutation.
+#define MSGLAST_PERMUTE \
+	MOVD $0x1E00, R9; \
+	VDUP R9, V25.D2; \
+	VEOR V25.B16, V1.B16, V1.B16; \
+	MOVD $0x8000000000000000, R9; \
+	VDUP R9, V25.D2; \
+	VEOR V25.B16, V20.B16, V20.B16; \
+	MOVD $tw128_round_consts(SB), R1; \
+	ADD $96, R1; \
+	KECCAK_12_ROUNDS
+
+// MSGLAST_FULL_PERMUTE closes a full rho-block with MSG_LAST: it XORs
+// (MSG_LAST 0x1E | pad 0x80) = 0x9E at byte 167 (lane 20, byte 7) for both
+// instances, then runs the permutation. Used for the final block now that the
+// chunk size is an exact multiple of rho (no undersized tail).
+#define MSGLAST_FULL_PERMUTE \
+	MOVD $0x9E00000000000000, R9; \
+	VDUP R9, V25.D2; \
+	VEOR V25.B16, V20.B16, V20.B16; \
+	MOVD $tw128_round_consts(SB), R1; \
+	ADD $96, R1; \
+	KECCAK_12_ROUNDS
+
+// EXTRACT_TAGS writes lanes 0-3 for both instances to the tag buffer at R6.
+#define EXTRACT_TAGS \
+	VST1	[V0.D1], (R6); ADD $8, R6; \
+	VST1	[V1.D1], (R6); ADD $8, R6; \
+	VST1	[V2.D1], (R6); ADD $8, R6; \
+	VST1	[V3.D1], (R6); ADD $8, R6; \
+	VDUP	V0.D[1], V25.D2; VST1 [V25.D1], (R6); ADD $8, R6; \
+	VDUP	V1.D[1], V25.D2; VST1 [V25.D1], (R6); ADD $8, R6; \
+	VDUP	V2.D[1], V25.D2; VST1 [V25.D1], (R6); ADD $8, R6; \
+	VDUP	V3.D[1], V25.D2; VST1 [V25.D1], (R6); ADD $8, R6
+
+
+// func encryptChunksARM64(s *State8, src, dst *byte, cvs *byte)
+//
+// Processes 8 × 8183-byte chunks using 4× x2 pairs,
+// encrypting and writing 8 × 32-byte tags.
+//
+// Frame: 32 bytes local (0=State8 ptr, 8=src base, 16=dst base, 24=tags ptr).
+TEXT ·encryptChunksARM64(SB), NOSPLIT, $32-32
+	MOVD	s+0(FP), R0		// State8 pointer
+	MOVD	src+8(FP), R7		// src base
+	MOVD	dst+16(FP), R8		// dst base
+	MOVD	cvs+24(FP), R6		// tags pointer
+
+	MOVD	R0, 0(RSP)		// save State8 pointer
+	MOVD	R7, 8(RSP)		// save src base
+	MOVD	R8, 16(RSP)		// save dst base
+	MOVD	R6, 24(RSP)		// save tags pointer
+
+	// === Pair (0,1): instances 0 and 1 ===
+	MOVD	R0, R8
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	R7, R2			// src0
+	ADD	$8183, R7, R3		// src1
+	MOVD	16(RSP), R8		// dst base
+	MOVD	R8, R5			// dst0
+	ADD	$8183, R8, R6		// dst1
+
+	MOVD	$48, R4
+
+tw128_enc_arm64_loop_01:
+	ENC_LANES20
+	ENC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_enc_arm64_loop_01
+
+	ENC_LANES20
+	ENC_PARTIAL7
+	MSGLAST_FULL_PERMUTE
+
+	// Extract tags for pair (0,1).
+	MOVD	24(RSP), R6
+	EXTRACT_TAGS
+
+	// === Pair (2,3): instances 2 and 3 ===
+	MOVD	0(RSP), R0
+	ADD	$16, R0, R8
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	8(RSP), R7
+	ADD	$16366, R7, R2
+	ADD	$24549, R7, R3
+	MOVD	16(RSP), R8
+	ADD	$16366, R8, R5
+	ADD	$24549, R8, R6
+
+	MOVD	$48, R4
+
+tw128_enc_arm64_loop_23:
+	ENC_LANES20
+	ENC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_enc_arm64_loop_23
+
+	ENC_LANES20
+	ENC_PARTIAL7
+	MSGLAST_FULL_PERMUTE
+
+	// Extract tags for pair (2,3).
+	MOVD	24(RSP), R6
+	ADD	$64, R6
+	EXTRACT_TAGS
+
+	// === Pair (4,5): instances 4 and 5 ===
+	MOVD	0(RSP), R0
+	ADD	$32, R0, R8
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	8(RSP), R7
+	ADD	$32732, R7, R2
+	ADD	$40915, R7, R3
+	MOVD	16(RSP), R8
+	ADD	$32732, R8, R5
+	ADD	$40915, R8, R6
+
+	MOVD	$48, R4
+
+tw128_enc_arm64_loop_45:
+	ENC_LANES20
+	ENC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_enc_arm64_loop_45
+
+	ENC_LANES20
+	ENC_PARTIAL7
+	MSGLAST_FULL_PERMUTE
+
+	// Extract tags for pair (4,5).
+	MOVD	24(RSP), R6
+	ADD	$128, R6
+	EXTRACT_TAGS
+
+	// === Pair (6,7): instances 6 and 7 ===
+	MOVD	0(RSP), R0
+	ADD	$48, R0, R8
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	8(RSP), R7
+	ADD	$49098, R7, R2
+	ADD	$57281, R7, R3
+	MOVD	16(RSP), R8
+	ADD	$49098, R8, R5
+	ADD	$57281, R8, R6
+
+	MOVD	$48, R4
+
+tw128_enc_arm64_loop_67:
+	ENC_LANES20
+	ENC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_enc_arm64_loop_67
+
+	ENC_LANES20
+	ENC_PARTIAL7
+	MSGLAST_FULL_PERMUTE
+
+	// Extract tags for pair (6,7).
+	MOVD	24(RSP), R6
+	ADD	$192, R6
+	EXTRACT_TAGS
+
+	RET
+
+
+// func decryptChunksARM64(s *State8, src, dst *byte, cvs *byte)
+TEXT ·decryptChunksARM64(SB), NOSPLIT, $32-32
+	MOVD	s+0(FP), R0
+	MOVD	src+8(FP), R7
+	MOVD	dst+16(FP), R8
+	MOVD	cvs+24(FP), R6
+
+	MOVD	R0, 0(RSP)
+	MOVD	R7, 8(RSP)
+	MOVD	R8, 16(RSP)
+	MOVD	R6, 24(RSP)
+
+	// === Pair (0,1) ===
+	MOVD	R0, R8
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	R7, R2
+	ADD	$8183, R7, R3
+	MOVD	16(RSP), R8
+	MOVD	R8, R5
+	ADD	$8183, R8, R6
+
+	MOVD	$48, R4
+
+tw128_dec_arm64_loop_01:
+	DEC_LANES20
+	DEC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_dec_arm64_loop_01
+
+	DEC_LANES20
+	DEC_PARTIAL7
+	MSGLAST_FULL_PERMUTE
+
+	MOVD	24(RSP), R6
+	EXTRACT_TAGS
+
+	// === Pair (2,3) ===
+	MOVD	0(RSP), R0
+	ADD	$16, R0, R8
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	8(RSP), R7
+	ADD	$16366, R7, R2
+	ADD	$24549, R7, R3
+	MOVD	16(RSP), R8
+	ADD	$16366, R8, R5
+	ADD	$24549, R8, R6
+
+	MOVD	$48, R4
+
+tw128_dec_arm64_loop_23:
+	DEC_LANES20
+	DEC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_dec_arm64_loop_23
+
+	DEC_LANES20
+	DEC_PARTIAL7
+	MSGLAST_FULL_PERMUTE
+
+	MOVD	24(RSP), R6
+	ADD	$64, R6
+	EXTRACT_TAGS
+
+	// === Pair (4,5) ===
+	MOVD	0(RSP), R0
+	ADD	$32, R0, R8
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	8(RSP), R7
+	ADD	$32732, R7, R2
+	ADD	$40915, R7, R3
+	MOVD	16(RSP), R8
+	ADD	$32732, R8, R5
+	ADD	$40915, R8, R6
+
+	MOVD	$48, R4
+
+tw128_dec_arm64_loop_45:
+	DEC_LANES20
+	DEC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_dec_arm64_loop_45
+
+	DEC_LANES20
+	DEC_PARTIAL7
+	MSGLAST_FULL_PERMUTE
+
+	MOVD	24(RSP), R6
+	ADD	$128, R6
+	EXTRACT_TAGS
+
+	// === Pair (6,7) ===
+	MOVD	0(RSP), R0
+	ADD	$48, R0, R8
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	8(RSP), R7
+	ADD	$49098, R7, R2
+	ADD	$57281, R7, R3
+	MOVD	16(RSP), R8
+	ADD	$49098, R8, R5
+	ADD	$57281, R8, R6
+
+	MOVD	$48, R4
+
+tw128_dec_arm64_loop_67:
+	DEC_LANES20
+	DEC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_dec_arm64_loop_67
+
+	DEC_LANES20
+	DEC_PARTIAL7
+	MSGLAST_FULL_PERMUTE
+
+	MOVD	24(RSP), R6
+	ADD	$192, R6
+	EXTRACT_TAGS
+
+	RET

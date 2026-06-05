@@ -1,0 +1,1302 @@
+\section{Supporting Lemmas}
+\label{app:lemmas}
+
+The proof core separates structural decoding from probabilistic
+accounting. The well-formed transcript language of
+\Cref{def:wf-transcripts} fixes which flattened queries are valid \TW{}
+construction prefixes.
+\Cref{lem:duplex-flat,lem:transcript-inj,lem:bridge-decode} then show
+how such a query is flattened, parsed as a typed transcript, assigned an
+output point, and decoded to a candidate key, when any.
+\Cref{lem:key-tests} turns those decoded keys into an adaptive key-test
+bound. The remaining proof interfaces expose the
+events and stopped-game equalities their consumers must control:
+privacy freshness and hybrid replacement, INT-CTXT hidden-key exposure
+and root-tag guessing, leaf-tag collisions, and the committing
+candidate-sequence collision event. Thus the privacy, INT-CTXT, and
+committing proofs only
+have to derive the relevant local event premise before applying the
+corresponding accounting argument.
+
+\begin{figure}[t]
+  \centering
+  \resizebox{\linewidth}{!}{%
+  \begin{tikzpicture}[
+    every node/.style={font=\footnotesize},
+    lemma/.style={draw, rounded corners=2pt, align=center, inner sep=3pt,
+                  minimum width=2.6cm, minimum height=0.7cm, fill=white},
+    consumer/.style={draw, dashed, rounded corners=2pt, align=center,
+                     inner sep=3pt, minimum width=2.3cm, minimum height=0.7cm,
+                     fill=white},
+    arr/.style={-{Latex[length=1.6mm]}, semithick, draw=black!70},
+  ]
+    % Column 1: foundational lemmas.
+    \node[lemma] (df) at (0,  3.0) {Duplex\\ Flattening};
+    \node[lemma] (ba) at (0, -3.0) {Bridge \&\\ Decode};
+
+    % Column 2: structural lemma.
+    \node[lemma] (ti) at (3.8, 3.0) {Transcript\\ Injectivity};
+    \node[lemma] (kt) at (3.8, -2.0) {Adaptive\\ Key Tests};
+
+    % Column 3: derived lemmas.
+    \node[lemma] (tf) at (7.6,  2.0) {Transcript\\ Freshness};
+    \node[lemma] (lc) at (7.6, -0.5) {Leaf-Tag\\ Collision};
+    \node[lemma] (cc) at (7.6, -1.75) {Candidate\\ Collision};
+
+    % Column 4: consumers.
+    \node[consumer] (c6) at (11.4,  2.4) {\S\ref{sec:privacy} Privacy};
+    \node[consumer] (c7) at (11.4,  0.8) {\S\ref{sec:authenticity} INT-CTXT};
+    \node[consumer] (c8) at (11.4, -1.5) {Committing\\proofs};
+    \node[consumer] (cb) at (11.4, -3.0) {App.~\ref{app:flat-sponge-lift}};
+
+    \begin{scope}[on background layer]
+      % Foundational -> structural.
+      \draw[arr] (df) -- (ti);
+
+      % Transcript Injectivity feeds the derived transcript lemmas.
+      \draw[arr] (ti.east) -- (tf.west);
+      \draw[arr] (ti.east) to[out=-20, in=160] (lc.west);
+
+      % Derived lemmas -> Privacy.
+      \draw[arr] (tf.east) to[out=30,  in=200] (c6.west);
+
+      % Derived lemmas -> INT-CTXT.
+      \draw[arr] (lc.east) to[out=30,  in=200] (c7.west);
+
+      % Candidate collision accounting -> committing proofs.
+      \draw[arr] (cc.east) to[out=0,  in=180] (c8.west);
+
+      % Bridge decoding is consumed directly at the proof sites.
+      \draw[arr] (ba.east) to[out=10,  in=200] (kt.west);
+      \draw[arr] (kt.east) to[out=35,  in=220] (c6.west);
+      \draw[arr] (kt.east) to[out=15,  in=210] (c7.west);
+      \draw[arr] (ba.east) to[out=0,   in=210] (c6.west);
+      \draw[arr] (ba.east) to[out=-5,  in=200] (c7.west);
+      \draw[arr] (ba.east) to[out=-15, in=200] (c8.west);
+      \draw[arr] (ba.east) to[out=-10, in=180] (cb.west);
+
+      % Transcript Injectivity -> committing proofs, routed
+      % orthogonally below the derived column.
+      \draw[arr] (ti.south)
+        -- ++(0, -4.95) -| (c8.south);
+    \end{scope}
+  \end{tikzpicture}
+  }
+  \caption{Dependency graph of the supporting lemmas in this
+    appendix and their consumers. Solid boxes are lemmas; dashed
+    boxes are the proof sections that consume them. The edge from
+    \Cref{lem:transcript-inj} into the committing proofs of
+    \Cref{sec:cmtds3,app:committing-transfer} is mediated by
+    \Cref{cor:triple-sep} for final-root distinctness and
+    \Cref{cor:output-sep} for candidate-sequence filtering; the edge
+    from \Cref{lem:adaptive-candidate-collision} records the collision
+    accounting used by the CMTDs-3 and CMTs proofs. The edge from
+    \Cref{lem:transcript-inj} into \Cref{lem:freshness} uses
+    \Cref{cor:output-sep}; the verification-first root-tag guessing
+    accounting reached through the same separation is internal to
+    \Cref{sec:authenticity}. The
+    \Cref{lem:key-tests} edge records the shared
+    $\badkey$ accounting used by privacy and
+    INT-CTXT.}
+  \label{fig:lemma-dag}
+\end{figure}
+
+\subsection{Duplex Flattening}
+\label{app:lem-duplex-flat}
+
+\begin{lemma}[Duplex Flattening]
+\label{lem:duplex-flat}
+Every \TW{} root or leaf duplex output is equal to a \cite{BDPV11} sponge
+output on the corresponding flattened duplex-call transcript, and the
+ciphertext-absorbing message phase admits a flattened duplex transcript
+that is well defined for both encryption and decryption.
+\end{lemma}
+
+\begin{proof}
+Let $\mathsf{D}$ be a duplex object using permutation $\pi$, rate $r$,
+and padding $\padtenone$. For a sequence of duplex calls $Z_i =
+\mathsf{D}.\duplexing(\sigma_i, \ell_i)$ with each $\sigma_i$ short
+enough to fit in one duplex block after padding, \cite[Lemma~3]{BDPV11}
+gives
+\[
+  Z_i = \Sponge[\pi, \padtenone, r]
+    \bigl(\sigma_0 \concat \mathsf{pad}_0 \concat \sigma_1
+          \concat \mathsf{pad}_1 \concat \cdots \concat \sigma_i,\, \ell_i\bigr),
+\]
+where $\mathsf{pad}_j = \padtenone[r](|\sigma_j|)$, and Lemma~4 says
+that, for fixed $\padtenone$ and $r$, the map from the duplex-call
+sequence to the flattened sponge input is injective.
+
+In \TW{}, each duplex call absorbs a byte-aligned block $\sigma$
+followed by a $4$-bit phase suffix $\tau \in \{\siginit,
+\sigadmore, \dots, \sigagglast\}$
+(\Cref{sec:domain-sep}), so the duplex-call input is
+$\sigma \concat \tau$ followed by $\padtenone$. With
+$r = 1344$ and $\rho_{\max}(\padtenone, r) = r - 2 = 1342$ bits, the
+maximum byte-aligned input is $\rho = 167$ bytes
+(\Cref{sec:params}), giving a worst-case duplex-call input of $8 \cdot
+167 + 4 = 1340 \leq 1342$ bits. The two initialization calls are
+shorter still: $|\prfxroot \concat K \concat N| + 4 = 8
+\cdot (6 + 32 + 32) + 4 = 564$ bits and $|\prfxleaf \concat
+K \concat N \concat \langle j \rangle_8| + 4 = 8 \cdot (6 + 32 + 32 +
+8) + 4 = 628$ bits. \cite[Lemmas~3 and~4]{BDPV11} therefore apply
+independently to every \TW{} duplex object.
+
+The root duplex is initialized by absorbing $\prfxroot
+\concat K \concat N$ under \siginit (\Cref{alg:enc}), then
+absorbs the associated-data blocks under \sigadmore /
+\sigadlast, the root ciphertext blocks in the message phase under
+\sigmsgmore / \sigmsglast, and the leaf-tag aggregation
+blocks under \sigaggmore / \sigagglast. By the
+duplex-to-sponge equality, every root duplex output is the sponge
+function evaluated on the root transcript prefix accumulated up to the
+relevant output point. The same holds for each leaf duplex,
+initialized by $\prfxleaf \concat K \concat N \concat
+\langle j \rangle_8$ and absorbing only its own ciphertext blocks in the
+message phase. In decryption and verification, \Cref{alg:dec} absorbs the
+submitted ciphertext blocks before the root-tag comparison, so the same
+flattened message-phase transcript is defined whether the comparison
+accepts or rejects.
+\end{proof}
+
+\subsection{Well-formed Transcript Prefixes}
+\label{app:wf-transcripts}
+
+For a duplex-call prefix $((\sigma_0, \tau_0), \dots, (\sigma_i,
+\tau_i))$, write
+\[
+  \Flat\bigl((\sigma_0, \tau_0), \dots, (\sigma_i, \tau_i)\bigr)
+  = \bigconcat_{j=0}^{i-1}\!
+    \bigl(\sigma_j \concat \tau_j \concat \mathsf{pad}_j\bigr)
+    \concat \sigma_i \concat \tau_i.
+\]
+The current call's padding $\mathsf{pad}_i$ is not part of $\Flat$;
+it is applied internally by the sponge function. Equivalently, after
+the $i$-th call the duplex state is the sponge state after absorbing
+$\Flat(\cdot) \concat \mathsf{pad}_i$.
+
+\begin{definition}[Well-Formed \TW{} Transcript Prefixes]
+\label{def:wf-transcripts}
+A typed \TW{} transcript prefix is \emph{well formed} if it is a prefix,
+ending at a construction transcript lookup point, of one of the following
+two call languages.
+\begin{itemize}
+\item A root transcript starts with
+  $(\prfxroot \concat K \concat N,\siginit)$, with fixed-width fields
+  $K \in \bits^k$ and $N \in \bits^\nu$. It then absorbs the
+  associated-data byte string (only when the associated data is
+  nonempty; the phase is otherwise elided, \Cref{sec:enc}), the root
+  ciphertext byte string, and the aggregation byte string (only when
+  $n \geq 1$; when $n = 0$ the aggregation phase is elided,
+  \Cref{sec:enc}, and the root tag is emitted by the final
+  $\sigmsglast$ message call), in that order. Each present phase byte
+  string is partitioned by the block rule
+  of \Cref{alg:helpers}: the empty string gives one empty final block,
+  and a nonempty string gives zero or more $\rho$-byte non-final blocks
+  followed by one final block. The phases use respectively
+  $\sigadmore/\sigadlast$, $\sigmsgmore/\sigmsglast$, and
+  $\sigaggmore/\sigagglast$.
+\item A leaf-$j$ transcript starts with
+  $(\prfxleaf \concat K \concat N \concat \langle j \rangle_8,\siginit)$,
+  where $1 \leq j < 2^{64}$ and the fields have fixed width. It then
+  absorbs the leaf ciphertext byte string under
+  $\sigmsgmore/\sigmsglast$, using the same block rule.
+\end{itemize}
+The message byte string in this language is always the ciphertext byte
+string absorbed by the construction: encryption obtains it by XORing the
+plaintext with the current keystream, while decryption and verification
+use the submitted ciphertext. Thus a verification transcript is well
+formed for every in-domain ciphertext before the tag comparison is made;
+acceptance is not part of the transcript language.
+
+The root aggregation byte string has the form
+$T_1 \concat \cdots \concat T_n \concat \langle n \rangle_8$, where each
+$T_j$ has fixed byte length $\tauleaf/8$. The trailing fixed-width field
+therefore gives a unique parse of the leaf-tag sequence. The
+output-point class of a well-formed counted prefix is the class in
+\Cref{tab:keyed-twout} determined by its duplex instance and final-call
+suffix.
+\end{definition}
+
+Name the tag-emitting transcript families:
+\begin{align*}
+  \Rtag   &= \text{root transcript prefix whose sponge output gives the final root tag}, \\
+  \Ltag[j]   &= \text{leaf-$j$ transcript prefix whose sponge output gives the leaf tag}.
+\end{align*}
+The final root tag is emitted by the $\sigagglast$ aggregation call (the
+$\Rtag$ family) when $n \geq 1$, and by the closing $\sigmsglast$
+message call (an $\Rmsg^+$ prefix, in the notation of
+\Cref{cor:output-sep}) when $n = 0$ and the aggregation phase is elided.
+Since $n = \leaves(C)$ is fixed by $\|C\|$, every computation on a given
+ciphertext emits its tag at the one of these two output points selected
+by $\|C\|$.
+Intermediate construction transcript lookup points (init, non-final
+AD, non-final message, and non-final aggregation) are also typed
+prefixes covered by \Cref{lem:bridge-decode}; the exact keyed
+direct-query decoder names them in \Cref{tab:keyed-twout}.
+
+\subsection{Transcript Injectivity}
+\label{app:lem-transcript-inj}
+
+\begin{lemma}[Transcript Injectivity]
+\label{lem:transcript-inj}
+Well-formed \TW{} flattened duplex-call transcript prefixes are
+injectively encoded and separated by duplex instance (root vs leaf),
+leaf index $j$, phase suffix, and duplex-call order. For final-root
+prefixes, equality of flattened inputs recovers the same root
+initialization, AD blocks, root ciphertext blocks, aggregation input,
+and leaf-tag sequence. When the compared final-root prefixes are
+construction-generated, if no two distinct construction-generated final
+leaf transcripts produce the same leaf tag, equality also recovers the
+same leaf transcript sequence and therefore the same full absorbed
+ciphertext.
+\end{lemma}
+
+\begin{proof}
+By \Cref{lem:duplex-flat}, every well-formed output point can be written
+as a \cite{BDPV11} flattened sponge input for the corresponding
+duplex-call prefix, namely $\Flat$ as defined above. The deterministic
+current-call $\padtenone$ is applied internally by the sponge function
+and is not part of the input to which \cite[Lemma~4]{BDPV11} is applied.
+That lemma recovers the duplex-call sequence from the flattened sponge
+input; in \TW{}, each call input is
+$\sigma \concat \tau$ with byte-aligned $\sigma$ and
+fixed $4$-bit suffix $\tau$, so recovering the call input recovers the pair
+$(\sigma, \tau)$.
+
+\Cref{def:wf-transcripts} fixes the root and leaf initialization fields,
+the admissible phase order, and the final-call suffixes. The distinct
+prefixes $\prfxroot$ and $\prfxleaf$ separate root from leaf transcripts;
+the fixed-width leaf field $\langle j \rangle_8$ separates leaves; and
+the seven suffix values of \Cref{tab:suffixes} separate phases and
+non-final/final calls. Thus equality of flattened inputs forces equality
+of the recovered instance type, key, nonce, leaf index when present,
+phase suffixes, and duplex-call order.
+
+\paragraph{Phase-recovery sub-claim.}
+For each present phase $P \in \{\mathsf{ad}, \mathsf{msg}, \mathsf{agg}\}$
+(the $\mathsf{ad}$ phase is present exactly when the associated data is
+nonempty; see \Cref{sec:enc}),
+\TW{} absorbs the phase's input byte string $s_P$ by partitioning into
+$\rho$-byte blocks (with the empty case yielding a single empty block,
+per \Cref{sec:enc}) and feeding each block to the duplex with suffix
+$\sigma_P^-$ (non-final) or $\sigma_P^+$ (final).
+\Cref{lem:duplex-flat} and \cite[Lemma~4]{BDPV11} recover the
+corresponding $(\sigma, \tau)$ sequence from the flattened input.
+Because the partition map is deterministic and uniquely invertible on
+its image (the empty case yielding the single empty block carrying
+$\sigma_P^+$), concatenating the recovered $\sigma$ blocks
+reconstructs $s_P$ exactly. The map from $s_P$ to the phase's $(\sigma,
+\tau)$ sequence is therefore injective.
+
+Applied phase by phase to a well-formed final-root transcript:
+\begin{itemize}
+\item AD. The associated-data phase contributes a $\sigadlast$-tagged
+  block exactly when the associated data is nonempty; an empty
+  associated data elides the phase and contributes no block. When the
+  phase is present the sub-claim recovers the AD byte string. Thus
+  distinct associated-data strings $A_i \neq A_j$ are separated either
+  by the presence versus absence of the AD phase (when exactly one is
+  empty) or, when both are nonempty, by their distinct AD
+  $\sigma$-block sequences.
+\item MSG. Distinct absorbed root or leaf ciphertext byte strings
+  produce distinct MSG $\sigma$-block sequences; the message language of
+  \Cref{def:wf-transcripts} is ciphertext-absorbing for encryption and
+  decryption alike.
+\item AGG. The aggregation phase is present exactly when $n \geq 1$
+  (\Cref{sec:enc}). When it is present, the sub-claim applied to the
+  aggregation byte string $T_1 \concat \cdots \concat T_n \concat
+  \langle n \rangle_8$ recovers that byte string. The final eight bytes
+  give $\langle n \rangle_8$, and each leaf tag has fixed byte length
+  $\tauleaf / 8$, so the byte string has a unique parse as a leaf-tag
+  sequence. Two root aggregation encodings are therefore equal exactly
+  when their leaf-tag sequences are equal. Under the structural
+  condition that distinct construction-generated final leaf transcripts
+  receive distinct leaf-tag values, equality of leaf-tag sequences
+  implies equality of the corresponding final leaf transcripts. When
+  $n = 0$ the aggregation phase is absent and the final-root transcript
+  ends at the recovered $\sigmsglast$ root message call; the MSG bullet
+  recovers the root ciphertext byte string, and the absence of any
+  $\sigaggmore/\sigagglast$ call distinguishes such a prefix from every
+  $n \geq 1$ final-root prefix.
+\end{itemize}
+
+Therefore the recovered final-root transcript determines the root
+initialization, AD blocks, root ciphertext blocks, and, when
+$n \geq 1$, the aggregation byte string and leaf-tag sequence. For
+construction-generated final-root prefixes with $n \geq 1$, under the
+stated leaf-tag structural condition, the leaf-tag sequence determines
+the corresponding final leaf transcripts as well, so the same full
+absorbed ciphertext is recovered; for $n = 0$ the root ciphertext blocks
+already constitute the full absorbed ciphertext.
+\end{proof}
+
+\paragraph{Bridge injectivity on transcript prefixes.}
+For \TW{}, the \cite[Theorem~3]{BDPV11} bridge has $r = r_{\max}$ and
+maps a native flattened input $U$ to $U \concat 1 \concat 0^q$, where
+$q = (-|U|-2) \bmod r$. Any string in this image has a unique inverse:
+$q$ is the number of trailing zero bits, the preceding bit is the
+inserted $1$, and deleting this suffix recovers $U$. Thus equality of
+bridged images $\flatmap(X)=\flatmap(X')$ for well-formed typed \TW{}
+prefixes implies equality of their native flattened inputs, after which
+\Cref{lem:transcript-inj} gives the same recovery consequences as above.
+
+\begin{corollary}[Opening Triple Separation]
+\label{cor:triple-sep}
+If two \TW{} root computations have distinct $(K, N, A)$ triples, then
+their bridged final root transcript inputs under $\flatmap(\cdot)$ are
+distinct, regardless of whether each computation is an encryption or
+a decryption check on a common ciphertext.
+\end{corollary}
+
+\begin{proof}
+Suppose for contradiction that $\flatmap(R_i) = \flatmap(R_j)$. By
+the bridge-injectivity observation above, the native flattened inputs of
+the two final-root prefixes are equal. Then \Cref{lem:transcript-inj}
+recovers the full duplex-call sequence and reads off the pair
+$(\sigma,\tau)$ for each call. The seven $4$-bit phase suffixes are
+pairwise distinct, so the \siginit, $\sigma_{\mathsf{ad}}^\pm$,
+$\sigma_{\mathsf{msg}}^\pm$, and (when present) $\sigma_{\mathsf{agg}}^\pm$
+calls in the recovered sequence are unambiguously identified. The
+aggregation phase is present exactly when $n \geq 1$, and
+$n = \leaves(C)$ is determined by the common ciphertext, so the two
+recovered sequences either both carry an aggregation phase or both omit
+it; either way the recovery of $(K, N, A)$ below uses only the
+\siginit and AD calls, which precede any message or aggregation block.
+
+Equality of the recovered sequences forces equality of the \siginit
+call, whose $\sigma$ is $\prfxroot \concat K \concat N$ with
+fixed-width $K$ and $N$, hence $K_i = K_j$ and $N_i = N_j$. It also
+forces equality of the recovered AD subsequences. By the AD bullet of
+\Cref{lem:transcript-inj} the associated-data phase contributes a
+$\sigadlast$-tagged block exactly when the associated data is nonempty,
+so the recovered sequences agree on the presence of the AD phase. If
+exactly one of $A_i, A_j$ were empty the recovered sequences would
+differ in the presence of a $\sigadlast$ call, contradicting their
+equality; hence either both are empty, giving $A_i = A_j = \varepsilon$,
+or both are nonempty, in which case the phase-recovery sub-claim of
+\Cref{lem:transcript-inj} inverts the $\rho$-byte-block partition map on
+the AD byte string and equal AD $\sigma$-block sequences imply
+$A_i = A_j$. In all cases $(K_i, N_i, A_i) = (K_j, N_j, A_j)$,
+contradicting the hypothesis of distinct triples.
+\end{proof}
+
+\begin{corollary}[Output-Point Separation]
+\label{cor:output-sep}
+Every well-formed \TW{} typed transcript prefix at a counted
+construction transcript lookup point belongs to exactly one of the
+following output-point classes, identified by the recovered duplex
+instance and the $4$-bit suffix of its final call:
+\begin{itemize}
+\item \Rinit (root duplex, suffix \siginit),
+\item \Linit($j$) (leaf-$j$ duplex, suffix \siginit),
+\item $\Rad^-$ / $\Rad^+$ (root duplex, suffix \sigadmore or \sigadlast),
+\item $\Rmsg^-$ / $\Rmsg^+$ (root duplex, suffix \sigmsgmore or \sigmsglast),
+\item $\Lmsg^-(j)$ (leaf-$j$ duplex, suffix \sigmsgmore),
+\item $\Ltag[j]$ (leaf-$j$ duplex, suffix \sigmsglast),
+\item \Ragg (suffix \sigaggmore),
+\item $\Rtag$ (root duplex, suffix \sigagglast).
+\end{itemize}
+For any two such prefixes whose bridged flattened inputs are equal,
+the recovered duplex-call sequences are equal, and therefore:
+\begin{enumerate}[label=(\roman*)]
+\item the prefixes have the same $(K, N)$ pair, recovered from the first call's $\sigma$;
+\item the prefixes have the same instance type (root or leaf), separated by $\prfxroot$ vs $\prfxleaf$ in the first call's $\sigma$;
+\item within leaf instances, the prefixes have the same chunk index $j$, separated by the fixed-width $\langle j \rangle_8$ field;
+\item the prefixes have the same output-point class, since the seven phase suffixes of the final call are pairwise distinct;
+\item within a single output-point class on the same duplex instance, the prefixes have the same duplex-call sequence, since two distinct prefixes in the same class differ in the contents of some recovered call.
+\end{enumerate}
+Equivalently, any two distinct counted transcript prefixes are
+separated by the first of (i)--(v) that applies.
+\end{corollary}
+
+\begin{proof}
+Items~(i)--(iv) restate the recovery established by
+\Cref{def:wf-transcripts,lem:transcript-inj}: bridge injectivity first
+recovers equality of native flattened inputs from equality of bridged
+inputs, and then \Cref{lem:transcript-inj} recovers the duplex-call
+sequence. The first call's $\sigma$ has the form
+$\prfxroot \concat K \concat N$ for root instances and
+$\prfxleaf \concat K \concat N \concat \langle j
+\rangle_8$ for leaf instances, with fixed-width $K$, $N$, and
+$\langle j \rangle_8$; the seven phase suffixes are pairwise distinct.
+Item~(v) is the contrapositive: two distinct well-formed prefixes in the
+same class on the same duplex instance differ in some recovered call's
+$\sigma$ or in the sequence length, and therefore in their flattened
+inputs.
+\end{proof}
+
+\subsection{Bridge and Typed Decoding}
+\label{app:lem-bridge-decode}
+
+\begin{lemma}[Bridge and Typed Decoding]
+\label{lem:bridge-decode}
+The random-oracle games used in
+\Cref{sec:privacy,sec:authenticity,sec:cmtds3,app:committing-transfer}
+are ordinary random-oracle games on a single random oracle
+$\ROflat : \bits^* \to \bits^\infty$ over the unpadded
+\cite{BDPV08} $H$-input domain (\Cref{sec:ro-model}), with \TW{} root and
+leaf duplex outputs answered by the typed restriction
+\[
+  \RF(X) = \ROflat(\flatmap(X)),
+  \qquad \flatmap(X) = \bridge[r, r_{\max}]\bigl(\mathsf{raw\_flat}(X)\bigr),
+\]
+for $r = r_{\max} = 1344$. Here $\mathsf{raw\_flat}(X)$ is the native
+flattened input $\Flat(\cdot)$ of \Cref{app:wf-transcripts} applied to
+the duplex-call sequence of $X$. The bridge $\bridge[r, r_{\max}]$ is the
+\cite{BDPV11} Theorem~3 preprocessing map, and the induced map
+$X \mapsto \flatmap(X)$ is injective on well-formed typed \TW{} duplex
+transcript prefixes. The exact decoder
+$\KeyedTWOut$ defined below maps any direct-query input to either
+$\bot$ or a unique candidate key and counted output-point class.
+\end{lemma}
+
+\begin{proof}
+The bridge $\bridge[r, r_{\max}]$ is described by the proof of
+\cite[Theorem~3]{BDPV11} in three steps: (1)~pad the input with
+$\padtenone[r]$; (2)~for each $r$-bit block, append $r_{\max} - r$
+zero bits; (3)~strip the trailing $\padten$ from the result. The
+$\padtenone$ padding in step~(1) appends a~$1$, then
+$q = (-|\mathsf{raw\_flat}(X)| - 2) \bmod r$ zero bits, then a closing
+$1$; the $\padten$-unpadding in step~(3) strips the $r_{\max} - r$
+trailing zero bits introduced by step~(2) together with the closing
+$1$ of step~(1). For \TW{} with $r = r_{\max}$, step~(2) appends an
+empty string and step~(3) strips zero trailing zeros and the closing
+$1$, so the net effect of steps~(1) and~(3) is to append $1 \concat
+0^q$. The bridge-injectivity paragraph above gives the direct inverse
+on this image: count the trailing zeros, delete them and the preceding
+inserted $1$, and recover the native flattened input.
+
+Injectivity of $\flatmap$ on well-formed typed \TW{} prefixes then
+follows from \Cref{lem:transcript-inj}: distinct well-formed typed
+prefixes have distinct
+$\mathsf{raw\_flat}(\cdot)$ images, and the bridge is injective on
+that image. Direct adversary queries on inputs outside the bridged
+\TW{} well-formed transcript language still count in $\qRO(\mathcal{B})$
+(\Cref{sec:resources}) but cannot trigger
+$\badkey$.
+
+Counted transcript lookup points are the well-formed prefixes of
+\Cref{def:wf-transcripts} whose classes are listed in
+\Cref{tab:keyed-twout}: root or leaf initialization, root AD blocks,
+root and leaf message blocks, root aggregation blocks, and the final
+root-tag point. \Cref{cor:output-sep} separates these output points, so
+an input accepted by $\KeyedTWOut$ fixes at most one candidate key and
+one output-point class, and inputs outside this well-formed transcript
+language decode to none.
+\end{proof}
+
+\medskip
+\noindent\textbf{Exact keyed decoder.}
+
+For a direct query to $\ROflat$ with input $Y$ and finite length
+$\ell$, define $\KeyedTWOut(Y)$ as a partial map from $\bits^*$ to
+$\bits^k \times \mathcal{C}_{\mathsf{out}}$. The map ignores
+$\ell$. It returns $(K,\mathcal{C})$ iff
+there exists a typed \TW{} duplex-call prefix $X$ such that
+$Y = \flatmap(X)$, the raw flattened prefix of $X$ parses as a
+well-formed \TW{} transcript prefix in the class $\mathcal{C}$ listed in
+\Cref{tab:keyed-twout}, and the first call of $X$ contains the
+candidate key $K$ in the fixed-width root field
+$\prfxroot \concat K \concat N$ or leaf field
+$\prfxleaf \concat K \concat N \concat \langle j \rangle_8$. If no
+such prefix exists, $\KeyedTWOut(Y) = \bot$. In particular, inputs with
+the right final suffix but a malformed phase order, noncanonical block
+partition, malformed aggregation string, or out-of-range leaf index are
+outside the well-formed language and decode to $\bot$.
+
+\begin{table}[ht]
+  \centering
+  \small
+  \begin{tabular}{l l l}
+    \toprule
+    Class $\mathcal{C}$ & Instance & Final call / role \\
+    \midrule
+    \Rinit       & root     & \siginit, root initialization \\
+    $\Rad^-$     & root     & \sigadmore, non-final AD block \\
+    $\Rad^+$     & root     & \sigadlast, final AD block \\
+    $\Rmsg^-$    & root     & \sigmsgmore, non-final root message block \\
+    $\Rmsg^+$    & root     & \sigmsglast, final root message block \\
+    \Ragg        & root     & \sigaggmore, non-final aggregation block \\
+    $\Rtag$      & root     & \sigagglast, final aggregation / root tag \\
+    \Linit($j$)  & leaf $j$ & \siginit, leaf initialization \\
+    $\Lmsg^-(j)$ & leaf $j$ & \sigmsgmore, non-final leaf message block \\
+    $\Ltag[j]$   & leaf $j$ & \sigmsglast, final leaf message block / leaf tag \\
+    \bottomrule
+  \end{tabular}
+  \caption{Counted keyed transcript classes for $\KeyedTWOut$.}
+  \label{tab:keyed-twout}
+\end{table}
+
+The table is a transcript-lookup table, not an observation-length
+table. A class is counted even when the construction's requested
+output length at that call is zero, including root initialization,
+non-final AD and aggregation calls, a final AD call whose following
+root chunk requests no keystream bytes, and the final root message
+call. A direct query triggers the same decoder regardless of $\ell$:
+short finite-output queries and zero-length queries $(Y,0)$ still
+count as direct queries to the address $Y$. Leaves have no AD or
+aggregation classes; a leaf transcript enters the table only through
+leaf initialization, non-final leaf message blocks, or the final leaf
+tag point. When the associated data is empty the root transcript
+likewise has no $\Rad^-$ or $\Rad^+$ class (\Cref{sec:enc}); the
+\Rinit class then supplies the first root keystream block, exactly as
+\Linit($j$) supplies the first leaf keystream block, and the decoder
+still ignores $\ell$. Symmetrically, when $n = 0$ the root transcript
+has no \Ragg or $\Rtag$ class (\Cref{sec:enc}); the final root message
+call $\Rmsg^+$ then supplies the root tag, exactly as $\Ltag[j]$
+supplies a leaf tag, and the decoder again ignores $\ell$. An $n \geq 1$
+computation also reaches an $\Rmsg^+$ point when closing chunk $0$, but
+there the construction requests zero output and continues into the
+aggregation phase, so the $\Rmsg^+$ value is exposed as a tag only on
+the $n = 0$ path; since $n = \leaves(C)$ is fixed by $\|C\|$, the two
+uses never coincide on a single ciphertext.
+
+\subsection{Adaptive Candidate Collisions}
+\label{app:lem-candidate-collisions}
+
+\begin{lemma}[Adaptive Candidate Collision]
+\label{lem:adaptive-candidate-collision}
+Fix $s \geq 2$, a projection length $\tau$, and a cap $Q$. Consider
+any interaction with a lazy random oracle $\ROflat : \bits^* \to
+\bits^\infty$ that builds a sequence of distinct \emph{candidate}
+inputs $Y_1,\dots,Y_m$ with $m \leq Q+s$. The process may make
+arbitrary non-candidate oracle queries and may choose each candidate
+adaptively from the full prior transcript. Whenever a new candidate
+$Y_j$ is appended, the append step immediately precedes the first
+oracle lookup that samples $\ROflat(Y_j)$. Both the decision to append
+and the string $Y_j$ are determined before that lookup, and the
+lazy-table value for $Y_j$ has not previously been sampled. Let
+$\mathsf{coll}_{s,\tau}$ be the event that some
+$s$ distinct candidates have equal $\tau$-bit projections:
+\[
+  \bigl\lfloor \ROflat(Y_{i_1}) \bigr\rfloor_\tau
+  =
+  \cdots
+  =
+  \bigl\lfloor \ROflat(Y_{i_s}) \bigr\rfloor_\tau
+  \quad
+  \text{for some } 1 \leq i_1 < \cdots < i_s \leq m .
+\]
+Then
+\[
+  \Pr[\mathsf{coll}_{s,\tau}]
+  \leq
+  \binom{Q+s}{s} \cdot 2^{-\tau(s-1)}.
+\]
+\end{lemma}
+
+\begin{proof}
+For a fixed position set $I = \{i_1 < \cdots < i_s\}
+\subseteq \{1,\dots,Q+s\}$, let $E_I$ be the event that these candidate
+positions exist and their $\tau$-bit projections are all equal. Expose
+the interaction in chronological order. Condition on any
+positive-probability prefix immediately before candidate position
+$i_r$ is appended, for $r \geq 2$, and on the values sampled at the
+earlier candidate positions in $I$. By the measurability and
+first-touch premises for new candidates, the value assigned to
+$Y_{i_r}$ is a fresh lazy-sampled infinite string independent of that
+prefix. Its $\tau$-bit projection therefore equals the already fixed
+projection of $Y_{i_1}$ with probability $2^{-\tau}$. Multiplying over
+$r = 2,\dots,s$ gives
+\[
+  \Pr[E_I] \leq 2^{-\tau(s-1)}.
+\]
+If some position in $I$ is never appended, then $E_I$ is false, so the
+same bound applies. There are $\binom{Q+s}{s}$ possible position sets,
+and a union bound over them gives the claim.
+\end{proof}
+
+\subsection{Adaptive Key Tests}
+\label{app:lem-key-tests}
+
+\begin{lemma}[Adaptive Key-Test Bound]
+\label{lem:key-tests}
+Consider a \TW{} random-oracle-model game with hidden
+$K \sample \bits^k$, direct adversary access to $\ROflat$, and an
+immediate abort event $\badkey$ that fires on a
+direct query $(Y,\ell)$ exactly when
+$\KeyedTWOut(Y) = (K,\mathcal{C})$ for some counted output-point class
+$\mathcal{C}$ of \Cref{tab:keyed-twout}. Suppose that, before the
+abort, the following invariant holds for every direct query position
+$i$: after conditioning on the full visible execution prefix and on
+the set $S_i$ of distinct decoded candidate keys from earlier direct
+queries, the hidden key is uniform on $\bits^k \setminus S_i$. Then
+\[
+  \Pr[\badkey]
+  \leq \KeyGuess_k(\qRO)
+  = \qRO / 2^k,
+\]
+where $\qRO$ is the execution-uniform cap on direct $\ROflat$ queries.
+\end{lemma}
+
+\begin{proof}
+If $\qRO \geq 2^k$ the right-hand side is at least one, so the claim is
+trivial. Assume $\qRO < 2^k$.
+
+Order the direct $\ROflat$ queries. By the definition of
+$\KeyedTWOut$ and \Cref{lem:bridge-decode}, each query input either
+decodes to $\bot$ or decodes to a unique candidate key and counted
+output-point class. Queries that decode to $\bot$, and repeated
+queries whose decoded key already lies in the current set $S_i$, do
+not change the set of possible first successful key tests. Removing
+them can only shorten the sequence, so it suffices to analyze the
+subsequence of distinct fresh decoded candidate keys
+$K'_1, \dots, K'_m$, where $m \leq \qRO$.
+
+Let $F_i$ be the event that the first $i$ fresh decoded candidate keys
+all miss the hidden key. The invariant says that, conditioned on the
+visible prefix before the $(i+1)$-st fresh test and on $F_i$, the
+hidden key is uniform over the $2^k - i$ keys not yet tested. The next
+fresh candidate key $K'_{i+1}$ is one of those remaining keys and is
+determined by the adversary's next direct query, so
+\[
+  \Pr[K = K'_{i+1} \mid F_i] = \frac{1}{2^k - i},
+  \qquad
+  \Pr[F_{i+1} \mid F_i] = 1 - \frac{1}{2^k - i}.
+\]
+Multiplying the miss probabilities gives
+\[
+  \Pr[F_m]
+  = \prod_{i=0}^{m-1} \left(1 - \frac{1}{2^k - i}\right)
+  = \prod_{i=0}^{m-1} \frac{2^k - i - 1}{2^k - i}
+  = \frac{2^k - m}{2^k}.
+\]
+Thus the probability that some fresh decoded candidate key equals the
+hidden key is $m / 2^k \leq \qRO / 2^k$. This event is exactly the
+first $\badkey$ abort, because $\KeyedTWOut$
+returns either $\bot$ or a unique candidate key.
+\end{proof}
+
+\subsection{Leaf-Tag Collision Bound}
+\label{app:lem-leaf-collision}
+
+\begin{lemma}[Leaf-Tag Collision Bound]
+\label{lem:leaf-collision}
+Consider any \TW{} random-oracle-model game with a hidden key,
+direct adversary access to $\ROflat$, and construction computations
+that may generate final leaf transcripts. Let
+$\mathsf{hit}_{\mathsf{leaf}}$ be the event that, before some
+construction-generated keyed final leaf transcript is first created,
+a direct adversary query to $\ROflat$ has already hit the bridged
+input of that hidden-key leaf transcript. Let
+$\badleaf$ be the event that two distinct
+construction-generated keyed final leaf transcript prefixes
+$X \neq X'$ in leaf-tag output-point classes receive the same
+$\tauleaf$-bit projection from $\RF(\cdot)$. Then the probability that
+$\badleaf$ occurs before
+$\mathsf{hit}_{\mathsf{leaf}}$ is bounded by
+\[
+  \Pr[\badleaf \text{ before }
+      \mathsf{hit}_{\mathsf{leaf}}]
+  \;\leq\; \binom{\nleaf(\mathcal{B})}{2} \cdot 2^{-\tauleaf}
+  = \frac{\nleaf(\mathcal{B})(\nleaf(\mathcal{B}) - 1)}{2^{\tauleaf + 1}}.
+\]
+\end{lemma}
+
+\begin{proof}
+Construction-generated means generated by encryption computations or
+by INT-CTXT verification computations (whether they accept or reject).
+Repeated evaluations of the same final leaf transcript are not new
+collision opportunities, since the lazy-sampled $\ROflat$ value is
+reused.
+
+Run the relevant game and stop the leaf-collision accounting if
+$\mathsf{hit}_{\mathsf{leaf}}$ occurs. The execution-uniform resource
+$\nleaf(\mathcal{B})$ of \Cref{sec:resources} bounds the number of
+distinct final leaf transcripts. Order those transcripts by first
+creation. At the moment such a transcript is first created by a
+construction computation before the stop, no earlier direct
+$\ROflat$ query has hit the bridge image of that hidden-key
+transcript by definition of $\mathsf{hit}_{\mathsf{leaf}}$. Nor has
+an earlier construction computation queried the same $\ROflat$ input
+under a different well-formed transcript:
+\Cref{lem:transcript-inj} separates distinct final leaf transcript
+encodings, and the \cite[Theorem~3]{BDPV11} bridge is injective. The
+$\tauleaf$-bit leaf-tag projection of $\RF(X)$ for that transcript
+sampled at that moment is therefore uniform and independent of the
+entire prior game view, including the prior $\ROflat$ table on other
+inputs, prior ciphertext and tag outputs, and the leaf-tag projections
+assigned to all distinct prior final leaf transcripts.
+
+For any fixed unordered pair of distinct final leaf transcripts
+created before this stop, the probability that their leaf tags are
+equal is $2^{-\tauleaf}$. There are at most
+$\binom{\nleaf(\mathcal{B})}{2}$ such pairs, and a union bound gives
+the claim. By \Cref{lem:transcript-inj}, conditioned on no leaf-tag
+collision, equal root aggregation inputs identify the same leaf
+transcript sequence.
+\end{proof}
+
+\subsection{Transcript Freshness}
+\label{app:lem-freshness}
+
+\begin{lemma}[Transcript Freshness]
+\label{lem:freshness}
+For any fixed nonce-respecting encryption query in the \TW{}
+random-oracle experiment, let $\mathsf{hit}_{\mathsf{fresh}}$ be the
+event that, before this query reaches some counted transcript point,
+a prior direct adversary query to $\ROflat$ has already hit the
+bridged input of that hidden-key point. On
+$\neg\mathsf{hit}_{\mathsf{fresh}}$, every transcript output of the
+query that contributes to a returned ciphertext block, to an internal
+leaf tag, or to the final root tag is fresh at the moment its
+$\ROflat$ value is sampled.
+\end{lemma}
+
+\begin{proof}
+Work on an execution outside $\mathsf{hit}_{\mathsf{fresh}}$ for the
+fixed query. This rules out prior adversary reads of the hidden-key
+construction inputs considered below. It remains to rule out repeats
+from previous construction-interface outputs and from the current
+encryption query.
+
+\paragraph{First root keystream block.}
+The first root keystream block, when present, is produced by the root
+duplex after the initialization call $\prfxroot \concat K
+\concat N$ and any AD absorption (elided when $A = \varepsilon$, in
+which case the \siginit call itself emits the first root keystream
+block). Since the privacy adversary never repeats
+a nonce, no previous encryption query can have used the same root
+initialization transcript. Within the current query,
+\Cref{lem:transcript-inj} separates initialization, AD, message, and
+aggregation calls by their suffixes and by the duplex-call encoding,
+so the first root keystream transcript is fresh. If the requested
+keystream length is zero, no ciphertext block is returned at that
+point and there is nothing to prove for that output.
+
+\paragraph{First leaf keystream block.}
+For each leaf chunk $j \geq 1$, the first leaf keystream block is
+produced after the initialization call $\prfxleaf \concat
+K \concat N \concat \langle j \rangle_8$. The prefix separates leaves
+from the root, the nonce separates this encryption query from all
+previous encryption queries, and $\langle j \rangle_8$ separates
+leaves within this query. Hence every first leaf keystream transcript
+is fresh.
+
+\paragraph{Later message outputs.}
+Argue inductively within each root or leaf message stream. Suppose
+the current message-output transcript is fresh. If its output is used
+as a keystream block, its $\ROflat$ value $Z_i$ is, by freshness of the
+lazy sample, uniform conditioned on the full prior view; since the
+adaptive plaintext block $M_i$ is a deterministic function of that
+prior view,
+\[
+  C_i = M_i \oplus Z_i
+\]
+is uniform conditioned on the prior view. \TW{} then absorbs $C_i$
+with the appropriate message-phase suffix ($\sigmsgmore$ or
+$\sigmsglast$) before requesting the next keystream block. Once $C_i$ is sampled, the next transcript is
+fixed; \Cref{lem:transcript-inj}'s injectivity and domain separation
+imply it has not appeared earlier unless the same duplex-call prefix
+has appeared earlier. Nonce uniqueness excludes this across encryption
+queries. By \Cref{cor:output-sep}, the next message-keystream output
+point can coincide with a within-query earlier output point only if
+both belong to the same output-point class on the same duplex
+instance (root or leaf-$j$ with matching $j$) and have the same
+duplex-call sequence; the current message-stream prefix is strictly
+longer than every earlier prefix in that stream, so this is excluded.
+Across distinct instances within the same query (root vs leaf, or
+two leaves with distinct $j$), the prefixes already differ in the
+first call's $\sigma$ by $\prfxroot /
+\prfxleaf$ or $\langle j \rangle_8$ respectively. Each
+later message-output transcript that emits keystream is therefore fresh
+when sampled. The terminal message-output transcript of a leaf emits
+the leaf tag rather than a following keystream block; the same
+separation argument applies to that transcript, so each internal leaf
+tag is sampled at a fresh point. Empty inputs still induce a duplex
+call, but with zero keystream output they contribute no ciphertext
+block.
+
+\paragraph{Final root tag transcript.}
+The final root tag is sampled at the root-tag output point selected by
+$\|C\|$: the $\Rtag$ point after the root duplex absorbs the
+aggregation transcript built from the leaf tags and $\langle n
+\rangle_8$ when $n \geq 1$, and the $\Rmsg^+$ point closing the root
+message phase when $n = 0$ (\Cref{sec:enc}). When $n \geq 1$, the leaf
+tags are themselves $\ROflat$ outputs on final leaf transcripts;
+condition on their sampled values, on the sampled
+ciphertext, and on the adversary-visible prior view and $\ROflat$
+table state, so that the root aggregation transcript is fixed. When
+$n = 0$ there is no aggregation transcript; condition on the sampled
+ciphertext and the adversary-visible prior view alone. By
+\Cref{cor:output-sep}, the selected root-tag output-point class is
+separated from every other output-point class in the same query ---
+including root initialization (suffix \siginit), AD-phase outputs,
+the remaining message-phase outputs, leaf-side output points (separated
+by $\prfxleaf$), and, in the $n \geq 1$ case, earlier \Ragg-prefix
+output points (separated by the \sigaggmore vs
+\sigagglast suffix). Even if two encryption queries realize
+the same aggregation transcript (or, for $n = 0$, the same root
+ciphertext), the full root transcript also
+contains the root initialization $\prfxroot \concat K
+\concat N$, and nonce uniqueness separates that initialization from
+all previous encryption queries. The final root tag transcript is
+therefore fresh, and its $\tauroot$-bit $\ROflat$ output is uniform
+independently of the conditioned information.
+\end{proof}
+
+\subsection{Privacy Accounting Lemmas}
+\label{app:priv-accounting}
+
+The random-oracle privacy proof of \Cref{thm:priv-ro} uses
+Transcript Freshness and the Adaptive Key-Test Bound through the
+privacy-specific interfaces below. These interfaces track the hidden
+key through the set of key values still viable after the visible
+stopped-game prefix. The stopped privacy games use the event
+$\badkey$ from \Cref{thm:priv-ro}: a direct query
+$(Y,\ell)$ aborts when
+$\KeyedTWOut(Y) = (K,\mathcal{C})$ for the hidden or auxiliary key
+$K$ and a counted output-point class $\mathcal{C}$. The stopped games
+inspect this predicate before returning the direct-oracle answer for
+the offending query; if it holds, no answer for that query is included
+in the adversary's view.
+
+\begin{lemma}[Privacy Viable-Key Prefix]
+\label{lem:priv-viable-prefix}
+Fix a nonce-respecting privacy adversary and an index $i \geq 0$. Let
+$H_i$ be the stopped privacy hybrid that samples $K \sample \bits^k$,
+answers the first $i$ accepted encryption queries by $\Rand$, answers
+all later accepted encryption queries by $\Enc_K^\RO$, answers direct
+$\ROflat$ queries by the lazy table, and aborts on
+$\badkey$. Condition on any positive-probability
+visible prefix that includes the submitted $(i+1)$-st accepted
+encryption query but not its oracle answer, and on no earlier
+$\badkey$. Let $S$ be the set of distinct keys
+$K'$ for which some prior direct query input $Y$ satisfies
+$\KeyedTWOut(Y) = (K',\mathcal{C})$ for a counted output-point class
+$\mathcal{C}$, and let
+\[
+  \mathcal{V} = \bits^k \setminus S .
+\]
+Then the hidden key is uniform on $\mathcal{V}$ under this conditioning.
+Moreover, for every $K' \in \mathcal{V}$, the online execution of
+$\Enc_{K'}^\RO$ on the pending query reaches no counted transcript
+point whose bridged input was previously queried directly by the
+adversary. The bridged transcript inputs reached for two distinct keys
+in $\mathcal{V}$ are disjoint.
+\end{lemma}
+
+\begin{proof}
+Before the $(i+1)$-st accepted encryption query in $H_i$, the accepted
+construction-interface queries, if any, were answered by $\Rand$. Thus
+the visible encryption answers and the lazy answers to direct
+$\ROflat$ queries are independent of the hidden key except through the
+immediate-abort rule. A prior direct query aborts exactly when its
+decoded candidate key equals the hidden key. Conditioning on the
+visible prefix and on no earlier abort therefore removes exactly the
+keys in $S$, leaving the hidden key uniform on
+$\bits^k \setminus S = \mathcal{V}$.
+
+Fix $K' \in \mathcal{V}$ and run the pending encryption computation
+online, with each later transcript address determined by the already
+fixed query input and by the outputs sampled earlier in this same
+computation. If a counted transcript point reached in this execution
+had appeared as a prior direct query input $Y$, then
+\Cref{lem:bridge-decode} would give
+$\KeyedTWOut(Y) = (K',\mathcal{C})$ for that point's counted class
+$\mathcal{C}$, so $K'$ would lie in $S$, contradicting
+$K' \in \mathcal{V}$. Hence no prior direct query has hit any counted
+point reached by the pending computation for a viable key. Finally,
+if two reached bridged transcript inputs for keys $K'_0 \neq K'_1$
+were equal, bridge injectivity and \Cref{lem:transcript-inj} would
+recover the same first duplex call. That call contains the fixed-width
+key field, forcing $K'_0 = K'_1$, a contradiction.
+\end{proof}
+
+\begin{lemma}[Privacy One-Query Replacement]
+\label{lem:priv-one-query-replacement}
+Fix a nonce-respecting privacy adversary and an index $i \geq 0$. Let
+$H_i$ be the stopped privacy hybrid that samples
+$K \sample \bits^k$, answers the first $i$ accepted encryption queries
+by $\Rand$, answers all later accepted encryption queries by
+$\Enc_K^\RO$, answers direct $\ROflat$ queries by the lazy table, and
+aborts on $\badkey$. On executions with fewer than
+$i+1$ accepted encryption queries, the two hybrids coincide. Then
+$H_i$ and $H_{i+1}$ can be coupled so that the adversary's visible
+transcript and the abort indicator are identical. In particular, they
+have identical joint distributions of the adversary's view and the
+abort indicator.
+\end{lemma}
+
+\begin{proof}
+Use the same adversary coins, the same key $K$, and the same answers to
+all direct queries and encryption queries before the $(i+1)$-st
+accepted encryption query. If the adversary never makes that query, the
+coupling is immediate. Otherwise condition on any common
+positive-probability visible prefix that includes the submitted query
+but not its oracle answer, and on no earlier abort. Let the query be
+$(N,A,M)$, and let $\mathcal{V}$ be the viable key set of
+\Cref{lem:priv-viable-prefix} for this prefix.
+
+By \Cref{lem:priv-viable-prefix}, the hidden key is uniform on
+$\mathcal{V}$, and every viable key has no prior direct hit on any
+counted transcript point reached by the pending encryption computation.
+For the actual key in $H_i$, this no-hit condition is precisely the
+event $\neg\mathsf{hit}_{\mathsf{fresh}}$ of \Cref{lem:freshness} for
+the pending computation: any prior direct query that hit a counted
+transcript point reached by the computation would, by
+\Cref{lem:bridge-decode}, be decoded by $\KeyedTWOut$ to the hidden key
+$K$ and would already have triggered $\badkey$.
+Applying \Cref{lem:freshness} gives freshness for every construction
+output of the query that contributes to the returned ciphertext, to an
+internal leaf tag, or to the final root tag. Applying the same transcript
+freshness argument to each $K' \in \mathcal{V}$, and using the
+disjointness of key-indexed transcript inputs from
+\Cref{lem:priv-viable-prefix}, enumerate all such outputs in the order
+taken by the encryption computation.
+
+Thus, to describe the conditional law, introduce an auxiliary online
+family of uniform coins indexed by a viable key and by the output
+position reached in that key's encryption computation. These auxiliary
+coins are sampled independently of the hidden key. If the hidden key is
+$K'$, the $H_i$ computation reads the $K'$-row and installs only those
+row entries in the lazy table, at the transcript addresses actually
+reached by $\Enc_{K'}^\RO$. The coins for other viable keys are not
+lazy-table entries; they only witness that every possible hidden-key
+row induces the same distribution on the returned string. A later
+direct query to a nonactual viable-key address is therefore answered by
+the ordinary shared lazy table in both hybrids, not by a coin sampled
+during this replacement coupling.
+
+Each plaintext block is fixed before the corresponding keystream coin
+is drawn, so XOR with that coin makes the ciphertext block uniform.
+Once a ciphertext block is fixed, the next message transcript is fixed
+and fresh at its sampling time. When $n \geq 1$, leaf tags are sampled
+from fresh coins as well; after these tags and the ciphertext are fixed,
+the aggregation transcript is fixed and the final root tag is sampled
+from another fresh coin at the $\Rtag$ point. When $n = 0$ the
+aggregation phase is elided and the final root tag is instead the fresh
+coin at the closing $\Rmsg^+$ root message point. Hence the returned string $(C,T)$ is jointly uniform of
+length $\|M\|+\tauroot/8$ and independent of $K$ conditioned on the
+prefix. In the coupling, the $\Rand$ answer in $H_{i+1}$ is sampled as
+this same independent string.
+
+It remains to compare the lazy-table state exposed after this query.
+The entries that may be written in $H_i$ but not in $H_{i+1}$ are
+construction-internal entries at hidden-key counted transcript inputs
+for nonce $N$. A later direct adversary query to any such input would
+be decoded by $\KeyedTWOut$ to $K$ and would trigger
+$\badkey$ before returning an oracle answer, so the
+possibly different table entry is never exposed. Later real encryption
+queries use nonces different from $N$ by nonce-respectingness, and
+their typed construction inputs are therefore disjoint from this
+query's inputs by \Cref{cor:output-sep}. Thus the extra lazy-table
+entries are unobservable before the abort. Continuing the coupling with
+shared answers on all exposed direct-oracle inputs and all later real
+construction inputs gives identical visible transcripts and identical
+abort indicators.
+\end{proof}
+
+\begin{lemma}[Privacy Stopped-Game Advantage Bound]
+\label{lem:priv-stopped-bound}
+Let $\mathsf{P}_0$ and $\mathsf{P}_1$ be the unstopped real and ideal
+privacy games of \Cref{thm:priv-ro}, with $\mathsf{P}_1$ carrying the
+auxiliary key used only for the abort predicate, and let
+$\mathsf{P}_0^{\mathrm{stop}}$ and $\mathsf{P}_1^{\mathrm{stop}}$ be
+their immediate-abort variants. Assume the adversary $\mathcal{B}$ has
+an execution-uniform cap $q_e$ on accepted encryption queries. Then for
+any event $E$ determined by the adversary's final output in the
+unstopped games,
+\[
+  \left|
+    \Pr[E \text{ in } \mathsf{P}_0]
+    - \Pr[E \text{ in } \mathsf{P}_1]
+  \right|
+  \leq
+  \KeyGuess_k(\qRO(\mathcal{B})).
+\]
+\end{lemma}
+
+\begin{proof}
+\emph{Stopped-game equality.}
+Define hybrids $H_0,\dots,H_{q_e}$ as in
+\Cref{lem:priv-one-query-replacement}. Then
+$H_0 = \mathsf{P}_0^{\mathrm{stop}}$. Since every accepted encryption
+query is among the first $q_e$ such queries, $H_{q_e}$ is
+$\mathsf{P}_1^{\mathrm{stop}}$. Applying
+\Cref{lem:priv-one-query-replacement} for $i = 0,\dots,q_e-1$ gives the
+same joint distribution of the adversary's view and the abort indicator
+in adjacent hybrids, and telescoping gives the same joint distribution
+in the two stopped games. Write
+\[
+  p =
+  \Pr[\badkey \text{ in }
+      \mathsf{P}_1^{\mathrm{stop}}];
+\]
+by the stopped-game equality the abort probability is also $p$ in
+$\mathsf{P}_0^{\mathrm{stop}}$. For each side $b \in \{0,1\}$, the
+unstopped game $\mathsf{P}_b$ and its stopped variant
+$\mathsf{P}_b^{\mathrm{stop}}$ agree exactly until the first
+$\badkey$ direct query and have the same occurrence
+probability for that event. Hence, for the final-output event $E$,
+\[
+  \Pr[E \text{ in } \mathsf{P}_b]
+  =
+  \Pr[E \wedge \neg \badkey
+      \text{ in } \mathsf{P}_b^{\mathrm{stop}}]
+  + x_b
+\]
+for some $0 \leq x_b \leq p$. The first terms are equal for $b=0$ and
+$b=1$ by stopped-game equality, while $x_0, x_1 \in [0,p]$, so
+\[
+  \left|
+    \Pr[E \text{ in } \mathsf{P}_0]
+    - \Pr[E \text{ in } \mathsf{P}_1]
+  \right|
+  \leq p .
+\]
+
+\emph{Abort bound.}
+It remains to show $p \leq \KeyGuess_k(\qRO(\mathcal{B}))$. Let
+$\mathsf{P}_1^{\mathrm{aux}}$ be the non-aborting version of the ideal
+privacy game: it samples the auxiliary key $K \sample \bits^k$,
+answers construction queries by fresh random strings exactly as $\Rand$
+does, answers direct $\ROflat$ queries by the ordinary lazy table, and
+never aborts. For each direct query input $Y_i$, \Cref{lem:bridge-decode}
+either rejects $Y_i$ as outside the bridged well-formed \TW{} transcript
+language or recovers a unique candidate key from the decoded keyed
+transcript prefix.
+
+The visible-prefix uniformity invariant required by \Cref{lem:key-tests}
+holds in $\mathsf{P}_1^{\mathrm{aux}}$. Condition on any
+positive-probability visible execution prefix immediately before a
+direct query, on no earlier $\badkey$, and on the set
+$S_i$ of distinct candidate keys decoded from prior direct-query inputs.
+Construction responses are fresh random strings, direct $\ROflat$
+answers are lazy random-oracle values, and both are independent of the
+auxiliary key $K$; the no-earlier-abort condition removes exactly the
+keys in $S_i$. Thus $K$ remains uniform on $\bits^k \setminus S_i$.
+
+The first $\badkey$ event in
+$\mathsf{P}_1^{\mathrm{stop}}$ has the same probability as the first
+successful adaptive key test in $\mathsf{P}_1^{\mathrm{aux}}$, because
+the two games are identical up to that query. Applying
+\Cref{lem:key-tests} with $\qRO = \qRO(\mathcal{B})$ gives
+$p \leq \KeyGuess_k(\qRO(\mathcal{B}))$. Combining with the
+stopped-game bound proves the claim.
+\end{proof}
+
+\subsection{INT-CTXT Accounting Lemmas}
+\label{app:intctxt-accounting}
+
+The INT-CTXT proof of \Cref{thm:intctxt-ro} uses the generic key-test
+and leaf-collision accounting lemmas together with the INT-specific
+facts below. The \emph{root-tag output point} of a computation is the
+output point that emits its root tag: $\Rtag$ (suffix \sigagglast) when
+$n \geq 1$, and the closing root message point $\Rmsg^+$ (suffix
+\sigmsglast) when $n = 0$ and the aggregation phase is elided
+(\Cref{sec:enc}). Because $n = \leaves(C)$ is fixed by $\|C\|$, all
+computations on a common ciphertext share the same root-tag output
+point. A \emph{final root transcript class} is the set of
+construction computations whose encryption or verification computation
+realizes the same bridged final root input at this root-tag output point.
+Such a class is \emph{encryption-first} if its first construction
+generation is by an encryption query, and \emph{verification-first} if
+its first construction generation is by a non-replay verification
+query.
+
+\begin{lemma}[INT Visible-Prefix Key Uniformity]
+\label{lem:int-key-uniformity}
+In the random-oracle INT-CTXT game stopped at
+$\badkey$ as in \Cref{thm:intctxt-ro}, order the
+direct $\ROflat$ queries. For a direct query position $i$, let $S_i$
+be the set of distinct candidate keys decoded by $\KeyedTWOut$ from
+earlier direct-query inputs. Condition on any positive-probability
+visible execution prefix immediately before query $i$, on no earlier
+$\badkey$, and on $S_i$. Then the hidden key $K$
+is uniform on $\bits^k \setminus S_i$. Consequently the uniformity
+invariant required by \Cref{lem:key-tests} holds in the stopped
+INT-CTXT game.
+\end{lemma}
+
+\begin{proof}
+The visible prefix contains the adversary's oracle queries and replies:
+direct $\ROflat$ outputs, encryption outputs and the resulting replay
+table, verification bits, and the adversary state determined by these
+values. Fix such a prefix and two keys $K_0, K_1 \notin S_i$.
+
+Define a transcript-renaming map $\Phi_{0 \to 1}$ on typed
+construction prefixes by replacing the first-call key field $K_0$ by
+$K_1$ and leaving every other recovered field unchanged: the nonce,
+leaf index, phase sequence, AD blocks, ciphertext blocks, leaf-tag
+bytes appearing in root aggregation, and the root/leaf instance
+identifier are preserved. Let $\Phi_{1 \to 0}$ be the inverse map. By
+\Cref{lem:bridge-decode,cor:output-sep}, $\flatmap \circ \Phi_{0 \to
+1} \circ \flatmap^{-1}$ is a bijection between the bridged
+construction-addresses whose decoded key is $K_0$ and those whose
+decoded key is $K_1$; it preserves output-point classes and equality
+relations among addresses.
+
+This bijection is applied online, not to a pre-existing fixed address
+set. Whenever a construction computation under $K_0$ would first query
+a hidden-key address $Y$, the coupled computation under $K_1$ queries
+$\Phi_{0 \to 1}(Y)$ and receives the same lazy-table value; repeated
+queries are coupled consistently through the same map. If the queried
+address is a root aggregation address containing leaf-tag bytes, those
+bytes are already coupled equal because the corresponding leaf-tag
+lookups were either repeated or first sampled earlier under the same
+renaming rule. Thus adaptively generated message transcripts and root
+aggregation transcripts are renamed step by step with the same visible
+ciphertext, leaf-tag, and root-tag bytes.
+
+Prior direct-query inputs are not renamed: they are adversary-chosen
+visible strings. None lies in either hidden-key construction-address
+set for $K_0$ or $K_1$, because any prior direct query to such an
+address would be decoded by $\KeyedTWOut$ to $K_0$ or $K_1$ and would
+put that key in $S_i$. Direct-query lazy-table values are therefore
+coupled identically and remain disjoint from the renamed hidden
+construction addresses.
+
+Use the same adversary coins, the same direct-query lazy-table values,
+and the online renamed construction-internal lazy-table values.
+Encryption outputs have the same distribution under the coupling,
+because every construction lookup that determines ciphertext, leaf
+tags, or the final root tag is paired with a distinct renamed lookup
+carrying the same sampled value. Replay verification decisions depend
+only on the visible replay table. Non-replay verification computations
+are renamed in the same online way as encryption computations, and the
+final root-tag comparison therefore gives the same accept/reject bit.
+Verification does not reveal plaintext on rejection or acceptance; it
+reveals only that bit.
+
+Thus every visible prefix with hidden key $K_0 \notin S_i$ has the
+same conditional probability as the corresponding execution with hidden
+key $K_1 \notin S_i$. Since $K$ is initially uniform and the condition
+``no earlier $\badkey$'' removes exactly the keys in
+$S_i$, all keys in $\bits^k \setminus S_i$ remain equally likely.
+\end{proof}
+
+\begin{lemma}[INT Leaf Freshness Before BadKey]
+\label{lem:int-leaf-fresh-before-badkey}
+In the stopped INT-CTXT game of \Cref{thm:intctxt-ro}, let
+$\mathsf{hit}_{\mathsf{leaf}}$ be the event of
+\Cref{lem:leaf-collision}: before some construction-generated
+hidden-key final leaf transcript is first created, a direct adversary
+query has already hit its bridged input. Then
+$\mathsf{hit}_{\mathsf{leaf}}$ cannot occur before
+$\badkey$. Hence
+\[
+  \Pr[\badleaf \text{ before }
+      \badkey]
+  \leq
+  \Pr[\badleaf \text{ before }
+      \mathsf{hit}_{\mathsf{leaf}}].
+\]
+\end{lemma}
+
+\begin{proof}
+A hidden-key final leaf transcript is one of the counted leaf classes
+of \Cref{tab:keyed-twout}. By \Cref{lem:bridge-decode}, any direct
+query to its bridged input is decoded by $\KeyedTWOut$ to the hidden
+key $K$ and the corresponding $\Ltag[j]$ class, independently of the
+requested output length. Such a direct query triggers
+$\badkey$ immediately. Therefore no execution
+prefix strictly before $\badkey$ contains a
+$\mathsf{hit}_{\mathsf{leaf}}$ event. Hence, on every execution path
+where $\badleaf$ occurs before
+$\badkey$ (including paths where
+$\badkey$ never occurs),
+$\badleaf$ occurs before
+$\mathsf{hit}_{\mathsf{leaf}}$.
+\end{proof}
+
+\begin{lemma}[INT Encryption-First Root Replay]
+\label{lem:int-encryption-first-replay}
+In the random-oracle INT-CTXT game, before
+$\badleaf$, no accepting non-replay verification
+submission belongs to an encryption-first final root transcript class.
+\end{lemma}
+
+\begin{proof}
+Fix a verification submission $(N,A,C,T)$ whose final root transcript
+belongs to a class first generated by an encryption query returning
+$(N_e,A_e,C_e,T_e)$. Since the final root transcript is the same and
+$\badleaf$ has not occurred,
+the final-root determinacy part of \Cref{lem:transcript-inj} gives
+$(N,A,C) = (N_e,A_e,C_e)$.
+
+The correct root tag for this transcript is the lazy-sampled value
+already returned as $T_e$ by the encryption oracle. If $T = T_e$, then
+$(N,A,C,T)$ is exactly a recorded encryption tuple and the verification
+is a replay. If $T \neq T_e$, the final tag comparison fails. Thus the
+submission cannot be both accepting and non-replay.
+\end{proof}
+
+\begin{lemma}[INT Verification-First Root Guessing]
+\label{lem:int-verification-first-root-guess}
+In the random-oracle INT-CTXT game stopped before
+$\badkey \cup \badleaf$, let
+$\mathsf{win}_{\mathsf{vf}}$ be the event that some accepting
+non-replay verification submission belongs to a verification-first
+final root transcript class. Then
+\[
+  \Pr[\mathsf{win}_{\mathsf{vf}}]
+  \leq \qv(\mathcal{B}) / 2^{\tauroot}.
+\]
+\end{lemma}
+
+\begin{proof}
+Work in the game stopped at the first occurrence of
+$\badkey$ or $\badleaf$. For
+accounting, define an all-reject continuation: encryption queries are
+answered normally, replay verification queries accept normally, and
+every non-replay verification submission performs the same construction
+computation but returns reject to the adversary. Lazy sampling is
+deferred for each verification-first class's final root-tag value: the
+continuation records the class address and the submitted tag, but while
+the class remains verification-first it does not expose that root-tag
+value to the adversary. The execution-uniform cap $\qv(\mathcal{B})$
+applies to this continuation.
+
+Fix a verification-first final root transcript class $\mathcal{C}$ and follow the
+all-reject path until the first later encryption query generating the
+same class, if any. Let $G_{\mathcal{C}}$ be the set of distinct candidate tags
+submitted by non-replay verification queries in class $\mathcal{C}$ before that
+cutoff. Repeated tags only shrink this set. The class's correct root
+tag $U_{\mathcal{C}}$ is the $\tauroot$-bit projection of $\ROflat$ at the class's
+bridged root-tag input. Before the stop, no direct query has hit this
+hidden-key input: such a query would be decoded by $\KeyedTWOut$ to
+the hidden key and would trigger $\badkey$. Before
+the cutoff, no encryption query has revealed $U_{\mathcal{C}}$ as an encryption
+tag. (When the class's root-tag point is $\Rmsg^+$, i.e.\ $n = 0$, an
+encryption query on a longer message that shares chunk $0$ may touch
+this same address while closing its chunk-$0$ message phase, but it
+requests zero output there and continues into its aggregation phase, so
+it does not reveal $U_{\mathcal{C}}$; its own tag is emitted at a later $\Rtag$
+point.) The all-reject path and the set $G_{\mathcal{C}}$ are therefore functions
+only of the adversary's coins, visible oracle replies, and lazy-table
+values at inputs other than this class's root-tag address. By lazy sampling,
+conditioned on those values and on the fixed path, $U_{\mathcal{C}}$ may be sampled
+after $G_{\mathcal{C}}$ is fixed and is uniform independently of $G_{\mathcal{C}}$.
+
+After the cutoff, if it exists, class $\mathcal{C}$ contributes no accepting
+non-replay submission. Let the cutoff encryption query return
+$(N_e,A_e,C_e,T_e)$. Any later verification submission in the same
+final root transcript class has, by the final-root determinacy part of
+\Cref{lem:transcript-inj} and the absence of
+$\badleaf$, the same $(N,A,C)$ as that encryption
+computation. If the submitted tag is $T_e$, the tuple is a recorded
+encryption tuple and the verification is a replay; if the submitted tag
+is not $T_e$, the final tag comparison fails.
+
+Consider the event that the first accepting non-replay verification
+submission in the stopped game belongs to class $\mathcal{C}$. Up to that global
+first accept, the adversary's visible answers match the all-reject
+continuation: every earlier non-replay submission rejects, replay
+queries accept in both executions, and encryption answers are
+unchanged. The construction computations also agree at every address
+except that the all-reject continuation defers the final root-tag value
+for class $\mathcal{C}$ until the comparison is needed. Therefore the first
+accepting non-replay submission can belong to class $\mathcal{C}$ only before the
+cutoff, and only if $U_{\mathcal{C}} \in G_{\mathcal{C}}$, which has probability at most
+$|G_{\mathcal{C}}|/2^{\tauroot}$.
+
+Each non-replay verification submission deterministically reconstructs
+one final root transcript at the root-tag output point. If the class is
+verification-first and the submission occurs before that class's
+encryption cutoff, the submitted tag contributes to at most one set
+$G_{\mathcal{C}}$; otherwise it contributes to none. Thus
+$\sum_{\mathcal{C}} |G_{\mathcal{C}}| \leq \qv(\mathcal{B})$, and a union bound over the
+verification-first classes gives the claim.
+\end{proof}

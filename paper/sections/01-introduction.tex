@@ -1,0 +1,197 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Authenticated encryption with associated data is the workhorse of applied
+cryptography, and the sponge and duplex constructions over a single public
+permutation offer an attractive route to it. The duplex of \cite{BDPV11} turns
+one permutation---here \Keccak[1600, 12], the round-reduced permutation
+underlying the \cite{FIPS202} standard---into a single-pass authenticated cipher
+with a small, constant memory footprint and no separate block cipher or
+universal-hash key schedule. Its security rests on the indifferentiability of
+the sponge from a random oracle \cite{BDPV08}, which reduces analysis of the full
+construction to a random-oracle argument plus one capacity-birthday loss.
+
+This compactness comes at a structural cost. A duplex is inherently
+\emph{sequential}: each call absorbs its input into a state produced by the
+previous call, so a single duplex cannot exploit the wide SIMD and multicore
+parallelism of modern processors, on which competing designs built from AES
+reach many bytes per cycle. A second, orthogonal gap is \emph{commitment}.
+Widely deployed AEADs such as AES-GCM and ChaCha20-Poly1305 are not
+key-committing: an adversary can craft a single ciphertext that decrypts to
+valid plaintexts under two or more keys \cite{DGRW18, ADGKLS22}. Far from a
+curiosity, this enables concrete abuses---the ``invisible salamander'' that
+defeats Facebook's attachment-franking scheme \cite{DGRW18}, ciphertexts that
+open to different well-formed files under different keys \cite{ADGKLS22}, and
+partitioning-oracle attacks that recover passwords from systems built on
+non-committing AEAD \cite{LGR21}. The committing-AE line that addresses these
+threats was initiated by \cite{GLR17} and developed into formal committing
+notions with efficient generic transforms by \cite{BH22}. A mode that targets
+those notions natively, rather than through an add-on transform, avoids the
+transform's overhead and binds commitment to the same permutation it already
+uses for confidentiality and integrity.
+
+\TW{} addresses both gaps with a two-level tree of keyed duplexes. A serial
+\emph{root} duplex, initialized with the key $K$ and nonce $N$, absorbs the
+associated data, encrypts the first message chunk, and absorbs a tag from every
+other chunk before emitting the final authentication tag. The remaining chunks
+are processed by independent \emph{leaf} duplexes, each keyed by $(K, N, j)$ and
+operating on disjoint state and disjoint input. Because the leaves share nothing
+once $(K, N)$ is fixed, they can be evaluated in parallel across SIMD lanes,
+recovering the throughput a flat duplex forgoes; and because the root binds the
+associated data, the first chunk, and every leaf tag into the single output tag,
+that tag is a sponge image of the entire $(K, N, A, M)$ input. The structure
+ensures only that distinct $(K, N, A)$ triples reach distinct root transcripts;
+the committing security itself rests on the indistinguishability of the sponge,
+which makes those transcripts' tags collision-resistant (\Cref{sec:cmtds3}). Every duplex
+still operates on a bounded $1600$-bit state, so the memory footprint remains
+constant in the message length.
+
+We analyze \TW{} in the public-permutation model and obtain concrete bounds for
+three notions: all-in-one authenticated encryption in the sense of
+\cite{RS06}, its multi-user indistinguishability lift in the sense of
+\cite{BT16}, and $s$-way committing security in the strongest full-input sense
+(\textsf{CMTDs-4}) of \cite{BH22}. Each bound is proved first against an
+intermediate random oracle and then transferred to the real permutation by the
+flat-sponge lift of \cite{BDPV08}. At the implemented parameters
+($k = c = \tauroot = \tauleaf = 256$), all three notions meet a $128$-bit
+security target for adversaries running up to $\Ntot \leq 2^{63}$ \Keccak{}
+calls---on the order of $2^{71}$ bytes of processed data, beyond any realistic
+deployment lifetime. Optimized \texttt{amd64} and \texttt{arm64} implementations
+turn the tree's leaf parallelism into measured throughput within a small factor
+of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
+
+\subsection{Our Contributions}
+\label{sec:contributions}
+
+\begin{itemize}
+\item \textbf{The \TW{} mode.} We specify \TW{}, a nonce-based AEAD with
+  associated data built as a two-level tree of strict \cite{BDPV11} duplexes
+  over \Keccak[1600, 12] (\Cref{sec:tw128}): a serial root duplex that binds
+  $(K, N, A)$, the first chunk, and the leaf tags into a single authentication
+  tag, over a set of parallel, independently keyed leaf duplexes. All phases are
+  domain-separated within one permutation, and the state is constant-size
+  regardless of message length.
+
+\item \textbf{All-in-one AE security.} We prove a concrete bound on the
+  all-in-one AE advantage \cite{RS06} in the public-permutation model
+  (\Cref{thm:ae}), obtained by composing random-oracle privacy and
+  \textsf{INT-CTXT} bounds through the generic-composition argument of
+  \cite{BN00} and lifting the result to the real permutation.
+
+\item \textbf{Multi-user security.} We give a concrete multi-user
+  indistinguishability bound \cite{BT16} for $D$ users
+  (\Cref{thm:mu-ind}), obtained by a key-collision-stopped hybrid over the
+  users that reuses the single-user privacy and \textsf{INT-CTXT} envelopes.
+
+\item \textbf{Committing security.} We prove that \TW{} achieves $s$-way
+  \textsf{CMTDs-4} committing security---commitment to the full
+  $(K, N, A, M)$ input, for any number $s \geq 2$ of claimed openings---with a
+  concrete root-collision bound (\Cref{thm:cmtds4}), and we derive the remaining
+  \cite{BH22} committing notions (\textsf{CMT} and \textsf{CMTD} for
+  $\ell \in \{1, 3, 4\}$) as direct bounds (\Cref{app:committing-transfer}).
+  Committing security is native to the mode, with no generic transform.
+
+\item \textbf{Proof methodology.} We carry out the analysis in a dedicated \TW{}
+  random-oracle model and transfer every bound to the public-permutation setting
+  through the \cite{BDPV08} flat-sponge lift (\Cref{app:flat-sponge-lift}). A
+  derived-adversary argument shows that each direct primitive query induces at
+  most one random-oracle query, so the random-oracle envelopes are instantiated
+  at the direct-query count $\Nprim$ rather than the total work $\Ntot$,
+  separating the single capacity-birthday loss $\Lift_c(\Ntot)$ from the
+  scheme-specific terms.
+
+\item \textbf{Optimized implementations.} We describe and evaluate vectorized
+  \texttt{amd64} (AVX-512 and AVX2) and \texttt{arm64} (NEON with the SHA-3
+  extension) implementations whose batched leaf cores realize the tree's
+  parallelism in practice, reaching multi-gigabyte-per-second throughput on
+  contemporary hardware (\Cref{sec:performance}).
+\end{itemize}
+
+\subsection{Related Work}
+\label{sec:related}
+
+\paragraph{Sponge and duplex AEADs.}
+Permutation-based authenticated encryption built on the sponge and duplex
+constructions of \cite{BDPV08, BDPV11} is well established. Keyak \cite{BDPVV16}
+is a CAESAR candidate built on the duplex over round-reduced \Keccak{}, whose
+Motorist mode already admits parallel duplex instances. Ascon \cite{DEMS21}, the
+lightweight winner of the CAESAR competition and the basis of the NIST
+lightweight-cryptography standard, and Xoodyak \cite{DHPVV20}, a finalist in that
+process whose Cyclist mode is a deliberately serial simplification of Motorist,
+are duplex AEADs over the Ascon and Xoodoo permutations. \TW{} shares this
+single-permutation, constant-state duplex foundation but differs in structure:
+rather than one duplex session, it is a two-level tree whose leaves are
+\emph{independently keyed} duplexes under domain-separated chunk identifiers.
+Like Keyak's Motorist mode, the tree admits data-parallel evaluation across SIMD
+lanes; the designs differ in where the degree of parallelism lives. Keyak fixes
+it as a mode parameter---each named instance sets the number $\Pi$ of parallel
+duplex instances across which a message is spread, so $\Pi$ is part of the wire
+format and must be agreed by the encryptor and decryptor in advance. In \TW{} the
+leaf decomposition is fixed by the mode, but the number of leaves evaluated
+simultaneously is not part of the transcript: an implementation chooses it at run
+time to match the host's vector width, and the ciphertext and tag are identical
+however it is chosen, so a wide-SIMD encryptor and a scalar decryptor
+interoperate.
+
+\paragraph{Tree hashing.}
+The two-level shape is inspired by tree hashing over the same permutation, in
+particular KangarooTwelve \cite{BDPVVV16}, which splits its input into
+fixed-size chunks hashed independently under \Keccak[1600, 12] and absorbs their
+chaining values into a root node. \TW{} reuses the round count and the
+final-node/leaf split of that design and adapts it to authenticated encryption:
+each leaf chunk is encrypted and tagged independently, and the leaf tags are
+absorbed by the root in place of chaining values. It also inherits the
+short-message behavior of KangarooTwelve's \emph{kangaroo hopping}, which merges
+the first chunk with the hashing of the remaining chunks' chaining values so
+that an input fitting in a single chunk incurs no tree overhead: in \TW{} a
+single-chunk message engages no leaf duplexes and no aggregation phase, the root
+processing it directly and emitting the tag as a plain keyed duplex would. Short
+messages therefore pay none of the tree's cost and retain the latency profile of
+an unstructured duplex (\Cref{sec:latency}); the leaf layer, and its
+parallelism, engage only once a message spans more than one chunk.
+
+\paragraph{Committing AEAD.}
+The study of committing authenticated encryption was initiated by \cite{GLR17},
+who introduced compactly committing AEAD for message franking, and by
+\cite{DGRW18}, who built it from a dedicated primitive (encryptment);
+\cite{BH22} subsequently organized the notions into the \textsf{CMT-1}/\textsf{3}/\textsf{4}
+and \textsf{CMTD} hierarchy and gave efficient generic transforms
+(\textsf{UtC}, \textsf{RtC}, \textsf{HtE}) that add commitment to a base scheme.
+A complementary line shows that widely used and dedicated AEADs fail these
+notions: the invisible-salamander \cite{DGRW18} and partitioning-oracle
+\cite{LGR21} attacks, multi-format ciphertexts \cite{ADGKLS22}, the
+context-discovery and commitment attacks that break CCM, EAX, SIV, GCM, and
+OCB3 \cite{MLGR23}, and an $O(1)$ key-committing attack against all variants of
+AEGIS \cite{WP14} that refutes the prior belief that AEGIS was committing
+\cite{IR23}. \TW{} instead targets the strongest full-input notion,
+\textsf{CMTDs-4}, directly: its committing security follows from the
+indistinguishability of the sponge, rather than from a generic transform
+applied to a non-committing base scheme.
+
+\subsection{Paper Organization}
+\label{sec:organization}
+
+\Cref{sec:prelims} recalls the notation, sponge and duplex
+constructions over \Keccak{}, the authenticated-encryption and
+committing-security \cite{BH22} notions used throughout, and the
+multi-user indistinguishability notion of \cite{BT16}.
+\Cref{sec:tw128} specifies the \TW{} construction and its parameters.
+\Cref{sec:security-model} fixes the public-permutation games, the
+intermediate random-oracle model, and the resource accounting that
+all later bounds reference. \Cref{sec:main-results} states the
+headline AE, mu-ind, and CMTDs-4 theorems and their
+concrete \TW{}-parameter forms; \Cref{sec:privacy,sec:authenticity}
+prove the random-oracle privacy and INT-CTXT bounds that feed those
+theorems, and \Cref{sec:cmtds3} proves the random-oracle
+CMTDs-3 bound. \Cref{sec:performance} reports the
+performance of the reference and optimized implementations.
+\Cref{sec:discussion} compares \TW{} to prior sponge AEADs and
+committing constructions and discusses limitations.
+\Cref{sec:conclusion} concludes.
+\Cref{app:lemmas} collects the structural decoding and accounting
+lemmas that form the proof core;
+\Cref{app:flat-sponge-lift} carries out the \cite{BDPV08} flat-sponge lift
+that converts each random-oracle bound to its public-permutation
+form; \Cref{app:committing-transfer} gives the remaining
+\cite{BH22} committing-security bounds; and
+\Cref{app:test-vectors} lists \TW{} test vectors.

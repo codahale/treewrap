@@ -1,0 +1,64 @@
+\documentclass[journal=tosc,submission,notanonymous]{iacrtrans}
+
+\input{preamble}
+\input{macros}
+
+\title[TW128]{TW128: A Tree-Structured Duplex Authenticated-Encryption Mode}
+\author{Coda Hale}
+\institute{Hale Institute for Bicycle Appreciation}
+
+\begin{document}
+
+\maketitle
+
+\keywords{authenticated encryption \and committing security \and sponge constructions \and duplex constructions \and Keccak}
+
+\begin{abstract}
+  We present \TW{}, a nonce-based authenticated-encryption mode with
+  associated data built as a two-level tree of keyed duplexes over the
+  \Keccak[1600, 12] permutation. A serial root duplex binds
+  the key, nonce, and associated data, encrypts the first message chunk, and
+  aggregates a tag from every remaining chunk into a single authentication tag;
+  the remaining chunks are handled by independent leaf duplexes that share no
+  state once the key and nonce are fixed and can therefore be evaluated in
+  parallel across SIMD lanes.
+
+  We analyze \TW{} in the public-permutation model, proving each
+  bound first against an intermediate random oracle and then transferring it
+  to the real permutation by the flat-sponge lift. We obtain concrete bounds for
+  all-in-one authenticated encryption, multi-user indistinguishability, and
+  $s$-way committing security in the strongest full-input sense
+  (\textsf{CMTDs-4}), obtained directly rather than through a generic transform.
+  At the implemented parameters all three notions meet a
+  $128$-bit security target. Vectorized \texttt{amd64} and \texttt{arm64}
+  implementations realize the tree's leaf parallelism, reaching
+  multi-gigabyte-per-second throughput within a small factor of
+  hardware-accelerated AES-128-GCM.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-preliminaries}
+\input{sections/03-tw128}
+\input{sections/04-security-model}
+\input{sections/05-main-results}
+\input{sections/06-privacy}
+\input{sections/07-authenticity}
+\input{sections/08-cmtds3}
+\input{sections/09-performance}
+\input{sections/10-discussion}
+\input{sections/11-conclusion}
+
+\section*{Acknowledgments}
+A hearty thank-you to my wife, who remains reasonably mystified at my choice
+of hobbies.
+
+\bibliographystyle{alpha}
+\bibliography{refs}
+
+\appendix
+\input{sections/appendix-lemmas}
+\input{sections/appendix-flat-sponge-lift}
+\input{sections/appendix-committing-transfer}
+\input{sections/appendix-test-vectors}
+
+\end{document}

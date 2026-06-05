@@ -1,0 +1,155 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Comparison Table}
+\label{sec:compare-table}
+
+\Cref{tab:scheme-compare} situates \TW{} against representative authenticated
+encryption schemes along the axes that distinguish it: the underlying primitive,
+whether the mode is parallelizable, the key, nonce, and tag sizes, associated-data
+support, nonce-misuse resistance, and full-input key commitment (\textsf{CMT-4}).
+The comparison is structural; the concrete forms of \TW{}'s own privacy, AE, and
+committing bounds, and the regimes in which each term dominates, are treated in
+\Cref{sec:bound-discussion}. The \textsf{CMT-4} column records full-input key
+commitment: \TW{} provides it within the mode, as does Ascon \cite{KSW23}, a
+committing transform supplies it for an arbitrary base scheme, and the remaining
+listed schemes do not provide it.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Structural comparison of \TW{} with representative AEADs. Sizes are in
+bytes; AES-GCM-SIV also admits a $32$-byte key. ``Misuse-res.'' is nonce-misuse
+resistance in the sense of \cite{RS06}; \textsf{CMT-4} is full-input
+key-commitment in the sense of \cite{BH22}. A dash means the entry is inherited
+from the base scheme. \TW{}'s concrete bounds appear in
+\Cref{sec:bound-discussion}.}
+\label{tab:scheme-compare}
+\begin{tabular}{@{}llccccc@{}}
+\toprule
+Scheme & Primitive & Par. & K/N/T & AD & Misuse & \textsf{CMT-4} \\
+\midrule
+\TW{}                        & \Keccak[1600,12]   & yes & $32/32/32$ & yes & no  & yes \\
+Ascon-128a \cite{DEMS21}     & Ascon-$p$ ($320$ b) & no  & $16/16/16$ & yes & no  & yes \\
+Xoodyak \cite{DHPVV20}       & Xoodoo ($384$ b)   & no  & $16/16/16$ & yes & no  & no  \\
+AES-GCM-SIV \cite{GLL17}     & AES                & yes & $16/12/16$ & yes & yes & no  \\
+nAE $+$ \textsf{CTX} \cite{CR22} & any nAE        & ---  & ---        & yes & --- & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Comparison with Prior Sponge AEADs}
+\label{sec:compare-sponge}
+
+\TW{} belongs to the family of single-permutation duplex AEADs initiated by
+\cite{BDPV11}. The dedicated lightweight members of that family, Ascon
+\cite{DEMS21} and Xoodyak \cite{DHPVV20}, target $128$-bit security on small
+permutations ($320$ and $384$ bits) with a strictly serial duplex: each call
+depends on the previous one, so there is no mode-level parallelism to exploit.
+\TW{} instead pays for a larger permutation, \Keccak[1600, 12], and a $256$-bit
+capacity---the same round count as KangarooTwelve \cite{BDPVVV16}---in exchange
+for a tree that processes leaf chunks in parallel and for the headroom that
+yields $128$-bit security with a comfortable margin. The cost of this choice is
+visible in \Cref{sec:performance}: on short, single-leaf inputs \TW{} is slower
+per byte than a compact serial duplex would be, and its advantage appears only
+once a message spans enough leaves to fill the vector units.
+
+Keyak \cite{BDPVV16} is the closest prior duplex AEAD in spirit, since its
+Motorist mode is already parallelizable. As discussed in \Cref{sec:related}, the
+difference is that Keyak fixes its degree of parallelism as a mode parameter
+that the encryptor and decryptor must share, whereas in \TW{} the number of
+leaves evaluated at once is an implementation choice invisible to the ciphertext.
+Strobe \cite{Ham17} is a serial sponge framework aimed at whole protocols rather
+than at a standalone AEAD, and like Ascon and Xoodyak it does not parallelize.
+Committing security is not unique to \TW{} in this family: a dedicated analysis
+of the sponge-based NIST lightweight finalists proves Ascon committing while
+breaking others \cite{KSW23}, and some constructions, such as Strobe, have not
+been examined in that setting at all. What distinguishes \TW{} is that it targets
+the strongest $s$-way full-input notion (\textsf{CMT-4}) as a proven, designed
+property of the mode, established without leaving the single-permutation duplex
+setting.
+
+\subsection{Comparison with Committing AEAD Constructions}
+\label{sec:compare-commit}
+
+The dominant route to committing AEAD is a generic transform over a
+non-committing base scheme. \cite{BH22} give the \textsf{UtC}, \textsf{RtC}, and
+\textsf{HtE} transforms, which add key- or context-commitment to an arbitrary
+AEAD, and \cite{CR22} give \textsf{CTX}, which makes any nonce-based AE scheme
+commit to its full context at the cost of a single hash over a short string and
+with no ciphertext expansion. These transforms are inexpensive and broadly
+applicable; \textsf{CTX} in particular is nearly free. \TW{} differs not by
+undercutting their cost but by integration: it is committing as the mode itself,
+with the same permutation and the same tag that already provide confidentiality
+and integrity, so no separate commitment primitive, key-derivation step, or
+auxiliary hash is invoked, and the strongest $s$-way full-input notion follows
+from a single root-tag collision bound (\Cref{sec:cmtds3}). This places \TW{}
+alongside the dedicated committing primitives---the compactly committing AEAD of
+\cite{GLR17} and the encryptment of \cite{DGRW18}---which likewise build
+commitment in rather than bolt it on, but which were designed for message
+franking rather than as general nonce-based AEADs. The contrast with transformed
+conventional schemes is sharpened by the attacks of \Cref{sec:related}: base
+schemes such as GCM and OCB are not committing on their own \cite{CR22}, and a
+transform is the only way to make them so.
+
+Closest to \TW{} here is the recent work of \cite{DHMVV24}, which builds
+nonce-based AE directly on the SHA-3 functions \textsf{SHAKE} and
+\textsf{TurboSHAKE}---the latter using the same round-reduced \Keccak{}
+permutation as \TW{}---and likewise achieves \textsf{CMT-4} natively, from the
+collision resistance of the underlying function rather than from a transform. The
+two designs make different structural choices: \cite{DHMVV24} targets
+session-based communication, chaining a stream of messages through intermediate
+tags and generalizing the keyed duplex into a \emph{duplex cipher}, whereas \TW{}
+is a single two-level tree whose independent leaves expose run-time-selectable
+parallelism at constant memory (\Cref{sec:related,sec:impl}). Both demonstrate
+that committing AE needs no add-on transform once it is built on a
+well-scrutinized \Keccak{} permutation.
+
+\subsection{Limitations and Open Problems}
+\label{sec:limitations}
+
+\paragraph{Nonce misuse.}
+\TW{}'s privacy analysis requires a nonce-respecting adversary, and the mode is
+not misuse-resistant: a repeated nonce reuses leaf keystream and breaks
+confidentiality, as for any online duplex stream cipher. Schemes such as
+AES-GCM-SIV \cite{GLL17}, in the deterministic/misuse-resistant lineage of
+\cite{RS06}, tolerate nonce repetition at the price of a second pass. A
+misuse-resistant variant of \TW{} is left open.
+
+\paragraph{Release of unverified plaintext.}
+The analysis assumes that plaintext is released only after the tag verifies. \TW{}
+is online and single-pass, so an implementation that streams decrypted leaf
+output before checking the root tag operates in the release-of-unverified-plaintext
+setting of \cite{ABLMMY14}, which our bounds do not cover; plaintext-awareness and
+\textsf{INT-RUP} security for \TW{} are unstudied.
+
+\paragraph{Bound tightness.}
+Two terms are knowingly conservative. The flat-sponge differentiating loss
+$\Lift_c(\Ntot) = \Ntot(\Ntot+1)/2^{c+1}$ is the transformation-form
+indifferentiability bound of \cite{BDPV08}, used here as a generic lift from the
+random-oracle model. A direct analysis of the keyed duplex is tighter: the
+modern keyed-duplex bounds synthesized by \cite{Men23}, building on the
+full-state keyed-duplex line, bound a keyed duplex against an ideal permutation
+without passing through indifferentiability, and recasting \TW{}'s leaf and root
+duplexes in that framework is a promising route to a sharper capacity term. This
+route is not turnkey, however: the keyed duplex bundles squeezing and absorption
+into a single call, so its authenticated-encryption mode \textsf{MonkeySpongeWrap}
+has the decryptor \emph{overwrite} the rate with each ciphertext block rather than
+feed back the ciphertext it has just produced. On the final, padded block this
+overwrite no longer matches the encryptor's XOR-absorbed padded plaintext outside
+the message bits, so the decryptor cannot reconstruct the final block of duplex
+output and recomputes the tag from a divergent state \cite[Alg.~8]{Men23}. \TW{}
+sidesteps this by absorbing the ciphertext in both directions (\Cref{sec:tw128}),
+so recasting it on the keyed duplex would first require repairing the mode. We
+retain the indifferentiability lift for its modularity, as the resulting
+$\Lift_c$ already meets the $128$-bit target (\Cref{sec:bound-discussion}). The
+leaf-tag collision term
+$\Nleaf(\Nleaf-1)/2^{\tauleaf+1}$ is a pairwise union bound whose necessity for
+the AE guarantee, as opposed to an artifact of the accounting, is not settled.
+
+\paragraph{Beyond-birthday and leakage.}
+All bounds are birthday-type on the $256$-bit capacity, delivering the
+$128$-bit target but no more; a beyond-birthday analysis is open. The model is
+also single-stage and leakage-free: side-channel resistance is addressed only at
+the implementation level, through the constant-time properties of
+\Cref{sec:impl}, and is not part of the provable-security claims.

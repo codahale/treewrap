@@ -1,0 +1,98 @@
+\section{Committing Security}
+\label{sec:cmtds3}
+
+This section proves the random-oracle CMTDs-3 bound that the headline
+CMTDs-4 statement (\Cref{thm:cmtds4}) consumes via the trivial
+promotion of \Cref{app:committing-transfer}. The public-permutation
+CMTDs-3 statement follows by the flat-sponge lift of
+\Cref{app:flat-sponge-lift}.
+
+\begin{theorem}[Random-Oracle CMTDs-3]
+\label{thm:cmtds3-ro}
+For every $s \geq 2$ and every $s$-way CMTDs-3
+adversary $\mathcal{B}$ in the \TW{} random-oracle model
+(\Cref{sec:ro-model}),
+\[
+  \Advcmtds{3}_\RO(\mathcal{B})
+  \;\leq\; \RootColl_{\tauroot}(\qRO(\mathcal{B}), s)
+  = \frac{\binom{\qRO(\mathcal{B}) + s}{s}}{2^{\tauroot (s - 1)}}.
+\]
+\end{theorem}
+
+\begin{proof}
+Unlike the privacy and INT-CTXT proofs, the CMTDs-3 analysis has no
+$\badkey$ event: all $s$ keys are
+adversary-supplied, so a direct query to a keyed transcript is one of
+$\mathcal{B}$'s visible $\ROflat$ queries and is counted in
+$\qRO(\mathcal{B})$.
+
+Run the random-oracle CMTDs-3 game (\Cref{sec:ro-model}) and define a
+candidate sequence for every execution. During $\mathcal{B}$'s direct
+oracle phase, when $\mathcal{B}$ makes a direct query to an input $Y$
+that is not already in the sequence, append $Y$ immediately before
+answering the query if $\KeyedTWOut(Y)$ decodes to a root-tag
+output-point class, namely $\Rmsg^+$ (the single-chunk root tag, with
+the aggregation phase elided when $n = 0$) or $\Rtag$ (the multi-chunk
+root tag). This predicate depends on $Y$ alone through the exact decoder
+of \Cref{lem:bridge-decode}, which ignores the requested output length,
+so both the decision to append and the string $Y$ are determined before
+the query's $\ROflat$ lookup. By Output-Point Separation
+(\Cref{cor:output-sep}) each input decodes to at most one output-point
+class, so each distinct direct query contributes at most one candidate.
+Since there is no construction oracle before $\mathcal{B}$ outputs its
+tuples, each direct-query candidate is first touched at its append step.
+
+After $\mathcal{B}$ outputs $C \concat T$ and tuples
+$(K_i,N_i,A_i,M_i)_{i=1}^s$, stop appending challenger candidates if
+the syntax, message-length, or pairwise-distinct-triple check fails.
+Otherwise, as the
+challenger evaluates the $s$ deterministic decryption checks, let
+$R_i$ be the final root transcript reached by
+$\Dec_{K_i}^\RO(N_i,A_i,C \concat T)$ in check $i$, and append
+$\flatmap(R_i)$ immediately before the root-tag oracle answer is
+sampled, unless that input is already in the sequence. If a challenger
+input was already touched by a direct query, then
+\Cref{lem:bridge-decode} and Output-Point Separation
+(\Cref{cor:output-sep}) imply that the earlier query was a final-root
+candidate and the input is already in the sequence. Otherwise,
+\Cref{cor:output-sep} excludes all earlier challenger lookups outside
+the final-root class, and Opening Triple Separation
+(\Cref{cor:triple-sep}) excludes earlier final-root lookups from the
+other checked triples. Thus every newly appended candidate is first
+touched at its append step. The sequence therefore satisfies the
+first-touch premise of Adaptive Candidate Collision
+(\Cref{lem:adaptive-candidate-collision}), and its length is at most
+$\qRO(\mathcal{B}) + s$.
+
+On a winning execution, the challenger has accepted the syntax,
+message-length, and pairwise-distinct-triple checks, so the tuples are
+valid and the $(K_i,N_i,A_i)$ triples are pairwise distinct. By
+\Cref{cor:triple-sep}, the bridged final-root inputs
+\[
+  \flatmap(R_1),\dots,\flatmap(R_s)
+\]
+are pairwise distinct. Thus leaf-tag collisions cannot merge the root
+inputs relevant to a CMTDs-3 win. Since every decryption check
+accepts, the
+$\tauroot$-bit projections at the $s$ distinct challenger final-root
+inputs all equal the supplied tag $T$:
+\[
+  \bigl\lfloor\ROflat(\flatmap(R_1))\bigr\rfloor_{\tauroot}
+  =
+  \cdots
+  =
+  \bigl\lfloor\ROflat(\flatmap(R_s))\bigr\rfloor_{\tauroot}
+  =
+  T .
+\]
+Hence the win event is contained in the $s$-way candidate-collision
+event. Applying \Cref{lem:adaptive-candidate-collision} with
+$Q=\qRO(\mathcal{B})$ and $\tau=\tauroot$ gives
+\[
+  \Advcmtds{3}_\RO(\mathcal{B})
+  \leq
+  \binom{\qRO(\mathcal{B}) + s}{s} \cdot 2^{-\tauroot(s-1)}
+  =
+  \RootColl_{\tauroot}(\qRO(\mathcal{B}), s).
+\]
+\end{proof}

@@ -1,0 +1,40 @@
+% Figures and pseudocode.
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+% Disambiguate algpseudocode line anchors so multiple algorithms with
+% line-numbering don't collide under hyperref.
+\makeatletter
+\renewcommand{\theHALG@line}{\thealgorithm.\arabic{ALG@line}}
+\makeatother
+
+% Tables.
+\usepackage{booktabs}
+\usepackage{comment}
+
+% Lists.
+\usepackage{enumitem}
+
+% The IACR text block is narrow; allow TeX to loosen dense math prose before
+% reporting overfull lines.
+\emergencystretch=2em
+
+% IACR loads hyperref at the end of the preamble; load cleveref after it.
+\AtEndPreamble{%
+  \usepackage[capitalize,noabbrev]{cleveref}%
+  \crefname{section}{\S}{\S\S}%
+  \Crefname{section}{Section}{Sections}%
+  \crefname{lemma}{Lemma}{Lemmas}%
+  \Crefname{lemma}{Lemma}{Lemmas}%
+  \crefname{corollary}{Corollary}{Corollaries}%
+  \Crefname{corollary}{Corollary}{Corollaries}%
+  \crefname{theorem}{Theorem}{Theorems}%
+  \Crefname{theorem}{Theorem}{Theorems}%
+  \crefname{algorithm}{Algorithm}{Algorithms}%
+  \Crefname{algorithm}{Algorithm}{Algorithms}%
+  \crefname{figure}{Figure}{Figures}%
+  \Crefname{figure}{Figure}{Figures}%
+  \crefname{remark}{Remark}{Remarks}%
+  \Crefname{remark}{Remark}{Remarks}%
+}

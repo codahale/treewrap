@@ -1,0 +1,476 @@
+\section{The TW128 Construction}
+\label{sec:tw128}
+
+\subsection{Design Overview}
+\label{sec:design}
+
+\TW{} is a nonce-based authenticated-encryption scheme with associated
+data, built as a two-level tree of duplex objects over the
+\Keccak[1600, 12] permutation. A single \emph{root} duplex, initialized
+with the key $K$ and nonce $N$, absorbs the associated data $A$ when it
+is nonempty, emits
+keystream for the first plaintext chunk $M_0$ of at most $\beta$ bytes,
+and absorbs the resulting ciphertext chunk $C_0$;
+when $A$ is empty the associated-data phase is elided and the
+initialization call itself emits the $M_0$ keystream;
+the remaining plaintext is partitioned into \emph{leaf} chunks
+$M_1, \dots, M_n$, each handled by an independent leaf duplex
+initialized with $(K, N, j)$. The leaf duplex emits the keystream for
+$M_j$, absorbs the resulting ciphertext chunk $C_j$, and produces a
+$\tauleaf$-bit leaf tag $T_j$. When $n \geq 1$ the leaf tags, together
+with the eight-byte little-endian length $\langle n \rangle_8$, are
+absorbed into the root duplex, which emits a single $\tauroot$-bit root
+tag $T$; when $n = 0$ the aggregation phase is elided and the closing
+message-phase call of the root chunk emits $T$ directly, mirroring the
+way a leaf duplex emits its leaf tag. The construction is depicted in
+\Cref{fig:tw128-tree}.
+
+Three design properties motivate the tree shape. First, the leaf
+duplexes operate on disjoint state and consume disjoint inputs once
+$(K, N)$ is fixed, so leaves $1, \dots, n$ can be evaluated in parallel
+across SIMD lanes; \Cref{sec:performance} quantifies the
+resulting throughput on AMD64 and ARM64 hardware. Second, every duplex
+operates on a bounded 1600-bit state regardless of message length, so
+the memory footprint is constant in $\|M\|$. Third, the explicit
+aggregation of leaf tags through a single deterministic root transcript
+gives the construction its committing-security guarantee: distinct
+$(K, N, A)$ triples force distinct final root transcripts before
+aggregation values matter
+(\Cref{cor:triple-sep,sec:cmtds3}), which is the structural fact behind
+the CMTDs-4 headline of \Cref{sec:headline}.
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}[
+    font=\small,
+    >=Stealth,
+    block/.style={draw, rounded corners=1pt, minimum height=10mm,
+                  align=center},
+    init/.style={block, minimum width=15mm, fill=black!10,
+                 font=\footnotesize},
+    msg/.style={block, minimum width=11mm, fill=blue!12},
+    cv/.style={block, minimum width=9mm, fill=green!18,
+               font=\footnotesize},
+    enc/.style={block, minimum width=11mm, fill=black!10,
+                font=\scriptsize},
+    leaf/.style={block, minimum height=22mm, minimum width=11mm,
+                 fill=blue!12},
+    arr/.style={->, thin},
+    flab/.style={font=\scriptsize, inner sep=1pt},
+  ]
+    \node[init] (init) {$K, N$};
+    \node[msg, right=1mm of init] (ad) {$A$};
+    \node[msg, right=1mm of ad] (c0) {$C_0$};
+    \node[cv, right=1mm of c0] (t1) {$T_1$};
+    \node[cv, right=1mm of t1] (t2) {$T_2$};
+    \node[right=1mm of t2, inner sep=1pt] (dots) {$\cdots$};
+    \node[cv, right=1mm of dots] (tn) {$T_n$};
+    \node[enc, right=1mm of tn] (lenc) {$\langle n \rangle_8$};
+
+    \draw[arr] (lenc.east) -- ++(7mm,0) node[right] {$T$};
+
+    \node[leaf, above=12mm of t1] (leaf1) {$C_1$};
+    \node[leaf, above=12mm of t2] (leaf2) {$C_2$};
+    \node[leaf, above=12mm of tn] (leafn) {$C_n$};
+
+    \node[flab, above=1mm of leaf1.north] {$K, N, 1$};
+    \node[flab, above=1mm of leaf2.north] {$K, N, 2$};
+    \node[flab, above=1mm of leafn.north] {$K, N, n$};
+
+    \draw[arr] (leaf1.south) -- (t1.north);
+    \draw[arr] (leaf2.south) -- (t2.north);
+    \draw[arr] (leafn.south) -- (tn.north);
+  \end{tikzpicture}
+  \caption{Schematic of TW128 for $n \geq 1$ leaves.
+    The root duplex (bottom row) is
+    initialized with $(K, N)$ and absorbs in turn the associated data
+    $A$, the root ciphertext chunk $C_0$, each leaf tag
+    $T_1, \dots, T_n$, and the eight-byte little-endian length
+    $\langle n \rangle_8$; it emits the root tag $T$. Each leaf duplex
+    (top row) is initialized with $(K, N, j)$, emits keystream for
+    plaintext chunk $M_j$, absorbs the resulting ciphertext chunk $C_j$,
+    and produces $T_j$. Leaves can be evaluated in parallel. The
+    ciphertext chunks $C_0, C_1, \dots, C_n$ are obtained by XORing the
+    keystream emitted by the corresponding duplex with the plaintext
+    chunks $M_0, M_1, \dots, M_n$. When $n = 0$ the diagram
+    reduces to the bottom row without any $T_j$ boxes or aggregation
+    block: the aggregation phase is elided and the closing message-phase
+    call on $C_0$ emits the root tag $T$ directly. When the
+    associated data is empty the $A$ block is absent: the
+    associated-data phase is elided and the initialization call emits the
+    $M_0$ keystream directly.}
+  \label{fig:tw128-tree}
+\end{figure}
+
+\subsection{Parameters and Domain}
+\label{sec:params}
+
+\Cref{tab:params} lists the user-visible and derived scheme parameters.
+The implementation uses the same byte length for the root tag and each
+leaf tag, but the proofs of \Cref{sec:authenticity,sec:cmtds3} keep
+$\tauroot$ and $\tauleaf$ as separate symbols.
+
+\begin{table}[ht]
+  \centering
+  \small
+  \begin{tabular}{l l l}
+    \toprule
+    Parameter & Value & Description \\
+    \midrule
+    $k$                  & $256$          & Key length (bits) \\
+    $\nu$                & $256$          & Nonce length (bits) \\
+    $\tauroot$ & $256$          & Root tag length (bits) \\
+    $\tauleaf$ & $256$          & Leaf tag length (bits) \\
+    $\beta$              & $8183$         & Plaintext chunk size (bytes) \\
+    $M_{\max}$           & $8183 \cdot 2^{64}$ bytes & Maximum plaintext length \\
+    $A_{\max}$           & $8183 \cdot 2^{64}$ bytes & Maximum associated-data length \\
+    \midrule
+    $b$           & $1600$  & Permutation state width (bits) \\
+    $n_r$         & $12$    & Permutation rounds \\
+    $r$           & $1344$  & Sponge rate (bits) \\
+    $c$           & $256$   & Sponge capacity (bits) \\
+    $\rho$        & $167$   & Maximum byte-aligned absorption per duplex call (bytes) \\
+    \bottomrule
+  \end{tabular}
+  \caption{\TW{} parameters.}
+  \label{tab:params}
+\end{table}
+
+The bound $M_{\max} = 8183 \cdot 2^{64}$ bytes is the largest plaintext whose leaf
+index fits in $\langle \cdot \rangle_8$: writing $\leaves(M) =
+\max(0, \lceil \|M\| / \beta \rceil - 1)$, every
+supported plaintext satisfies $0 \leq \leaves(M) \leq 2^{64} - 1$, so
+leaf indices lie in $\{1, \dots, 2^{64} - 1\}$. The associated-data
+bound $A_{\max}$ is a fixed scheme parameter taken equal to $M_{\max}$
+unless stated otherwise. Inputs exceeding these bounds are outside the
+scheme domain; every game in \Cref{sec:security-model} rejects
+domain-violating queries.
+
+The derived per-call absorption bound $\rho$ follows the \cite{BDPV11}
+analysis: with $r = 1344$ and $\padtenone$ padding, $\rho_{\max}(\padtenone, r) =
+r - 2 = 1342$ bits. The byte-aligned data field shares this allotment
+with the four-bit phase suffix of \Cref{sec:domain-sep}, so $\rho$ is
+the largest integer satisfying $8\rho + 4 \leq 1342$, giving $\rho =
+167$ data bytes (and $8\rho + 4 = 1340 \leq 1342$).
+
+\subsection{Parameter Choice Rationale}
+\label{sec:param-rationale}
+
+The four free parameters $c$, $k$, $\tauroot =
+\tauleaf$, and $\beta$ (the rate $r = b - c$ is then determined by
+the capacity) are chosen to give 128-bit
+single-key security against every term of the concrete bounds derived
+in \Cref{sec:concrete} while keeping per-byte cost low. Specifically:
+
+\begin{itemize}
+\item $c = 256$. The dominant single-key term is the \cite{BDPV08}
+flat-sponge loss
+\[
+  \Lift_c(\Ntot) = \Ntot(\Ntot+1)/2^{c+1},
+\]
+which reaches the $2^{-128}$ threshold at
+$\Ntot \approx 2^{(c-127)/2} \approx 2^{64.5}$ \Keccak{} calls;
+the headline cap of $\Ntot \leq 2^{63}$ used in \Cref{sec:concrete-claim} keeps
+this term at most $2^{-131}+2^{-194}$, and hence below $2^{-130}$.
+Setting $c = 256$ thereby delivers 128-bit single-key security on this term.
+Under the mu-ind
+bound of \Cref{sec:headline} the per-user security margin degrades by
+$\log D$ bits in $D$ users; the concrete $D$-indexed envelope appears in
+\Cref{sec:concrete-claim}.
+
+\item $r = 1344$. With state width $b = 1600$ fixed by the
+\Keccak[1600, 12] choice, $r = b - c = 1344$ is the largest rate
+compatible with the chosen capacity. The 12-round
+\Keccak[1600, 12] permutation matches KangarooTwelve's
+choice~\cite{BDPVVV16}, with a substantial cryptanalytic safety margin
+relative to the 24-round version used in SHA-3~\cite{FIPS202}.
+
+\item $\tauroot = \tauleaf = 256$. Matching the
+capacity ensures that the per-tag collision terms in the
+authenticity and committing bounds (\Cref{sec:concrete}) are dominated
+by the capacity birthday rather than the tag length.
+
+\item $k = 256$. Matching the capacity ensures that the per-user key
+guess
+\[
+  \KeyGuess_k(\Nprim) = \Nprim/2^k
+\]
+remains below the capacity birthday at the target $D$ of
+\Cref{sec:concrete-claim}.
+
+\item $\beta = 8183$. The chunk size is set to $49\rho = 49 \cdot 167$
+bytes, the largest multiple of the per-call absorption bound $\rho$ not
+exceeding $2^{13}$ bytes. Taking $\beta$ to be an exact multiple of
+$\rho$ makes every full leaf split into exactly $49$ fully utilized
+message duplex calls with no short final block, so a full leaf costs one
+initialization duplex call plus $49$ message duplex calls. This amortizes
+the fixed per-leaf initialization cost over a large chunk while keeping
+the leaf state working set ($8183 < 2^{13}$ bytes) small enough for L1
+cache; \Cref{sec:throughput} reports the resulting cycles-per-byte figures.
+\end{itemize}
+
+\subsection{Domain Separation}
+\label{sec:domain-sep}
+
+Distinct duplex instances and distinct phases within a duplex are kept
+separate at the transcript level by two mechanisms. First, the
+initialization strings carry a 6-byte ASCII prefix and, for leaves, an
+eight-byte little-endian chunk index:
+\begin{align*}
+  \prfxroot &= \texttt{"TW128R"} \in \bits^{48}, \\
+  \prfxleaf &= \texttt{"TW128L"} \in \bits^{48}.
+\end{align*}
+The root duplex's first absorbed string is
+$\prfxroot \concat K \concat N$, and the $j$-th leaf
+duplex's first absorbed string is $\prfxleaf \concat K
+\concat N \concat \langle j \rangle_8$. Together with the fixed
+$k$-bit and $\nu$-bit widths of $K$ and $N$, these prefixes separate
+root from leaf transcripts and distinguish leaves with different
+chunk indices.
+
+Second, every byte-aligned absorption carries a four-bit phase suffix.
+We identify each suffix with the four-bit string given by its
+\Cref{tab:suffixes} value written least-significant-bit first, so that a
+duplex call absorbing a byte-aligned block $\sigma$ under suffix
+$\sigma^\pm$ feeds the duplex interface of \Cref{sec:sponge} the input
+$\sigma \concat \sigma^\pm$ before $\padtenone$ padding.
+The seven phase suffixes are summarized in \Cref{tab:suffixes}; they
+correspond to initialization, non-final and final associated-data
+blocks, non-final and final message blocks, and non-final and final
+aggregation blocks. The seven values are pairwise distinct, so any two
+transcripts that differ in the phase of any block also differ in the
+flattened sponge input.
+
+\begin{table}[ht]
+  \centering
+  \small
+  \begin{tabular}{l l l}
+    \toprule
+    Name & Hex & Use \\
+    \midrule
+    \siginit & \texttt{0xC} & End of initialization (the sole init call) \\
+    \sigadmore   & \texttt{0x9} & Non-final associated-data block \\
+    \sigadlast   & \texttt{0xD} & Final associated-data block \\
+    \sigmsgmore  & \texttt{0xA} & Non-final message block \\
+    \sigmsglast  & \texttt{0xE} & Final message block \\
+    \sigaggmore  & \texttt{0xB} & Non-final aggregation block \\
+    \sigagglast  & \texttt{0xF} & Final aggregation block (emits root tag) \\
+    \bottomrule
+  \end{tabular}
+  \caption{Phase suffixes (4 bits each, appended LSB-first).}
+  \label{tab:suffixes}
+\end{table}
+
+The combined effect of the initialization prefixes and the phase
+suffixes is that the flattened sponge input of any \TW{} duplex call
+uniquely determines the duplex instance, the leaf index when applicable,
+the phase, and the duplex-call position within that phase.
+\Cref{def:wf-transcripts} (Well-formed \TW{} transcript prefixes),
+\Cref{lem:transcript-inj} (Transcript Injectivity), and its structural
+corollaries formalize this parsing fact for the proofs of
+\Cref{sec:privacy,sec:authenticity,sec:cmtds3,app:committing-transfer}.
+
+\subsection{Encryption}
+\label{sec:enc}
+
+\Cref{alg:enc} specifies $\Enc_K(N, A, M)$ in terms of two
+helper procedures, \Call{Absorb}{} and \Call{StreamEnc}{}, defined in
+\Cref{alg:helpers}. \Call{Absorb}{} drives a duplex through a sequence
+of blocks of a byte string with non-final $\sigma^-$ and final
+$\sigma^+$ suffix tags, returning the output of the final call;
+the empty-input case yields a single empty block carrying the
+$\sigma^+$ tag. The streaming helpers use the same empty-input
+convention, so a zero-length chunk still performs one final
+message-phase duplex call and returns a zero-length body.
+\Cref{alg:enc} invokes \Call{Absorb}{} for the associated-data phase
+only when $A \neq \varepsilon$; when $A = \varepsilon$ the phase is
+elided and the root \siginit call emits the $M_0$ keystream directly.
+\Call{StreamEnc}{} encrypts a plaintext byte string block by block,
+XORing each plaintext block with the current keystream, absorbing the
+resulting ciphertext block back into the duplex with the appropriate
+phase tag, and using the duplex's output as the next keystream. This is
+the duplex-level presentation of the
+overwrite mechanism of \cite[\S6.2 and Algorithm~5]{BDPV11}: when the
+current rate prefix emitted as keystream is $Z$, XOR-absorbing
+$m \oplus Z$ has the same update on the message bytes as overwriting
+that prefix with $m$, with the phase tag still carried as part of the
+duplex input. In both helpers, each duplex call absorbs a data block followed by its
+phase suffix---$\sigma^-$ for a non-final block and $\sigma^+$ for the
+final block---and requests $\ell$ output bits, which is the duplex
+interface of \Cref{sec:sponge} applied to the suffixed input of
+\Cref{sec:domain-sep}.
+
+The encryption procedure (\Cref{alg:enc}) instantiates the root duplex
+and obtains the keystream for the root chunk $M_0$: when $A \neq
+\varepsilon$ it absorbs the associated data $A$, and when $A =
+\varepsilon$ it elides the associated-data phase and takes the keystream
+from the \siginit call itself. It then encrypts $M_0$ while absorbing
+the resulting ciphertext chunk $C_0$. When $n = 0$ the closing
+\sigmsglast call of this root chunk requests $\tauroot$ output bits,
+which are the root tag $T$, and the aggregation phase is elided. When
+$n \geq 1$ it independently encrypts each leaf chunk
+$M_j$ while absorbing $C_j$, producing the leaf tag $T_j$; the leaf
+tags together with $\langle n \rangle_8$ are then absorbed into the root
+duplex, and the final \sigagglast call emits the root tag $T$. The
+ciphertext is the concatenation $C_0 \concat C_1 \concat \cdots \concat
+C_n$. Thus this section writes $C$ for the ciphertext body and
+$C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
+
+\begin{algorithm}[t]
+  \caption{TW128 helper procedures.}
+  \label{alg:helpers}
+  \begin{algorithmic}[1]
+    \Procedure{Absorb}{$D$, $s$, $\sigma^-$, $\sigma^+$, $\ell$}
+      \State Partition $s$ into byte blocks $s_1, \dots, s_t$ of at most $\rho$ bytes each, with $t \geq 1$ (the empty case yields the single empty block $s_1 = \varepsilon$).
+      \For{$i \gets 1$ \textbf{to} $t - 1$}
+        \State $D.\duplexing(s_i \concat \sigma^-, 0)$
+      \EndFor
+      \State \Return $D.\duplexing(s_t \concat \sigma^+, \ell)$
+    \EndProcedure
+    \Statex
+    \Procedure{StreamEnc}{$D$, $m$, $Z$, $\sigma^-$, $\sigma^+$, $\ell$}
+      \State Partition $m$ into byte blocks $m_1, \dots, m_t$ of at most $\rho$ bytes each, with $t \geq 1$ (if $m = \varepsilon$, set $t = 1$ and $m_1 = \varepsilon$).
+      \For{$i \gets 1$ \textbf{to} $t - 1$}
+        \State $c_i \gets m_i \oplus Z$
+        \State $Z \gets D.\duplexing(c_i \concat \sigma^-, 8\|m_{i+1}\|)$
+      \EndFor
+      \State $c_t \gets m_t \oplus Z$
+      \State $Z' \gets D.\duplexing(c_t \concat \sigma^+, \ell)$
+      \State \Return $(c_1 \concat \cdots \concat c_t, Z')$
+    \EndProcedure
+    \Statex
+    \Procedure{StreamDec}{$D$, $c$, $Z$, $\sigma^-$, $\sigma^+$, $\ell$}
+      \State Partition $c$ into byte blocks $c_1, \dots, c_t$ of at most $\rho$ bytes each, with $t \geq 1$ (if $c = \varepsilon$, set $t = 1$ and $c_1 = \varepsilon$).
+      \For{$i \gets 1$ \textbf{to} $t - 1$}
+        \State $m_i \gets c_i \oplus Z$
+        \State $Z \gets D.\duplexing(c_i \concat \sigma^-, 8\|c_{i+1}\|)$
+      \EndFor
+      \State $m_t \gets c_t \oplus Z$
+      \State $Z' \gets D.\duplexing(c_t \concat \sigma^+, \ell)$
+      \State \Return $(m_1 \concat \cdots \concat m_t, Z')$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[t]
+  \caption{$\Enc_K(N, A, M)$.}
+  \label{alg:enc}
+  \begin{algorithmic}[1]
+    \Require $K \in \bits^k$, $N \in \bits^{\nu}$, $A$ with $\|A\| \leq A_{\max}$, $M$ with $\|M\| \leq M_{\max}$.
+    \Ensure $(C, T)$ with $\|C\| = \|M\|$ and $T \in \bits^{\tauroot}$.
+    \State $M_0 \gets$ first $\min(\|M\|, \beta)$ bytes of $M$ (possibly $\varepsilon$).
+    \State Partition the remaining suffix into nonempty chunks $M_1, \dots, M_n$ of at most $\beta$ bytes each, so $n = \leaves(M)$.
+    \State $D_{\text{root}} \gets$ new $\Duplex$
+    \If{$A = \varepsilon$}
+      \State $Z \gets D_{\text{root}}.\duplexing(\prfxroot \concat K \concat N \concat \siginit, 8\min(\|M_0\|, \rho))$
+    \Else
+      \State $D_{\text{root}}.\duplexing(\prfxroot \concat K \concat N \concat \siginit, 0)$
+      \State $Z \gets \Call{Absorb}{D_{\text{root}}, A, \sigadmore, \sigadlast, 8\min(\|M_0\|, \rho)}$
+    \EndIf
+    \If{$n = 0$}
+      \State $(C_0,\, T) \gets \Call{StreamEnc}{D_{\text{root}}, M_0, Z, \sigmsgmore, \sigmsglast, \tauroot}$
+      \State \Return $(C_0,\, T)$
+    \EndIf
+    \State $(C_0,\, \_) \gets \Call{StreamEnc}{D_{\text{root}}, M_0, Z, \sigmsgmore, \sigmsglast, 0}$
+    \For{$j \gets 1$ \textbf{to} $n$ \textbf{in parallel}}
+      \State $D_j \gets$ new $\Duplex$
+      \State $Z_j \gets D_j.\duplexing(\prfxleaf \concat K \concat N \concat \langle j \rangle_8 \concat \siginit, 8\min(\|M_j\|, \rho))$
+      \State $(C_j, T_j) \gets \Call{StreamEnc}{D_j, M_j, Z_j, \sigmsgmore, \sigmsglast, \tauleaf}$
+    \EndFor
+    \State $G \gets T_1 \concat \cdots \concat T_n$.
+    \State $T \gets \Call{Absorb}{D_{\text{root}},\, G \concat \langle n \rangle_8,\, \sigaggmore,\, \sigagglast,\, \tauroot}$
+    \State \Return $(C_0 \concat C_1 \concat \cdots \concat C_n,\, T)$
+  \end{algorithmic}
+\end{algorithm}
+
+The keystream bit length that produces the first root chunk $M_0$ is
+$8\min(\|M_0\|, \rho)$, eight times the size of the next message block.
+It is emitted by the closing \sigadlast call when $A \neq \varepsilon$,
+and by the root \siginit call itself when $A = \varepsilon$ and the
+associated-data phase is elided. Each leaf's \siginit call likewise
+emits $8\min(\|M_j\|, \rho)$ keystream bits for $M_j$, so the
+empty-associated-data root \siginit call plays exactly the role a leaf
+\siginit call already plays. When the corresponding
+chunk is empty, the requested keystream length is zero and the next
+message-phase duplex call absorbs the empty ciphertext block carrying
+\sigmsglast. The final \sigmsglast call in the root chunk requests
+$\tauroot$ output bits when $n = 0$, namely the root tag $T$ emitted by
+the elided-aggregation path, and zero output bits when $n \geq 1$
+because the next duplex operation on the root is then the first
+aggregation block; the corresponding call on a leaf requests $\tauleaf$
+bits, namely the leaf tag. When $n \geq 1$ the final \sigagglast call
+requests $\tauroot$ bits, which is the root tag $T$.
+
+The leaf loop is annotated \textbf{in parallel} to make explicit that
+the $n$ leaf computations are mutually independent; \Cref{sec:impl}
+discusses the SIMD realizations.
+
+\subsection{Decryption}
+\label{sec:dec}
+
+\Cref{alg:dec} specifies $\Dec_K(N, A, C \concat T)$. The procedure
+mirrors $\Enc$ block for block: each ciphertext block $c_i$ is
+absorbed into the appropriate duplex (root or leaf) under the
+corresponding \sigmsgmore or \sigmsglast suffix, and the
+plaintext block is recovered as $m_i = c_i \oplus Z_i$ from the same
+keystream the encryption procedure would have produced. The procedure
+absorbs ciphertext bytes before the final tag comparison, so the
+verification transcript is determined by $(K, N, A, C)$ for every
+in-domain ciphertext, accepting or not. This property is used by the
+authenticity proof of \Cref{sec:authenticity} to argue that
+encryption-first and verification-first transcript classes are well
+defined regardless of the tag-comparison outcome.
+
+\begin{algorithm}[t]
+  \caption{$\Dec_K(N, A, C \concat T)$.}
+  \label{alg:dec}
+  \begin{algorithmic}[1]
+    \Require $K, N, A$ as in \Cref{alg:enc}, ciphertext $C$ with $\|C\| \leq M_{\max}$, candidate tag $T \in \bits^{\tauroot}$.
+    \Ensure $M$ with $\|M\| = \|C\|$, or $\bot$.
+    \State $C_0 \gets$ first $\min(\|C\|, \beta)$ bytes of $C$ (possibly $\varepsilon$).
+    \State Partition the remaining suffix into nonempty chunks $C_1, \dots, C_n$ of at most $\beta$ bytes each, so $n = \leaves(C)$.
+    \State $D_{\text{root}} \gets$ new $\Duplex$
+    \If{$A = \varepsilon$}
+      \State $Z \gets D_{\text{root}}.\duplexing(\prfxroot \concat K \concat N \concat \siginit, 8\min(\|C_0\|, \rho))$
+    \Else
+      \State $D_{\text{root}}.\duplexing(\prfxroot \concat K \concat N \concat \siginit, 0)$
+      \State $Z \gets \Call{Absorb}{D_{\text{root}}, A, \sigadmore, \sigadlast, 8\min(\|C_0\|, \rho)}$
+    \EndIf
+    \If{$n = 0$}
+      \State $(M_0,\, T') \gets \Call{StreamDec}{D_{\text{root}}, C_0, Z, \sigmsgmore, \sigmsglast, \tauroot}$
+      \State \Return $M_0$ if $T' = T$ (compared in constant time), else $\bot$.
+    \EndIf
+    \State $(M_0,\, \_) \gets \Call{StreamDec}{D_{\text{root}}, C_0, Z, \sigmsgmore, \sigmsglast, 0}$
+    \For{$j \gets 1$ \textbf{to} $n$ \textbf{in parallel}}
+      \State $D_j \gets$ new $\Duplex$
+      \State $Z_j \gets D_j.\duplexing(\prfxleaf \concat K \concat N \concat \langle j \rangle_8 \concat \siginit, 8\min(\|C_j\|, \rho))$
+      \State $(M_j, T_j) \gets \Call{StreamDec}{D_j, C_j, Z_j, \sigmsgmore, \sigmsglast, \tauleaf}$
+    \EndFor
+    \State $G \gets T_1 \concat \cdots \concat T_n$.
+    \State $T' \gets \Call{Absorb}{D_{\text{root}},\, G \concat \langle n \rangle_8,\, \sigaggmore,\, \sigagglast,\, \tauroot}$
+    \If{$T' = T$ (compared in constant time)}
+      \State \Return $M_0 \concat M_1 \concat \cdots \concat M_n$
+    \Else
+      \State \Return $\bot$
+    \EndIf
+  \end{algorithmic}
+\end{algorithm}
+
+For root-only inputs ($n = 0$), the leaf loop performs no iterations and
+the aggregation phase is elided: the closing \sigmsglast call of the
+root chunk emits the candidate tag $T'$ directly, and no
+$\langle 0 \rangle_8$ block is absorbed. For an empty body,
+$M_0 = C_0 = \varepsilon$; the streaming helper still makes the single
+empty \sigmsglast call specified in \Cref{alg:helpers}, now requesting
+$\tauroot$ output bits.
+
+\paragraph{Correctness.}
+For every $K \in \bits^k$, $N \in \bits^{\nu}$,
+$A$ with $\|A\| \leq A_{\max}$, and $M$ with $\|M\| \leq M_{\max}$,
+$\Dec_K(N, A, \Enc_K(N, A, M)) = M$. This follows by inspection: every
+duplex call in $\Dec_K$ receives the same input as the corresponding
+call in $\Enc_K$ (each ciphertext block is absorbed under the same
+phase tag in both directions), so the duplex states and the recomputed
+root tag $T'$ exactly match. The constant-time comparison $T' = T$
+succeeds, and the recovered $m_i = c_i \oplus Z_i = (m_i \oplus Z_i)
+\oplus Z_i = m_i$ at every position.
