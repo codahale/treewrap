@@ -165,7 +165,7 @@ encryption algorithm $\Enc : \mathcal{K} \times \mathcal{N} \times
 $C = \Enc_K(N, A, M)$. The decryption algorithm $\Dec : \mathcal{K}
 \times \mathcal{N} \times \mathcal{A} \times \mathcal{C} \to
 \mathcal{M} \cup \{\bot\}$ returns either a plaintext or the
-rejection symbol $\bot$. The \emph{tag length} is the constant
+rejection symbol $\bot$. The \emph{tag length in bytes} is the constant
 $\|\Enc_K(N, A, M)\| - \|M\|$, fixed by the scheme.
 In this generic syntax, $C$ denotes the full AEAD ciphertext, including
 any tag material. The \TW{} algorithm section writes this same value as
@@ -310,7 +310,7 @@ $\Advae$.
 Nonce uniqueness is enforced per user via the set $V$: the same nonce
 may appear under distinct users but not twice under the same user.
 This is strictly weaker than the global nonce-uniqueness requirement
-that would force every $(i, N)$ pair across all users to be unique.
+that would force every $(d, N)$ pair across all users to be unique.
 
 The multi-key committing-security story does not need a separate
 multi-user notion: the $s$-way CMTDs-$\ell$ games of

@@ -142,7 +142,9 @@ The privacy and INT-CTXT accounting used in these two hops is local to
 user $d$'s keyed transcript language. In the privacy hop, the
 one-query replacement of \Cref{lem:priv-one-query-replacement} only
 requires that no direct query has read a user-$d$ counted transcript
-before $\badkey^{(d)}$; any extra lazy-table entries
+before $\badkey^{(d)}$, the $\badkey$ event of
+\Cref{sec:privacy,sec:authenticity} instantiated at user $d$'s key
+$K_d$; any extra lazy-table entries
 written by the real user-$d$ encryption computation are unobservable
 before that abort. The accepted user-$d$ encryption queries are
 nonce-respecting because the mu-ind interface enforces nonce uniqueness

@@ -412,8 +412,9 @@ discusses the SIMD realizations.
 mirrors $\Enc$ block for block: each ciphertext block $c_i$ is
 absorbed into the appropriate duplex (root or leaf) under the
 corresponding \sigmsgmore or \sigmsglast suffix, and the
-plaintext block is recovered as $m_i = c_i \oplus Z_i$ from the same
-keystream the encryption procedure would have produced. The procedure
+plaintext block is recovered as $m_i = c_i \oplus Z_i$, where $Z_i$ is
+the keystream block at position $i$, the same the encryption procedure
+would have produced. The procedure
 absorbs ciphertext bytes before the final tag comparison, so the
 verification transcript is determined by $(K, N, A, C)$ for every
 in-domain ciphertext, accepting or not. This property is used by the
