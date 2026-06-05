@@ -28,11 +28,14 @@ jobs:
         - ubuntu-24.04
         - ubuntu-24.04-arm
         config:
-        - { name: "Standard", tags: "", flags: "-race" }
-        - { name: "Pure Go",  tags: "purego", flags: "" }
+        - { name: "Standard",     tags: "", flags: "-race" }
+        - { name: "Pure Go",      tags: "purego", flags: "" }
+        - { name: "No AVX-512",   tags: "tw128_disable_avx512", flags: "-race" }
         exclude:
           - os: ubuntu-24.04-arm
             config: { name: "Pure Go", tags: "purego", flags: "" }
+          - os: ubuntu-24.04-arm
+            config: { name: "No AVX-512", tags: "tw128_disable_avx512", flags: "-race" }
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout
