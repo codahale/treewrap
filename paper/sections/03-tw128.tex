@@ -231,9 +231,9 @@ chunk indices.
 Second, every byte-aligned absorption carries a four-bit phase suffix.
 We identify each suffix with the four-bit string given by its
 \Cref{tab:suffixes} value written least-significant-bit first, so that a
-duplex call absorbing a byte-aligned block $\sigma$ under suffix
-$\sigma^\pm$ feeds the duplex interface of \Cref{sec:sponge} the input
-$\sigma \concat \sigma^\pm$ before $\padtenone$ padding.
+duplex call absorbing a byte-aligned block $\sigma$ under a phase
+suffix \sigph{} feeds the duplex interface of \Cref{sec:sponge} the input
+$\sigma \concat \sigph$ before $\padtenone$ padding.
 The seven phase suffixes are summarized in \Cref{tab:suffixes}; they
 correspond to initialization, non-final and final associated-data
 blocks, non-final and final message blocks, and non-final and final

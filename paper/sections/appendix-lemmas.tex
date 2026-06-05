@@ -128,10 +128,10 @@ that, for fixed $\padtenone$ and $r$, the map from the duplex-call
 sequence to the flattened sponge input is injective.
 
 In \TW{}, each duplex call absorbs a byte-aligned block $\sigma$
-followed by a $4$-bit phase suffix $\tau \in \{\siginit,
+followed by a $4$-bit phase suffix $\sigph \in \{\siginit,
 \sigadmore, \dots, \sigagglast\}$
 (\Cref{sec:domain-sep}), so the duplex-call input is
-$\sigma \concat \tau$ followed by $\padtenone$. With
+$\sigma \concat \sigph$ followed by $\padtenone$. With
 $r = 1344$ and $\rho_{\max}(\padtenone, r) = r - 2 = 1342$ bits, the
 maximum byte-aligned input is $\rho = 167$ bytes
 (\Cref{sec:params}), giving a worst-case duplex-call input of $8 \cdot
@@ -162,13 +162,13 @@ accepts or rejects.
 \subsection{Well-formed Transcript Prefixes}
 \label{app:wf-transcripts}
 
-For a duplex-call prefix $((\sigma_0, \tau_0), \dots, (\sigma_i,
-\tau_i))$, write
+For a duplex-call prefix $((\sigma_0, \sigph[0]), \dots, (\sigma_i,
+\sigph[i]))$, write
 \[
-  \Flat\bigl((\sigma_0, \tau_0), \dots, (\sigma_i, \tau_i)\bigr)
+  \Flat\bigl((\sigma_0, \sigph[0]), \dots, (\sigma_i, \sigph[i])\bigr)
   = \bigconcat_{j=0}^{i-1}\!
-    \bigl(\sigma_j \concat \tau_j \concat \mathsf{pad}_j\bigr)
-    \concat \sigma_i \concat \tau_i.
+    \bigl(\sigma_j \concat \sigph[j] \concat \mathsf{pad}_j\bigr)
+    \concat \sigma_i \concat \sigph[i].
 \]
 The current call's padding $\mathsf{pad}_i$ is not part of $\Flat$;
 it is applied internally by the sponge function. Equivalently, after
@@ -260,9 +260,9 @@ current-call $\padtenone$ is applied internally by the sponge function
 and is not part of the input to which \cite[Lemma~4]{BDPV11} is applied.
 That lemma recovers the duplex-call sequence from the flattened sponge
 input; in \TW{}, each call input is
-$\sigma \concat \tau$ with byte-aligned $\sigma$ and
-fixed $4$-bit suffix $\tau$, so recovering the call input recovers the pair
-$(\sigma, \tau)$.
+$\sigma \concat \sigph$ with byte-aligned $\sigma$ and
+fixed $4$-bit suffix $\sigph$, so recovering the call input recovers the pair
+$(\sigma, \sigph)$.
 
 \Cref{def:wf-transcripts} fixes the root and leaf initialization fields,
 the admissible phase order, and the final-call suffixes. The distinct
@@ -282,12 +282,12 @@ $\rho$-byte blocks (with the empty case yielding a single empty block,
 per \Cref{sec:enc}) and feeding each block to the duplex with suffix
 $\sigma_P^-$ (non-final) or $\sigma_P^+$ (final).
 \Cref{lem:duplex-flat} and \cite[Lemma~4]{BDPV11} recover the
-corresponding $(\sigma, \tau)$ sequence from the flattened input.
+corresponding $(\sigma, \sigph)$ sequence from the flattened input.
 Because the partition map is deterministic and uniquely invertible on
 its image (the empty case yielding the single empty block carrying
 $\sigma_P^+$), concatenating the recovered $\sigma$ blocks
 reconstructs $s_P$ exactly. The map from $s_P$ to the phase's $(\sigma,
-\tau)$ sequence is therefore injective.
+\sigph)$ sequence is therefore injective.
 
 Applied phase by phase to a well-formed final-root transcript:
 \begin{itemize}
@@ -354,7 +354,7 @@ Suppose for contradiction that $\flatmap(R_i) = \flatmap(R_j)$. By
 the bridge-injectivity observation above, the native flattened inputs of
 the two final-root prefixes are equal. Then \Cref{lem:transcript-inj}
 recovers the full duplex-call sequence and reads off the pair
-$(\sigma,\tau)$ for each call. The seven $4$-bit phase suffixes are
+$(\sigma,\sigph)$ for each call. The seven $4$-bit phase suffixes are
 pairwise distinct, so the \siginit, $\sigma_{\mathsf{ad}}^\pm$,
 $\sigma_{\mathsf{msg}}^\pm$, and (when present) $\sigma_{\mathsf{agg}}^\pm$
 calls in the recovered sequence are unambiguously identified. The
