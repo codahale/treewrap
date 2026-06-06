@@ -261,9 +261,36 @@ func (c *cryptor) processComplete(dst, src []byte, nFlush int) {
 		idx += 2
 	}
 
+	// Register-resident pass: drain a 2..7 chunk remainder with a single
+	// AVX-512 kernel that reads the chunks directly (no scratch buffer) where one
+	// is available. This removes both the x1 serial penalty for a small remainder
+	// (e.g. the three leaf chunks of a 32 KiB message) and the padded-x8 path's
+	// 128 KiB scratch buffer.
+	//
+	// Gated to idx == 0, i.e. the remainder is the entire chunk set (at most
+	// seven chunks, cache-hot — the 32/64 KiB case). When idx > 0 the remainder
+	// is the tail of a larger message whose working set has spilled L2, so the
+	// chunks are cold; a strided gather over cold memory is slow, and the
+	// padded-x8 path's sequential memcpy-into-scratch warms the data far more
+	// efficiently. Those tails fall through to padded-x8 / x1 below. On arm64 the
+	// pair pass already left fewer than two chunks; on an AVX2-only amd64 host the
+	// call reports false and the fallbacks below run.
+	if rem := nFlush - idx; idx == 0 && rem >= 2 {
+		off := idx * ChunkSize
+		var ok bool
+		if c.decrypt {
+			ok = decryptChunkRun(c, src[off:off+rem*ChunkSize], dst[off:off+rem*ChunkSize], rem)
+		} else {
+			ok = encryptChunkRun(c, src[off:off+rem*ChunkSize], dst[off:off+rem*ChunkSize], rem)
+		}
+		if ok {
+			idx += rem
+		}
+	}
+
 	// Remainder: pad to 8 and use x8 when utilization is high enough. Reached
-	// only on platforms without a 2-wide kernel; the pair pass above otherwise
-	// leaves fewer than two complete chunks.
+	// only on platforms without a register-resident or 2-wide kernel; those
+	// passes otherwise leave fewer than five complete chunks.
 	if rem := nFlush - idx; rem >= 5 {
 		off := idx * ChunkSize
 		realBytes := rem * ChunkSize
