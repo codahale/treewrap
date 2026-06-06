@@ -12,6 +12,6 @@ gcloud compute ssh treewrap --zone=us-central1-b --command 'wget -q https://go.d
 gcloud compute ssh treewrap --zone=us-central1-b --command 'tar -xzf *.tar.gz'
 gcloud compute ssh treewrap --zone=us-central1-b --command "echo 'export PATH=\"\$PATH:~/go/bin\"' >> ~/.bashrc"
 gcloud compute ssh treewrap --zone=us-central1-b --command "echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc"
-# gcloud compute ssh treewrap --zone=us-central1-b --command 'git clone https://github.com/codahale/treewrap'
+gcloud compute ssh treewrap --zone=us-central1-b --command 'git clone https://github.com/codahale/treewrap'
 # shellcheck disable=SC2016
 gcloud compute ssh treewrap --zone=us-central1-b --command 'PATH=$PATH:~/go/bin go install golang.org/x/perf/cmd/benchstat@latest'
