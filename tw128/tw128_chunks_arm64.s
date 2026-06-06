@@ -285,6 +285,73 @@ tw128_enc_arm64_loop_67:
 	RET
 
 
+// func encryptChunksPairARM64(s *state8, src0, src1, dst0, dst1, tags *byte)
+//
+// Processes a single x2 pair (instances 0 and 1 of s) over two 8183-byte
+// chunks, writing two 32-byte tags. This is the inner pair loop of
+// encryptChunksARM64 factored out so the streaming path can drain a 2..3-chunk
+// remainder at 2-wide throughput instead of falling back to x1.
+TEXT ·encryptChunksPairARM64(SB), NOSPLIT, $0-48
+	MOVD	s+0(FP), R8		// state8 pointer (instances 0,1 at offset 0)
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	src0+8(FP), R2
+	MOVD	src1+16(FP), R3
+	MOVD	dst0+24(FP), R5
+	MOVD	dst1+32(FP), R6
+	MOVD	tags+40(FP), R7		// held aside; R6 is reused as dst1 in the loop
+
+	MOVD	$48, R4
+
+tw128_enc_arm64_pair_loop:
+	ENC_LANES20
+	ENC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_enc_arm64_pair_loop
+
+	ENC_LANES20
+	ENC_PARTIAL7
+	MSGLAST_FULL_PERMUTE
+
+	MOVD	R7, R6
+	EXTRACT_TAGS
+
+	RET
+
+
+// func decryptChunksPairARM64(s *state8, src0, src1, dst0, dst1, tags *byte)
+TEXT ·decryptChunksPairARM64(SB), NOSPLIT, $0-48
+	MOVD	s+0(FP), R8
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	src0+8(FP), R2
+	MOVD	src1+16(FP), R3
+	MOVD	dst0+24(FP), R5
+	MOVD	dst1+32(FP), R6
+	MOVD	tags+40(FP), R7
+
+	MOVD	$48, R4
+
+tw128_dec_arm64_pair_loop:
+	DEC_LANES20
+	DEC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_dec_arm64_pair_loop
+
+	DEC_LANES20
+	DEC_PARTIAL7
+	MSGLAST_FULL_PERMUTE
+
+	MOVD	R7, R6
+	EXTRACT_TAGS
+
+	RET
+
+
 // func decryptChunksARM64(s *State8, src, dst *byte, cvs *byte)
 TEXT ·decryptChunksARM64(SB), NOSPLIT, $32-32
 	MOVD	s+0(FP), R0

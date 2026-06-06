@@ -241,7 +241,29 @@ func (c *cryptor) processComplete(dst, src []byte, nFlush int) {
 		idx += 8
 	}
 
-	// Remainder: pad to 8 and use x8 when utilization is high enough.
+	// 2-wide pass: drain the remaining complete chunks in pairs where a 2-wide
+	// kernel is available. This avoids the x1 serial penalty for small
+	// remainders (e.g. the three leaf chunks of a 32 KiB message) and, for a
+	// 5..7 chunk remainder, the padded-x8 path's wasted eighth lane and large
+	// scratch buffer. On platforms without a 2-wide kernel the calls report
+	// false and the padded-x8 and x1 fallbacks below handle the remainder.
+	for idx+2 <= nFlush {
+		off := idx * ChunkSize
+		var ok bool
+		if c.decrypt {
+			ok = decryptChunkPair(c, src[off:off+2*ChunkSize], dst[off:off+2*ChunkSize])
+		} else {
+			ok = encryptChunkPair(c, src[off:off+2*ChunkSize], dst[off:off+2*ChunkSize])
+		}
+		if !ok {
+			break
+		}
+		idx += 2
+	}
+
+	// Remainder: pad to 8 and use x8 when utilization is high enough. Reached
+	// only on platforms without a 2-wide kernel; the pair pass above otherwise
+	// leaves fewer than two complete chunks.
 	if rem := nFlush - idx; rem >= 5 {
 		off := idx * ChunkSize
 		realBytes := rem * ChunkSize
