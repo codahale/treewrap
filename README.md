@@ -19,7 +19,7 @@ instantiation described there.
 - `tw128.py`: a compact Python reference implementation, with `duplex.py` and `keccak.py` as supporting modules.
 - `tw128_tv.json`: deterministic test vectors.
 - `test_tw128.py`: the Python test suite, which also generates the test vectors.
-- `cmd/cpb/`: a benchmark tool that measures TW128 and AES-128-GCM performance in cycles per byte.
+- `cmd/cpb/`: a benchmark tool that measures TW128 and AES-128-GCM performance in cycles per byte and wall-clock throughput, both from the same interleaved run.
 - `refs/`: reference papers cited by the manuscript.
 
 ## TW128 Parameters
