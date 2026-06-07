@@ -14,20 +14,24 @@ import (
 // finish{Encrypt,Decrypt}Chunks in Go, shared with the generic path.
 
 //go:noescape
-func encryptChunksBodyAVX512(s *state8, src, dst *byte)
-
-//go:noescape
 func encryptChunksBodyAVX2(s *state8, src, dst *byte)
-
-//go:noescape
-func decryptChunksBodyAVX512(s *state8, src, dst *byte)
 
 //go:noescape
 func decryptChunksBodyAVX2(s *state8, src, dst *byte)
 
+// The transposed AVX-512 kernels (tw128_chunks_transpose_amd64.s) replace the
+// per-lane gather/scatter of the plain AVX-512 body with contiguous loads + an
+// in-register transpose; they are the AVX-512 steady-state path.
+//
+//go:noescape
+func encryptChunksBodyAVX512T(s *state8, src, dst *byte)
+
+//go:noescape
+func decryptChunksBodyAVX512T(s *state8, src, dst *byte)
+
 func encryptChunksArch(s *state8, src, dst []byte, tags *[256]byte) bool {
 	if cpuid.HasAVX512 {
-		encryptChunksBodyAVX512(s, unsafe.SliceData(src), unsafe.SliceData(dst))
+		encryptChunksBodyAVX512T(s, unsafe.SliceData(src), unsafe.SliceData(dst))
 	} else {
 		encryptChunksBodyAVX2(s, unsafe.SliceData(src), unsafe.SliceData(dst))
 	}
@@ -37,7 +41,7 @@ func encryptChunksArch(s *state8, src, dst []byte, tags *[256]byte) bool {
 
 func decryptChunksArch(s *state8, src, dst []byte, tags *[256]byte) bool {
 	if cpuid.HasAVX512 {
-		decryptChunksBodyAVX512(s, unsafe.SliceData(src), unsafe.SliceData(dst))
+		decryptChunksBodyAVX512T(s, unsafe.SliceData(src), unsafe.SliceData(dst))
 	} else {
 		decryptChunksBodyAVX2(s, unsafe.SliceData(src), unsafe.SliceData(dst))
 	}
