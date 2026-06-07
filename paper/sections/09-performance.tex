@@ -31,12 +31,16 @@ each holding the corresponding 64-bit word of all eight instances---so that the
 batched cores can address the eight instances of a lane with a single
 vector load.
 
-Messages are decomposed into eight-chunk batches with the leftover handled by
-the single-duplex core: a partial trailing chunk, the count-aggregation tail,
-and any complete-chunk remainder of fewer than five chunks fall back to $\times
-1$, while a remainder of five to seven chunks is padded to a full batch of eight
-and processed by the $\times 8$ core, which is faster than repeated
-single-duplex calls even at that utilization. In every batched core the final
+Messages are decomposed into eight-chunk batches run on the $\times 8$ core, and
+the leftover complete chunks are drained by narrower paths. Where a sub-eight
+kernel exists the remainder is processed in place: on \texttt{arm64} a $2$-wide
+kernel consumes it two chunks at a time, and on the AVX-512 path a
+register-resident kernel handles a two-to-seven-chunk remainder directly when it
+forms the entire (cache-resident) leaf region. Otherwise a remainder of five to
+seven chunks is padded to a full batch of eight and run on the $\times 8$
+core---faster than repeated single-duplex calls even at that utilization---while
+any final straggler, a partial trailing chunk, and the count-aggregation tail
+fall back to the single-duplex ($\times 1$) core. In every batched core the final
 \textsc{msg\_last} block and the leaf-tag extraction are performed in portable
 Go, shared with the reference path; the assembly kernels handle only the $48$
 full \textsc{msg\_more} blocks, which keeps the byte-granular tail logic out of
@@ -57,10 +61,17 @@ the permutation with no cross-lane shuffles: rotations use \texttt{VPROLQ}, and
 core, lacking 512-bit registers, runs the eight instances as two groups of four
 (four 64-bit lanes per YMM register), rotating by shift-or and computing $\chi$
 with \texttt{VPANDN}. The fused chunk kernels combine absorption with the
-permutation: the AVX-512 kernel uses gather/scatter
-(\texttt{VPGATHERQQ}/\texttt{VPSCATTERQQ}) at the fixed chunk stride $\beta$ to
-read and write the eight chunks directly in the lane-major layout, so no
-transpose of the message buffer is needed.
+permutation. The AVX-512 steady-state kernel reads the eight chunks with
+contiguous loads, transposes each rate block into the lane-major layout in
+registers (\texttt{VPUNPCKLQDQ}/\texttt{VPUNPCKHQDQ} and \texttt{VSHUFI64X2}),
+absorbs on the lane-major state, and transposes each output block back for a
+contiguous store, leaving only the $7$-byte partial rate lane to a masked gather;
+these sequential accesses are prefetcher-friendly, whereas the earlier per-lane
+gather and scatter at the chunk stride $\beta$
+(\texttt{VPGATHERQQ}/\texttt{VPSCATTERQQ}) stalled on cold memory and capped the
+long-message rate. The register-resident kernel that drains a small
+two-to-seven-chunk remainder keeps that masked gather/scatter form, reading the
+active chunks in place without a scratch buffer.
 
 \paragraph{\texttt{arm64}.}
 The \texttt{arm64} path uses NEON plus the Armv8.2 SHA-3 extension
@@ -74,14 +85,20 @@ instance per 64-bit \texttt{D} lane across the 25 vector registers; the
 eight-way core packs two instances per 128-bit register and processes the batch
 of eight as four such pairs, using \texttt{ZIP1} and duplicating moves to
 interleave and extract the two instances of each lane in the fused chunk kernel.
+The same pair machinery backs a $2$-wide kernel that drains a leaf-chunk
+remainder two chunks at a time---one instance per $64$-bit half of a $128$-bit
+register---at roughly twice the single-duplex per-chunk rate.
 
 \paragraph{Constant time.}
 All three implementations are constant time with respect to the key, nonce, and
 plaintext. The permutation and the XOR-based absorb/squeeze contain no
 secret-dependent branches and no secret-dependent memory or vector indices. The
 only indexed table is the round-constant array, addressed by the public round
-number, and the AVX-512 gather/scatter indices are the fixed public chunk
-strides; neither depends on secret data.
+number; the AVX-512 chunk transpose uses contiguous loads and stores, and the
+gather and scatter that remain---for the partial rate lane and the
+register-resident remainder kernel---are addressed by the fixed public chunk
+strides under a mask set by the public chunk count. None of these depend on
+secret data.
 
 \begin{comment}
 === AMD64 Benchmarking Host ===
@@ -175,46 +192,35 @@ cpu family	: 6
 cycles/byte (linux/amd64)
 
                         1B       64B      8KiB     32KiB     64KiB      1MiB     16MiB
-tw128 encrypt          733     11.38      2.31      2.22      0.97      0.58      0.49
-tw128 decrypt          739     11.46      2.31      2.20      0.97      0.58      0.48
-aes128gcm seal         924     15.13      0.46      0.38      0.37      0.36      0.36
-aes128gcm open         931     15.05      0.45      0.37      0.36      0.35      0.34
+tw128 encrypt          627      9.79      1.96      1.23      0.66      0.43      0.40
+tw128 decrypt          627      9.92      1.94      1.21      0.65      0.42      0.40
+aes128gcm seal         769     13.15      0.39      0.33      0.31      0.30      0.30
+aes128gcm open         789     12.88      0.38      0.32      0.30      0.30      0.30
 
-=== go test -bench=. with AVX512 ===
-BenchmarkEncrypt/1B      3754659               320.1 ns/op         3.12 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/64B     3717213               323.2 ns/op       198.01 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/8KiB     141633              8241 ns/op         994.04 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/32KiB     37813             31975 ns/op        1024.81 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/64KiB     44456             27237 ns/op        2406.17 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/1MiB       4411            259080 ns/op        4047.30 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/16MiB       303           3916544 ns/op        4283.68 MB/s           0 B/op          0 allocs/op
+throughput (GB/s, 1e9 bytes/s, wall-clock) (linux/amd64)
 
-=== go test -bench=. baseline Go standard library AES-128-GCM implementation ===
-BenchmarkAESGCM/1B                       3479703               344.8 ns/op         2.90 MB/s        1280 B/op           2 allocs/op
-BenchmarkAESGCM/64B                      3049509               394.5 ns/op       162.22 MB/s        1280 B/op           2 allocs/op
-BenchmarkAESGCM/8KiB                      627120              1928 ns/op        4248.93 MB/s        1280 B/op           2 allocs/op
-BenchmarkAESGCM/32KiB                     176569              6661 ns/op        4919.08 MB/s        1280 B/op           2 allocs/op
-BenchmarkAESGCM/64KiB                      92349             12897 ns/op        5081.58 MB/s        1280 B/op           2 allocs/op
-BenchmarkAESGCM/1MiB                        6012            200140 ns/op        5239.21 MB/s        1280 B/op           2 allocs/op
-BenchmarkAESGCM/16MiB                        368           3216253 ns/op        5216.39 MB/s        1280 B/op           2 allocs/op
+                        1B       64B      8KiB     32KiB     64KiB      1MiB     16MiB
+tw128 encrypt         0.00      0.23      1.17      1.87      3.50      5.39      5.75
+tw128 decrypt         0.00      0.23      1.18      1.90      3.52      5.41      5.72
+aes128gcm seal        0.00      0.17      5.95      7.04      7.36      7.60      7.55
+aes128gcm open        0.00      0.18      6.09      7.23      7.55      7.76      7.72
 
 === cmd/cpb with AVX2 ===
 cycles/byte (linux/amd64)
 
                         1B       64B      8KiB     32KiB     64KiB      1MiB     16MiB
-tw128 encrypt          787     12.35      2.67      2.58      1.81      1.30      1.29
-tw128 decrypt          804     12.58      2.67      2.57      1.81      1.30      1.29
-aes128gcm seal         895     15.37      0.46      0.38      0.37      0.36      0.36
-aes128gcm open         911     14.90      0.44      0.37      0.36      0.35      0.35
+tw128 encrypt          677     10.84      2.30      2.18      1.49      1.08      1.04
+tw128 decrypt          687     10.89      2.27      2.19      1.49      1.08      1.04
+aes128gcm seal         768     13.28      0.39      0.33      0.31      0.30      0.30
+aes128gcm open         782     13.06      0.38      0.32      0.30      0.30      0.30
 
-=== go test -bench=. with AVX2 ===
-BenchmarkEncrypt/1B-4            3434967               349.3 ns/op         2.86 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/64B-4           3393152               354.6 ns/op       180.47 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/8KiB-4           119905              9632 ns/op         850.51 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/32KiB-4           32348             37326 ns/op         877.88 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/64KiB-4           22728             52231 ns/op        1254.73 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/1MiB-4             1918            627818 ns/op        1670.19 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/16MiB-4             120           9926414 ns/op        1690.16 MB/s           0 B/op          0 allocs/op
+throughput (GB/s, 1e9 bytes/s, wall-clock) (linux/amd64)
+
+                        1B       64B      8KiB     32KiB     64KiB      1MiB     16MiB
+tw128 encrypt         0.00      0.21      1.00      1.06      1.54      2.12      2.22
+tw128 decrypt         0.00      0.21      1.01      1.05      1.54      2.13      2.20
+aes128gcm seal        0.00      0.17      5.92      7.05      7.33      7.56      7.56
+aes128gcm open        0.00      0.18      6.07      7.27      7.57      7.69      7.69
 \end{comment}
 
 \begin{comment}
@@ -351,33 +357,18 @@ hw.optional.arm64: 1
 cycles/byte (darwin/arm64)
 
                         1B       64B      8KiB     32KiB     64KiB      1MiB     16MiB
-tw128 encrypt          627     10.14      2.01      1.94      1.43      0.95      0.91
-tw128 decrypt          630     10.27      2.08      1.99      1.42      0.93      0.89
-aes128gcm seal        1048     17.32      0.55      0.48      0.46      0.46      0.46
-aes128gcm open        1056     17.31      0.53      0.46      0.44      0.43      0.44
+tw128 encrypt          619      9.99      1.95      1.38      1.14      0.89      0.88
+tw128 decrypt          621     10.01      2.00      1.41      1.14      0.87      0.86
+aes128gcm seal        1027     16.66      0.54      0.45      0.44      0.43      0.44
+aes128gcm open        1026     16.73      0.52      0.43      0.42      0.41      0.42
 
-=== go test -bench=. ===
-BenchmarkEncrypt/1B-14           8177559               147.3 ns/op         6.79 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/64B-14          8033787               150.5 ns/op       425.26 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/8KiB-14          314403              3800 ns/op        2155.93 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/32KiB-14          83380             14496 ns/op        2260.42 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/64KiB-14          57300             20774 ns/op        3154.76 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/1MiB-14            5590            219962 ns/op        4767.08 MB/s           0 B/op          0 allocs/op
-BenchmarkEncrypt/16MiB-14            346           3438603 ns/op        4879.08 MB/s           0 B/op          0 allocs/op
-BenchmarkEncryptor/1B-14         8121108               147.1 ns/op         6.80 MB/s           0 B/op          0 allocs/op
-BenchmarkEncryptor/64B-14        7946226               151.2 ns/op       423.42 MB/s           0 B/op          0 allocs/op
-BenchmarkEncryptor/8KiB-14        319045              3761 ns/op        2178.10 MB/s           0 B/op          0 allocs/op
-BenchmarkEncryptor/32KiB-14        83788             14446 ns/op        2268.35 MB/s           0 B/op          0 allocs/op
-BenchmarkEncryptor/64KiB-14        57069             20728 ns/op        3161.68 MB/s           0 B/op          0 allocs/op
-BenchmarkEncryptor/1MiB-14          5487            221869 ns/op        4726.10 MB/s           0 B/op          0 allocs/op
-BenchmarkEncryptor/16MiB-14          349           3429014 ns/op        4892.72 MB/s           0 B/op          0 allocs/op
-BenchmarkAESGCM/1B-14            5242848               226.0 ns/op         4.42 MB/s        1280 B/op          2 allocs/op
-BenchmarkAESGCM/64B-14           5053110               235.3 ns/op       271.95 MB/s        1280 B/op          2 allocs/op
-BenchmarkAESGCM/8KiB-14          1000000              1153 ns/op        7106.34 MB/s        1280 B/op          2 allocs/op
-BenchmarkAESGCM/32KiB-14          292712              4027 ns/op        8136.21 MB/s        1280 B/op          2 allocs/op
-BenchmarkAESGCM/64KiB-14          146367              7917 ns/op        8278.04 MB/s        1280 B/op          2 allocs/op
-BenchmarkAESGCM/1MiB-14             9938            125150 ns/op        8378.54 MB/s        1280 B/op          2 allocs/op
-BenchmarkAESGCM/16MiB-14             604           1996936 ns/op        8401.48 MB/s        1280 B/op          2 allocs/op
+throughput (GB/s, 1e9 bytes/s, wall-clock) (darwin/arm64)
+
+                        1B       64B      8KiB     32KiB     64KiB      1MiB     16MiB
+tw128 encrypt         0.01      0.45      2.29      3.24      3.92      5.04      5.09
+tw128 decrypt         0.01      0.45      2.23      3.17      3.91      5.13      5.17
+aes128gcm seal        0.00      0.27      8.29      9.92     10.26     10.42     10.12
+aes128gcm open        0.00      0.27      8.58     10.40     10.70     10.89     10.74
 \end{comment}
 
 \subsection{Benchmark Methodology}
@@ -400,12 +391,14 @@ frequency control.
 Measurements are collected by a standalone harness (\texttt{cmd/cpb}) that locks
 its goroutine to an OS thread and, for each algorithm, operation, and message
 length, first calibrates an iteration count that fills at least $100$\,ms, then
-records $21$ samples and reports the median cycles per byte. Each sample reuses
-the same source and destination buffers, so the reported figures are
-warm-cache, steady-state rates. The single-threaded measurement leaves the SMT
-sibling of the \texttt{amd64} host idle. We report a sweep of seven message
-lengths from $1$\,B to $16$\,MiB. As an independent cross-check of absolute
-throughput we also report wall-clock rates from \texttt{go test -bench}.
+records $21$ samples and reports the median cycles per byte and the median
+wall-clock throughput. Both metrics are read from the same timed loop, so the
+cycles-per-byte and throughput figures for a given measurement come from one
+interleaved run rather than two separately scheduled ones. Each sample reuses the
+same source and destination buffers, so the reported figures are warm-cache,
+steady-state rates. The single-threaded measurement leaves the SMT sibling of the
+\texttt{amd64} host idle. We report a sweep of seven message lengths from $1$\,B
+to $16$\,MiB.
 
 The cycle counters differ by architecture, and this affects how the
 cycles-per-byte figures may be read. On \texttt{amd64} the harness reads
@@ -428,33 +421,38 @@ and \texttt{PMULL} instructions on \texttt{arm64}.
 Each timed AES-128-GCM call constructs its cipher, so its measurement includes
 the key schedule and the GHASH key-power precomputation; this mirrors the
 \TW{} measurement, which constructs a fresh encryptor (one permutation) per
-call. Both directions are measured for each scheme; decryption tracks encryption
-to within $2\%$ throughout.
+call. Both directions are measured for each scheme; the two directions track each
+other to within $3\%$ for \TW{} and within $5\%$ for AES-128-GCM across the sweep.
 
 \subsection{Throughput}
 \label{sec:throughput}
 
 \Cref{tab:cpb} reports cycles per byte across the message-length sweep and
 \Cref{tab:throughput} the corresponding wall-clock throughput in the bulk
-regime. The dominant feature of the \TW{} rows is the transition produced by the
-tree-parallel leaf core. Below the break-even point a message is processed
-almost entirely on the serial single-duplex ($\times 1$) core: chunk~$0$ runs on
-the root duplex, and a message that yields fewer than five complete leaf chunks
-falls back to $\times 1$ for those leaves as well (\Cref{sec:impl}). The
-eight-way ($\times 8$) core first engages once a message contains at least five
-complete leaf chunks beyond chunk~$0$, i.e.\ at a length of about
-$6\beta \approx 48$\,KiB. This is exactly the transition visible between the
-$32$\,KiB and $64$\,KiB columns: on the \texttt{amd64} AVX-512 path \TW{}
-encryption falls from $2.22$ to $0.97$ cycles per byte there, then to $0.58$ at
-$1$\,MiB and $0.49$ at $16$\,MiB as the per-message root cost amortizes. The
-\texttt{amd64} AVX2 path shows the same break-even but a shallower steady state
-($1.29$ cycles per byte at $16$\,MiB), since it runs the eight instances as two
-groups of four rather than in a single $8$-wide register; the AVX-512 core is
-about $2.6\times$ faster in bulk. The \texttt{arm64} core, which packs two
-instances per $128$-bit register, narrows the gap more gradually ($1.94 \to 1.43
-\to 0.95 \to 0.91$ cycles per byte from $32$\,KiB to $16$\,MiB). In wall-clock
-terms \TW{} reaches $4.28$\,GB/s on the \texttt{amd64} AVX-512 host and
-$4.88$\,GB/s on the M4 Pro for $16$\,MiB messages.
+regime. The dominant feature of the \TW{} rows is the descent produced by the
+tree-parallel leaf core: the per-byte cost falls as a message lengthens and
+its leaf chunks move onto progressively wider kernels. A short message is
+dominated by the serial root duplex over chunk~$0$; its few complete leaf chunks,
+when present, run on the sub-eight remainder kernels (\Cref{sec:impl}), and only a
+message with at least eight complete leaf chunks beyond chunk~$0$ (about
+$9\beta \approx 72$\,KiB) fills the eight-way ($\times 8$) core even once. The
+per-byte cost therefore falls for two compounding reasons: the fixed per-message
+root cost amortizes over more leaf bytes, and the leaf chunks occupy more SIMD
+lanes. On the \texttt{amd64} AVX-512 path \TW{} encryption falls $1.96 \to 1.23
+\to 0.66$ across the $8$, $32$, and $64$\,KiB columns---the register-resident
+remainder kernel engaging at $32$\,KiB and filling more of its eight lanes by
+$64$\,KiB---then to $0.43$ at $1$\,MiB and $0.40$ at $16$\,MiB as the $\times 8$
+steady state takes over. The \texttt{amd64} AVX2 path has no sub-eight remainder
+kernel below five chunks, so it stays on the serial core through $32$\,KiB
+($2.18$) and reaches wide-SIMD throughput only once a five-to-seven-chunk
+remainder is padded to eight at $64$\,KiB ($1.49$); its steady state is shallower
+($1.04$ at $16$\,MiB), since it runs the eight instances as two groups of four
+rather than in a single $8$-wide register, leaving the AVX-512 core about
+$2.6\times$ faster in bulk. The \texttt{arm64} core, whose $2$-wide kernel engages
+at $32$\,KiB and which packs two instances per $128$-bit register, narrows the gap
+more gradually ($1.95 \to 1.38 \to 1.14 \to 0.89 \to 0.88$ cycles per byte from
+$8$\,KiB to $16$\,MiB). In wall-clock terms \TW{} reaches $5.75$\,GB/s on the
+\texttt{amd64} AVX-512 host and $5.09$\,GB/s on the M4 Pro for $16$\,MiB messages.
 
 \begin{table}
 \centering
@@ -471,43 +469,43 @@ frequency. Cycle counts are not directly comparable across architectures
 & $1$\,B & $64$\,B & $8$\,KiB & $32$\,KiB & $64$\,KiB & $1$\,MiB & $16$\,MiB \\
 \midrule
 \multicolumn{8}{l}{\emph{Intel Xeon 8581C (Emerald Rapids), AVX-512}} \\
-\quad \TW{} encrypt      & 733 & 11.38 & 2.31 & 2.22 & 0.97 & 0.58 & 0.49 \\
-\quad \TW{} decrypt      & 739 & 11.46 & 2.31 & 2.20 & 0.97 & 0.58 & 0.48 \\
-\quad AES-128-GCM seal   & 924 & 15.13 & 0.46 & 0.38 & 0.37 & 0.36 & 0.36 \\
-\quad AES-128-GCM open   & 931 & 15.05 & 0.45 & 0.37 & 0.36 & 0.35 & 0.34 \\
+\quad \TW{} encrypt      & 627 & 9.79 & 1.96 & 1.23 & 0.66 & 0.43 & 0.40 \\
+\quad \TW{} decrypt      & 627 & 9.92 & 1.94 & 1.21 & 0.65 & 0.42 & 0.40 \\
+\quad AES-128-GCM seal   & 769 & 13.15 & 0.39 & 0.33 & 0.31 & 0.30 & 0.30 \\
+\quad AES-128-GCM open   & 789 & 12.88 & 0.38 & 0.32 & 0.30 & 0.30 & 0.30 \\
 \midrule
 \multicolumn{8}{l}{\emph{Intel Xeon 8581C (Emerald Rapids), AVX2}} \\
-\quad \TW{} encrypt      & 787 & 12.35 & 2.67 & 2.58 & 1.81 & 1.30 & 1.29 \\
-\quad \TW{} decrypt      & 804 & 12.58 & 2.67 & 2.57 & 1.81 & 1.30 & 1.29 \\
+\quad \TW{} encrypt      & 677 & 10.84 & 2.30 & 2.18 & 1.49 & 1.08 & 1.04 \\
+\quad \TW{} decrypt      & 687 & 10.89 & 2.27 & 2.19 & 1.49 & 1.08 & 1.04 \\
 \midrule
 \multicolumn{8}{l}{\emph{Apple M4 Pro, NEON\,+\,\texttt{FEAT\_SHA3}}} \\
-\quad \TW{} encrypt      & 627 & 10.14 & 2.01 & 1.94 & 1.43 & 0.95 & 0.91 \\
-\quad \TW{} decrypt      & 630 & 10.27 & 2.08 & 1.99 & 1.42 & 0.93 & 0.89 \\
-\quad AES-128-GCM seal   & 1048 & 17.32 & 0.55 & 0.48 & 0.46 & 0.46 & 0.46 \\
-\quad AES-128-GCM open   & 1056 & 17.31 & 0.53 & 0.46 & 0.44 & 0.43 & 0.44 \\
+\quad \TW{} encrypt      & 619 & 9.99 & 1.95 & 1.38 & 1.14 & 0.89 & 0.88 \\
+\quad \TW{} decrypt      & 621 & 10.01 & 2.00 & 1.41 & 1.14 & 0.87 & 0.86 \\
+\quad AES-128-GCM seal   & 1027 & 16.66 & 0.54 & 0.45 & 0.44 & 0.43 & 0.44 \\
+\quad AES-128-GCM open   & 1026 & 16.73 & 0.52 & 0.43 & 0.42 & 0.41 & 0.42 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}
 \centering
-\caption{Measured throughput (GB/s, wall-clock, $\mathrm{GB} = 10^9$ bytes) from
-\texttt{go test -bench}, encryption direction; decryption is within $2\%$
-(\Cref{tab:cpb}). The \texttt{amd64} AES-128-GCM row is the AVX-512 host and is
-unaffected by the \TW{} core selection.}
+\caption{Measured wall-clock throughput (GB/s, $\mathrm{GB} = 10^9$ bytes) from
+the same \texttt{cmd/cpb} run as \Cref{tab:cpb}, encryption direction; the
+decryption direction tracks it. The \texttt{amd64} AES-128-GCM row is the AVX-512
+host and is unaffected by the \TW{} core selection.}
 \label{tab:throughput}
 \begin{tabular}{l rrrrr}
 \toprule
 & $8$\,KiB & $32$\,KiB & $64$\,KiB & $1$\,MiB & $16$\,MiB \\
 \midrule
 \multicolumn{6}{l}{\emph{Intel Xeon 8581C (Emerald Rapids)}} \\
-\quad \TW{} (AVX-512)  & 0.99 & 1.02 & 2.41 & 4.05 & 4.28 \\
-\quad \TW{} (AVX2)     & 0.85 & 0.88 & 1.25 & 1.67 & 1.69 \\
-\quad AES-128-GCM      & 4.25 & 4.92 & 5.08 & 5.24 & 5.22 \\
+\quad \TW{} (AVX-512)  & 1.17 & 1.87 & 3.50 & 5.39 & 5.75 \\
+\quad \TW{} (AVX2)     & 1.00 & 1.06 & 1.54 & 2.12 & 2.22 \\
+\quad AES-128-GCM      & 5.95 & 7.04 & 7.36 & 7.60 & 7.55 \\
 \midrule
 \multicolumn{6}{l}{\emph{Apple M4 Pro}} \\
-\quad \TW{} (NEON+SHA3) & 2.16 & 2.26 & 3.15 & 4.77 & 4.88 \\
-\quad AES-128-GCM       & 7.11 & 8.14 & 8.28 & 8.38 & 8.40 \\
+\quad \TW{} (NEON+SHA3) & 2.29 & 3.24 & 3.92 & 5.04 & 5.09 \\
+\quad AES-128-GCM       & 8.29 & 9.92 & 10.26 & 10.42 & 10.12 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -520,18 +518,19 @@ of the parallel leaf machinery. A message of at most $\rho = 167$ bytes occupies
 a single rate block and never enters leaf mode, so it costs exactly two
 permutations---one to initialize the root duplex and one to close the message
 block and extract the tag. The $1$\,B and $64$\,B columns of \Cref{tab:cpb} bear
-this out: per-message latency is flat across them at roughly $730$ reference
-cycles on \texttt{amd64} ($733$ at $1$\,B versus $11.38 \times 64 = 728$ at
-$64$\,B) and $640$ core cycles on \texttt{arm64}, i.e.\ about $365$ and $320$
+this out: per-message latency is flat across them at roughly $627$ reference
+cycles on \texttt{amd64} ($627$ at $1$\,B versus $9.79 \times 64 = 627$ at
+$64$\,B) and $620$ core cycles on \texttt{arm64}, i.e.\ about $314$ and $310$
 cycles per \Keccak[1600, 12] respectively. Because such messages bypass the leaf
 core entirely, leaf-level parallelism imposes no latency penalty on them.
 
 The latency/throughput trade-off appears instead in the intermediate regime. A
-message large enough to span leaves but smaller than the $\approx 48$\,KiB
-break-even runs its leaves on the serial $\times 1$ core, where \TW{} sits at its
-worst cycles-per-byte ($2.0$--$2.7$ across the $8$\,KiB and $32$\,KiB columns);
-only past the break-even does the $\times 8$ core convert the available leaf
-parallelism into throughput. The root duplex also bounds the tail of a long
+message large enough to span a few leaf chunks but too short to fill the
+eight-way core runs those chunks on the serial core or on a partly-filled
+remainder kernel, where \TW{} sits at its worst cycles-per-byte ($1.2$--$2.3$
+across the $8$\,KiB and $32$\,KiB columns); the per-byte cost reaches its floor
+only once the message is long enough to keep the $\times 8$ core in its steady
+state. The root duplex also bounds the tail of a long
 message: the final tag cannot be produced until chunk~$0$ has been processed and
 every leaf tag has been absorbed into the aggregation transcript. That absorption
 is cheap---each rate block of the root absorbs five $32$-byte leaf tags, so a
@@ -544,25 +543,28 @@ overhead---so the serial root does not materially cap bulk throughput.
 
 We compare against the one baseline measured under the same harness on the same
 hosts, the Go standard library's hardware-accelerated AES-128-GCM
-(\Cref{tab:cpb,tab:throughput}). In the bulk regime AES-128-GCM is faster on both
-architectures, as expected for a primitive with dedicated AES and
-carryless-multiply instructions: at $16$\,MiB it runs at $0.36$ cycles per byte
-on \texttt{amd64} and $0.46$ on \texttt{arm64}, against $0.49$ and $0.91$ for
-\TW{}. The \texttt{amd64} AVX-512 path is thus within about $1.4\times$ of
-AES-128-GCM ($4.28$ versus $5.22$\,GB/s), while on the M4 Pro the gap is closer
-to $1.9\times$ in cycles per byte ($4.88$ versus $8.40$\,GB/s), reflecting the
-strength of Apple's AES and \texttt{PMULL} units. \TW{} attains these rates with
-a permutation that has no dedicated hardware support, relying only on the SHA-3
-extension on \texttt{arm64} and on general SIMD on \texttt{amd64}.
+(\Cref{tab:cpb,tab:throughput}). The harness times \TW{} and AES-128-GCM
+back-to-back at each length and reads both metrics from the same loop, so the
+cycles-per-byte and throughput comparisons hold under identical conditions and
+agree. In the bulk regime AES-128-GCM is faster on both architectures, as
+expected for a primitive with dedicated AES and carryless-multiply instructions:
+at $16$\,MiB it runs at $0.30$ cycles per byte on \texttt{amd64} and $0.44$ on
+\texttt{arm64}, against $0.40$ and $0.88$ for \TW{}---about $1.3\times$ and
+$2\times$ faster. The wall-clock throughputs show the same margins: \TW{} reaches
+$5.75$ and $5.09$\,GB/s against AES-128-GCM's $7.55$ and $10.12$\,GB/s. The wider
+\texttt{arm64} gap reflects the strength of Apple's AES and \texttt{PMULL} units.
+\TW{} attains these rates with a permutation that has no dedicated hardware
+support, relying only on the SHA-3 extension on \texttt{arm64} and on general SIMD
+on \texttt{amd64}.
 
 The ordering reverses for very short messages, where AES-128-GCM's key schedule
-and GHASH key-power precomputation dominate: at $1$\,B AES-128-GCM costs $924$
-and $1048$ cycles on the two hosts against \TW{}'s $733$ and $627$. This
+and GHASH key-power precomputation dominate: at $1$\,B AES-128-GCM costs $769$
+and $1027$ cycles on the two hosts against \TW{}'s $627$ and $619$. This
 comparison is setup-bound rather than representative of steady state, since each
 timed call rebuilds its cipher; it nonetheless reflects the per-message cost an
-application pays when it does not amortize key setup across messages. Below the
-$\approx 48$\,KiB break-even, where \TW{} runs on its serial core, AES-128-GCM is
-several times faster (e.g.\ $0.46$ versus $2.31$ cycles per byte at $8$\,KiB on
+application pays when it does not amortize key setup across messages. In the
+sub-bulk regime, before \TW{}'s leaf chunks fill the wide core, AES-128-GCM is
+several times faster (e.g.\ $0.39$ versus $1.96$ cycles per byte at $8$\,KiB on
 \texttt{amd64}); \TW{}'s throughput advantage is confined to the parallel regime,
 and its intended value relative to AES-128-GCM lies in the tree structure and
 committing-security properties analyzed in
