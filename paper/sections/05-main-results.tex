@@ -378,11 +378,13 @@ expression of \cite[Eq.~(4)]{BDPV08},
 \[
   \Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{c + 1}.
 \]
-For a random permutation, \cite[Eq.~(6)]{BDPV08} gives a strictly
-smaller bound: its $2^{-r}$ terms lower the leading coefficient from
-$1$ to $1 - 2^{-r}$. The transformation-form expression therefore
-remains a valid (conservative) upper bound in the random-permutation
-setting. The theorem carries the side condition
+For a random permutation, \cite[Eq.~(6)]{BDPV08} gives the bound
+$\bigl((1 - 2^{-r})\Ntot^2 + (1 + 2^{-r})\Ntot\bigr)/2^{c+1}$, which
+never exceeds the transformation-form expression: the $2^{-r}$
+reduction in the quadratic coefficient dominates the $2^{-r}$ increase
+in the linear coefficient for $\Ntot \geq 1$. The transformation-form
+expression therefore remains a valid (conservative) upper bound in the
+random-permutation setting. The theorem carries the side condition
 $\Ntot < 2^c$; for
 $\Ntot \geq 2^c$, $\Lift_c(\Ntot) \geq 1$ and the advantage bound is
 trivial without any appeal to indifferentiability, and already at
@@ -501,9 +503,11 @@ are answered by running the simulator with direct $\ROflat$ queries;
 this hop is a lossless equality of joint distributions. One
 inspection of \cite[Algorithm~3]{BDPV08} shows that the simulator
 issues an $\ROflat$ call only on a forward primitive query whose
-input node is rooted, unsaturated, paddable, and a new edge in the
-simulator's internal graph; inverse queries and forward queries
-violating any of those conditions return $\ROflat$-free outputs.
+input node is rooted and has no outgoing edge in the simulator's
+internal graph, whose constructed path is paddable, and only while
+the simulator is unsaturated (\Cref{lem:sim-ro-call-filter}); inverse
+queries and forward queries violating any of those conditions return
+$\ROflat$-free outputs.
 Every primitive query therefore induces at most one $\ROflat$ call,
 giving the key accounting
 \[

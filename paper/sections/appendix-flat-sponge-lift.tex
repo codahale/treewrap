@@ -45,9 +45,9 @@ simple-padded-sponge simulator, not \TW{} resource notation:
   \item[(C2) Unsaturated.] $\mathcal{R} \cup \mathcal{O} \neq
     \mathcal{C}$.
   \item[(C3) Rooted input.] The input node is rooted.
-  \item[(C4) Paddable path.] The constructed path $p$ has stripped
-    suffix $p'$ (the unique decomposition $p = p' \concat 0^{rj}$
-    with $p'$ not ending in $0^r$) that is a valid padded sponge input:
+  \item[(C4) Paddable path.] The constructed path $p$ decomposes
+    uniquely as $p = p' \concat 0^{rj}$ with $p'$ not ending in
+    $0^r$, and the prefix $p'$ is a valid padded sponge input:
     equivalently, $p' = x \concat \mathsf{pad}[r](|x|)$ for an unpadded
     BDPV08 random-oracle input $x$.
 \end{description}
@@ -111,9 +111,11 @@ are disjoint in the public-permutation experiment: $N$ counts
 construction-internal use of the primitive, while $\Nprim$ counts only
 the adversary's public-primitive interface queries. The execution-uniform
 caps ensure that every adaptive transcript seen by the single-stage
-replacement has length at most $N+\Nprim=\Ntot$. \cite[Theorem~2]{BDPV08},
-with the concrete loss written as $\Lift_c$ in
-\Cref{sec:loss-terms}, therefore gives distinguishing or
+replacement has length at most $N+\Nprim=\Ntot$. If $\Ntot \geq 2^c$
+then $\Lift_c(\Ntot) \geq 1$ and the claimed bound holds trivially, so
+assume $\Ntot < 2^c$, satisfying the hypothesis of
+\cite[Theorem~2]{BDPV08}. That theorem, with the concrete loss written
+as $\Lift_c$ in \Cref{sec:loss-terms}, gives distinguishing or
 success-probability cost at most $\Lift_c(\Ntot)$.
 \end{proof}
 
