@@ -40,14 +40,16 @@ $\mathsf{G}$ returns~$1$.
 \paragraph{Advantages.}
 For an indistinguishability-style experiment with two games $\mathsf{G}_0,
 \mathsf{G}_1$, the distinguishing advantage of $\mathcal{A}$ against a
-scheme $\Pi$ in security notion $\mathsf{X}$ is the symmetric difference
+scheme $\Pi$ in security notion $\mathsf{X}$ is the absolute difference
 \[
   \Adv^{\mathsf{X}}_\Pi(\mathcal{A})
   = \bigl| \Pr[\mathsf{G}_0^{\mathcal{A}} \Rightarrow 1]
          - \Pr[\mathsf{G}_1^{\mathcal{A}} \Rightarrow 1] \bigr|.
 \]
 For a one-shot or win-event experiment, $\Adv^{\mathsf{X}}_\Pi(\mathcal{A})
-= \Pr[\mathsf{G}^{\mathcal{A}} \text{ wins}]$.
+= \Pr[\mathsf{G}^{\mathcal{A}} \text{ wins}]$, where
+``$\mathsf{G}^{\mathcal{A}}$ wins'' denotes the event that the game
+returns $1$.
 
 \paragraph{Concrete security.}
 All bounds in this paper are concrete: each advantage is an explicit
@@ -72,7 +74,7 @@ loss terms in \Cref{sec:loss-terms}.
     $\Ntot$    & $N + \Nprim$ (total query-sequence cost)             & \cref{sec:resources} \\
     $\qv$, $\Qv$ & Valid verification queries / cap (INT-CTXT)        & \cref{sec:resources} \\
     $\qRO$, $\QRO$ & Direct random-oracle queries / cap (RO-model)    & \cref{sec:resources} \\
-    $\nleaf$, $\Nleaf$ & Distinct construction-generated leaf transcripts / cap & \cref{sec:resources} \\
+    $\nleaf$, $\Nleaf$ & Distinct construction-generated final leaf transcripts / cap & \cref{sec:resources} \\
     \midrule
     $\Lift_c(\Ntot)$        & $\Ntot(\Ntot+1) / 2^{c+1}$, \cite{BDPV08} flat-sponge loss   & \cref{sec:loss-terms} \\
     $\KeyGuess_k(Q)$        & $Q / 2^k$, ideal-system key guess                       & \cref{sec:loss-terms} \\
@@ -361,7 +363,7 @@ with two tuples $(K_1, N_1, A_1, M_1), (K_2, N_2, A_2, M_2)$ with
 $\WiC_\ell(K_1, N_1, A_1, M_1) \neq \WiC_\ell(K_2, N_2, A_2, M_2)$,
 and wins if $\Dec_{K_i}(N_i, A_i, C) = M_i$ for both $i \in \{1,
 2\}$. The CMT-$\ell$ game has the adversary output the
-two tuples (without $C$) and wins if $\Enc_{K_1}(N_1, A_1, M_1) =
+two tuples (without $C$); the adversary wins if $\Enc_{K_1}(N_1, A_1, M_1) =
 \Enc_{K_2}(N_2, A_2, M_2)$. No tuple entry is allowed to be $\bot$
 and all entries must lie in the scheme's syntactic domain. Define
 $\Adv^{\mathsf{CMTD}\text{-}\ell}_\SE(\mathcal{A})$ and

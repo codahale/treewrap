@@ -313,7 +313,9 @@ $X$ is the plaintext body for encryption computations and the submitted
 ciphertext body for verification and committing decryption checks.
 Each distinct final leaf transcript contains a final leaf duplex call
 counted in $N$, so $\nleaf(\mathcal{B}) \leq N$ unconditionally. The
-inequality is tight when most processed bytes lie in leaf chunks.
+ratio $\nleaf/N$ is largest when most processed bytes lie in leaf
+chunks, where each full leaf contributes $1 + \beta/\rho = 50$ duplex
+calls to $N$ per final leaf transcript.
 
 All theorems are stated for adversaries whose execution-uniform caps
 hold at the stated bounds.
