@@ -115,10 +115,10 @@ length $\ell$ to an $\ell$-bit string by absorbing $M \concat
 (each separated by an application of $\pi$) and squeezing $\ell$ bits in
 $r$-bit blocks from the resulting state. \cite[Theorem~2]{BDPV08} shows that
 $\Sponge[\pi, \padten, r]$ is indifferentiable from a random oracle when
-$\pi$ is uniformly random. We bound its distinguishing advantage by the
-transformation-form expression $\Lift_c(\Ntot) = \Ntot(\Ntot+1) / 2^{c+1}$
-of \cite[Eq.~(4)]{BDPV08}, a conservative upper bound in the
-random-permutation setting (\Cref{sec:loss-terms}).
+$\pi$ is uniformly random. We bound its distinguishing advantage by
+$\Lift_c(\Ntot) = \Ntot(\Ntot+1) / 2^{c+1}$, derived in
+\Cref{sec:loss-terms} from the exact differentiating probabilities of
+\cite[Lemmas~4 and~5]{BDPV08}.
 
 \paragraph{The duplex construction.}
 The \emph{duplex} construction of \cite{BDPV11} extends the sponge to

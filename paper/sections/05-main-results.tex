@@ -373,18 +373,27 @@ Three closed-form expressions recur across the headline bounds of
 $\RootColl_\tau$ in some. We collect them here for reference.
 
 \paragraph{Flat-sponge loss.}
-The flat-sponge differentiating loss uses the transformation-form
-expression of \cite[Eq.~(4)]{BDPV08},
+The flat-sponge differentiating loss is
 \[
   \Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{c + 1}.
 \]
-For a random permutation, \cite[Eq.~(6)]{BDPV08} gives the bound
-$\bigl((1 - 2^{-r})\Ntot^2 + (1 + 2^{-r})\Ntot\bigr)/2^{c+1}$, which
-never exceeds the transformation-form expression: the $2^{-r}$
-reduction in the quadratic coefficient dominates the $2^{-r}$ increase
-in the linear coefficient for $\Ntot \geq 1$. The transformation-form
-expression therefore remains a valid (conservative) upper bound in the
-random-permutation setting. The theorem carries the side condition
+\cite[Lemmas~4 and~5]{BDPV08} give the differentiating probabilities
+in exact product form: the random-transformation probability is
+$f_T(\Ntot) = 1 - \prod_{i=1}^{\Ntot}(1 - i/2^c)$, and each factor of
+the random-permutation probability $f_P(\Ntot)$ is the corresponding
+$f_T$ factor divided by a quantity $1 - i/2^{r+c} \in (0, 1]$, hence
+at least as large, so $f_P(\Ntot) \leq f_T(\Ntot)$. For
+$\Ntot < 2^c$ every factor lies in $[0, 1]$ and
+\[
+  f_P(\Ntot) \leq f_T(\Ntot)
+  = 1 - \prod_{i=1}^{\Ntot}\Bigl(1 - \frac{i}{2^c}\Bigr)
+  \leq \sum_{i=1}^{\Ntot} \frac{i}{2^c}
+  = \frac{\Ntot(\Ntot + 1)}{2^{c+1}}
+  = \Lift_c(\Ntot),
+\]
+the second inequality by the Weierstrass product inequality
+$\prod_i (1 - x_i) \geq 1 - \sum_i x_i$ for $x_i \in [0, 1]$.
+\cite[Theorem~2]{BDPV08} carries the side condition
 $\Ntot < 2^c$; for
 $\Ntot \geq 2^c$, $\Lift_c(\Ntot) \geq 1$ and the advantage bound is
 trivial without any appeal to indifferentiability, and already at
@@ -678,9 +687,9 @@ at the threshold.
   birthday attack on the $\tauleaf$-bit leaf tag projection matches
   the leading $\Nleaf^2 / 2^{\tauleaf + 1}$ rate.
 \item \emph{Flat-sponge lift.} The term
-  $\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{c + 1}$ is the
-  transformation-form flat-sponge loss of \cite[Eq.~(4)]{BDPV08}, used
-  as a random-permutation upper bound via \Cref{sec:loss-terms}. The
+  $\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{c + 1}$ bounds the exact
+  random-permutation differentiating probability of
+  \cite[Lemma~5]{BDPV08} via \Cref{sec:loss-terms}. The
   remaining slack is the unimproved
   tightness of the \cite{BDPV08} simulator itself, which is an open
   problem on the sponge side and not specific to \TW{}.
