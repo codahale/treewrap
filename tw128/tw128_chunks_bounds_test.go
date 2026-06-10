@@ -57,4 +57,18 @@ func TestChunkKernelsStayInBounds(t *testing.T) {
 		encryptChunkPair(&c, src, dst)
 		decryptChunkPair(&c, src, dst)
 	})
+
+	t.Run("run", func(t *testing.T) {
+		for rem := 2; rem <= 7; rem++ {
+			n := rem * ChunkSize
+			src := guardedTail(t, n)
+			dst := guardedTail(t, n)
+			copy(src, seq(n))
+			var c cryptor
+			copy(c.key[:], key)
+			copy(c.nonce[:], nonce)
+			encryptChunkRun(&c, src, dst, rem)
+			decryptChunkRun(&c, src, dst, rem)
+		}
+	})
 }

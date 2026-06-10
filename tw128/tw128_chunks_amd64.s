@@ -140,6 +140,36 @@
 	VMOVDQU	24*32(SP), Y0; VMOVDQU	Y0, 24*64+32(BASE)
 
 
+// SETUP_PTR_N points instance i's src/dst pointer slots at src + i*8183 (base
+// AX) and dst + i*8183 (base R9) with stride 167 when i < n (CX), or at the
+// in-frame dummy block (DX) with stride 0 when i >= n, so an inactive instance
+// reads and writes only the dummy block and never advances. Temps R10-R12.
+#define SETUP_PTR_N(i, srcslot, dstslot, strideslot) \
+	LEAQ	(i*8183)(AX), R10; \
+	LEAQ	(i*8183)(R9), R11; \
+	MOVQ	$167, R12; \
+	CMPQ	CX, $i; \
+	JGT	4(PC); \
+	MOVQ	DX, R10; \
+	MOVQ	DX, R11; \
+	XORQ	R12, R12; \
+	MOVQ	R10, srcslot(SP); \
+	MOVQ	R11, dstslot(SP); \
+	MOVQ	R12, strideslot(SP)
+
+// ADVANCE_PTRS_N advances the four src and four dst block pointers by their
+// per-instance strides (167 for active instances, 0 for dummy-pinned ones).
+#define ADVANCE_PTRS_N \
+	ADDQ	1680(SP), AX; \
+	ADDQ	1688(SP), CX; \
+	ADDQ	1696(SP), DX; \
+	ADDQ	1704(SP), BX; \
+	ADDQ	1680(SP), SI; \
+	ADDQ	1688(SP), BP; \
+	ADDQ	1696(SP), R13; \
+	ADDQ	1704(SP), R14
+
+
 // ENC_LANE_GS_N / DEC_LANE_GS_N are the masked variants of ENC_LANE_GS /
 // DEC_LANE_GS: they gather/scatter only the K2-selected lanes (the low n chunk
 // instances) instead of all eight, so the kernel can read a 2..7 chunk remainder
@@ -431,7 +461,7 @@ tw128_dec_avx512n_loop:
 // func encryptChunksBodyAVX2(s *state8, src, dst *byte)
 //
 // 2× x4 approach (half 0: instances 0-3, half 1: instances 4-7). Processes the
-// 49 full rho-blocks and stores the 8-way state back into s.
+// 48 MSG_MORE rho-blocks and stores the 8-way state back into s.
 //
 // Frame: 1688 bytes local (0-799 = buffer A, 800-1599 = buffer B,
 //   1600-1631 = 4 src ptrs, 1632-1663 = 4 dst ptrs,
@@ -937,5 +967,468 @@ tw128_dec_avx2_final_b:
 	MOVQ	1672(SP), DI
 	STORE_STATE_X4_UPPER(DI)
 
+	VZEROUPPER
+	RET
+
+
+// func encryptChunksBodyAVX2N(s *state8, src, dst *byte, n uint64)
+//
+// AVX2 kernel for a 2..7 chunk remainder. Same 2× x4 structure as
+// encryptChunksBodyAVX2, but instance i's src/dst pointers are aimed at an
+// in-frame 168-byte dummy block with a zero stride when i >= n (SETUP_PTR_N),
+// so inactive instances read and write only the dummy block — no memory access
+// past the remainder — and run as independent garbage instances, ignored. When
+// n <= 4 the upper half is skipped entirely: instances 4..7 keep their init
+// state in s, which finishEncryptChunksN permutes but never extracts.
+//
+// Frame: encryptChunksBodyAVX2's layout plus 1680-1711 = 4 per-instance
+// strides, 1712-1879 = dummy block, 1880 = n.
+TEXT ·encryptChunksBodyAVX2N(SB), $1888-32
+	MOVQ	s+0(FP), DI
+	MOVQ	src+8(FP), AX
+	MOVQ	dst+16(FP), R9
+	MOVQ	n+24(FP), CX
+	MOVQ	DI, 1672(SP)		// save state ptr
+	MOVQ	CX, 1880(SP)		// save n
+	LEAQ	1712(SP), DX		// dummy block
+
+	// === Half 0: instances 0-3 ===
+	SETUP_PTR_N(0, 1600, 1632, 1680)
+	SETUP_PTR_N(1, 1608, 1640, 1688)
+	SETUP_PTR_N(2, 1616, 1648, 1696)
+	SETUP_PTR_N(3, 1624, 1656, 1704)
+	MOVQ	$48, 1664(SP)		// block count
+
+	VMOVDQU	0*64(DI), Y0;   VMOVDQU	Y0, 0*32(SP)
+	VMOVDQU	1*64(DI), Y0;   VMOVDQU	Y0, 1*32(SP)
+	VMOVDQU	2*64(DI), Y0;   VMOVDQU	Y0, 2*32(SP)
+	VMOVDQU	3*64(DI), Y0;   VMOVDQU	Y0, 3*32(SP)
+	VMOVDQU	4*64(DI), Y0;   VMOVDQU	Y0, 4*32(SP)
+	VMOVDQU	5*64(DI), Y0;   VMOVDQU	Y0, 5*32(SP)
+	VMOVDQU	6*64(DI), Y0;   VMOVDQU	Y0, 6*32(SP)
+	VMOVDQU	7*64(DI), Y0;   VMOVDQU	Y0, 7*32(SP)
+	VMOVDQU	8*64(DI), Y0;   VMOVDQU	Y0, 8*32(SP)
+	VMOVDQU	9*64(DI), Y0;   VMOVDQU	Y0, 9*32(SP)
+	VMOVDQU	10*64(DI), Y0;  VMOVDQU	Y0, 10*32(SP)
+	VMOVDQU	11*64(DI), Y0;  VMOVDQU	Y0, 11*32(SP)
+	VMOVDQU	12*64(DI), Y0;  VMOVDQU	Y0, 12*32(SP)
+	VMOVDQU	13*64(DI), Y0;  VMOVDQU	Y0, 13*32(SP)
+	VMOVDQU	14*64(DI), Y0;  VMOVDQU	Y0, 14*32(SP)
+	VMOVDQU	15*64(DI), Y0;  VMOVDQU	Y0, 15*32(SP)
+	VMOVDQU	16*64(DI), Y0;  VMOVDQU	Y0, 16*32(SP)
+	VMOVDQU	17*64(DI), Y0;  VMOVDQU	Y0, 17*32(SP)
+	VMOVDQU	18*64(DI), Y0;  VMOVDQU	Y0, 18*32(SP)
+	VMOVDQU	19*64(DI), Y0;  VMOVDQU	Y0, 19*32(SP)
+	VMOVDQU	20*64(DI), Y0;  VMOVDQU	Y0, 20*32(SP)
+	VMOVDQU	21*64(DI), Y0;  VMOVDQU	Y0, 21*32(SP)
+	VMOVDQU	22*64(DI), Y0;  VMOVDQU	Y0, 22*32(SP)
+	VMOVDQU	23*64(DI), Y0;  VMOVDQU	Y0, 23*32(SP)
+	VMOVDQU	24*64(DI), Y0;  VMOVDQU	Y0, 24*32(SP)
+
+tw128_enc_avx2n_loop_a:
+	CMPQ	1664(SP), $0
+	JEQ	tw128_enc_avx2n_final_a
+
+	LEAQ	0(SP), R8
+	MOVQ	1600(SP), AX
+	MOVQ	1608(SP), CX
+	MOVQ	1616(SP), DX
+	MOVQ	1624(SP), BX
+	MOVQ	1632(SP), SI
+	MOVQ	1640(SP), BP
+	MOVQ	1648(SP), R13
+	MOVQ	1656(SP), R14
+
+	ENC_LANE_X4(0)
+	ENC_LANE_X4(1)
+	ENC_LANE_X4(2)
+	ENC_LANE_X4(3)
+	ENC_LANE_X4(4)
+	ENC_LANE_X4(5)
+	ENC_LANE_X4(6)
+	ENC_LANE_X4(7)
+	ENC_LANE_X4(8)
+	ENC_LANE_X4(9)
+	ENC_LANE_X4(10)
+	ENC_LANE_X4(11)
+	ENC_LANE_X4(12)
+	ENC_LANE_X4(13)
+	ENC_LANE_X4(14)
+	ENC_LANE_X4(15)
+	ENC_LANE_X4(16)
+	ENC_LANE_X4(17)
+	ENC_LANE_X4(18)
+	ENC_LANE_X4(19)
+	ENC_PARTIAL7_X4
+
+	ADVANCE_PTRS_N
+	MOVQ	AX, 1600(SP)
+	MOVQ	CX, 1608(SP)
+	MOVQ	DX, 1616(SP)
+	MOVQ	BX, 1624(SP)
+	MOVQ	SI, 1632(SP)
+	MOVQ	BP, 1640(SP)
+	MOVQ	R13, 1648(SP)
+	MOVQ	R14, 1656(SP)
+	SUBQ	$1, 1664(SP)
+
+	MSG_MORE_X4
+
+	LEAQ	0(SP), R8
+	LEAQ	800(SP), R9
+	LEAQ	tw128_round_consts_4x+384(SB), R11
+	MOVQ	$12, R10
+
+	PCALIGN	$16
+tw128_enc_avx2n_round_a:
+	X4_KECCAK_ROUND
+	XCHGQ	R8, R9
+	ADDQ	$32, R11
+	SUBQ	$1, R10
+	JNZ	tw128_enc_avx2n_round_a
+
+	JMP	tw128_enc_avx2n_loop_a
+
+tw128_enc_avx2n_final_a:
+	MOVQ	1672(SP), DI
+	STORE_STATE_X4_LOWER(DI)
+
+	// === Half 1: instances 4-7 (skipped when n <= 4) ===
+	MOVQ	1880(SP), CX
+	CMPQ	CX, $4
+	JLE	tw128_enc_avx2n_done
+
+	MOVQ	1672(SP), DI
+	MOVQ	src+8(FP), AX
+	MOVQ	dst+16(FP), R9
+	LEAQ	1712(SP), DX
+	SETUP_PTR_N(4, 1600, 1632, 1680)
+	SETUP_PTR_N(5, 1608, 1640, 1688)
+	SETUP_PTR_N(6, 1616, 1648, 1696)
+	SETUP_PTR_N(7, 1624, 1656, 1704)
+	MOVQ	$48, 1664(SP)
+
+	VMOVDQU	0*64+32(DI), Y0;  VMOVDQU	Y0, 0*32(SP)
+	VMOVDQU	1*64+32(DI), Y0;  VMOVDQU	Y0, 1*32(SP)
+	VMOVDQU	2*64+32(DI), Y0;  VMOVDQU	Y0, 2*32(SP)
+	VMOVDQU	3*64+32(DI), Y0;  VMOVDQU	Y0, 3*32(SP)
+	VMOVDQU	4*64+32(DI), Y0;  VMOVDQU	Y0, 4*32(SP)
+	VMOVDQU	5*64+32(DI), Y0;  VMOVDQU	Y0, 5*32(SP)
+	VMOVDQU	6*64+32(DI), Y0;  VMOVDQU	Y0, 6*32(SP)
+	VMOVDQU	7*64+32(DI), Y0;  VMOVDQU	Y0, 7*32(SP)
+	VMOVDQU	8*64+32(DI), Y0;  VMOVDQU	Y0, 8*32(SP)
+	VMOVDQU	9*64+32(DI), Y0;  VMOVDQU	Y0, 9*32(SP)
+	VMOVDQU	10*64+32(DI), Y0; VMOVDQU	Y0, 10*32(SP)
+	VMOVDQU	11*64+32(DI), Y0; VMOVDQU	Y0, 11*32(SP)
+	VMOVDQU	12*64+32(DI), Y0; VMOVDQU	Y0, 12*32(SP)
+	VMOVDQU	13*64+32(DI), Y0; VMOVDQU	Y0, 13*32(SP)
+	VMOVDQU	14*64+32(DI), Y0; VMOVDQU	Y0, 14*32(SP)
+	VMOVDQU	15*64+32(DI), Y0; VMOVDQU	Y0, 15*32(SP)
+	VMOVDQU	16*64+32(DI), Y0; VMOVDQU	Y0, 16*32(SP)
+	VMOVDQU	17*64+32(DI), Y0; VMOVDQU	Y0, 17*32(SP)
+	VMOVDQU	18*64+32(DI), Y0; VMOVDQU	Y0, 18*32(SP)
+	VMOVDQU	19*64+32(DI), Y0; VMOVDQU	Y0, 19*32(SP)
+	VMOVDQU	20*64+32(DI), Y0; VMOVDQU	Y0, 20*32(SP)
+	VMOVDQU	21*64+32(DI), Y0; VMOVDQU	Y0, 21*32(SP)
+	VMOVDQU	22*64+32(DI), Y0; VMOVDQU	Y0, 22*32(SP)
+	VMOVDQU	23*64+32(DI), Y0; VMOVDQU	Y0, 23*32(SP)
+	VMOVDQU	24*64+32(DI), Y0; VMOVDQU	Y0, 24*32(SP)
+
+tw128_enc_avx2n_loop_b:
+	CMPQ	1664(SP), $0
+	JEQ	tw128_enc_avx2n_final_b
+
+	LEAQ	0(SP), R8
+	MOVQ	1600(SP), AX
+	MOVQ	1608(SP), CX
+	MOVQ	1616(SP), DX
+	MOVQ	1624(SP), BX
+	MOVQ	1632(SP), SI
+	MOVQ	1640(SP), BP
+	MOVQ	1648(SP), R13
+	MOVQ	1656(SP), R14
+
+	ENC_LANE_X4(0)
+	ENC_LANE_X4(1)
+	ENC_LANE_X4(2)
+	ENC_LANE_X4(3)
+	ENC_LANE_X4(4)
+	ENC_LANE_X4(5)
+	ENC_LANE_X4(6)
+	ENC_LANE_X4(7)
+	ENC_LANE_X4(8)
+	ENC_LANE_X4(9)
+	ENC_LANE_X4(10)
+	ENC_LANE_X4(11)
+	ENC_LANE_X4(12)
+	ENC_LANE_X4(13)
+	ENC_LANE_X4(14)
+	ENC_LANE_X4(15)
+	ENC_LANE_X4(16)
+	ENC_LANE_X4(17)
+	ENC_LANE_X4(18)
+	ENC_LANE_X4(19)
+	ENC_PARTIAL7_X4
+
+	ADVANCE_PTRS_N
+	MOVQ	AX, 1600(SP)
+	MOVQ	CX, 1608(SP)
+	MOVQ	DX, 1616(SP)
+	MOVQ	BX, 1624(SP)
+	MOVQ	SI, 1632(SP)
+	MOVQ	BP, 1640(SP)
+	MOVQ	R13, 1648(SP)
+	MOVQ	R14, 1656(SP)
+	SUBQ	$1, 1664(SP)
+
+	MSG_MORE_X4
+
+	LEAQ	0(SP), R8
+	LEAQ	800(SP), R9
+	LEAQ	tw128_round_consts_4x+384(SB), R11
+	MOVQ	$12, R10
+
+	PCALIGN	$16
+tw128_enc_avx2n_round_b:
+	X4_KECCAK_ROUND
+	XCHGQ	R8, R9
+	ADDQ	$32, R11
+	SUBQ	$1, R10
+	JNZ	tw128_enc_avx2n_round_b
+
+	JMP	tw128_enc_avx2n_loop_b
+
+tw128_enc_avx2n_final_b:
+	MOVQ	1672(SP), DI
+	STORE_STATE_X4_UPPER(DI)
+
+tw128_enc_avx2n_done:
+	VZEROUPPER
+	RET
+
+
+// func decryptChunksBodyAVX2N(s *state8, src, dst *byte, n uint64)
+//
+// Decrypt counterpart of encryptChunksBodyAVX2N.
+TEXT ·decryptChunksBodyAVX2N(SB), $1888-32
+	MOVQ	s+0(FP), DI
+	MOVQ	src+8(FP), AX
+	MOVQ	dst+16(FP), R9
+	MOVQ	n+24(FP), CX
+	MOVQ	DI, 1672(SP)
+	MOVQ	CX, 1880(SP)
+	LEAQ	1712(SP), DX
+
+	// === Half 0: instances 0-3 ===
+	SETUP_PTR_N(0, 1600, 1632, 1680)
+	SETUP_PTR_N(1, 1608, 1640, 1688)
+	SETUP_PTR_N(2, 1616, 1648, 1696)
+	SETUP_PTR_N(3, 1624, 1656, 1704)
+	MOVQ	$48, 1664(SP)
+
+	VMOVDQU	0*64(DI), Y0;   VMOVDQU	Y0, 0*32(SP)
+	VMOVDQU	1*64(DI), Y0;   VMOVDQU	Y0, 1*32(SP)
+	VMOVDQU	2*64(DI), Y0;   VMOVDQU	Y0, 2*32(SP)
+	VMOVDQU	3*64(DI), Y0;   VMOVDQU	Y0, 3*32(SP)
+	VMOVDQU	4*64(DI), Y0;   VMOVDQU	Y0, 4*32(SP)
+	VMOVDQU	5*64(DI), Y0;   VMOVDQU	Y0, 5*32(SP)
+	VMOVDQU	6*64(DI), Y0;   VMOVDQU	Y0, 6*32(SP)
+	VMOVDQU	7*64(DI), Y0;   VMOVDQU	Y0, 7*32(SP)
+	VMOVDQU	8*64(DI), Y0;   VMOVDQU	Y0, 8*32(SP)
+	VMOVDQU	9*64(DI), Y0;   VMOVDQU	Y0, 9*32(SP)
+	VMOVDQU	10*64(DI), Y0;  VMOVDQU	Y0, 10*32(SP)
+	VMOVDQU	11*64(DI), Y0;  VMOVDQU	Y0, 11*32(SP)
+	VMOVDQU	12*64(DI), Y0;  VMOVDQU	Y0, 12*32(SP)
+	VMOVDQU	13*64(DI), Y0;  VMOVDQU	Y0, 13*32(SP)
+	VMOVDQU	14*64(DI), Y0;  VMOVDQU	Y0, 14*32(SP)
+	VMOVDQU	15*64(DI), Y0;  VMOVDQU	Y0, 15*32(SP)
+	VMOVDQU	16*64(DI), Y0;  VMOVDQU	Y0, 16*32(SP)
+	VMOVDQU	17*64(DI), Y0;  VMOVDQU	Y0, 17*32(SP)
+	VMOVDQU	18*64(DI), Y0;  VMOVDQU	Y0, 18*32(SP)
+	VMOVDQU	19*64(DI), Y0;  VMOVDQU	Y0, 19*32(SP)
+	VMOVDQU	20*64(DI), Y0;  VMOVDQU	Y0, 20*32(SP)
+	VMOVDQU	21*64(DI), Y0;  VMOVDQU	Y0, 21*32(SP)
+	VMOVDQU	22*64(DI), Y0;  VMOVDQU	Y0, 22*32(SP)
+	VMOVDQU	23*64(DI), Y0;  VMOVDQU	Y0, 23*32(SP)
+	VMOVDQU	24*64(DI), Y0;  VMOVDQU	Y0, 24*32(SP)
+
+tw128_dec_avx2n_loop_a:
+	CMPQ	1664(SP), $0
+	JEQ	tw128_dec_avx2n_final_a
+
+	LEAQ	0(SP), R8
+	MOVQ	1600(SP), AX
+	MOVQ	1608(SP), CX
+	MOVQ	1616(SP), DX
+	MOVQ	1624(SP), BX
+	MOVQ	1632(SP), SI
+	MOVQ	1640(SP), BP
+	MOVQ	1648(SP), R13
+	MOVQ	1656(SP), R14
+
+	DEC_LANE_X4(0)
+	DEC_LANE_X4(1)
+	DEC_LANE_X4(2)
+	DEC_LANE_X4(3)
+	DEC_LANE_X4(4)
+	DEC_LANE_X4(5)
+	DEC_LANE_X4(6)
+	DEC_LANE_X4(7)
+	DEC_LANE_X4(8)
+	DEC_LANE_X4(9)
+	DEC_LANE_X4(10)
+	DEC_LANE_X4(11)
+	DEC_LANE_X4(12)
+	DEC_LANE_X4(13)
+	DEC_LANE_X4(14)
+	DEC_LANE_X4(15)
+	DEC_LANE_X4(16)
+	DEC_LANE_X4(17)
+	DEC_LANE_X4(18)
+	DEC_LANE_X4(19)
+	DEC_PARTIAL7_X4
+
+	ADVANCE_PTRS_N
+	MOVQ	AX, 1600(SP)
+	MOVQ	CX, 1608(SP)
+	MOVQ	DX, 1616(SP)
+	MOVQ	BX, 1624(SP)
+	MOVQ	SI, 1632(SP)
+	MOVQ	BP, 1640(SP)
+	MOVQ	R13, 1648(SP)
+	MOVQ	R14, 1656(SP)
+	SUBQ	$1, 1664(SP)
+
+	MSG_MORE_X4
+
+	LEAQ	0(SP), R8
+	LEAQ	800(SP), R9
+	LEAQ	tw128_round_consts_4x+384(SB), R11
+	MOVQ	$12, R10
+
+	PCALIGN	$16
+tw128_dec_avx2n_round_a:
+	X4_KECCAK_ROUND
+	XCHGQ	R8, R9
+	ADDQ	$32, R11
+	SUBQ	$1, R10
+	JNZ	tw128_dec_avx2n_round_a
+
+	JMP	tw128_dec_avx2n_loop_a
+
+tw128_dec_avx2n_final_a:
+	MOVQ	1672(SP), DI
+	STORE_STATE_X4_LOWER(DI)
+
+	// === Half 1: instances 4-7 (skipped when n <= 4) ===
+	MOVQ	1880(SP), CX
+	CMPQ	CX, $4
+	JLE	tw128_dec_avx2n_done
+
+	MOVQ	1672(SP), DI
+	MOVQ	src+8(FP), AX
+	MOVQ	dst+16(FP), R9
+	LEAQ	1712(SP), DX
+	SETUP_PTR_N(4, 1600, 1632, 1680)
+	SETUP_PTR_N(5, 1608, 1640, 1688)
+	SETUP_PTR_N(6, 1616, 1648, 1696)
+	SETUP_PTR_N(7, 1624, 1656, 1704)
+	MOVQ	$48, 1664(SP)
+
+	VMOVDQU	0*64+32(DI), Y0;  VMOVDQU	Y0, 0*32(SP)
+	VMOVDQU	1*64+32(DI), Y0;  VMOVDQU	Y0, 1*32(SP)
+	VMOVDQU	2*64+32(DI), Y0;  VMOVDQU	Y0, 2*32(SP)
+	VMOVDQU	3*64+32(DI), Y0;  VMOVDQU	Y0, 3*32(SP)
+	VMOVDQU	4*64+32(DI), Y0;  VMOVDQU	Y0, 4*32(SP)
+	VMOVDQU	5*64+32(DI), Y0;  VMOVDQU	Y0, 5*32(SP)
+	VMOVDQU	6*64+32(DI), Y0;  VMOVDQU	Y0, 6*32(SP)
+	VMOVDQU	7*64+32(DI), Y0;  VMOVDQU	Y0, 7*32(SP)
+	VMOVDQU	8*64+32(DI), Y0;  VMOVDQU	Y0, 8*32(SP)
+	VMOVDQU	9*64+32(DI), Y0;  VMOVDQU	Y0, 9*32(SP)
+	VMOVDQU	10*64+32(DI), Y0; VMOVDQU	Y0, 10*32(SP)
+	VMOVDQU	11*64+32(DI), Y0; VMOVDQU	Y0, 11*32(SP)
+	VMOVDQU	12*64+32(DI), Y0; VMOVDQU	Y0, 12*32(SP)
+	VMOVDQU	13*64+32(DI), Y0; VMOVDQU	Y0, 13*32(SP)
+	VMOVDQU	14*64+32(DI), Y0; VMOVDQU	Y0, 14*32(SP)
+	VMOVDQU	15*64+32(DI), Y0; VMOVDQU	Y0, 15*32(SP)
+	VMOVDQU	16*64+32(DI), Y0; VMOVDQU	Y0, 16*32(SP)
+	VMOVDQU	17*64+32(DI), Y0; VMOVDQU	Y0, 17*32(SP)
+	VMOVDQU	18*64+32(DI), Y0; VMOVDQU	Y0, 18*32(SP)
+	VMOVDQU	19*64+32(DI), Y0; VMOVDQU	Y0, 19*32(SP)
+	VMOVDQU	20*64+32(DI), Y0; VMOVDQU	Y0, 20*32(SP)
+	VMOVDQU	21*64+32(DI), Y0; VMOVDQU	Y0, 21*32(SP)
+	VMOVDQU	22*64+32(DI), Y0; VMOVDQU	Y0, 22*32(SP)
+	VMOVDQU	23*64+32(DI), Y0; VMOVDQU	Y0, 23*32(SP)
+	VMOVDQU	24*64+32(DI), Y0; VMOVDQU	Y0, 24*32(SP)
+
+tw128_dec_avx2n_loop_b:
+	CMPQ	1664(SP), $0
+	JEQ	tw128_dec_avx2n_final_b
+
+	LEAQ	0(SP), R8
+	MOVQ	1600(SP), AX
+	MOVQ	1608(SP), CX
+	MOVQ	1616(SP), DX
+	MOVQ	1624(SP), BX
+	MOVQ	1632(SP), SI
+	MOVQ	1640(SP), BP
+	MOVQ	1648(SP), R13
+	MOVQ	1656(SP), R14
+
+	DEC_LANE_X4(0)
+	DEC_LANE_X4(1)
+	DEC_LANE_X4(2)
+	DEC_LANE_X4(3)
+	DEC_LANE_X4(4)
+	DEC_LANE_X4(5)
+	DEC_LANE_X4(6)
+	DEC_LANE_X4(7)
+	DEC_LANE_X4(8)
+	DEC_LANE_X4(9)
+	DEC_LANE_X4(10)
+	DEC_LANE_X4(11)
+	DEC_LANE_X4(12)
+	DEC_LANE_X4(13)
+	DEC_LANE_X4(14)
+	DEC_LANE_X4(15)
+	DEC_LANE_X4(16)
+	DEC_LANE_X4(17)
+	DEC_LANE_X4(18)
+	DEC_LANE_X4(19)
+	DEC_PARTIAL7_X4
+
+	ADVANCE_PTRS_N
+	MOVQ	AX, 1600(SP)
+	MOVQ	CX, 1608(SP)
+	MOVQ	DX, 1616(SP)
+	MOVQ	BX, 1624(SP)
+	MOVQ	SI, 1632(SP)
+	MOVQ	BP, 1640(SP)
+	MOVQ	R13, 1648(SP)
+	MOVQ	R14, 1656(SP)
+	SUBQ	$1, 1664(SP)
+
+	MSG_MORE_X4
+
+	LEAQ	0(SP), R8
+	LEAQ	800(SP), R9
+	LEAQ	tw128_round_consts_4x+384(SB), R11
+	MOVQ	$12, R10
+
+	PCALIGN	$16
+tw128_dec_avx2n_round_b:
+	X4_KECCAK_ROUND
+	XCHGQ	R8, R9
+	ADDQ	$32, R11
+	SUBQ	$1, R10
+	JNZ	tw128_dec_avx2n_round_b
+
+	JMP	tw128_dec_avx2n_loop_b
+
+tw128_dec_avx2n_final_b:
+	MOVQ	1672(SP), DI
+	STORE_STATE_X4_UPPER(DI)
+
+tw128_dec_avx2n_done:
 	VZEROUPPER
 	RET

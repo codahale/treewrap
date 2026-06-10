@@ -242,11 +242,10 @@ func (c *cryptor) processComplete(dst, src []byte, nFlush int) {
 	}
 
 	// 2-wide pass: drain the remaining complete chunks in pairs where a 2-wide
-	// kernel is available. This avoids the x1 serial penalty for small
-	// remainders (e.g. the three leaf chunks of a 32 KiB message) and, for a
-	// 5..7 chunk remainder, the padded-x8 path's wasted eighth lane and large
-	// scratch buffer. On platforms without a 2-wide kernel the calls report
-	// false and the padded-x8 and x1 fallbacks below handle the remainder.
+	// kernel is available (arm64). This avoids the x1 serial penalty for small
+	// remainders (e.g. the three leaf chunks of a 32 KiB message). On
+	// platforms without a 2-wide kernel the calls report false and the
+	// register-resident and x1 passes below handle the remainder.
 	for idx+2 <= nFlush {
 		off := idx * ChunkSize
 		var ok bool
@@ -261,21 +260,22 @@ func (c *cryptor) processComplete(dst, src []byte, nFlush int) {
 		idx += 2
 	}
 
-	// Register-resident pass: drain a 2..7 chunk remainder with a single
-	// AVX-512 kernel that reads the chunks directly (no scratch buffer) where one
-	// is available. This removes both the x1 serial penalty for a small remainder
-	// (e.g. the three leaf chunks of a 32 KiB message) and the padded-x8 path's
-	// 128 KiB scratch buffer.
+	// Remainder pass: drain a 2..7 chunk remainder with a single kernel call
+	// that reads the chunks directly (no scratch buffer): register-resident
+	// masked gather/scatter on AVX-512, dummy-lane x4 on AVX2. This removes
+	// the x1 serial penalty for a small remainder (e.g. the three leaf chunks
+	// of a 32 KiB message).
 	//
-	// Gated to idx == 0, i.e. the remainder is the entire chunk set (at most
-	// seven chunks, cache-hot — the 32/64 KiB case). When idx > 0 the remainder
-	// is the tail of a larger message whose working set has spilled L2, so the
-	// chunks are cold; a strided gather over cold memory is slow, and the
-	// padded-x8 path's sequential memcpy-into-scratch warms the data far more
-	// efficiently. Those tails fall through to padded-x8 / x1 below. On arm64 the
-	// pair pass already left fewer than two chunks; on an AVX2-only amd64 host the
-	// call reports false and the fallbacks below run.
-	if rem := nFlush - idx; idx == 0 && rem >= 2 {
+	// This pass also takes the tail of a larger message (idx > 0), whose
+	// chunks are cold: the kernels read each chunk as a sequential stream, so
+	// cold tails prefetch as well as the x8 batches do. Measured on Emerald
+	// Rapids (Xeon Platinum 8581C), the AVX-512 kernel beats both a padded-x8
+	// pass and serial x1 for every remainder size, on cache-resident and cold
+	// chunks alike; see the commit introducing this pass for the measurements.
+	// On arm64 the pair pass already left fewer than two chunks; on platforms
+	// without a remainder kernel the call reports false and the x1 loop below
+	// runs.
+	if rem := nFlush - idx; rem >= 2 {
 		off := idx * ChunkSize
 		var ok bool
 		if c.decrypt {
@@ -288,26 +288,9 @@ func (c *cryptor) processComplete(dst, src []byte, nFlush int) {
 		}
 	}
 
-	// Remainder: pad to 8 and use x8 when utilization is high enough. Reached
-	// only on platforms without a register-resident or 2-wide kernel; those
-	// passes otherwise leave fewer than five complete chunks.
-	if rem := nFlush - idx; rem >= 5 {
-		off := idx * ChunkSize
-		realBytes := rem * ChunkSize
-		var padSrc, padDst [8 * ChunkSize]byte
-		copy(padSrc[:realBytes], src[off:off+realBytes])
-		if c.decrypt {
-			decryptChunks(c.key[:], c.nonce[:], c.nLeaves+1, padSrc[:], padDst[:], &tags)
-		} else {
-			encryptChunks(c.key[:], c.nonce[:], c.nLeaves+1, padSrc[:], padDst[:], &tags)
-		}
-		copy(dst[off:off+realBytes], padDst[:realBytes])
-		c.trunk.absorbMore(tags[:rem*leafTagSize], aggMore)
-		c.nLeaves += uint64(rem)
-		idx += rem
-	}
-
-	// Small remainder via x1.
+	// Remainder via x1: a single leftover chunk, or any remainder on platforms
+	// without SIMD chunk kernels — where padding to 8 wide would buy nothing,
+	// since the generic 8-way permute is eight serial permutes.
 	for idx < nFlush {
 		off := idx * ChunkSize
 		if c.decrypt {
