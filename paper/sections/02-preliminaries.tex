@@ -100,7 +100,7 @@ modeled as a uniformly random element of $\Perm(\bits^{1600})$.
 \paragraph{The sponge construction.}
 Following \cite{BDPV08}, fix a permutation $\pi \in \Perm(\bits^b)$, a
 \emph{sponge-compliant} padding rule $\mathsf{pad}$, and a rate $1 \leq
-r \leq b$ with capacity $c = b - r$. A padding rule appends
+r < b$ with capacity $c = b - r$. A padding rule appends
 $\mathsf{pad}[r](|M|)$, a bit string determined by the input length and
 the rate, to an input $M$; it is sponge-compliant
 \cite[Definition~1]{BDPV11} if $M \concat \mathsf{pad}[r](|M|)$ is never
@@ -122,9 +122,13 @@ random-permutation setting (\Cref{sec:loss-terms}).
 The \emph{duplex} construction of \cite{BDPV11} extends the sponge to
 a stateful interface. A duplex object $\Duplex[\pi, \mathsf{pad}, r]$
 is initialized to the all-zero state. Each call $\duplexing(\sigma,
-\ell)$ absorbs an input string $\sigma$ of at most
+\ell)$, with $\ell \leq r$, absorbs an input string $\sigma$ of at most
 $\rho_{\max}(\mathsf{pad}, r)$ bits via $\pi$ and returns the first
-$\ell$ bits of the resulting state. \cite[Lemma~3]{BDPV11}
+$\ell$ bits of the resulting state. Here $\rho_{\max}(\mathsf{pad}, r)
+= \min\{x : x + |\mathsf{pad}[r](x)| > r\} - 1$ is the largest input
+length for which the padded input fits in a single $r$-bit block; for
+the $\padtenone$ rule, $\rho_{\max}(\padtenone, r) = r - 2$
+\cite{BDPV11}. \cite[Lemma~3]{BDPV11}
 establishes the duplex-to-sponge equality: for any call
 sequence $((\sigma_0, \ell_0), \dots, (\sigma_i, \ell_i))$, the $i$-th
 output equals
