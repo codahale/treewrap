@@ -106,7 +106,7 @@ and accepts iff all $C_i \concat T_i$ are equal.
 
 Build the same candidate sequence as in \Cref{thm:cmtds3-ro}. During
 $\mathcal{B}$'s direct oracle phase, append every distinct direct-query
-input whose decoded class is a root-tag output-point class --- $\Rmsg^+$
+input whose decoded class is a root tag output-point class --- $\Rmsg^+$
 (the single-chunk root tag, with the aggregation phase elided when
 $n = 0$) or $\Rtag$ (the multi-chunk root tag) --- immediately before
 the corresponding direct $\ROflat$ lookup first samples that input. This
@@ -120,7 +120,7 @@ After the tuple output, stop appending challenger candidates if the
 syntax or pairwise-$\WiC_\ell$ check fails. Otherwise, as the challenger
 computes the $s$ deterministic encryption checks, let $R_i$ be the final
 root transcript reached by the $i$-th encryption and append
-$\flatmap(R_i)$ immediately before the root-tag oracle answer is sampled,
+$\flatmap(R_i)$ immediately before the root tag oracle answer is sampled,
 unless that input is already in the sequence. If such an input was
 already touched by a direct query, then \Cref{lem:bridge-decode} and
 \Cref{cor:output-sep} imply that the earlier query was a final-root
@@ -128,7 +128,7 @@ candidate. Earlier challenger lookups outside the final-root class are
 separated by \Cref{cor:output-sep}. An earlier challenger final-root
 lookup with a different address does not affect the new candidate. An
 earlier challenger final-root lookup with the same address is either a
-root-tag answer sampling, in which case the address was already
+root tag answer sampling, in which case the address was already
 appended and is not appended again, or the chunk-$0$-closing
 \sigmsglast{} call of an $n \geq 1$ encryption check that reaches the
 same $\Rmsg^+$ address (possible only for $\ell = 4$, where two checks

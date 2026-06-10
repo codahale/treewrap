@@ -30,7 +30,7 @@ Run the random-oracle CMTDs-3 game (\Cref{sec:ro-model}) and define a
 candidate sequence for every execution. During $\mathcal{B}$'s direct
 oracle phase, when $\mathcal{B}$ makes a direct query to an input $Y$
 that is not already in the sequence, append $Y$ immediately before
-answering the query if $\KeyedTWOut(Y)$ decodes to a root-tag
+answering the query if $\KeyedTWOut(Y)$ decodes to a root tag
 output-point class, namely $\Rmsg^+$ (the single-chunk root tag, with
 the aggregation phase elided when $n = 0$) or $\Rtag$ (the multi-chunk
 root tag). This predicate depends on $Y$ alone through the exact decoder
@@ -49,7 +49,7 @@ Otherwise, as the
 challenger evaluates the $s$ deterministic decryption checks, let
 $R_i$ be the final root transcript reached by
 $\Dec_{K_i}^\RO(N_i,A_i,C \concat T)$ in check $i$, and append
-$\flatmap(R_i)$ immediately before the root-tag oracle answer is
+$\flatmap(R_i)$ immediately before the root tag oracle answer is
 sampled, unless that input is already in the sequence. If a challenger
 input was already touched by a direct query, then
 \Cref{lem:bridge-decode} and Output-Point Separation
@@ -71,7 +71,7 @@ valid and the $(K_i,N_i,A_i)$ triples are pairwise distinct. By
 \[
   \flatmap(R_1),\dots,\flatmap(R_s)
 \]
-are pairwise distinct. Thus leaf-tag collisions cannot merge the root
+are pairwise distinct. Thus leaf tag collisions cannot merge the root
 inputs relevant to a CMTDs-3 win. Since every decryption check
 accepts, the
 $\tauroot$-bit projections at the $s$ distinct challenger final-root

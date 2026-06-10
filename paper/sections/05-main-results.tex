@@ -163,7 +163,7 @@ from $K_d$. If the lookup is outside the counted keyed language, it is
 irrelevant to $\badkey^{(d)}$. Thus foreign-user
 construction lookups neither trigger user $d$'s key-test event nor
 pre-read a user-$d$ hidden transcript point. They also do not create
-user-$d$ leaf-tag collisions or user-$d$ verification attempts, which
+user-$d$ leaf tag collisions or user-$d$ verification attempts, which
 are counted by $\nleaf^{(d)}$ and $\qv^{(d)}$.
 
 The key-test contribution is taken in the original pre-sampled-key
@@ -347,7 +347,7 @@ then gives the claim.
 \label{rem:rtag-cap}
 The $\Nprim$ in \Cref{thm:cmtds4}'s root-collision term counts every
 primitive query, not only those whose induced simulator $\ROflat$ call
-lands at the root-tag output point ($\Rtag$ for multi-chunk
+lands at the root tag output point ($\Rtag$ for multi-chunk
 ciphertexts, and $\Rmsg^+$ for single-chunk ciphertexts whose
 aggregation phase is elided). By \Cref{cor:output-sep}, calls
 landing at any other output-point class cannot contribute to the
@@ -404,7 +404,7 @@ bounds the probability that any of $Q$ direct queries tests the right
 key by $Q / 2^k$.
 
 \paragraph{Root-collision term.}
-The $s$-way root-tag multi-collision term is
+The $s$-way root tag multi-collision term is
 \[
   \RootColl_\tau(Q, s) = \binom{Q + s}{s} \big/ 2^{\tau (s - 1)},
 \]
@@ -416,7 +416,7 @@ these lookups are construction-internal and are not added to
 $\qRO(\mathcal{B})$. In the public-permutation CMTDs-3 and
 direct CMTs-$\ell$ bounds, the committing proof builds a
 chronological candidate sequence and bounds only the event that some
-$s$ distinct candidates have equal root-tag projections. The flat-sponge
+$s$ distinct candidates have equal root tag projections. The flat-sponge
 lift of
 \Cref{app:flat-sponge-lift} gives $Q = \Nprim$: only the adversary's
 $\Nprim$ direct primitive queries can induce simulator-side
@@ -481,7 +481,7 @@ with no key-guessing or leaf-collision term. The keys are
 adversary-supplied, so a direct query on an input accepted by the
 keyed transcript decoder $\KeyedTWOut$ is one of the adversary's
 visible $\ROflat$ queries and is counted in $\qRO(\mathcal{B})$;
-leaf-tag collisions cannot merge
+leaf tag collisions cannot merge
 the final root transcripts whose tags are compared, since by
 \Cref{cor:triple-sep} distinct $(K, N, A)$ triples force distinct
 final root transcripts before aggregation values matter.
@@ -632,7 +632,7 @@ The closed-form bounds of \Cref{sec:concrete} aggregate four loss
 terms: the flat-sponge differentiating loss $\Lift_c$, the
 key-guessing contribution $\KeyGuess_k$ (entering privacy and
 INT-CTXT independently, hence the factor of two in the AE and
-mu-ind bounds), the leaf-tag pairwise-collision term, and the
+mu-ind bounds), the leaf tag pairwise-collision term, and the
 verification-tag term. The CMTDs-4 bound substitutes the
 $s$-way root-collision term $\RootColl_{\tauroot}$ for the latter
 three. We comment on dominance and tightness.
@@ -643,7 +643,7 @@ $\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{257}$ dominates throughout
 the non-trivial range $\Ntot < 2^{c}$. The key-guessing and
 verification-tag contributions $(2 \Nprim + \Qv) / 2^{256}$ are
 linear in their resource caps and bounded by $3 \Ntot / 2^{256}$,
-hence below $\Lift_c$ for $\Ntot \geq 6$. The leaf-tag collision
+hence below $\Lift_c$ for $\Ntot \geq 6$. The leaf tag collision
 term $\Nleaf(\Nleaf - 1) / 2^{257}$ is at most $\Lift_c$ via
 $\Nleaf \leq \Ntot$. The CMTDs-4 bound is similar: the
 $s = 2$ root-collision term equals $(\Nprim + 1)(\Nprim + 2) /
@@ -658,7 +658,7 @@ $\Lift_c$. At the upper end of \Cref{sec:concrete-claim}'s parameters
 ($\Ntot, D, \Nprim \leq 2^{63}$), the hybrid-induced term
 $2 D \cdot \KeyGuess_k(\Nprim) \leq 2 D \Ntot / 2^{256}$ reaches
 $\approx 4 \Lift_c$ and is the binding constraint; the user-key
-birthday $D(D - 1) / 2^{257}$ and the leaf-tag collision each
+birthday $D(D - 1) / 2^{257}$ and the leaf tag collision each
 contribute roughly $\Lift_c$. The $2^{-128}$ figure of
 \Cref{sec:concrete-claim} is an upper bound on the sum of these terms
 at the threshold.
@@ -673,9 +673,9 @@ at the threshold.
   multi-collision bound on a $\tau$-bit projection of $\ROflat$, and
   a generic birthday-style adversary against the random oracle
   matches the leading-order term.
-\item \emph{Leaf-tag collision $\Nleaf (\Nleaf - 1) / 2^{\tauleaf +
+\item \emph{Leaf tag collision $\Nleaf (\Nleaf - 1) / 2^{\tauleaf +
   1}$.} The pairwise union bound is tight up to constants: a generic
-  birthday attack on the $\tauleaf$-bit leaf-tag projection matches
+  birthday attack on the $\tauleaf$-bit leaf tag projection matches
   the leading $\Nleaf^2 / 2^{\tauleaf + 1}$ rate.
 \item \emph{Flat-sponge lift.} The term
   $\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{c + 1}$ is the

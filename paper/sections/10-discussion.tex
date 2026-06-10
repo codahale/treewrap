@@ -83,7 +83,7 @@ undercutting their cost but by integration: it is committing as the mode itself,
 with the same permutation and the same tag that already provide confidentiality
 and integrity, so no separate commitment primitive, key-derivation step, or
 auxiliary hash is invoked, and the strongest $s$-way full-input notion follows
-from a single root-tag collision bound (\Cref{sec:cmtds3}). This places \TW{}
+from a single root tag collision bound (\Cref{sec:cmtds3}). This places \TW{}
 alongside the dedicated committing primitives---the compactly committing AEAD of
 \cite{GLR17} and the encryptment of \cite{DGRW18}---which likewise build
 commitment in rather than bolt it on, but which were designed for message
@@ -143,7 +143,7 @@ sidesteps this by absorbing the ciphertext in both directions (\Cref{sec:tw128})
 so recasting it on the keyed duplex would first require repairing the mode. We
 retain the indifferentiability lift for its modularity, as the resulting
 $\Lift_c$ already meets the $128$-bit target (\Cref{sec:bound-discussion}). The
-leaf-tag collision term
+leaf tag collision term
 $\Nleaf(\Nleaf-1)/2^{\tauleaf+1}$ is a pairwise union bound whose necessity for
 the AE guarantee, as opposed to an artifact of the accounting, is not settled.
 

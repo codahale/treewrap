@@ -73,7 +73,7 @@ event, so
         \badkey].
 \]
 \Cref{lem:int-leaf-fresh-before-badkey} supplies the event premise for
-the Leaf-Tag Collision Bound (\Cref{lem:leaf-collision}): before
+the Leaf Tag Collision Bound (\Cref{lem:leaf-collision}): before
 $\badkey$, no direct query has pre-read the
 bridged input of a hidden-key final leaf transcript before the
 construction first creates that transcript. Thus
@@ -99,7 +99,7 @@ submission cannot be an accepting non-replay; the remaining accepting
 non-replay submissions are therefore verification-first. By
 \Cref{lem:int-verification-first-root-guess}, their total probability
 before $\badkey \cup
-\badleaf$ is bounded by the root-tag guessing
+\badleaf$ is bounded by the root tag guessing
 term:
 \[
   \Pr[\mathsf{G}_2 \text{ wins}]
@@ -127,17 +127,17 @@ and a tag-guessing term ($q\,2^{-k}$ and $2^{-t}$ in their notation)
 follows the SpongeWrap authenticity result of \cite[Lemma~6]{BDPV11},
 whose random-oracle bound carries no sponge-capacity term. We realize
 the key-guessing term as the $\badkey$ abort and
-the tag-guessing term as the residual root-tag-guessing bound on
-$\Pr[\mathsf{G}_2 \text{ wins}]$, with a \TW{}-specific leaf-tag
+the tag-guessing term as the residual root tag guessing bound on
+$\Pr[\mathsf{G}_2 \text{ wins}]$, with a \TW{}-specific leaf tag
 birthday abort $\badleaf$ inserted between them.
 The sponge-capacity differentiating loss of
 \cite[\S5, Theorem~1]{BDPV11} does not appear at this random-oracle
 layer; it enters only through the flat-sponge lift of
 \Cref{app:flat-sponge-lift}, as the \cite{BDPV08} indifferentiability
 term written $\Lift_c$. The \TW{}-specific steps come from
-Transcript Injectivity (\Cref{lem:transcript-inj}), the Leaf-Tag
+Transcript Injectivity (\Cref{lem:transcript-inj}), the Leaf Tag
 Collision Bound (\Cref{lem:leaf-collision}), which bounds the
 $\badleaf$ abort by a birthday on the
-$\tauleaf$-bit leaf-tag space, and the INT-CTXT
+$\tauleaf$-bit leaf tag space, and the INT-CTXT
 auxiliary lemmas
 (\Cref{lem:int-key-uniformity,lem:int-leaf-fresh-before-badkey,lem:int-encryption-first-replay,lem:int-verification-first-root-guess}).

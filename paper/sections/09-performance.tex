@@ -16,7 +16,7 @@ architectures.
 
 The tree structure of \TW{} exposes two distinct permutation workloads, and
 both architectures provide a separate core for each. The root duplex---which
-absorbs the associated data, processes chunk~$0$, and absorbs the leaf-tag
+absorbs the associated data, processes chunk~$0$, and absorbs the leaf tag
 aggregation transcript---is inherently sequential, since each of its calls
 consumes the previous call's output; it is driven by a \emph{single-duplex}
 ($\times 1$) core that permutes one 1600-bit state at a time. The leaf duplexes,
@@ -41,7 +41,7 @@ seven chunks is padded to a full batch of eight and run on the $\times 8$
 core---faster than repeated single-duplex calls even at that utilization---while
 any final straggler, a partial trailing chunk, and the count-aggregation tail
 fall back to the single-duplex ($\times 1$) core. In every batched core the final
-\textsc{msg\_last} block and the leaf-tag extraction are performed in portable
+\textsc{msg\_last} block and the leaf tag extraction are performed in portable
 Go, shared with the reference path; the assembly kernels handle only the $48$
 full \textsc{msg\_more} blocks, which keeps the byte-granular tail logic out of
 assembly.

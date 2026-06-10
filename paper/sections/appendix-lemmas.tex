@@ -12,7 +12,7 @@ output point, and decoded to a candidate key, when any.
 bound. The remaining proof interfaces expose the
 events and stopped-game equalities their consumers must control:
 privacy freshness and hybrid replacement, INT-CTXT hidden-key exposure
-and root-tag guessing, leaf-tag collisions, and the committing
+and root tag guessing, leaf tag collisions, and the committing
 candidate-sequence collision event. Thus the privacy, INT-CTXT, and
 committing proofs only
 have to derive the relevant local event premise before applying the
@@ -40,7 +40,7 @@ corresponding accounting argument.
 
     % Column 3: derived lemmas.
     \node[lemma] (tf) at (7.6,  2.0) {Transcript\\ Freshness};
-    \node[lemma] (lc) at (7.6, -0.5) {Leaf-Tag\\ Collision};
+    \node[lemma] (lc) at (7.6, -0.5) {Leaf Tag\\ Collision};
     \node[lemma] (cc) at (7.6, -1.75) {Candidate\\ Collision};
 
     % Column 4: consumers.
@@ -92,7 +92,7 @@ corresponding accounting argument.
     from \Cref{lem:adaptive-candidate-collision} records the collision
     accounting used by the CMTDs-3 and CMTs proofs. The edge from
     \Cref{lem:transcript-inj} into \Cref{lem:freshness} uses
-    \Cref{cor:output-sep}; the verification-first root-tag guessing
+    \Cref{cor:output-sep}; the verification-first root tag guessing
     accounting reached through the same separation is carried out in
     \Cref{app:intctxt-accounting}
     (\Cref{lem:int-verification-first-root-guess}) and consumed by
@@ -148,7 +148,7 @@ The root duplex is initialized by absorbing $\prfxroot
 \concat K \concat N$ under \siginit (\Cref{alg:enc}), then
 absorbs the associated-data blocks under \sigadmore /
 \sigadlast, the root ciphertext blocks in the message phase under
-\sigmsgmore / \sigmsglast, and the leaf-tag aggregation
+\sigmsgmore / \sigmsglast, and the leaf tag aggregation
 blocks under \sigaggmore / \sigagglast. By the
 duplex-to-sponge equality, every root duplex output is the sponge
 function evaluated on the root transcript prefix accumulated up to the
@@ -156,7 +156,7 @@ relevant output point. The same holds for each leaf duplex,
 initialized by $\prfxleaf \concat K \concat N \concat
 \langle j \rangle_8$ and absorbing only its own ciphertext blocks in the
 message phase. In decryption and verification, \Cref{alg:dec} absorbs the
-submitted ciphertext blocks before the root-tag comparison, so the same
+submitted ciphertext blocks before the root tag comparison, so the same
 flattened message-phase transcript is defined whether the comparison
 accepts or rejects.
 \end{proof}
@@ -214,7 +214,7 @@ acceptance is not part of the transcript language.
 The root aggregation byte string has the form
 $T_1 \concat \cdots \concat T_n \concat \langle n \rangle_8$, where each
 $T_j$ has fixed byte length $\tauleaf/8$. The trailing fixed-width field
-therefore gives a unique parse of the leaf-tag sequence. The
+therefore gives a unique parse of the leaf tag sequence. The
 output-point class of a well-formed counted prefix is the class in
 \Cref{tab:keyed-twout} determined by its duplex instance and final-call
 suffix.
@@ -247,7 +247,7 @@ injectively encoded and separated by duplex instance (root vs leaf),
 leaf index $j$, phase suffix, and duplex-call order. For final-root
 prefixes, equality of flattened inputs recovers the same root
 initialization, AD blocks, root ciphertext blocks, aggregation input,
-and leaf-tag sequence. When the compared final-root prefixes are
+and leaf tag sequence. When the compared final-root prefixes are
 construction-generated, if no two distinct construction-generated final
 leaf transcripts produce the same leaf tag, equality also recovers the
 same leaf transcript sequence and therefore the same full absorbed
@@ -310,11 +310,11 @@ Applied phase by phase to a well-formed final-root transcript:
   aggregation byte string $T_1 \concat \cdots \concat T_n \concat
   \langle n \rangle_8$ recovers that byte string. The final eight bytes
   give $\langle n \rangle_8$, and each leaf tag has fixed byte length
-  $\tauleaf / 8$, so the byte string has a unique parse as a leaf-tag
+  $\tauleaf / 8$, so the byte string has a unique parse as a leaf tag
   sequence. Two root aggregation encodings are therefore equal exactly
-  when their leaf-tag sequences are equal. Under the structural
+  when their leaf tag sequences are equal. Under the structural
   condition that distinct construction-generated final leaf transcripts
-  receive distinct leaf-tag values, equality of leaf-tag sequences
+  receive distinct leaf tag values, equality of leaf tag sequences
   implies equality of the corresponding final leaf transcripts. When
   $n = 0$ the aggregation phase is absent and the final-root transcript
   ends at the recovered $\sigmsglast$ root message call; the MSG bullet
@@ -325,9 +325,9 @@ Applied phase by phase to a well-formed final-root transcript:
 
 Therefore the recovered final-root transcript determines the root
 initialization, AD blocks, root ciphertext blocks, and, when
-$n \geq 1$, the aggregation byte string and leaf-tag sequence. For
+$n \geq 1$, the aggregation byte string and leaf tag sequence. For
 construction-generated final-root prefixes with $n \geq 1$, under the
-stated leaf-tag structural condition, the leaf-tag sequence determines
+stated leaf tag structural condition, the leaf tag sequence determines
 the corresponding final leaf transcripts as well, so the same full
 absorbed ciphertext is recovered; for $n = 0$ the root ciphertext blocks
 already constitute the full absorbed ciphertext.
@@ -482,7 +482,7 @@ Counted transcript lookup points are the well-formed prefixes of
 \Cref{def:wf-transcripts} whose classes are listed in
 \Cref{tab:keyed-twout}: root or leaf initialization, root AD blocks,
 root and leaf message blocks, root aggregation blocks, and the final
-root-tag point. \Cref{cor:output-sep} separates these output points, so
+root tag point. \Cref{cor:output-sep} separates these output points, so
 an input accepted by $\KeyedTWOut$ fixes at most one candidate key and
 one output-point class, and inputs outside this well-formed transcript
 language decode to none.
@@ -670,10 +670,10 @@ first $\badkey$ abort, because $\KeyedTWOut$
 returns either $\bot$ or a unique candidate key.
 \end{proof}
 
-\subsection{Leaf-Tag Collision Bound}
+\subsection{Leaf Tag Collision Bound}
 \label{app:lem-leaf-collision}
 
-\begin{lemma}[Leaf-Tag Collision Bound]
+\begin{lemma}[Leaf Tag Collision Bound]
 \label{lem:leaf-collision}
 Consider any \TW{} random-oracle-model game with a hidden key,
 direct adversary access to $\ROflat$, and construction computations
@@ -684,7 +684,7 @@ a direct adversary query to $\ROflat$ has already hit the bridged
 input of that hidden-key leaf transcript. Let
 $\badleaf$ be the event that two distinct
 construction-generated keyed final leaf transcript prefixes
-$X \neq X'$ in leaf-tag output-point classes receive the same
+$X \neq X'$ in leaf tag output-point classes receive the same
 $\tauleaf$-bit projection from $\RF(\cdot)$. Then the probability that
 $\badleaf$ occurs before
 $\mathsf{hit}_{\mathsf{leaf}}$ is bounded by
@@ -715,17 +715,17 @@ an earlier construction computation queried the same $\ROflat$ input
 under a different well-formed transcript:
 \Cref{lem:transcript-inj} separates distinct final leaf transcript
 encodings, and the \cite[Theorem~3]{BDPV11} bridge is injective. The
-$\tauleaf$-bit leaf-tag projection of $\RF(X)$ for that transcript
+$\tauleaf$-bit leaf tag projection of $\RF(X)$ for that transcript
 sampled at that moment is therefore uniform and independent of the
 entire prior game view, including the prior $\ROflat$ table on other
-inputs, prior ciphertext and tag outputs, and the leaf-tag projections
+inputs, prior ciphertext and tag outputs, and the leaf tag projections
 assigned to all distinct prior final leaf transcripts.
 
 For any fixed unordered pair of distinct final leaf transcripts
 created before this stop, the probability that their leaf tags are
 equal is $2^{-\tauleaf}$. There are at most
 $\binom{\nleaf(\mathcal{B})}{2}$ such pairs, and a union bound gives
-the claim. By \Cref{lem:transcript-inj}, conditioned on no leaf-tag
+the claim. By \Cref{lem:transcript-inj}, conditioned on no leaf tag
 collision, equal root aggregation inputs identify the same leaf
 transcript sequence.
 \end{proof}
@@ -811,7 +811,7 @@ call, but with zero keystream output they contribute no ciphertext
 block.
 
 \paragraph{Final root tag transcript.}
-The final root tag is sampled at the root-tag output point selected by
+The final root tag is sampled at the root tag output point selected by
 $\|C\|$: the $\Rtag$ point after the root duplex absorbs the
 aggregation transcript built from the leaf tags and $\langle n
 \rangle_8$ when $n \geq 1$, and the $\Rmsg^+$ point closing the root
@@ -822,7 +822,7 @@ ciphertext, and on the adversary-visible prior view and $\ROflat$
 table state, so that the root aggregation transcript is fixed. When
 $n = 0$ there is no aggregation transcript; condition on the sampled
 ciphertext and the adversary-visible prior view alone. By
-\Cref{cor:output-sep}, the selected root-tag output-point class is
+\Cref{cor:output-sep}, the selected root tag output-point class is
 separated from every other output-point class in the same query ---
 including root initialization (suffix \siginit), AD-phase outputs,
 the remaining message-phase outputs, leaf-side output points (separated
@@ -1084,15 +1084,15 @@ stopped-game bound proves the claim.
 
 The INT-CTXT proof of \Cref{thm:intctxt-ro} uses the generic key-test
 and leaf-collision accounting lemmas together with the INT-specific
-facts below. The \emph{root-tag output point} of a computation is the
+facts below. The \emph{root tag output point} of a computation is the
 output point that emits its root tag: $\Rtag$ (suffix \sigagglast) when
 $n \geq 1$, and the closing root message point $\Rmsg^+$ (suffix
 \sigmsglast) when $n = 0$ and the aggregation phase is elided
 (\Cref{sec:enc}). Because $n = \leaves(C)$ is fixed by $\|C\|$, all
-computations on a common ciphertext share the same root-tag output
+computations on a common ciphertext share the same root tag output
 point. A \emph{final root transcript class} is the set of
 construction computations whose encryption or verification computation
-realizes the same bridged final root input at this root-tag output point.
+realizes the same bridged final root input at this root tag output point.
 Such a class is \emph{encryption-first} if its first construction
 generation is by an encryption query, and \emph{verification-first} if
 its first construction generation is by a non-replay verification
@@ -1121,7 +1121,7 @@ values. Fix such a prefix and two keys $K_0, K_1 \notin S_i$.
 Define a transcript-renaming map $\Phi_{0 \to 1}$ on typed
 construction prefixes by replacing the first-call key field $K_0$ by
 $K_1$ and leaving every other recovered field unchanged: the nonce,
-leaf index, phase sequence, AD blocks, ciphertext blocks, leaf-tag
+leaf index, phase sequence, AD blocks, ciphertext blocks, leaf tag
 bytes appearing in root aggregation, and the root/leaf instance
 identifier are preserved. Let $\Phi_{1 \to 0}$ be the inverse map. By
 \Cref{lem:bridge-decode,cor:output-sep}, $\flatmap \circ \Phi_{0 \to
@@ -1135,12 +1135,12 @@ set. Whenever a construction computation under $K_0$ would first query
 a hidden-key address $Y$, the coupled computation under $K_1$ queries
 $\Phi_{0 \to 1}(Y)$ and receives the same lazy-table value; repeated
 queries are coupled consistently through the same map. If the queried
-address is a root aggregation address containing leaf-tag bytes, those
-bytes are already coupled equal because the corresponding leaf-tag
+address is a root aggregation address containing leaf tag bytes, those
+bytes are already coupled equal because the corresponding leaf tag
 lookups were either repeated or first sampled earlier under the same
 renaming rule. Thus adaptively generated message transcripts and root
 aggregation transcripts are renamed step by step with the same visible
-ciphertext, leaf-tag, and root-tag bytes.
+ciphertext, leaf tag, and root tag bytes.
 
 Prior direct-query inputs are not renamed: they are adversary-chosen
 visible strings. None lies in either hidden-key construction-address
@@ -1158,7 +1158,7 @@ tags, or the final root tag is paired with a distinct renamed lookup
 carrying the same sampled value. Replay verification decisions depend
 only on the visible replay table. Non-replay verification computations
 are renamed in the same online way as encryption computations, and the
-final root-tag comparison therefore gives the same accept/reject bit.
+final root tag comparison therefore gives the same accept/reject bit.
 Verification does not reveal plaintext on rejection or acceptance; it
 reveals only that bit.
 
@@ -1245,9 +1245,9 @@ accounting, define an all-reject continuation: encryption queries are
 answered normally, replay verification queries accept normally, and
 every non-replay verification submission performs the same construction
 computation but returns reject to the adversary. Lazy sampling is
-deferred for each verification-first class's final root-tag value: the
+deferred for each verification-first class's final root tag value: the
 continuation records the class address and the submitted tag, but while
-the class remains verification-first it does not expose that root-tag
+the class remains verification-first it does not expose that root tag
 value to the adversary. The execution-uniform cap $\qv(\mathcal{B})$
 applies to this continuation.
 
@@ -1257,18 +1257,18 @@ same class, if any. Let $G_{\mathcal{C}}$ be the set of distinct candidate tags
 submitted by non-replay verification queries in class $\mathcal{C}$ before that
 cutoff. Repeated tags only shrink this set. The class's correct root
 tag $U_{\mathcal{C}}$ is the $\tauroot$-bit projection of $\ROflat$ at the class's
-bridged root-tag input. Before the stop, no direct query has hit this
+bridged root tag input. Before the stop, no direct query has hit this
 hidden-key input: such a query would be decoded by $\KeyedTWOut$ to
 the hidden key and would trigger $\badkey$. Before
 the cutoff, no encryption query has revealed $U_{\mathcal{C}}$ as an encryption
-tag. (When the class's root-tag point is $\Rmsg^+$, i.e.\ $n = 0$, an
+tag. (When the class's root tag point is $\Rmsg^+$, i.e.\ $n = 0$, an
 encryption query on a longer message that shares chunk $0$ may touch
 this same address while closing its chunk-$0$ message phase, but it
 requests zero output there and continues into its aggregation phase, so
 it does not reveal $U_{\mathcal{C}}$; its own tag is emitted at a later $\Rtag$
 point.) The all-reject path and the set $G_{\mathcal{C}}$ are therefore functions
 only of the adversary's coins, visible oracle replies, and lazy-table
-values at inputs other than this class's root-tag address. By lazy sampling,
+values at inputs other than this class's root tag address. By lazy sampling,
 conditioned on those values and on the fixed path, $U_{\mathcal{C}}$ may be sampled
 after $G_{\mathcal{C}}$ is fixed and is uniform independently of $G_{\mathcal{C}}$.
 
@@ -1288,14 +1288,14 @@ first accept, the adversary's visible answers match the all-reject
 continuation: every earlier non-replay submission rejects, replay
 queries accept in both executions, and encryption answers are
 unchanged. The construction computations also agree at every address
-except that the all-reject continuation defers the final root-tag value
+except that the all-reject continuation defers the final root tag value
 for class $\mathcal{C}$ until the comparison is needed. Therefore the first
 accepting non-replay submission can belong to class $\mathcal{C}$ only before the
 cutoff, and only if $U_{\mathcal{C}} \in G_{\mathcal{C}}$, which has probability at most
 $|G_{\mathcal{C}}|/2^{\tauroot}$.
 
 Each non-replay verification submission deterministically reconstructs
-one final root transcript at the root-tag output point. If the class is
+one final root transcript at the root tag output point. If the class is
 verification-first and the submission occurs before that class's
 encryption cutoff, the submitted tag contributes to at most one set
 $G_{\mathcal{C}}$; otherwise it contributes to none. Thus
