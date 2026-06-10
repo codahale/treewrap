@@ -323,7 +323,7 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
   \label{alg:helpers}
   \begin{algorithmic}[1]
     \Procedure{Absorb}{$D$, $s$, $\sigma^-$, $\sigma^+$, $\ell$}
-      \State Partition $s$ into byte blocks $s_1, \dots, s_t$ of at most $\rho$ bytes each, with $t \geq 1$ (the empty case yields the single empty block $s_1 = \varepsilon$).
+      \State Partition $s$ into byte blocks $s_1, \dots, s_t$ of exactly $\rho$ bytes each, except that the last block may be shorter, with $t \geq 1$ (the empty case yields the single empty block $s_1 = \varepsilon$).
       \For{$i \gets 1$ \textbf{to} $t - 1$}
         \State $D.\duplexing(s_i \concat \sigma^-, 0)$
       \EndFor
@@ -331,7 +331,7 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
     \EndProcedure
     \Statex
     \Procedure{StreamEnc}{$D$, $m$, $Z$, $\sigma^-$, $\sigma^+$, $\ell$}
-      \State Partition $m$ into byte blocks $m_1, \dots, m_t$ of at most $\rho$ bytes each, with $t \geq 1$ (if $m = \varepsilon$, set $t = 1$ and $m_1 = \varepsilon$).
+      \State Partition $m$ into byte blocks $m_1, \dots, m_t$ of exactly $\rho$ bytes each, except that the last block may be shorter, with $t \geq 1$ (if $m = \varepsilon$, set $t = 1$ and $m_1 = \varepsilon$).
       \For{$i \gets 1$ \textbf{to} $t - 1$}
         \State $c_i \gets m_i \oplus Z$
         \State $Z \gets D.\duplexing(c_i \concat \sigma^-, 8\|m_{i+1}\|)$
@@ -342,7 +342,7 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
     \EndProcedure
     \Statex
     \Procedure{StreamDec}{$D$, $c$, $Z$, $\sigma^-$, $\sigma^+$, $\ell$}
-      \State Partition $c$ into byte blocks $c_1, \dots, c_t$ of at most $\rho$ bytes each, with $t \geq 1$ (if $c = \varepsilon$, set $t = 1$ and $c_1 = \varepsilon$).
+      \State Partition $c$ into byte blocks $c_1, \dots, c_t$ of exactly $\rho$ bytes each, except that the last block may be shorter, with $t \geq 1$ (if $c = \varepsilon$, set $t = 1$ and $c_1 = \varepsilon$).
       \For{$i \gets 1$ \textbf{to} $t - 1$}
         \State $m_i \gets c_i \oplus Z$
         \State $Z \gets D.\duplexing(c_i \concat \sigma^-, 8\|c_{i+1}\|)$
@@ -361,7 +361,7 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
     \Require $K \in \bits^k$, $N \in \bits^{\nu}$, $A$ with $\|A\| \leq A_{\max}$, $M$ with $\|M\| \leq M_{\max}$.
     \Ensure $C \concat T$ with $\|C\| = \|M\|$ and $T \in \bits^{\tauroot}$.
     \State $M_0 \gets$ first $\min(\|M\|, \beta)$ bytes of $M$ (possibly $\varepsilon$).
-    \State Partition the remaining suffix into nonempty chunks $M_1, \dots, M_n$ of at most $\beta$ bytes each, so $n = \leaves(M)$.
+    \State Partition the remaining suffix into chunks $M_1, \dots, M_n$ of exactly $\beta$ bytes each, except that the last chunk may be shorter but nonempty, so $n = \leaves(M)$.
     \State $D_{\text{root}} \gets$ new $\Duplex$
     \If{$A = \varepsilon$}
       \State $Z \gets D_{\text{root}}.\duplexing(\prfxroot \concat K \concat N \concat \siginit, 8\min(\|M_0\|, \rho))$
@@ -432,7 +432,7 @@ defined regardless of the tag-comparison outcome.
     \Require $K, N, A$ as in \Cref{alg:enc}, ciphertext $C$ with $\|C\| \leq M_{\max}$, candidate tag $T \in \bits^{\tauroot}$.
     \Ensure $M$ with $\|M\| = \|C\|$, or $\bot$.
     \State $C_0 \gets$ first $\min(\|C\|, \beta)$ bytes of $C$ (possibly $\varepsilon$).
-    \State Partition the remaining suffix into nonempty chunks $C_1, \dots, C_n$ of at most $\beta$ bytes each, so $n = \leaves(C)$.
+    \State Partition the remaining suffix into chunks $C_1, \dots, C_n$ of exactly $\beta$ bytes each, except that the last chunk may be shorter but nonempty, so $n = \leaves(C)$.
     \State $D_{\text{root}} \gets$ new $\Duplex$
     \If{$A = \varepsilon$}
       \State $Z \gets D_{\text{root}}.\duplexing(\prfxroot \concat K \concat N \concat \siginit, 8\min(\|C_0\|, \rho))$
