@@ -143,7 +143,8 @@ the adversary outputs $s$ tuples, the challenger checks syntax and
 pairwise $\WiC_\ell$-distinctness, and then returns $1$ iff the
 $s$ deterministic encryptions $\Enc_{K_i}[\pi](N_i,A_i,M_i)$ are all
 equal.
-\Cref{app:committing-transfer} promotes this bound to the headline
+\Cref{app:committing-transfer} promotes the CMTDs-3 bound proved in
+\Cref{sec:cmtds3} (\Cref{thm:cmtds3-ro}) to the headline
 CMTDs-4 statement of \Cref{sec:headline} and proves matching
 direct bounds for the CMTs-$\ell$ source games.
 
@@ -368,6 +369,6 @@ remains a single shared count over the primitive interface.
 
 The mu-ind treatment applies only to indistinguishability. The
 committing-security games already give the adversary control of all
-$s$ keys, so the $s$-way CMTDs-3 statement of
-\Cref{sec:games-pp} is itself the multi-key committing statement and
-needs no separate $\mathsf{mu\text{-}cmt}$ notion.
+$s$ keys, so the $s$-way CMTDs-$\ell$ statements of
+\Cref{sec:games-pp} are themselves the multi-key committing statement
+and need no separate $\mathsf{mu\text{-}cmt}$ notion.
