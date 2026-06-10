@@ -415,8 +415,9 @@ mirrors $\Enc$ block for block: each ciphertext block $c_i$ is
 absorbed into the appropriate duplex (root or leaf) under the
 corresponding \sigmsgmore or \sigmsglast suffix, and the
 plaintext block is recovered as $m_i = c_i \oplus Z^{(i)}$, writing
-$Z^{(i)}$ for the value of the running keystream variable $Z$ of
-\textsc{StreamDec} at iteration $i$, the same the encryption procedure
+$Z^{(i)}$ for the value the running keystream variable $Z$ of
+\textsc{StreamDec} holds when block $i$ is processed ($i < t$ inside
+the loop, $i = t$ after it), the same value the encryption procedure
 would have produced. The procedure
 absorbs ciphertext bytes before the final tag comparison, so the
 verification transcript is determined by $(K, N, A, C)$ for every
