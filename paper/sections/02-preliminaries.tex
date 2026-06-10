@@ -46,10 +46,14 @@ scheme $\Pi$ in security notion $\mathsf{X}$ is the absolute difference
   = \bigl| \Pr[\mathsf{G}_0^{\mathcal{A}} \Rightarrow 1]
          - \Pr[\mathsf{G}_1^{\mathcal{A}} \Rightarrow 1] \bigr|.
 \]
-For a one-shot or win-event experiment, $\Adv^{\mathsf{X}}_\Pi(\mathcal{A})
+For a one-shot or win-event experiment without a hidden challenge bit,
+$\Adv^{\mathsf{X}}_\Pi(\mathcal{A})
 = \Pr[\mathsf{G}^{\mathcal{A}} \text{ wins}]$, where
 ``$\mathsf{G}^{\mathcal{A}}$ wins'' denotes the event that the game
-returns $1$.
+returns $1$. A bit-guessing experiment with a hidden challenge bit
+instead uses the rescaled form
+$\bigl|2 \Pr[\mathsf{G}^{\mathcal{A}} \text{ wins}] - 1\bigr|$, as in
+the multi-user notion of \Cref{sec:mu-ind}.
 
 \paragraph{Concrete security.}
 All bounds in this paper are concrete: each advantage is an explicit
@@ -286,7 +290,9 @@ counter $v$, a set $V$ of $(d, N)$ pairs already used by encryption,
 and a set $W$ of recorded encryption tuples $(d, N, C, A)$. We write
 the user index as $d$ and the associated-data input as $A$, where
 \cite{BT16} writes $i$ and $H$ respectively, to match the notation of
-\Cref{sec:mu-setting}. The adversary has access to
+\Cref{sec:mu-setting}; unlike \cite{BT16}, whose advantage is the
+signed quantity $2\Pr[\mathsf{G}] - 1$, we take the absolute value so
+that the advantage equals the two-game distinguishing form below. The adversary has access to
 \begin{itemize}
 \item $\mathsf{New}()$: increment $v$, sample $K_v \sample
   \mathcal{K}$.
@@ -309,7 +315,7 @@ $b' = b$ and $0$ otherwise. The advantage is
 \]
 
 \paragraph{Equivalence with the two-game form.}
-By the standard difference-lemma identity,
+Since $b$ is uniform, a standard calculation gives
 \[
   \Advmuind_\SE(\mathcal{A})
   = \bigl|
