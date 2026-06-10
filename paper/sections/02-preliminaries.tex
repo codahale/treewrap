@@ -263,8 +263,9 @@ the random-oracle model in the proof of \Cref{thm:ae}.
 
 The multi-user indistinguishability notion of \cite[Fig.~3]{BT16} is
 the multi-user lift of the single-user all-in-one notion of
-\Cref{sec:ae-defs}, parameterized by an adversary-determined number
-of users $u$. A challenge bit $b \sample \bits$ selects between the
+\Cref{sec:ae-defs}. The number of users $u$ is adversary-determined:
+it is the number of $\mathsf{New}$ queries the adversary makes, i.e.,
+the final value of the user counter $v$ in the game below. A challenge bit $b \sample \bits$ selects between the
 real construction interface (real ciphertexts, real verification) and
 an ideal interface (uniform strings of matching length, verification
 that accepts only previously-issued encryption tuples). The adversary
@@ -313,8 +314,10 @@ so $\Advmuind_\SE$ coincides with the two-game distinguishing
 advantage between the real $(\Enc, \Ver)$ pair and the ideal
 $(\Rand, \Replay)$ pair, instantiated per user. The single-user case
 $u = 1$ recovers the all-in-one AE notion
-used in \Cref{sec:ae-defs}; in particular, $\Advmuind$ generalizes
-$\Advae$.
+used in \Cref{sec:ae-defs}, augmented with the ideal primitive
+interface present in both worlds; in particular, $\Advmuind$
+generalizes $\Advae$, since an all-in-one adversary embeds into the
+$u = 1$ game with identical advantage by making no primitive queries.
 
 \paragraph{Per-user nonce uniqueness.}
 Nonce uniqueness is enforced per user via the set $V$: the same nonce
