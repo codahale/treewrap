@@ -340,9 +340,9 @@ $s$-way generalization used throughout this paper.
 
 \paragraph{What-is-committed functions.}
 For $\ell \in \{1, 3, 4\}$, the \emph{what-is-committed} function
-$\WiC_\ell : \mathcal{K} \times \mathcal{N} \times \mathcal{A} \times
-\mathcal{M} \to \bits^*$ projects an encryption input to the portion
-it should commit:
+$\WiC_\ell$ projects an encryption input $(K, N, A, M) \in \mathcal{K}
+\times \mathcal{N} \times \mathcal{A} \times \mathcal{M}$ to the
+portion it should commit:
 \[
 \begin{aligned}
   \WiC_1(K, N, A, M) &= K, \\
@@ -388,9 +388,9 @@ For the D-notions we use:
   \mathsf{CMTDs}\text{-}3 \;\Rightarrow\;
   \mathsf{CMTDs}\text{-}\ell \text{ for } \ell \in \{1, 4\}
 \]
-(the leftward arrow is immediate for $\ell = 1$ since pairwise
+(the $\ell = 1$ case is immediate since pairwise
 distinct keys imply pairwise distinct $(K, N, A)$ triples; the
-rightward arrow at $\ell = 4$ uses deterministic decryption, as
+$\ell = 4$ case uses deterministic decryption, as
 recalled in \Cref{app:committing-transfer}). The E-notions are bounded
 directly in \Cref{app:committing-transfer} by the same final-root
 candidate-collision argument, rather than through an encryption reduction.

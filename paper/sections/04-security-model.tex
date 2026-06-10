@@ -104,7 +104,7 @@ derived privacy and INT-CTXT adversaries, combined with the flat-sponge
 lift, bounds it via the privacy and INT-CTXT envelopes of
 \Cref{sec:thms-pp}; the precise bound is \Cref{thm:ae}.
 
-\paragraph{Committing security (CMTDs-3).}
+\paragraph{Committing security.}
 The $s$-way committing-security game follows \cite[Figs.~4 and~5]{BH22},
 extended to $s \geq 2$ tuples. There is no
 challenger-sampled key. After the primitive sampling, the adversary
@@ -131,6 +131,12 @@ The advantage is
 \]
 with the probability taken over the uniform choice of $\pi$ and
 $\mathcal{A}$'s coins. No nonce uniqueness is imposed.
+For $\ell \in \{1, 4\}$, the CMTDs-$\ell$ game is identical except
+that the pairwise-distinctness check is applied to the
+$\WiC_\ell$-images---the keys $K_i$ for $\ell = 1$ and the full tuples
+$(K_i, N_i, A_i, M_i)$ for $\ell = 4$---with the same check order and
+the same eager length rejection; $\Advcmtds{\ell}_\TW(\mathcal{A})$ is
+defined analogously.
 The CMTs-$\ell$ source games are instantiated
 analogously from \Cref{sec:commit-defs}: after the primitive sampling,
 the adversary outputs $s$ tuples, the challenger checks syntax and
