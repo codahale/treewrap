@@ -58,11 +58,11 @@ candidate and the input is already in the sequence. Otherwise,
 \Cref{cor:output-sep} excludes all earlier challenger lookups outside
 the final-root class, and Opening Triple Separation
 (\Cref{cor:triple-sep}) excludes earlier final-root lookups from the
-other checked triples. Thus every newly appended candidate is first
-touched at its append step. The sequence therefore satisfies the
-first-touch premise of Adaptive Candidate Collision
-(\Cref{lem:adaptive-candidate-collision}), and its length is at most
-$\qRO(\mathcal{B}) + s$.
+other checked triples. Thus no earlier lookup of any kind has touched
+a newly appended candidate's input. The sequence therefore satisfies
+the predictability and unrevealed-value premises of Adaptive Candidate
+Collision (\Cref{lem:adaptive-candidate-collision}), and its length is
+at most $\qRO(\mathcal{B}) + s$.
 
 On a winning execution, the challenger has accepted the syntax,
 message-length, and pairwise-distinct-triple checks, so the tuples are

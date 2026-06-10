@@ -133,11 +133,12 @@ appended and is not appended again, or the chunk-$0$-closing
 \sigmsglast{} call of an $n \geq 1$ encryption check that reaches the
 same $\Rmsg^+$ address (possible only for $\ell = 4$, where two checks
 may share $(K, N, A)$ and the chunk-$0$ ciphertext); that call requests
-zero output bits and continues into its aggregation phase, so it does
-not sample the lazy-table value at the address. In all cases the
-lazy-table value of each newly appended challenger candidate is first
-sampled at its append step, as \Cref{lem:adaptive-candidate-collision}
-requires, and the sequence length is at most $\qRO(\mathcal{B})+s$.
+zero output bits and continues into its aggregation phase, so it
+reveals nothing about $\ROflat$ at the address and is permitted by the
+unrevealed-value premise. In all cases each newly appended challenger
+candidate satisfies the predictability and unrevealed-value premises
+of \Cref{lem:adaptive-candidate-collision}, and the sequence length is
+at most $\qRO(\mathcal{B})+s$.
 
 On a winning execution, the accepted encryptions are all equal. Hence
 their ciphertext-body lengths are equal. Pairwise triple distinctness

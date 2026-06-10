@@ -565,10 +565,12 @@ any interaction with a lazy random oracle $\ROflat : \bits^* \to
 inputs $Y_1,\dots,Y_m$ with $m \leq Q+s$. The process may make
 arbitrary non-candidate oracle queries and may choose each candidate
 adaptively from the full prior transcript. Whenever a new candidate
-$Y_j$ is appended, the append step immediately precedes the first
-oracle lookup that samples $\ROflat(Y_j)$. Both the decision to append
-and the string $Y_j$ are determined before that lookup, and the
-lazy-table value for $Y_j$ has not previously been sampled. Let
+$Y_j$ is appended, two premises hold: \emph{predictability}---both the
+decision to append and the string $Y_j$ are determined by the
+transcript preceding the append step---and \emph{unrevealed
+value}---no oracle lookup before the append step has requested a
+positive number of bits of $\ROflat(Y_j)$; zero-length lookups at
+$Y_j$ are permitted. Let
 $\mathsf{coll}_{s,\tau}$ be the event that some
 $s$ distinct candidates have equal $\tau$-bit projections:
 \[
@@ -595,10 +597,12 @@ positions exist and their $\tau$-bit projections are all equal. Expose
 the interaction in chronological order. Condition on any
 positive-probability prefix immediately before candidate position
 $i_r$ is appended, for $r \geq 2$, and on the values sampled at the
-earlier candidate positions in $I$. By the measurability and
-first-touch premises for new candidates, the value assigned to
-$Y_{i_r}$ is a fresh lazy-sampled infinite string independent of that
-prefix. Its $\tau$-bit projection therefore equals the already fixed
+earlier candidate positions in $I$. By the predictability premise,
+that prefix determines $Y_{i_r}$; by the unrevealed-value premise, no
+bit of $\ROflat(Y_{i_r})$ has been revealed in it, so under lazy
+sampling the value of $\ROflat(Y_{i_r})$ may be sampled after the
+prefix is fixed and is uniform and independent of the
+conditioning. Its $\tau$-bit projection therefore equals the already fixed
 projection of $Y_{i_1}$ with probability $2^{-\tau}$. Multiplying over
 $r = 2,\dots,s$ gives
 \[
