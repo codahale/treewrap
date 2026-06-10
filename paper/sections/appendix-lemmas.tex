@@ -679,9 +679,12 @@ returns either $\bot$ or a unique candidate key.
 
 \begin{lemma}[Leaf Tag Collision Bound]
 \label{lem:leaf-collision}
-Consider any \TW{} random-oracle-model game with a hidden key,
-direct adversary access to $\ROflat$, and construction computations
-that may generate final leaf transcripts. Let
+Consider any \TW{} random-oracle-model game with a hidden key, an
+adversary $\mathcal{B}$ with direct access to $\ROflat$, and
+construction computations that may generate final leaf transcripts;
+$\nleaf(\mathcal{B})$ denotes the execution-uniform count of distinct
+construction-generated final leaf transcripts of
+\Cref{sec:resources}. Let
 $\mathsf{hit}_{\mathsf{leaf}}$ be the event that, before some
 construction-generated keyed final leaf transcript is first created,
 a direct adversary query to $\ROflat$ has already hit the bridged

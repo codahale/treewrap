@@ -650,8 +650,8 @@ three. We comment on dominance and tightness.
 
 \paragraph{Dominance.}
 In the single-user AE bound, the birthday-on-capacity loss
-$\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{257}$ dominates throughout
-the non-trivial range $\Ntot < 2^{c}$. The key-guessing and
+$\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{257}$ dominates for
+$6 \leq \Ntot < 2^{c}$. The key-guessing and
 verification-tag contributions $(2 \Nprim + \Qv) / 2^{256}$ are
 linear in their resource caps and bounded by $3 \Ntot / 2^{256}$,
 hence below $\Lift_c$ for $\Ntot \geq 6$. The leaf tag collision
@@ -668,7 +668,7 @@ practical deployment), the hybrid-induced term remains at most
 $\Lift_c$. At the upper end of \Cref{sec:concrete-claim}'s parameters
 ($\Ntot, D, \Nprim \leq 2^{63}$), the hybrid-induced term
 $2 D \cdot \KeyGuess_k(\Nprim) \leq 2 D \Ntot / 2^{256}$ reaches
-$\approx 4 \Lift_c$ and is the binding constraint; the user-key
+$\approx 4 \Lift_c$ and is the dominant term; the user-key
 birthday $D(D - 1) / 2^{257}$ and the leaf tag collision each
 contribute roughly $\Lift_c$. The $2^{-128}$ figure of
 \Cref{sec:concrete-claim} is an upper bound on the sum of these terms

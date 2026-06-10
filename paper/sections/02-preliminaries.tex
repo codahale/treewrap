@@ -177,10 +177,10 @@ random-oracle proofs of
 \paragraph{Syntax.}
 A \emph{nonce-based authenticated-encryption scheme with associated
 data} (AEAD scheme) is a pair $\SE = (\Enc, \Dec)$ of deterministic
-algorithms with associated key space $\mathcal{K} \subseteq \bits^*$,
-nonce space $\mathcal{N} \subseteq \bits^*$, associated-data space
-$\mathcal{A} \subseteq \bits^*$, message space $\mathcal{M} \subseteq
-\bits^*$, and ciphertext space $\mathcal{C} \subseteq \bits^*$. The
+algorithms with associated key space $\mathcal{K} \subseteq (\bits^8)^*$,
+nonce space $\mathcal{N} \subseteq (\bits^8)^*$, associated-data space
+$\mathcal{A} \subseteq (\bits^8)^*$, message space $\mathcal{M} \subseteq
+(\bits^8)^*$, and ciphertext space $\mathcal{C} \subseteq (\bits^8)^*$. The
 encryption algorithm $\Enc : \mathcal{K} \times \mathcal{N} \times
 \mathcal{A} \times \mathcal{M} \to \mathcal{C}$ produces a ciphertext
 $C = \Enc_K(N, A, M)$. The decryption algorithm $\Dec : \mathcal{K}
@@ -189,7 +189,7 @@ $C = \Enc_K(N, A, M)$. The decryption algorithm $\Dec : \mathcal{K}
 rejection symbol $\bot$. The \emph{tag length in bytes} is the constant
 $\|\Enc_K(N, A, M)\| - \|M\|$, fixed by the scheme.
 In this generic syntax, $C$ denotes the full AEAD ciphertext, including
-any tag material. The \TW{} algorithm section writes this same value as
+any tag material. The \TW{} algorithm section (\Cref{sec:tw128}) writes this same value as
 $C \concat T$, with $C$ the ciphertext body and $T$ the root tag.
 
 \paragraph{Correctness.}
@@ -259,10 +259,10 @@ $\mathcal{A}$ such that
 \Cref{lem:bn-composition} is the all-in-one form of the
 privacy-plus-integrity composition theorem of \cite{BN00}. The
 standard proof inserts the hybrid $(\Enc_K, \Replay)$, where
-$\Replay$ accepts exactly the tuples returned by the real encryption
+$\Replay$ accepts exactly the tuples recorded by the real encryption
 oracle. The hop from $(\Enc_K, \Ver_K)$ to $(\Enc_K, \Replay)$ is
 bounded by INT-CTXT: the two interfaces differ only if verification
-accepts a tuple not previously returned by encryption. The hop from
+accepts a tuple not previously recorded by encryption. The hop from
 $(\Enc_K, \Replay)$ to $(\Rand, \Replay)$ is bounded by privacy:
 $\mathcal{A}_{\text{priv}}$ runs $\mathcal{A}$, forwards encryption
 queries to its own oracle, records the returned tuples, and answers
@@ -384,7 +384,8 @@ probabilities that the adversary wins the respective game.
 \paragraph{$s$-way generalization.}
 For $s \geq 2$, \cite[Fig.~5]{BH22} extends the games to tuples
 $(K_i, N_i, A_i, M_i)_{i=1}^s$ with pairwise distinct
-$\WiC_\ell$-images. The $s$-way CMTDs-$\ell$ game returns $1$ if
+$\WiC_\ell$-images. The $s$-way CMTDs-$\ell$ game has the adversary
+output a ciphertext $C$ alongside the tuples and returns $1$ if
 $\Dec_{K_i}(N_i, A_i, C) = M_i$ for every $i$. The $s$-way
 CMTs-$\ell$ game returns $1$ if all encryptions
 $\Enc_{K_i}(N_i, A_i, M_i)$ are equal. The two-tuple case $s = 2$
@@ -398,7 +399,7 @@ definitions are instantiated for \TW{} in \Cref{sec:games-pp}, with the
 public-permutation lift deferred to that section.
 
 \paragraph{Relations.}
-\cite[Figs.~4 and~5]{BH22} record six implications among the notions.
+\cite[Figs.~4 and~5]{BH22} record the implications among the notions.
 For the D-notions we use:
 \[
   \mathsf{CMTDs}\text{-}3 \;\Rightarrow\;

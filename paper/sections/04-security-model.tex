@@ -74,7 +74,7 @@ The INT-CTXT game exposes encryption, verification, and the public
 permutation interfaces $\pi,\pi^{-1}$.
 Each encryption query records the resulting tuple $(N, A, C, T)$. The
 adversary wins if some verification query returns $1$ on a tuple $(N,
-A, C, T)$ that was not previously returned by the encryption oracle.
+A, C, T)$ that was not previously recorded by the encryption oracle.
 \[
   \Advintctxt_\TW(\mathcal{A}) =
   \Pr[\mathcal{A}^{\Enc_K[\pi],\, \Ver_K[\pi],\, \pi,\, \pi^{-1}} \text{ wins}].
@@ -364,7 +364,9 @@ Resource caps split per potential user $d \leq D$: $N^{(d)}$,
 $\qv^{(d)}$, $\nleaf^{(d)}$ are the per-user counts under
 \Cref{sec:resources}, with inactive users contributing zero. The global
 totals $N = \sum_{d=1}^D N^{(d)}$, $\qv = \sum_{d=1}^D \qv^{(d)}$,
-$\nleaf = \sum_{d=1}^D \nleaf^{(d)}$ appear in the lift terms. $\Nprim$
+$\nleaf = \sum_{d=1}^D \nleaf^{(d)}$ appear in the final bound: $N$
+through the lift term $\Lift_c(\Ntot)$, and $\nleaf$ and $\qv$ through
+the leaf-collision and verification-tag terms. $\Nprim$
 remains a single shared count over the primitive interface.
 
 The mu-ind treatment applies only to indistinguishability. The
