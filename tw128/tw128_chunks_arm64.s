@@ -66,17 +66,36 @@
 	VLD1 (R2), [V25.D1]; ADD $8, R2; VLD1 (R3), [V26.D1]; ADD $8, R3; VZIP1 V26.D2, V25.D2, V25.D2; VEOR V25.B16, V19.B16, V26.B16; VEOR V25.B16, V19.B16, V19.B16; VST1 [V26.D1], (R5); ADD $8, R5; VDUP V26.D[1], V27.D2; VST1 [V27.D1], (R6); ADD $8, R6
 
 // ENC_PARTIAL7 encrypts the 7-byte partial lane 20 for both instances. It reads
-// 8 bytes (the 8th lies within the chunk for every full block), masks the
+// 8 bytes (the 8th lies within the chunk for every MSG_MORE block), masks the
 // ciphertext to 7 bytes so byte 7 of the lane (the suffix slot) keeps its
-// keystream, and stores exactly 7 bytes. Temps R9-R13.
+// keystream, and stores exactly 7 bytes. Temps R9-R13. The final block of a
+// chunk must use ENC_PARTIAL7_LAST instead: there the 8th byte lies past the
+// chunk, and possibly past the buffer.
 #define ENC_PARTIAL7 \
 	VMOV V20.D[0], R9; MOVD (R2), R10; EOR R9, R10, R11; LSL $8, R11, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[0]; MOVW R11, (R5); LSR $32, R11, R13; MOVH R13, 4(R5); LSR $48, R11, R13; MOVB R13, 6(R5); ADD $7, R2; ADD $7, R5; \
 	VMOV V20.D[1], R9; MOVD (R3), R10; EOR R9, R10, R11; LSL $8, R11, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[1]; MOVW R11, (R6); LSR $32, R11, R13; MOVH R13, 4(R6); LSR $48, R11, R13; MOVB R13, 6(R6); ADD $7, R3; ADD $7, R6
 
-// DEC_PARTIAL7 decrypts the 7-byte partial lane 20 for both instances.
+// DEC_PARTIAL7 decrypts the 7-byte partial lane 20 for both instances. The
+// final block of a chunk must use DEC_PARTIAL7_LAST instead.
 #define DEC_PARTIAL7 \
 	VMOV V20.D[0], R9; MOVD (R2), R10; EOR R9, R10, R11; LSL $8, R10, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[0]; MOVW R11, (R5); LSR $32, R11, R13; MOVH R13, 4(R5); LSR $48, R11, R13; MOVB R13, 6(R5); ADD $7, R2; ADD $7, R5; \
 	VMOV V20.D[1], R9; MOVD (R3), R10; EOR R9, R10, R11; LSL $8, R10, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[1]; MOVW R11, (R6); LSR $32, R11, R13; MOVH R13, 4(R6); LSR $48, R11, R13; MOVB R13, 6(R6); ADD $7, R3; ADD $7, R6
+
+// ENC_PARTIAL7_LAST is ENC_PARTIAL7 for the final block of a chunk, where the
+// byte after the 7-byte partial is past the chunk (and, for the last chunk,
+// past the buffer). It loads the 8 bytes ending at the last chunk byte
+// (offset -1, always within the chunk: the final block never starts a chunk)
+// and shifts out the stale lead byte, leaving the 7 sigma bytes in the low
+// bytes and zero in byte 7, then proceeds exactly as ENC_PARTIAL7.
+#define ENC_PARTIAL7_LAST \
+	VMOV V20.D[0], R9; MOVD -1(R2), R10; LSR $8, R10, R10; EOR R9, R10, R11; LSL $8, R11, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[0]; MOVW R11, (R5); LSR $32, R11, R13; MOVH R13, 4(R5); LSR $48, R11, R13; MOVB R13, 6(R5); ADD $7, R2; ADD $7, R5; \
+	VMOV V20.D[1], R9; MOVD -1(R3), R10; LSR $8, R10, R10; EOR R9, R10, R11; LSL $8, R11, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[1]; MOVW R11, (R6); LSR $32, R11, R13; MOVH R13, 4(R6); LSR $48, R11, R13; MOVB R13, 6(R6); ADD $7, R3; ADD $7, R6
+
+// DEC_PARTIAL7_LAST is DEC_PARTIAL7 for the final block of a chunk, with the
+// same in-bounds load as ENC_PARTIAL7_LAST.
+#define DEC_PARTIAL7_LAST \
+	VMOV V20.D[0], R9; MOVD -1(R2), R10; LSR $8, R10, R10; EOR R9, R10, R11; LSL $8, R10, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[0]; MOVW R11, (R5); LSR $32, R11, R13; MOVH R13, 4(R5); LSR $48, R11, R13; MOVB R13, 6(R5); ADD $7, R2; ADD $7, R5; \
+	VMOV V20.D[1], R9; MOVD -1(R3), R10; LSR $8, R10, R10; EOR R9, R10, R11; LSL $8, R10, R12; LSR $8, R12, R12; EOR R12, R9, R9; VMOV R9, V20.D[1]; MOVW R11, (R6); LSR $32, R11, R13; MOVH R13, 4(R6); LSR $48, R11, R13; MOVB R13, 6(R6); ADD $7, R3; ADD $7, R6
 
 // MSGMORE_PERMUTE XORs (MSG_MORE 0x1A | pad 0x80) = 0x9A at byte 167 (lane 20,
 // byte 7) for both instances, then runs the 12-round permutation.
@@ -182,7 +201,7 @@ tw128_enc_arm64_loop_01:
 	BNE	tw128_enc_arm64_loop_01
 
 	ENC_LANES20
-	ENC_PARTIAL7
+	ENC_PARTIAL7_LAST
 	MSGLAST_FULL_PERMUTE
 
 	// Extract tags for pair (0,1).
@@ -212,7 +231,7 @@ tw128_enc_arm64_loop_23:
 	BNE	tw128_enc_arm64_loop_23
 
 	ENC_LANES20
-	ENC_PARTIAL7
+	ENC_PARTIAL7_LAST
 	MSGLAST_FULL_PERMUTE
 
 	// Extract tags for pair (2,3).
@@ -243,7 +262,7 @@ tw128_enc_arm64_loop_45:
 	BNE	tw128_enc_arm64_loop_45
 
 	ENC_LANES20
-	ENC_PARTIAL7
+	ENC_PARTIAL7_LAST
 	MSGLAST_FULL_PERMUTE
 
 	// Extract tags for pair (4,5).
@@ -274,7 +293,7 @@ tw128_enc_arm64_loop_67:
 	BNE	tw128_enc_arm64_loop_67
 
 	ENC_LANES20
-	ENC_PARTIAL7
+	ENC_PARTIAL7_LAST
 	MSGLAST_FULL_PERMUTE
 
 	// Extract tags for pair (6,7).
@@ -312,7 +331,7 @@ tw128_enc_arm64_pair_loop:
 	BNE	tw128_enc_arm64_pair_loop
 
 	ENC_LANES20
-	ENC_PARTIAL7
+	ENC_PARTIAL7_LAST
 	MSGLAST_FULL_PERMUTE
 
 	MOVD	R7, R6
@@ -343,7 +362,7 @@ tw128_dec_arm64_pair_loop:
 	BNE	tw128_dec_arm64_pair_loop
 
 	DEC_LANES20
-	DEC_PARTIAL7
+	DEC_PARTIAL7_LAST
 	MSGLAST_FULL_PERMUTE
 
 	MOVD	R7, R6
@@ -385,7 +404,7 @@ tw128_dec_arm64_loop_01:
 	BNE	tw128_dec_arm64_loop_01
 
 	DEC_LANES20
-	DEC_PARTIAL7
+	DEC_PARTIAL7_LAST
 	MSGLAST_FULL_PERMUTE
 
 	MOVD	24(RSP), R6
@@ -414,7 +433,7 @@ tw128_dec_arm64_loop_23:
 	BNE	tw128_dec_arm64_loop_23
 
 	DEC_LANES20
-	DEC_PARTIAL7
+	DEC_PARTIAL7_LAST
 	MSGLAST_FULL_PERMUTE
 
 	MOVD	24(RSP), R6
@@ -444,7 +463,7 @@ tw128_dec_arm64_loop_45:
 	BNE	tw128_dec_arm64_loop_45
 
 	DEC_LANES20
-	DEC_PARTIAL7
+	DEC_PARTIAL7_LAST
 	MSGLAST_FULL_PERMUTE
 
 	MOVD	24(RSP), R6
@@ -474,7 +493,7 @@ tw128_dec_arm64_loop_67:
 	BNE	tw128_dec_arm64_loop_67
 
 	DEC_LANES20
-	DEC_PARTIAL7
+	DEC_PARTIAL7_LAST
 	MSGLAST_FULL_PERMUTE
 
 	MOVD	24(RSP), R6
