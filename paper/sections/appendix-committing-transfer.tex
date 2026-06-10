@@ -126,11 +126,18 @@ already touched by a direct query, then \Cref{lem:bridge-decode} and
 \Cref{cor:output-sep} imply that the earlier query was a final-root
 candidate. Earlier challenger lookups outside the final-root class are
 separated by \Cref{cor:output-sep}. An earlier challenger final-root
-lookup either has the same address, in which case that address was
-already appended at its first final-root lookup, or has a different
-address and does not affect first touch for the new candidate. Thus each
-newly appended challenger candidate is first touched at its append step,
-and the sequence length is at most $\qRO(\mathcal{B})+s$.
+lookup with a different address does not affect the new candidate. An
+earlier challenger final-root lookup with the same address is either a
+root-tag answer sampling, in which case the address was already
+appended and is not appended again, or the chunk-$0$-closing
+\sigmsglast{} call of an $n \geq 1$ encryption check that reaches the
+same $\Rmsg^+$ address (possible only for $\ell = 4$, where two checks
+may share $(K, N, A)$ and the chunk-$0$ ciphertext); that call requests
+zero output bits and continues into its aggregation phase, so it does
+not sample the lazy-table value at the address. In all cases the
+lazy-table value of each newly appended challenger candidate is first
+sampled at its append step, as \Cref{lem:adaptive-candidate-collision}
+requires, and the sequence length is at most $\qRO(\mathcal{B})+s$.
 
 On a winning execution, the accepted encryptions are all equal. Hence
 their ciphertext-body lengths are equal. Pairwise triple distinctness
