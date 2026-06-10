@@ -104,7 +104,8 @@ Following \cite{BDPV08}, fix a permutation $\pi \in \Perm(\bits^b)$, a
 \emph{sponge-compliant} padding rule $\mathsf{pad}$, and a rate $1 \leq
 r < b$ with capacity $c = b - r$. A padding rule appends
 $\mathsf{pad}[r](|M|)$, a bit string determined by the input length and
-the rate, to an input $M$; it is sponge-compliant
+the rate, to an input $M$, extending it to a sequence of $r$-bit
+blocks; it is sponge-compliant
 \cite[Definition~1]{BDPV11} if $M \concat \mathsf{pad}[r](|M|)$ is never
 empty and, for all $M \neq M'$ and all $n \geq 0$, $M \concat
 \mathsf{pad}[r](|M|) \neq M' \concat \mathsf{pad}[r](|M'|) \concat
@@ -114,7 +115,9 @@ length $\ell$ to an $\ell$-bit string by absorbing $M \concat
 \mathsf{pad}[r](|M|)$ into the all-zero $b$-bit state in $r$-bit blocks
 (each separated by an application of $\pi$) and squeezing $\ell$ bits in
 $r$-bit blocks from the resulting state. \cite[Theorem~2]{BDPV08} shows that
-$\Sponge[\pi, \padten, r]$ is indifferentiable from a random oracle when
+$\Sponge[\pi, \padten, r]$, where the simple rule $\padten$ appends a
+single $1$ bit followed by the minimum number of $0$ bits reaching a
+multiple of $r$, is indifferentiable from a random oracle when
 $\pi$ is uniformly random. We bound its distinguishing advantage by
 $\Lift_c(\Ntot) = \Ntot(\Ntot+1) / 2^{c+1}$, derived in
 \Cref{sec:loss-terms} from the exact differentiating probabilities of
@@ -140,7 +143,9 @@ output equals
     \ell_i\bigr),
 \]
 where $\mathsf{pad}_j = \mathsf{pad}[r](|\sigma_j|)$ is the padding
-appended by the sponge for the $j$-th block. The flattening map is
+the duplex appends in its $j$-th call; the flattened input carries
+these interior paddings explicitly, and the sponge appends only the
+final $\mathsf{pad}_i$. The flattening map is
 injective by \cite[Lemma~4]{BDPV11}: the duplex-call sequence is
 recoverable from the flattened sponge input.
 

@@ -48,7 +48,7 @@ simple-padded-sponge simulator, not \TW{} resource notation:
   \item[(C4) Paddable path.] The constructed path $p$ decomposes
     uniquely as $p = p' \concat 0^{rj}$ with $p'$ not ending in
     $0^r$, and the prefix $p'$ is a valid padded sponge input:
-    equivalently, $p' = x \concat \mathsf{pad}[r](|x|)$ for an unpadded
+    equivalently, $p' = x \concat \padten[r](|x|)$ for an unpadded
     BDPV08 random-oracle input $x$.
 \end{description}
 When all four conditions hold, the forward primitive-interface query
