@@ -98,14 +98,20 @@ flat-sponge lift of \Cref{app:flat-sponge-lift}, this permutation is
 modeled as a uniformly random element of $\Perm(\bits^{1600})$.
 
 \paragraph{The sponge construction.}
-Following \cite{BDPV08}, fix a permutation $\pi \in \Perm(\bits^b)$, an
-injective padding rule $\mathsf{pad}$, and a rate $1 \leq r \leq b$ with
-capacity $c = b - r$. The sponge function $\Sponge[\pi, \mathsf{pad}, r]
+Following \cite{BDPV08}, fix a permutation $\pi \in \Perm(\bits^b)$, a
+\emph{sponge-compliant} padding rule $\mathsf{pad}$, and a rate $1 \leq
+r \leq b$ with capacity $c = b - r$. A padding rule appends
+$\mathsf{pad}[r](|M|)$, a bit string determined by the input length and
+the rate, to an input $M$; it is sponge-compliant
+\cite[Definition~1]{BDPV11} if $M \concat \mathsf{pad}[r](|M|)$ is never
+empty and, for all $M \neq M'$ and all $n \geq 0$, $M \concat
+\mathsf{pad}[r](|M|) \neq M' \concat \mathsf{pad}[r](|M'|) \concat
+0^{nr}$. The sponge function $\Sponge[\pi, \mathsf{pad}, r]
 : \bits^* \times \mathbb{N} \to \bits^*$ maps an input $M$ and an output
-length $\ell$ to an $\ell$-bit string by absorbing $\mathsf{pad}(M)$ into
-the all-zero $b$-bit state in $r$-bit blocks (each separated by an
-application of $\pi$) and squeezing $\ell$ bits in $r$-bit blocks from
-the resulting state. \cite[Theorem~2]{BDPV08} shows that
+length $\ell$ to an $\ell$-bit string by absorbing $M \concat
+\mathsf{pad}[r](|M|)$ into the all-zero $b$-bit state in $r$-bit blocks
+(each separated by an application of $\pi$) and squeezing $\ell$ bits in
+$r$-bit blocks from the resulting state. \cite[Theorem~2]{BDPV08} shows that
 $\Sponge[\pi, \padten, r]$ is indifferentiable from a random oracle when
 $\pi$ is uniformly random. We bound its distinguishing advantage by the
 transformation-form expression $\Lift_c(\Ntot) = \Ntot(\Ntot+1) / 2^{c+1}$
