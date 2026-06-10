@@ -32,7 +32,7 @@ Let $\mathsf{G}_0$ be the real random-oracle INT-CTXT game: the
 challenger samples $K \sample \bits^k$, $\mathcal{B}$ has direct
 access to $\ROflat$, and construction queries are answered by
 $\Enc_K^\RO$ and $\Ver_K^\RO$. Each encryption query
-$(N, A, M)$ returns $(C, T) = \Enc_K^\RO(N, A, M)$ and records the
+$(N, A, M)$ returns $C \concat T = \Enc_K^\RO(N, A, M)$ and records the
 tuple $(N, A, C, T)$; $\mathcal{B}$ wins if any verification query
 returns $1$ on a tuple $(N, A, C, T)$ that was not previously
 returned by the encryption oracle.

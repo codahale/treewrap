@@ -12,7 +12,7 @@ is nonempty, emits
 keystream for the first plaintext chunk $M_0$ of at most $\beta$ bytes,
 and absorbs the resulting ciphertext chunk $C_0$;
 when $A$ is empty the associated-data phase is elided and the
-initialization call itself emits the $M_0$ keystream;
+initialization call itself emits the initial $M_0$ keystream;
 the remaining plaintext is partitioned into \emph{leaf} chunks
 $M_1, \dots, M_n$, each handled by an independent leaf duplex
 initialized with $(K, N, j)$. The leaf duplex emits the keystream for
@@ -98,7 +98,7 @@ the CMTDs-4 headline of \Cref{sec:headline}.
     call on $C_0$ emits the root tag $T$ directly. When the
     associated data is empty the $A$ block is absent: the
     associated-data phase is elided and the initialization call emits the
-    $M_0$ keystream directly.}
+    initial $M_0$ keystream directly.}
   \label{fig:tw128-tree}
 \end{figure}
 
@@ -284,7 +284,8 @@ convention, so a zero-length chunk still performs one final
 message-phase duplex call and returns a zero-length body.
 \Cref{alg:enc} invokes \Call{Absorb}{} for the associated-data phase
 only when $A \neq \varepsilon$; when $A = \varepsilon$ the phase is
-elided and the root \siginit call emits the $M_0$ keystream directly.
+elided and the root \siginit call emits the initial $M_0$ keystream
+directly.
 \Call{StreamEnc}{} encrypts a plaintext byte string block by block,
 XORing each plaintext block with the current keystream, absorbing the
 resulting ciphertext block back into the duplex with the appropriate
@@ -296,12 +297,13 @@ $m \oplus Z$ has the same update on the message bytes as overwriting
 that prefix with $m$, with the phase tag still carried as part of the
 duplex input. In both helpers, each duplex call absorbs a data block followed by its
 phase suffix---$\sigma^-$ for a non-final block and $\sigma^+$ for the
-final block---and requests $\ell$ output bits, which is the duplex
-interface of \Cref{sec:sponge} applied to the suffixed input of
-\Cref{sec:domain-sep}.
+final block---and requests the output bits the caller consumes next:
+$\ell$ on the final call, and the next block's keystream length (or
+zero) on non-final calls. Each call is the duplex interface of
+\Cref{sec:sponge} applied to the suffixed input of \Cref{sec:domain-sep}.
 
 The encryption procedure (\Cref{alg:enc}) instantiates the root duplex
-and obtains the keystream for the root chunk $M_0$: when $A \neq
+and obtains the initial keystream for the root chunk $M_0$: when $A \neq
 \varepsilon$ it absorbs the associated data $A$, and when $A =
 \varepsilon$ it elides the associated-data phase and takes the keystream
 from the \siginit call itself. It then encrypts $M_0$ while absorbing
@@ -357,7 +359,7 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
   \label{alg:enc}
   \begin{algorithmic}[1]
     \Require $K \in \bits^k$, $N \in \bits^{\nu}$, $A$ with $\|A\| \leq A_{\max}$, $M$ with $\|M\| \leq M_{\max}$.
-    \Ensure $(C, T)$ with $\|C\| = \|M\|$ and $T \in \bits^{\tauroot}$.
+    \Ensure $C \concat T$ with $\|C\| = \|M\|$ and $T \in \bits^{\tauroot}$.
     \State $M_0 \gets$ first $\min(\|M\|, \beta)$ bytes of $M$ (possibly $\varepsilon$).
     \State Partition the remaining suffix into nonempty chunks $M_1, \dots, M_n$ of at most $\beta$ bytes each, so $n = \leaves(M)$.
     \State $D_{\text{root}} \gets$ new $\Duplex$
@@ -369,7 +371,7 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
     \EndIf
     \If{$n = 0$}
       \State $(C_0,\, T) \gets \Call{StreamEnc}{D_{\text{root}}, M_0, Z, \sigmsgmore, \sigmsglast, \tauroot}$
-      \State \Return $(C_0,\, T)$
+      \State \Return $C_0 \concat T$
     \EndIf
     \State $(C_0,\, \_) \gets \Call{StreamEnc}{D_{\text{root}}, M_0, Z, \sigmsgmore, \sigmsglast, 0}$
     \For{$j \gets 1$ \textbf{to} $n$ \textbf{in parallel}}
@@ -379,12 +381,12 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
     \EndFor
     \State $G \gets T_1 \concat \cdots \concat T_n$.
     \State $T \gets \Call{Absorb}{D_{\text{root}},\, G \concat \langle n \rangle_8,\, \sigaggmore,\, \sigagglast,\, \tauroot}$
-    \State \Return $(C_0 \concat C_1 \concat \cdots \concat C_n,\, T)$
+    \State \Return $C_0 \concat C_1 \concat \cdots \concat C_n \concat T$
   \end{algorithmic}
 \end{algorithm}
 
-The keystream bit length that produces the first root chunk $M_0$ is
-$8\min(\|M_0\|, \rho)$, eight times the size of the next message block.
+The keystream bit length requested for the first message block of $M_0$
+is $8\min(\|M_0\|, \rho)$, eight times the size of the next message block.
 It is emitted by the closing \sigadlast call when $A \neq \varepsilon$,
 and by the root \siginit call itself when $A = \varepsilon$ and the
 associated-data phase is elided. Each leaf's \siginit call likewise
@@ -412,8 +414,9 @@ discusses the SIMD realizations.
 mirrors $\Enc$ block for block: each ciphertext block $c_i$ is
 absorbed into the appropriate duplex (root or leaf) under the
 corresponding \sigmsgmore or \sigmsglast suffix, and the
-plaintext block is recovered as $m_i = c_i \oplus Z_i$, where $Z_i$ is
-the keystream block at position $i$, the same the encryption procedure
+plaintext block is recovered as $m_i = c_i \oplus Z^{(i)}$, writing
+$Z^{(i)}$ for the value of the running keystream variable $Z$ of
+\textsc{StreamDec} at iteration $i$, the same the encryption procedure
 would have produced. The procedure
 absorbs ciphertext bytes before the final tag comparison, so the
 verification transcript is determined by $(K, N, A, C)$ for every
@@ -473,5 +476,5 @@ duplex call in $\Dec_K$ receives the same input as the corresponding
 call in $\Enc_K$ (each ciphertext block is absorbed under the same
 phase tag in both directions), so the duplex states and the recomputed
 root tag $T'$ exactly match. The constant-time comparison $T' = T$
-succeeds, and the recovered $m_i = c_i \oplus Z_i = (m_i \oplus Z_i)
-\oplus Z_i = m_i$ at every position.
+succeeds, and the recovered $m_i = c_i \oplus Z^{(i)} = (m_i \oplus
+Z^{(i)}) \oplus Z^{(i)} = m_i$ at every position.
