@@ -215,25 +215,25 @@ func printGrid(results []result, value func(result) float64) {
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignRight)
-	fmt.Fprint(w, "\t")
+	_, _ = fmt.Fprint(w, "\t")
 	for _, s := range sizes {
-		fmt.Fprintf(w, "%s\t", s)
+		_, _ = fmt.Fprintf(w, "%s\t", s)
 	}
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 
 	for _, row := range rows {
-		fmt.Fprintf(w, "%s\t", row)
+		_, _ = fmt.Fprintf(w, "%s\t", row)
 		for _, s := range sizes {
 			v := vals[row+"/"+s]
 			if v >= 100 {
-				fmt.Fprintf(w, "%.0f\t", v)
+				_, _ = fmt.Fprintf(w, "%.0f\t", v)
 			} else {
-				fmt.Fprintf(w, "%.2f\t", v)
+				_, _ = fmt.Fprintf(w, "%.2f\t", v)
 			}
 		}
-		fmt.Fprintln(w)
+		_, _ = fmt.Fprintln(w)
 	}
-	w.Flush()
+	_ = w.Flush()
 }
 
 func outputCSV(results []result) {
