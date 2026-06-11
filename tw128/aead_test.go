@@ -94,7 +94,10 @@ func TestAEADInPlace(t *testing.T) {
 	nonce := seq(NonceSize)
 	a, _ := New(key)
 
-	for _, size := range []int{0, 1, 168, ChunkSize, ChunkSize + 1, ChunkSize * 2} {
+	// Sizes walk every kernel path with fully-overlapping src/dst: the trunk
+	// alone, the fused/remainder kernels at several widths, the full 8-wide
+	// batch, and the x1 and ragged-tail paths.
+	for _, size := range []int{0, 1, 168, ChunkSize, ChunkSize + 1, ChunkSize * 2, ChunkSize * 4, ChunkSize * 8, ChunkSize*9 + 5} {
 		pt := seq(size)
 		buf := make([]byte, size, size+TagSize)
 		copy(buf, pt)

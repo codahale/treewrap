@@ -281,8 +281,13 @@ tw128_enc_avx512n_loop:
 	VPGATHERQQ	160(BX)(Z28*1), K1, Z25
 	VPXORQ	Z25, Z20, Z26
 	VPANDQ	Z27, Z26, Z26
+	// The scatter writes whole qwords, so byte 7 of the stored value must be
+	// the original gathered byte (the next block's first source byte): a
+	// fully-overlapping dst would otherwise be clobbered before it is read.
+	VPANDNQ	Z25, Z27, Z29
+	VPORQ	Z26, Z29, Z29
 	KMOVW	K2, K1
-	VPSCATTERQQ	Z26, K1, 160(R14)(Z28*1)
+	VPSCATTERQQ	Z29, K1, 160(R14)(Z28*1)
 	VPXORQ	Z26, Z20, Z20
 
 	VPBROADCASTQ	DI, Z26
@@ -410,9 +415,14 @@ tw128_dec_avx512n_loop:
 	KMOVW	K2, K1
 	VPGATHERQQ	160(BX)(Z28*1), K1, Z25
 	VPXORQ	Z25, Z20, Z26
+	VPANDQ	Z27, Z26, Z26
+	// As in the encrypt kernel: byte 7 of the scattered qword carries the
+	// original gathered byte so a fully-overlapping dst is not corrupted.
+	VPANDNQ	Z25, Z27, Z29
+	VPORQ	Z26, Z29, Z29
 	VPANDQ	Z27, Z25, Z25
 	KMOVW	K2, K1
-	VPSCATTERQQ	Z26, K1, 160(R14)(Z28*1)
+	VPSCATTERQQ	Z29, K1, 160(R14)(Z28*1)
 	VPXORQ	Z25, Z20, Z20
 
 	VPBROADCASTQ	DI, Z26
