@@ -1,5 +1,3 @@
-//go:build amd64 && !purego
-
 package tw128
 
 import (
@@ -24,8 +22,9 @@ func trunkAfterInit(key, nonce, ad []byte) (d duplex) {
 // reference built from the same primitives crypt's fallback uses — trunk
 // bodyMore/closeBlock over chunk 0, then per-leaf x1 passes with their tags
 // absorbed in leaf order — for every fused width k=2..8, both directions, and
-// empty and non-empty associated data. Ciphertext, trunk state, and leaf
-// count must agree exactly.
+// empty and non-empty associated data. The fused call may consume fewer than
+// k chunks (the arm64 pair kernel consumes 2); the consumed prefix's
+// ciphertext, the trunk state, and the leaf count must agree exactly.
 func TestChunk0Fused(t *testing.T) {
 	key := seq(KeySize)
 	nonce := testChunkNonce()
@@ -40,13 +39,33 @@ func TestChunk0Fused(t *testing.T) {
 						src[i] = byte(i*5 + i>>9 + k)
 					}
 
-					// Serial reference.
+					// Fused path.
+					var g aggregator
+					copy(g.key[:], key)
+					copy(g.nonce[:], nonce)
+					g.decrypt = decrypt
+					g.trunk = trunkAfterInit(key, nonce, ad)
+					dst := make([]byte, len(src))
+					var consumed int
+					if decrypt {
+						consumed = decryptChunk0Fused(&g, src, dst, k)
+					} else {
+						consumed = encryptChunk0Fused(&g, src, dst, k)
+					}
+					if consumed == 0 {
+						t.Skip("no fused path on this platform")
+					}
+					if consumed < 2 || consumed > k {
+						t.Fatalf("consumed %d chunks of k=%d", consumed, k)
+					}
+
+					// Serial reference over the consumed chunks.
 					refTrunk := trunkAfterInit(key, nonce, ad)
-					refDst := make([]byte, len(src))
+					refDst := make([]byte, consumed*ChunkSize)
 					refTrunk.bodyMore(refDst[:ChunkSize], src[:ChunkSize], decrypt, msgMore)
 					refTrunk.closeBlock(msgLast)
 					var leaf duplex
-					for i := 1; i < k; i++ {
+					for i := 1; i < consumed; i++ {
 						off := i * ChunkSize
 						if decrypt {
 							decryptX1(key, nonce, uint64(i), src[off:off+ChunkSize], refDst[off:off+ChunkSize], &leaf)
@@ -57,25 +76,8 @@ func TestChunk0Fused(t *testing.T) {
 						refTrunk.absorbMore(tag[:], aggMore)
 					}
 
-					// Fused path.
-					var g aggregator
-					copy(g.key[:], key)
-					copy(g.nonce[:], nonce)
-					g.decrypt = decrypt
-					g.trunk = trunkAfterInit(key, nonce, ad)
-					dst := make([]byte, len(src))
-					var ok bool
-					if decrypt {
-						ok = decryptChunk0Fused(&g, src, dst, k)
-					} else {
-						ok = encryptChunk0Fused(&g, src, dst, k)
-					}
-					if !ok {
-						t.Fatal("fused kernel did not run")
-					}
-
-					if !bytes.Equal(dst, refDst) {
-						t.Errorf("output mismatch at byte %d", firstMismatch(dst, refDst))
+					if !bytes.Equal(dst[:consumed*ChunkSize], refDst) {
+						t.Errorf("output mismatch at byte %d", firstMismatch(dst[:consumed*ChunkSize], refDst))
 					}
 					if g.trunk.a != refTrunk.a {
 						t.Error("trunk state mismatch")
@@ -83,8 +85,8 @@ func TestChunk0Fused(t *testing.T) {
 					if g.trunk.pos != refTrunk.pos {
 						t.Errorf("trunk pos mismatch: got %d, want %d", g.trunk.pos, refTrunk.pos)
 					}
-					if g.nLeaves != uint64(k-1) {
-						t.Errorf("leaf count: got %d, want %d", g.nLeaves, k-1)
+					if g.nLeaves != uint64(consumed-1) {
+						t.Errorf("leaf count: got %d, want %d", g.nLeaves, consumed-1)
 					}
 				})
 			}

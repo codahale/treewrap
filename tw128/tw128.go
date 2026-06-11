@@ -141,23 +141,22 @@ func crypt(key, nonce, ad, dst, src []byte, decrypt bool) [TagSize]byte {
 	// platforms whose kernels hand the permutation state back, the trunk's
 	// chunk-0 phase rides lane 0 of the first kernel call alongside up to
 	// seven leaves, eliminating the serial chunk-0 pass. The fused call
-	// absorbs the leaf tags and advances g.nLeaves; for k < 8 it consumes
-	// every complete leaf, and for k == 8 processComplete continues with
-	// g.nLeaves pre-advanced. On platforms without a fused path the call
-	// reports false and the trunk processes chunk 0 serially.
-	fused := false
+	// absorbs the leaf tags it produced and advances g.nLeaves, and reports
+	// how many chunks it consumed: k on amd64, 8 or 2 on arm64 (full x8
+	// batch or one NEON pair), and 0 on platforms without a fused path,
+	// where the trunk processes chunk 0 serially instead. processComplete
+	// then continues the cascade with g.nLeaves pre-advanced.
+	fusedChunks := 0
 	if nComplete := (len(src) - ChunkSize) / ChunkSize; nComplete >= 1 {
 		k := min(1+nComplete, 8)
 		if decrypt {
-			fused = decryptChunk0Fused(&g, src[:k*ChunkSize], dst[:k*ChunkSize], k)
+			fusedChunks = decryptChunk0Fused(&g, src[:k*ChunkSize], dst[:k*ChunkSize], k)
 		} else {
-			fused = encryptChunk0Fused(&g, src[:k*ChunkSize], dst[:k*ChunkSize], k)
+			fusedChunks = encryptChunk0Fused(&g, src[:k*ChunkSize], dst[:k*ChunkSize], k)
 		}
-		if fused {
-			src, dst = src[k*ChunkSize:], dst[k*ChunkSize:]
-		}
+		src, dst = src[fusedChunks*ChunkSize:], dst[fusedChunks*ChunkSize:]
 	}
-	if !fused {
+	if fusedChunks == 0 {
 		// Chunk 0: the trunk message phase, closed with MSG_LAST.
 		g.trunk.bodyMore(dst[:ChunkSize], src[:ChunkSize], decrypt, msgMore)
 		g.trunk.closeBlock(msgLast)

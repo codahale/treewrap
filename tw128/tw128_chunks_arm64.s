@@ -166,7 +166,9 @@
 // func encryptChunksARM64(s *State8, src, dst *byte, cvs *byte)
 //
 // Processes 8 × 8183-byte chunks using 4× x2 pairs,
-// encrypting and writing 8 × 32-byte tags.
+// encrypting and writing 8 × 32-byte tags. Pair (0,1)'s final permutation
+// state is stored back into s for the lane-0 fused path, where instance 0
+// carries the trunk's chunk-0 transcript; instances 2..7 are left stale.
 //
 // Frame: 32 bytes local (0=State8 ptr, 8=src base, 16=dst base, 24=tags ptr).
 TEXT ·encryptChunksARM64(SB), NOSPLIT, $32-32
@@ -207,6 +209,10 @@ tw128_enc_arm64_loop_01:
 	// Extract tags for pair (0,1).
 	MOVD	24(RSP), R6
 	EXTRACT_TAGS
+
+	// Store pair (0,1)'s state back for the lane-0 fused path.
+	MOVD	0(RSP), R8
+	STORE25_STRIDE(R8, 64)
 
 	// === Pair (2,3): instances 2 and 3 ===
 	MOVD	0(RSP), R0
@@ -337,6 +343,11 @@ tw128_enc_arm64_pair_loop:
 	MOVD	R7, R6
 	EXTRACT_TAGS
 
+	// Store the pair's state back into s for the lane-0 fused path, where
+	// instance 0 carries the trunk's chunk-0 transcript.
+	MOVD	s+0(FP), R8
+	STORE25_STRIDE(R8, 64)
+
 	RET
 
 
@@ -367,6 +378,11 @@ tw128_dec_arm64_pair_loop:
 
 	MOVD	R7, R6
 	EXTRACT_TAGS
+
+	// Store the pair's state back into s for the lane-0 fused path, where
+	// instance 0 carries the trunk's chunk-0 transcript.
+	MOVD	s+0(FP), R8
+	STORE25_STRIDE(R8, 64)
 
 	RET
 
@@ -409,6 +425,10 @@ tw128_dec_arm64_loop_01:
 
 	MOVD	24(RSP), R6
 	EXTRACT_TAGS
+
+	// Store pair (0,1)'s state back for the lane-0 fused path.
+	MOVD	0(RSP), R8
+	STORE25_STRIDE(R8, 64)
 
 	// === Pair (2,3) ===
 	MOVD	0(RSP), R0

@@ -21,9 +21,9 @@ import (
 // absorbs the k-1 leaf tags into the aggregation transcript in leaf order,
 // and advances the leaf counter. src and dst must be exactly k*ChunkSize
 // bytes (chunk 0 first), and g must be at the start of the cascade
-// (g.nLeaves == 0, trunk block open at pos 0). It reports whether a kernel
-// ran; on amd64 one always does.
-func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) bool {
+// (g.nLeaves == 0, trunk block open at pos 0). It returns the number of
+// chunks consumed; on amd64 that is always k.
+func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	// Lanes 1..7 are leaves 1..7. Lane 0's "leaf 0" init is discarded below:
 	// chunk ID 0 is never used by the construction (leaf IDs start at 1).
 	var s state8
@@ -52,11 +52,11 @@ func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) bool {
 	}
 	g.trunk.absorbMore(tags[leafTagSize:k*leafTagSize], aggMore)
 	g.nLeaves += uint64(k - 1)
-	return true
+	return k
 }
 
 // decryptChunk0Fused is the decrypt counterpart of encryptChunk0Fused.
-func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) bool {
+func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	var s state8
 	initChunks(&s, g.key[:], g.nonce[:], 0)
 	for lane := range lanes {
@@ -80,5 +80,5 @@ func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) bool {
 	}
 	g.trunk.absorbMore(tags[leafTagSize:k*leafTagSize], aggMore)
 	g.nLeaves += uint64(k - 1)
-	return true
+	return k
 }
