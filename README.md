@@ -38,19 +38,21 @@ The concrete instantiation in this repo uses:
 The Go module path is `github.com/codahale/treewrap`, and the package import path is
 `github.com/codahale/treewrap/tw128`.
 
-The `tw128` package exposes a streaming interface:
+The `tw128` package exposes a `cipher.AEAD`:
 
 ```go
-e := tw128.NewEncryptor(key, nonce, ad)
-e.XORKeyStream(ciphertext, plaintext)
-tag := e.Finalize()
+aead, err := tw128.New(key)
+if err != nil {
+    // invalid key size
+}
 
-d := tw128.NewDecryptor(key, nonce, ad)
-d.XORKeyStream(plaintextOut, ciphertext)
-expectedTag := d.Finalize()
+// Seal appends the ciphertext and a 32-byte tag to the first argument.
+sealed := aead.Seal(nil, nonce, plaintext, ad)
+
+// Open verifies the tag in constant time and returns the plaintext, or an
+// error if authentication fails.
+plaintext, err = aead.Open(nil, nonce, sealed, ad)
 ```
-
-Callers should compare `tag` and `expectedTag` in constant time.
 
 ## Development
 

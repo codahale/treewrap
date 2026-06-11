@@ -14,20 +14,28 @@ import (
 	"testing"
 )
 
-// encrypt is a convenience helper for tests: single-call encrypt via streaming API.
+// encrypt is a convenience helper for tests: it seals pt via the public AEAD
+// and splits the result into ciphertext and tag.
 func encrypt(key, nonce, ad, pt []byte) ([]byte, [TagSize]byte) {
-	ct := make([]byte, len(pt))
-	e := NewEncryptor(key, nonce, ad)
-	e.XORKeyStream(ct, pt)
-	return ct, e.Finalize()
+	a, err := New(key)
+	if err != nil {
+		panic(err)
+	}
+	sealed := a.Seal(nil, nonce, pt, ad)
+	var tag [TagSize]byte
+	copy(tag[:], sealed[len(pt):])
+	return sealed[:len(pt)], tag
 }
 
-// decrypt is a convenience helper for tests: single-call decrypt via streaming API.
-func decrypt(key, nonce, ad, ct []byte) ([]byte, [TagSize]byte) {
-	pt := make([]byte, len(ct))
-	d := NewDecryptor(key, nonce, ad)
-	d.XORKeyStream(pt, ct)
-	return pt, d.Finalize()
+// decrypt is a convenience helper for tests: it opens ct||tag via the public
+// AEAD, returning the recovered plaintext or the authentication error.
+func decrypt(key, nonce, ad, ct []byte, tag [TagSize]byte) ([]byte, error) {
+	a, err := New(key)
+	if err != nil {
+		panic(err)
+	}
+	sealed := append(append(make([]byte, 0, len(ct)+TagSize), ct...), tag[:]...)
+	return a.Open(nil, nonce, sealed, ad)
 }
 
 type vectorFile struct {
@@ -74,12 +82,14 @@ func TestVectors(t *testing.T) {
 				t.Fatalf("ciphertext mismatch at byte %d", firstMismatch(ct, expectedCT))
 			}
 
-			pt2, tag2 := decrypt(key, nonce, ad, ct)
+			var etag [TagSize]byte
+			copy(etag[:], expectedTag)
+			pt2, err := decrypt(key, nonce, ad, ct, etag)
+			if err != nil {
+				t.Fatalf("Open rejected the reference ciphertext: %v", err)
+			}
 			if !bytes.Equal(pt2, pt) {
 				t.Fatal("round-trip plaintext mismatch")
-			}
-			if subtle.ConstantTimeCompare(expectedTag, tag2[:]) != 1 {
-				t.Fatal("decrypt tag mismatch")
 			}
 		})
 	}
@@ -159,70 +169,12 @@ func TestRoundTrip(t *testing.T) {
 				t.Fatalf("ciphertext length: got %d, want %d", len(ct), len(pt))
 			}
 
-			pt2, tag2 := decrypt(key, nonce, ad, ct)
+			pt2, err := decrypt(key, nonce, ad, ct, tag)
+			if err != nil {
+				t.Fatalf("Open failed at size %d: %v", sz.size, err)
+			}
 			if !bytes.Equal(pt2, pt) {
 				t.Fatalf("plaintext mismatch at size %d", sz.size)
-			}
-			if subtle.ConstantTimeCompare(tag[:], tag2[:]) != 1 {
-				t.Fatalf("tag mismatch at size %d", sz.size)
-			}
-		})
-	}
-}
-
-func TestInPlace(t *testing.T) {
-	key := seq(KeySize)
-	nonce := seq(NonceSize)
-
-	for _, size := range []int{0, 1, 168, ChunkSize, ChunkSize + 1, ChunkSize * 2} {
-		pt := seq(size)
-		buf := make([]byte, size)
-		copy(buf, pt)
-
-		e := NewEncryptor(key, nonce, nil)
-		e.XORKeyStream(buf, buf) // in-place
-		tag := e.Finalize()
-
-		d := NewDecryptor(key, nonce, nil)
-		d.XORKeyStream(buf, buf) // in-place
-		tag2 := d.Finalize()
-
-		if !bytes.Equal(buf, pt) {
-			t.Fatalf("in-place round-trip failed at size %d", size)
-		}
-		if subtle.ConstantTimeCompare(tag[:], tag2[:]) != 1 {
-			t.Fatalf("in-place tag mismatch at size %d", size)
-		}
-	}
-}
-
-func TestIncrementalWrite(t *testing.T) {
-	key := seq(KeySize)
-	nonce := seq(NonceSize)
-	ad := []byte("test ad")
-	pt := seq(ChunkSize*2 + 500)
-
-	// Single-call reference.
-	refCT, refTag := encrypt(key, nonce, ad, pt)
-
-	// Multi-call with various write sizes.
-	for _, writeSize := range []int{1, 7, 100, 168, 169, ChunkSize - 1, ChunkSize, ChunkSize + 1} {
-		t.Run(fmt.Sprintf("%d", writeSize), func(t *testing.T) {
-			ct := make([]byte, len(pt))
-			e := NewEncryptor(key, nonce, ad)
-			off := 0
-			for off < len(pt) {
-				n := min(writeSize, len(pt)-off)
-				e.XORKeyStream(ct[off:off+n], pt[off:off+n])
-				off += n
-			}
-			tag := e.Finalize()
-
-			if !bytes.Equal(ct, refCT) {
-				t.Fatalf("incremental ct mismatch (writeSize=%d)", writeSize)
-			}
-			if tag != refTag {
-				t.Fatalf("incremental tag mismatch (writeSize=%d)", writeSize)
 			}
 		})
 	}
@@ -236,9 +188,11 @@ func TestWrongAD(t *testing.T) {
 
 	ct, tag := encrypt(key, nonce, ad, pt)
 
-	_, tag2 := decrypt(key, nonce, []byte("wrong"), ct)
-	if subtle.ConstantTimeCompare(tag[:], tag2[:]) == 1 {
-		t.Fatal("wrong AD should produce different tag")
+	if _, err := decrypt(key, nonce, ad, ct, tag); err != nil {
+		t.Fatalf("Open rejected the correct AD: %v", err)
+	}
+	if _, err := decrypt(key, nonce, []byte("wrong"), ct, tag); err == nil {
+		t.Fatal("Open accepted the wrong AD")
 	}
 }
 
@@ -248,13 +202,16 @@ func TestTamperedCiphertext(t *testing.T) {
 	pt := seq(1000)
 
 	ct, tag := encrypt(key, nonce, nil, pt)
+
+	if _, err := decrypt(key, nonce, nil, ct, tag); err != nil {
+		t.Fatalf("Open rejected the untampered ciphertext: %v", err)
+	}
+
 	tampered := make([]byte, len(ct))
 	copy(tampered, ct)
 	tampered[0] ^= 1
-
-	_, tag2 := decrypt(key, nonce, nil, tampered)
-	if subtle.ConstantTimeCompare(tag[:], tag2[:]) == 1 {
-		t.Fatal("tampered ciphertext should produce different tag")
+	if _, err := decrypt(key, nonce, nil, tampered, tag); err == nil {
+		t.Fatal("Open accepted a tampered ciphertext")
 	}
 }
 
@@ -298,38 +255,21 @@ func TestNonceSensitivity(t *testing.T) {
 	}
 }
 
-func BenchmarkEncrypt(b *testing.B) {
-	key := seq(KeySize)
-	nonce := seq(NonceSize)
-
-	for _, size := range Sizes {
-		pt := make([]byte, size.N)
-		ct := make([]byte, size.N)
-		b.Run(size.Name, func(b *testing.B) {
-			b.SetBytes(int64(size.N))
-			b.ReportAllocs()
-			for b.Loop() {
-				e := NewEncryptor(key, nonce, nil)
-				e.XORKeyStream(ct, pt)
-				e.Finalize()
-			}
-		})
-	}
-}
-
-func BenchmarkEncryptor(b *testing.B) {
+func BenchmarkSeal(b *testing.B) {
 	key := seq(KeySize)
 	nonce := make([]byte, NonceSize)
+	a, err := New(key)
+	if err != nil {
+		b.Fatal(err)
+	}
 	for _, size := range Sizes {
 		pt := make([]byte, size.N)
-		output := make([]byte, size.N)
+		ct := make([]byte, 0, size.N+TagSize)
 		b.Run(size.Name, func(b *testing.B) {
 			b.SetBytes(int64(size.N))
 			b.ReportAllocs()
 			for b.Loop() {
-				e := NewEncryptor(key, nonce, nil)
-				e.XORKeyStream(output, pt)
-				e.Finalize()
+				ct = a.Seal(ct[:0], nonce, pt, nil)
 			}
 		})
 	}
@@ -353,20 +293,30 @@ func BenchmarkAESGCM(b *testing.B) {
 	}
 }
 
-func BenchmarkDecryptor(b *testing.B) {
+func BenchmarkOpen(b *testing.B) {
 	key := seq(KeySize)
 	nonce := make([]byte, NonceSize)
+	a, err := New(key)
+	if err != nil {
+		b.Fatal(err)
+	}
 	for _, size := range Sizes {
 		pt := make([]byte, size.N)
-		ct, _ := encrypt(key, nonce, nil, pt)
-		output := make([]byte, size.N)
+		// Allocate out before sealed: sealed's odd size (size.N + TagSize)
+		// would otherwise shift out off 2 MiB alignment and cost it
+		// transparent-hugepage backing on Linux, slowing the measured
+		// streaming stores by up to a third at 16 MiB.
+		out := make([]byte, 0, size.N)
+		sealed := a.Seal(nil, nonce, pt, nil)
 		b.Run(size.Name, func(b *testing.B) {
 			b.SetBytes(int64(size.N))
 			b.ReportAllocs()
 			for b.Loop() {
-				d := NewDecryptor(key, nonce, nil)
-				d.XORKeyStream(output, ct)
-				d.Finalize()
+				var err error
+				out, err = a.Open(out[:0], nonce, sealed, nil)
+				if err != nil {
+					b.Fatal(err)
+				}
 			}
 		})
 	}

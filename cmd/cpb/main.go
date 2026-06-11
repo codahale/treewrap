@@ -42,6 +42,11 @@ func main() {
 
 	key := make([]byte, tw128.KeySize)
 	nonce := make([]byte, tw128.NonceSize)
+	aead, err := tw128.New(key)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "tw128:", err)
+		os.Exit(1)
+	}
 
 	var results []result
 
@@ -50,31 +55,29 @@ func main() {
 
 	for _, size := range sizes {
 		src := make([]byte, size.N)
-		dst := make([]byte, size.N)
 
-		// TW128 encrypt.
+		// TW128 seal.
+		encDst := make([]byte, 0, size.N+tw128.TagSize)
 		encFn := func() {
-			e := tw128.NewEncryptor(key, nonce, nil)
-			e.XORKeyStream(dst, src)
-			e.Finalize()
+			encDst = aead.Seal(encDst[:0], nonce, src, nil)
 		}
 		iters := calibrate(encFn, *target)
 		cpb, gbps := measure(encFn, iters, *nSamples, scale, size.N)
 		results = append(results, result{
-			Alg: "tw128", Op: "encrypt", Size: size.Name, Bytes: size.N,
+			Alg: "tw128", Op: "seal", Size: size.Name, Bytes: size.N,
 			CPB: cpb, GBps: gbps,
 		})
 
-		// TW128 decrypt.
+		// TW128 open (decrypt + verify of a pre-sealed ciphertext).
+		ct128 := aead.Seal(nil, nonce, src, nil)
+		decDst := make([]byte, 0, size.N)
 		decFn := func() {
-			d := tw128.NewDecryptor(key, nonce, nil)
-			d.XORKeyStream(dst, src)
-			d.Finalize()
+			decDst, _ = aead.Open(decDst[:0], nonce, ct128, nil)
 		}
 		iters = calibrate(decFn, *target)
 		cpb, gbps = measure(decFn, iters, *nSamples, scale, size.N)
 		results = append(results, result{
-			Alg: "tw128", Op: "decrypt", Size: size.Name, Bytes: size.N,
+			Alg: "tw128", Op: "open", Size: size.Name, Bytes: size.N,
 			CPB: cpb, GBps: gbps,
 		})
 

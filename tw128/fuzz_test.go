@@ -6,8 +6,8 @@ import (
 )
 
 // fuzzMaxLen bounds fuzzed message lengths so a single execution stays cheap
-// while still spanning enough chunks to exercise the x8, pad-to-8, and x1
-// remainder paths in processComplete (9 leaf chunks plus a ragged tail).
+// while still spanning enough chunks to exercise the x8, remainder-kernel, and
+// x1 paths in processComplete (9 leaf chunks plus a ragged tail).
 const fuzzMaxLen = 9*ChunkSize + 4096
 
 // fixedSize returns a deterministic n-byte slice derived from seed (repeating
@@ -23,10 +23,10 @@ func fixedSize(seed []byte, n int) []byte {
 	return out
 }
 
-// FuzzRoundTrip checks that decryption recovers the plaintext and that the
-// encrypt and decrypt tags agree for arbitrary key, nonce, associated data, and
-// message lengths. Varying the length is the point: it walks chunk boundaries,
-// ragged tail blocks, and leaf counts that the fixed-size tests only sample.
+// FuzzRoundTrip checks that decryption authenticates and recovers the
+// plaintext for arbitrary key, nonce, associated data, and message lengths.
+// Varying the length is the point: it walks chunk boundaries, ragged tail
+// blocks, and leaf counts that the fixed-size tests only sample.
 func FuzzRoundTrip(f *testing.F) {
 	f.Add([]byte("key"), []byte("nonce"), []byte("ad"), []byte("plaintext"))
 	f.Add([]byte{}, []byte{}, []byte{}, []byte{})
@@ -45,52 +45,12 @@ func FuzzRoundTrip(f *testing.F) {
 			t.Fatalf("ciphertext length: got %d, want %d", len(ct), len(pt))
 		}
 
-		pt2, tag2 := decrypt(key, nonce, ad, ct)
+		pt2, err := decrypt(key, nonce, ad, ct, tag)
+		if err != nil {
+			t.Fatalf("Open failed (len=%d): %v", len(pt), err)
+		}
 		if !bytes.Equal(pt2, pt) {
 			t.Fatalf("round-trip plaintext mismatch (len=%d)", len(pt))
-		}
-		if tag != tag2 {
-			t.Fatalf("round-trip tag mismatch (len=%d)", len(pt))
-		}
-	})
-}
-
-// FuzzIncremental checks that splitting a message into arbitrary XORKeyStream
-// writes produces byte-identical ciphertext and tag to a single-call encrypt.
-// The split points are fuzzed, so this exercises the streaming state machine:
-// partial-leaf continuation, the chunk-0 to leaf-mode transition, and the
-// processComplete remainder paths at boundaries the fixed tests do not reach.
-func FuzzIncremental(f *testing.F) {
-	f.Add(seq(KeySize), seq(NonceSize), []byte("ad"), seq(ChunkSize*2+500), []byte{1, 7, 168, 169})
-	f.Add(seq(KeySize), seq(NonceSize), []byte{}, seq(ChunkSize+1), []byte{255})
-	f.Add(seq(KeySize), seq(NonceSize), seq(13), seq(ChunkSize*5+3), []byte{200, 1, 50})
-	f.Fuzz(func(t *testing.T, keySeed, nonceSeed, ad, pt, splits []byte) {
-		if len(pt) > fuzzMaxLen {
-			pt = pt[:fuzzMaxLen]
-		}
-		key := fixedSize(keySeed, KeySize)
-		nonce := fixedSize(nonceSeed, NonceSize)
-
-		refCT, refTag := encrypt(key, nonce, ad, pt)
-
-		ct := make([]byte, len(pt))
-		e := NewEncryptor(key, nonce, ad)
-		for off, si := 0, 0; off < len(pt); {
-			n := len(pt) - off
-			if len(splits) > 0 {
-				n = min(int(splits[si%len(splits)])+1, len(pt)-off)
-				si++
-			}
-			e.XORKeyStream(ct[off:off+n], pt[off:off+n])
-			off += n
-		}
-		tag := e.Finalize()
-
-		if !bytes.Equal(ct, refCT) {
-			t.Fatalf("incremental ciphertext mismatch (len=%d)", len(pt))
-		}
-		if tag != refTag {
-			t.Fatalf("incremental tag mismatch (len=%d)", len(pt))
 		}
 	})
 }

@@ -59,15 +59,15 @@ func finishDecryptChunksN(s *state8, src, dst []byte, tags *[256]byte, n int) {
 }
 
 // encryptChunkRun encrypts n complete leaf chunks (n in 2..7) at indices
-// c.nLeaves+1 .. c.nLeaves+n in a single pass — register-resident masked
+// g.nLeaves+1 .. g.nLeaves+n in a single pass — register-resident masked
 // gather/scatter on AVX-512, dummy-lane x4 on AVX2 — reading the chunks
 // directly from src with no scratch buffer, absorbs their leaf tags into the
 // trunk aggregation transcript, and advances the leaf counter. src and dst
 // must each be exactly n*ChunkSize bytes. It reports whether a kernel ran; on
 // amd64 one always does.
-func encryptChunkRun(c *cryptor, src, dst []byte, n int) bool {
+func encryptChunkRun(g *aggregator, src, dst []byte, n int) bool {
 	var s state8
-	initChunks(&s, c.key[:], c.nonce[:], c.nLeaves+1)
+	initChunks(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags [256]byte
 	if cpuid.HasAVX512 {
 		encryptChunksBodyAVX512N(&s, &src[0], &dst[0], uint64(n))
@@ -75,15 +75,15 @@ func encryptChunkRun(c *cryptor, src, dst []byte, n int) bool {
 		encryptChunksBodyAVX2N(&s, &src[0], &dst[0], uint64(n))
 	}
 	finishEncryptChunksN(&s, src, dst, &tags, n)
-	c.trunk.absorbMore(tags[:n*leafTagSize], aggMore)
-	c.nLeaves += uint64(n)
+	g.trunk.absorbMore(tags[:n*leafTagSize], aggMore)
+	g.nLeaves += uint64(n)
 	return true
 }
 
 // decryptChunkRun is the decrypt counterpart of encryptChunkRun.
-func decryptChunkRun(c *cryptor, src, dst []byte, n int) bool {
+func decryptChunkRun(g *aggregator, src, dst []byte, n int) bool {
 	var s state8
-	initChunks(&s, c.key[:], c.nonce[:], c.nLeaves+1)
+	initChunks(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags [256]byte
 	if cpuid.HasAVX512 {
 		decryptChunksBodyAVX512N(&s, &src[0], &dst[0], uint64(n))
@@ -91,7 +91,7 @@ func decryptChunkRun(c *cryptor, src, dst []byte, n int) bool {
 		decryptChunksBodyAVX2N(&s, &src[0], &dst[0], uint64(n))
 	}
 	finishDecryptChunksN(&s, src, dst, &tags, n)
-	c.trunk.absorbMore(tags[:n*leafTagSize], aggMore)
-	c.nLeaves += uint64(n)
+	g.trunk.absorbMore(tags[:n*leafTagSize], aggMore)
+	g.nLeaves += uint64(n)
 	return true
 }

@@ -44,26 +44,6 @@ func TestAEADRoundTrip(t *testing.T) {
 	}
 }
 
-// TestAEADMatchesStreaming checks that Seal produces the same ciphertext and tag
-// as the streaming Encryptor API.
-func TestAEADMatchesStreaming(t *testing.T) {
-	key := seq(KeySize)
-	nonce := seq(NonceSize)
-	pt := seq(ChunkSize*2 + 123)
-	ad := []byte("associated data")
-
-	a, _ := New(key)
-	ct := a.Seal(nil, nonce, pt, ad)
-
-	refCT, refTag := encrypt(key, nonce, ad, pt)
-	if !bytes.Equal(ct[:len(pt)], refCT) {
-		t.Fatal("AEAD ciphertext does not match streaming ciphertext")
-	}
-	if !bytes.Equal(ct[len(pt):], refTag[:]) {
-		t.Fatal("AEAD tag does not match streaming tag")
-	}
-}
-
 func TestAEADTampered(t *testing.T) {
 	key := seq(KeySize)
 	nonce := seq(NonceSize)
@@ -114,7 +94,7 @@ func TestAEADInPlace(t *testing.T) {
 	nonce := seq(NonceSize)
 	a, _ := New(key)
 
-	for _, size := range []int{0, 1, 168, ChunkSize + 1} {
+	for _, size := range []int{0, 1, 168, ChunkSize, ChunkSize + 1, ChunkSize * 2} {
 		pt := seq(size)
 		buf := make([]byte, size, size+TagSize)
 		copy(buf, pt)

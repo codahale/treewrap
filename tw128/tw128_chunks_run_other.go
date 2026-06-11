@@ -6,6 +6,6 @@ package tw128
 // n-chunk remainder kernel, leaving processComplete to fall back to its pair
 // and x1 remainder handling.
 
-func encryptChunkRun(_ *cryptor, _, _ []byte, _ int) bool { return false }
+func encryptChunkRun(_ *aggregator, _, _ []byte, _ int) bool { return false }
 
-func decryptChunkRun(_ *cryptor, _, _ []byte, _ int) bool { return false }
+func decryptChunkRun(_ *aggregator, _, _ []byte, _ int) bool { return false }

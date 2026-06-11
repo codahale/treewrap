@@ -24,27 +24,27 @@ func initChunkPairState(s *state8, key, nonce []byte, baseIndex uint64) {
 	}
 }
 
-// encryptChunkPair encrypts the two complete leaf chunks at indices c.nLeaves+1
-// and c.nLeaves+2 in a single 2-wide NEON pass, absorbs their leaf tags into the
+// encryptChunkPair encrypts the two complete leaf chunks at indices g.nLeaves+1
+// and g.nLeaves+2 in a single 2-wide NEON pass, absorbs their leaf tags into the
 // trunk aggregation transcript, and advances the leaf counter. src and dst must
 // each be exactly 2*ChunkSize bytes. It reports whether a 2-wide kernel ran.
-func encryptChunkPair(c *cryptor, src, dst []byte) bool {
+func encryptChunkPair(g *aggregator, src, dst []byte) bool {
 	var s state8
-	initChunkPairState(&s, c.key[:], c.nonce[:], c.nLeaves+1)
+	initChunkPairState(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags [256]byte
 	encryptChunksPairARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], &tags[0])
-	c.trunk.absorbMore(tags[:2*leafTagSize], aggMore)
-	c.nLeaves += 2
+	g.trunk.absorbMore(tags[:2*leafTagSize], aggMore)
+	g.nLeaves += 2
 	return true
 }
 
 // decryptChunkPair is the decrypt counterpart of encryptChunkPair.
-func decryptChunkPair(c *cryptor, src, dst []byte) bool {
+func decryptChunkPair(g *aggregator, src, dst []byte) bool {
 	var s state8
-	initChunkPairState(&s, c.key[:], c.nonce[:], c.nLeaves+1)
+	initChunkPairState(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags [256]byte
 	decryptChunksPairARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], &tags[0])
-	c.trunk.absorbMore(tags[:2*leafTagSize], aggMore)
-	c.nLeaves += 2
+	g.trunk.absorbMore(tags[:2*leafTagSize], aggMore)
+	g.nLeaves += 2
 	return true
 }

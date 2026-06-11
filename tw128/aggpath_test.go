@@ -8,7 +8,7 @@ import (
 
 // TestAggPathAgainstReference cross-checks the multi-leaf (x8 SIMD cascade)
 // path against the Python reference for message sizes that exercise the full
-// x8, x8+x1, padded-x8, and multi-x8 cases.
+// x8, x8+x1, remainder-kernel, and multi-x8 cases.
 func TestAggPathAgainstReference(t *testing.T) {
 	key := seq(KeySize)
 	nonce := make([]byte, NonceSize)
@@ -30,8 +30,9 @@ func TestAggPathAgainstReference(t *testing.T) {
 		ctSHA  string
 		tagHex string
 	}{
-		// Sizes are k×ChunkSize (8183) ± ε, chosen to exercise padded-x8 (7
-		// leaves), full x8 (8 leaves), x8+x1, and multi-x8 (16/21 leaves).
+		// Sizes are k×ChunkSize (8183) ± ε, chosen to exercise the remainder
+		// kernels (7 leaves), full x8 (8 leaves), x8+x1, and multi-x8 (16/21
+		// leaves).
 		{65464, "d7c72a400e48b64e60d7fc7582b8bc71d74857f06e2622061e2c30a06f765b54", "624b7c9180e2be8029582540b9ab664de2a6f420ce74fd1c646bb954b2a9dcd2"},
 		{65465, "cff0c723e8040b6cc4d782995e19250e6db8a398eef4d5e2d3c141d390d1c50a", "6f76553462803d75ce54ccadc07035b798c364e5d188e380d6460829503148b8"},
 		{73647, "5d7d7ad1a33c52dc4b186aef4f5ffa41c639bad24032e994b693e07413651c86", "c251dec84c27cd01f00d1fff04b99ecfab233e20754bc96c477050df9b926892"},
@@ -51,14 +52,19 @@ func TestAggPathAgainstReference(t *testing.T) {
 			t.Errorf("n=%d tag mismatch:\n  got  %s\n  want %s", tc.n, got, tc.tagHex)
 		}
 
-		// Verify the x8 decrypt cascade inverts encryption and recomputes the
-		// reference tag.
-		pt2, tag2 := decrypt(key, nonce, ad, ct)
-		if string(pt2) != string(pt) {
-			t.Errorf("n=%d decrypt round-trip mismatch", tc.n)
+		// Verify the x8 decrypt cascade inverts encryption and authenticates
+		// against the reference tag.
+		refTag, err := hex.DecodeString(tc.tagHex)
+		if err != nil {
+			t.Fatalf("n=%d bad reference tag: %v", tc.n, err)
 		}
-		if got := hex.EncodeToString(tag2[:]); got != tc.tagHex {
-			t.Errorf("n=%d decrypt tag mismatch:\n  got  %s\n  want %s", tc.n, got, tc.tagHex)
+		var etag [TagSize]byte
+		copy(etag[:], refTag)
+		pt2, err := decrypt(key, nonce, ad, ct, etag)
+		if err != nil {
+			t.Errorf("n=%d Open rejected the reference ciphertext: %v", tc.n, err)
+		} else if string(pt2) != string(pt) {
+			t.Errorf("n=%d decrypt round-trip mismatch", tc.n)
 		}
 	}
 }

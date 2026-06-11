@@ -51,11 +51,11 @@ func TestChunkKernelsStayInBounds(t *testing.T) {
 		src := guardedTail(t, n)
 		dst := guardedTail(t, n)
 		copy(src, seq(n))
-		var c cryptor
-		copy(c.key[:], key)
-		copy(c.nonce[:], nonce)
-		encryptChunkPair(&c, src, dst)
-		decryptChunkPair(&c, src, dst)
+		var g aggregator
+		copy(g.key[:], key)
+		copy(g.nonce[:], nonce)
+		encryptChunkPair(&g, src, dst)
+		decryptChunkPair(&g, src, dst)
 	})
 
 	t.Run("run", func(t *testing.T) {
@@ -64,11 +64,11 @@ func TestChunkKernelsStayInBounds(t *testing.T) {
 			src := guardedTail(t, n)
 			dst := guardedTail(t, n)
 			copy(src, seq(n))
-			var c cryptor
-			copy(c.key[:], key)
-			copy(c.nonce[:], nonce)
-			encryptChunkRun(&c, src, dst, rem)
-			decryptChunkRun(&c, src, dst, rem)
+			var g aggregator
+			copy(g.key[:], key)
+			copy(g.nonce[:], nonce)
+			encryptChunkRun(&g, src, dst, rem)
+			decryptChunkRun(&g, src, dst, rem)
 		}
 	})
 }

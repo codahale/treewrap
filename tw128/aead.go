@@ -56,9 +56,7 @@ func (a *aead) Seal(dst, nonce, plaintext, additionalData []byte) []byte {
 		panic("tw128: invalid buffer overlap")
 	}
 
-	e := NewEncryptor(a.key[:], nonce, additionalData)
-	e.XORKeyStream(out[:len(plaintext)], plaintext)
-	tag := e.Finalize()
+	tag := crypt(a.key[:], nonce, additionalData, out[:len(plaintext)], plaintext, false)
 	copy(out[len(plaintext):], tag[:])
 
 	return ret
@@ -88,9 +86,7 @@ func (a *aead) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, erro
 		panic("tw128: invalid buffer overlap")
 	}
 
-	d := NewDecryptor(a.key[:], nonce, additionalData)
-	d.XORKeyStream(out, body)
-	expected := d.Finalize()
+	expected := crypt(a.key[:], nonce, additionalData, out, body, true)
 
 	if subtle.ConstantTimeCompare(expected[:], tag) != 1 {
 		// Authentication failed: clear the candidate plaintext so a caller that
@@ -120,7 +116,7 @@ func sliceForAppend(in []byte, n int) (head, tail []byte) {
 
 // inexactOverlap reports whether x and y share memory at any non-corresponding
 // index. Buffers that overlap exactly (sharing the same base) are allowed, since
-// the underlying XORKeyStream supports fully-overlapping in-place operation.
+// the underlying pipeline supports fully-overlapping in-place operation.
 func inexactOverlap(x, y []byte) bool {
 	if len(x) == 0 || len(y) == 0 || &x[0] == &y[0] {
 		return false

@@ -6,7 +6,9 @@
 // to protect real data.
 //
 // This package exists to support the accompanying paper, experiments, test
-// vectors, and benchmarks.
+// vectors, and benchmarks. Its API is the cipher.AEAD returned by New: Seal
+// appends a TagSize-byte authentication tag and Open verifies it in constant
+// time.
 //
 // The trunk (root) duplex handles associated-data absorption, encryption of
 // chunk 0, absorption of the later hidden leaf tags, and final authentication
@@ -85,159 +87,109 @@ func leafInit(key, nonce []byte, chunkID uint64) [leafInitLen]byte {
 	return p
 }
 
-type cryptor struct {
-	key       [KeySize]byte
-	nonce     [NonceSize]byte
-	trunk     duplex // trunk (root) duplex state
-	leaf      duplex // current leaf duplex state (chunks 1+)
-	nLeaves   uint64 // number of completed leaves
-	chunkOff  int    // bytes processed in current chunk
-	leafMode  bool   // true after chunk 0 body complete
-	finalized bool
-	decrypt   bool
+// aggregator carries the state shared between the one-shot pipeline and the
+// leaf-cascade kernels: the trunk duplex absorbing the leaf tags, the key and
+// nonce for leaf inits, and the count of completed leaves. The trunk is held
+// by value so the zero aggregator is valid and no field escapes to the heap.
+type aggregator struct {
+	key     [KeySize]byte
+	nonce   [NonceSize]byte
+	trunk   duplex // trunk (root) duplex state
+	nLeaves uint64 // number of completed leaves
+	decrypt bool
 }
 
-func (c *cryptor) initCryptor(key, nonce, ad []byte, decrypt bool) {
+// crypt runs the one-shot TW128 pipeline over src into dst and returns the
+// root tag. dst and src must be the same length and must overlap entirely or
+// not at all. decrypt selects the SpongeWrap direction (the ciphertext is
+// absorbed either way).
+func crypt(key, nonce, ad, dst, src []byte, decrypt bool) [TagSize]byte {
 	checkSize("key", key, KeySize)
 	checkSize("nonce", nonce, NonceSize)
-	copy(c.key[:], key)
-	copy(c.nonce[:], nonce)
-	c.decrypt = decrypt
+
+	var g aggregator
+	copy(g.key[:], key)
+	copy(g.nonce[:], nonce)
+	g.decrypt = decrypt
 
 	// Root init (INIT_LAST). When associated data is present, run the
 	// associated-data phase; its closing AD_LAST block leaves the first
 	// chunk-0 keystream block in the rate. When the associated data is empty,
 	// the phase is elided: initWith already left the chunk-0 keystream block
 	// in the rate, mirroring leaf init.
-	p := rootInit(c.key[:], c.nonce[:])
-	c.trunk.initWith(p[:])
+	p := rootInit(g.key[:], g.nonce[:])
+	g.trunk.initWith(p[:])
 	if len(ad) > 0 {
-		c.trunk.absorbMore(ad, adMore)
-		c.trunk.closeBlock(adLast)
+		g.trunk.absorbMore(ad, adMore)
+		g.trunk.closeBlock(adLast)
 	}
-}
 
-// finalizeLeaf closes the current leaf's MSG_LAST block, then absorbs its tag
-// into the trunk's aggregation transcript.
-func (c *cryptor) finalizeLeaf() {
-	c.leaf.closeBlock(msgLast)
-	tag := c.leaf.tagBytes()
-	c.trunk.absorbMore(tag[:], aggMore)
-	c.nLeaves++
-	c.chunkOff = 0
-}
-
-// transitionToLeafMode closes the trunk's chunk-0 message phase and enters leaf
-// mode, leaving the trunk ready to absorb the leaf-tag aggregation transcript.
-func (c *cryptor) transitionToLeafMode() {
-	c.trunk.closeBlock(msgLast)
-	c.leafMode = true
-	c.chunkOff = 0
-}
-
-func (c *cryptor) finalizeInternal() [TagSize]byte {
-	if c.finalized {
-		panic("tw128: Finalize called more than once")
-	}
-	c.finalized = true
-
-	// If still on chunk 0 (a single chunk, no leaves), close the trunk message
-	// phase and elide the aggregation phase: the closing MSG_LAST call emits
-	// the root tag directly, mirroring a leaf. This covers the empty-message
-	// case.
-	if !c.leafMode {
-		c.trunk.closeBlock(msgLast)
+	// Chunk 0: the trunk message phase, closed with MSG_LAST. For a message
+	// that fits in chunk 0 (including the empty message) the aggregation
+	// phase is elided: the closing MSG_LAST block emits the root tag
+	// directly, mirroring a leaf.
+	n0 := min(len(src), ChunkSize)
+	g.trunk.bodyMore(dst[:n0], src[:n0], decrypt, msgMore)
+	g.trunk.closeBlock(msgLast)
+	if len(src) <= ChunkSize {
 		var tag [TagSize]byte
-		c.trunk.extractTag(&tag)
+		g.trunk.extractTag(&tag)
 		return tag
 	}
+	src, dst = src[ChunkSize:], dst[ChunkSize:]
 
-	// Finalize the last leaf if a partial chunk is in progress.
-	if c.leafMode && c.chunkOff > 0 {
-		c.finalizeLeaf()
+	// Complete leaf chunks at chunk IDs 1.., via the SIMD cascade.
+	//
+	// FUSION POINT: a future fused trunk+leaf kernel that interleaves the
+	// chunk-0 blocks above with the first leaf batch replaces the chunk-0
+	// phase plus the first batch consumed here; processComplete already
+	// supports entering with g.nLeaves pre-advanced.
+	if n := len(src) / ChunkSize; n > 0 {
+		g.processComplete(dst[:n*ChunkSize], src[:n*ChunkSize], n)
+		src, dst = src[n*ChunkSize:], dst[n*ChunkSize:]
 	}
 
-	// Aggregation phase: leaf tags were absorbed incrementally; append the
+	// Ragged tail: a final partial leaf of 1..ChunkSize-1 bytes.
+	if len(src) > 0 {
+		var leaf duplex
+		if decrypt {
+			decryptX1(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &leaf)
+		} else {
+			encryptX1(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &leaf)
+		}
+		t := leaf.tagBytes()
+		g.trunk.absorbMore(t[:], aggMore)
+		g.nLeaves++
+	}
+
+	// Aggregation phase: leaf tags were absorbed in leaf order; append the
 	// little-endian leaf count and close with AGG_LAST. The closing block's
 	// keystream prefix is the root tag.
 	var cnt [8]byte
-	binary.LittleEndian.PutUint64(cnt[:], c.nLeaves)
-	c.trunk.absorbMore(cnt[:], aggMore)
-	c.trunk.closeBlock(aggLast)
+	binary.LittleEndian.PutUint64(cnt[:], g.nLeaves)
+	g.trunk.absorbMore(cnt[:], aggMore)
+	g.trunk.closeBlock(aggLast)
 
 	var tag [TagSize]byte
-	c.trunk.extractTag(&tag)
+	g.trunk.extractTag(&tag)
 	return tag
 }
 
-func (c *cryptor) xorKeyStream(dst, src []byte) {
-	if len(src) == 0 {
-		return
-	}
-
-	if !c.leafMode {
-		// Still on chunk 0 (the root message phase).
-		n := min(len(src), ChunkSize-c.chunkOff)
-		c.trunk.bodyMore(dst[:n], src[:n], c.decrypt, msgMore)
-		c.chunkOff += n
-		dst = dst[n:]
-		src = src[n:]
-
-		if c.chunkOff == ChunkSize && len(src) > 0 {
-			c.transitionToLeafMode()
-		}
-
-		if len(src) == 0 {
-			return
-		}
-	}
-
-	// Leaf mode: processing chunks 1..n-1.
-
-	// Continue an in-progress partial leaf chunk.
-	if c.chunkOff > 0 {
-		n := min(len(src), ChunkSize-c.chunkOff)
-		c.leaf.bodyMore(dst[:n], src[:n], c.decrypt, msgMore)
-		c.chunkOff += n
-		dst = dst[n:]
-		src = src[n:]
-
-		if c.chunkOff == ChunkSize {
-			c.finalizeLeaf()
-		}
-	}
-
-	// Process complete leaf chunks via SIMD cascade.
-	if nComplete := len(src) / ChunkSize; nComplete > 0 {
-		c.processComplete(dst[:nComplete*ChunkSize], src[:nComplete*ChunkSize], nComplete)
-		dst = dst[nComplete*ChunkSize:]
-		src = src[nComplete*ChunkSize:]
-	}
-
-	// Start a new partial leaf chunk with remaining bytes.
-	if len(src) > 0 {
-		p := leafInit(c.key[:], c.nonce[:], c.nLeaves+1)
-		c.leaf.initWith(p[:])
-		c.chunkOff = 0
-		c.leaf.bodyMore(dst[:len(src)], src, c.decrypt, msgMore)
-		c.chunkOff += len(src)
-	}
-}
-
-// processComplete processes nFlush complete leaf chunks via x8 SIMD with padding for remainders.
-func (c *cryptor) processComplete(dst, src []byte, nFlush int) {
+// processComplete processes nFlush complete leaf chunks via the SIMD cascade,
+// absorbing their tags into the trunk in leaf order.
+func (g *aggregator) processComplete(dst, src []byte, nFlush int) {
 	idx := 0
 
 	var tags [256]byte
 	for idx+8 <= nFlush {
 		off := idx * ChunkSize
-		if c.decrypt {
-			decryptChunks(c.key[:], c.nonce[:], c.nLeaves+1, src[off:off+8*ChunkSize], dst[off:off+8*ChunkSize], &tags)
+		if g.decrypt {
+			decryptChunks(g.key[:], g.nonce[:], g.nLeaves+1, src[off:off+8*ChunkSize], dst[off:off+8*ChunkSize], &tags)
 		} else {
-			encryptChunks(c.key[:], c.nonce[:], c.nLeaves+1, src[off:off+8*ChunkSize], dst[off:off+8*ChunkSize], &tags)
+			encryptChunks(g.key[:], g.nonce[:], g.nLeaves+1, src[off:off+8*ChunkSize], dst[off:off+8*ChunkSize], &tags)
 		}
-		c.trunk.absorbMore(tags[:], aggMore)
-		c.nLeaves += 8
+		g.trunk.absorbMore(tags[:], aggMore)
+		g.nLeaves += 8
 		idx += 8
 	}
 
@@ -249,10 +201,10 @@ func (c *cryptor) processComplete(dst, src []byte, nFlush int) {
 	for idx+2 <= nFlush {
 		off := idx * ChunkSize
 		var ok bool
-		if c.decrypt {
-			ok = decryptChunkPair(c, src[off:off+2*ChunkSize], dst[off:off+2*ChunkSize])
+		if g.decrypt {
+			ok = decryptChunkPair(g, src[off:off+2*ChunkSize], dst[off:off+2*ChunkSize])
 		} else {
-			ok = encryptChunkPair(c, src[off:off+2*ChunkSize], dst[off:off+2*ChunkSize])
+			ok = encryptChunkPair(g, src[off:off+2*ChunkSize], dst[off:off+2*ChunkSize])
 		}
 		if !ok {
 			break
@@ -278,10 +230,10 @@ func (c *cryptor) processComplete(dst, src []byte, nFlush int) {
 	if rem := nFlush - idx; rem >= 2 {
 		off := idx * ChunkSize
 		var ok bool
-		if c.decrypt {
-			ok = decryptChunkRun(c, src[off:off+rem*ChunkSize], dst[off:off+rem*ChunkSize], rem)
+		if g.decrypt {
+			ok = decryptChunkRun(g, src[off:off+rem*ChunkSize], dst[off:off+rem*ChunkSize], rem)
 		} else {
-			ok = encryptChunkRun(c, src[off:off+rem*ChunkSize], dst[off:off+rem*ChunkSize], rem)
+			ok = encryptChunkRun(g, src[off:off+rem*ChunkSize], dst[off:off+rem*ChunkSize], rem)
 		}
 		if ok {
 			idx += rem
@@ -291,56 +243,19 @@ func (c *cryptor) processComplete(dst, src []byte, nFlush int) {
 	// Remainder via x1: a single leftover chunk, or any remainder on platforms
 	// without SIMD chunk kernels — where padding to 8 wide would buy nothing,
 	// since the generic 8-way permute is eight serial permutes.
+	var leaf duplex
 	for idx < nFlush {
 		off := idx * ChunkSize
-		if c.decrypt {
-			decryptX1(c.key[:], c.nonce[:], c.nLeaves+1, src[off:off+ChunkSize], dst[off:off+ChunkSize], &c.leaf)
+		if g.decrypt {
+			decryptX1(g.key[:], g.nonce[:], g.nLeaves+1, src[off:off+ChunkSize], dst[off:off+ChunkSize], &leaf)
 		} else {
-			encryptX1(c.key[:], c.nonce[:], c.nLeaves+1, src[off:off+ChunkSize], dst[off:off+ChunkSize], &c.leaf)
+			encryptX1(g.key[:], g.nonce[:], g.nLeaves+1, src[off:off+ChunkSize], dst[off:off+ChunkSize], &leaf)
 		}
-		tag := c.leaf.tagBytes()
-		c.trunk.absorbMore(tag[:], aggMore)
-		c.nLeaves++
+		tag := leaf.tagBytes()
+		g.trunk.absorbMore(tag[:], aggMore)
+		g.nLeaves++
 		idx++
 	}
-}
-
-// Encryptor incrementally encrypts data and computes the authentication tag.
-type Encryptor struct {
-	cryptor
-}
-
-// NewEncryptor returns a new Encryptor initialized with the given key, nonce, and associated data.
-func NewEncryptor(key, nonce, ad []byte) (e Encryptor) {
-	e.initCryptor(key, nonce, ad, false)
-	return e
-}
-
-// XORKeyStream encrypts src into dst. Dst and src must overlap entirely or not at all. Len(dst) must be >= len(src).
-func (e *Encryptor) XORKeyStream(dst, src []byte) { e.xorKeyStream(dst, src) }
-
-// Finalize returns the authentication tag.
-func (e *Encryptor) Finalize() [TagSize]byte {
-	return e.finalizeInternal()
-}
-
-// Decryptor incrementally decrypts data and computes the authentication tag.
-type Decryptor struct {
-	cryptor
-}
-
-// NewDecryptor returns a new Decryptor initialized with the given key, nonce, and associated data.
-func NewDecryptor(key, nonce, ad []byte) (d Decryptor) {
-	d.initCryptor(key, nonce, ad, true)
-	return d
-}
-
-// XORKeyStream decrypts src into dst. Dst and src must overlap entirely or not at all. Len(dst) must be >= len(src).
-func (d *Decryptor) XORKeyStream(dst, src []byte) { d.xorKeyStream(dst, src) }
-
-// Finalize returns the expected authentication tag.
-func (d *Decryptor) Finalize() [TagSize]byte {
-	return d.finalizeInternal()
 }
 
 func decryptX1(key, nonce []byte, index uint64, ct, pt []byte, d *duplex) {
