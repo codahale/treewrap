@@ -68,9 +68,13 @@ func main() {
 			CPB: cpb, GBps: gbps,
 		})
 
-		// TW128 open (decrypt + verify of a pre-sealed ciphertext).
-		ct128 := aead.Seal(nil, nonce, src, nil)
+		// TW128 open (decrypt + verify of a pre-sealed ciphertext). Allocate
+		// decDst before ct128: the sealed buffer's odd size (size.N +
+		// TagSize) would otherwise shift decDst off 2 MiB alignment and cost
+		// it transparent-hugepage backing on Linux, slowing the measured
+		// streaming stores by up to a third at 16 MiB.
 		decDst := make([]byte, 0, size.N)
+		ct128 := aead.Seal(nil, nonce, src, nil)
 		decFn := func() {
 			decDst, _ = aead.Open(decDst[:0], nonce, ct128, nil)
 		}
