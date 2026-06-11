@@ -15,6 +15,7 @@ import (
 	"os"
 	"runtime"
 	"slices"
+	"text/tabwriter"
 	"time"
 
 	"github.com/codahale/treewrap/tw128"
@@ -213,34 +214,26 @@ func printGrid(results []result, value func(result) float64) {
 		vals[r.Alg+" "+r.Op+"/"+r.Size] = value(r)
 	}
 
-	// Find the widest row label.
-	labelW := 0
-	for _, row := range rows {
-		if len(row) > labelW {
-			labelW = len(row)
-		}
-	}
-	labelW += 2
-
-	colW := 10
-	fmt.Printf("%-*s", labelW, "")
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignRight)
+	fmt.Fprint(w, "\t")
 	for _, s := range sizes {
-		fmt.Printf("%*s", colW, s)
+		fmt.Fprintf(w, "%s\t", s)
 	}
-	fmt.Println()
+	fmt.Fprintln(w)
 
 	for _, row := range rows {
-		fmt.Printf("%-*s", labelW, row)
+		fmt.Fprintf(w, "%s\t", row)
 		for _, s := range sizes {
 			v := vals[row+"/"+s]
 			if v >= 100 {
-				fmt.Printf("%*.0f", colW, v)
+				fmt.Fprintf(w, "%.0f\t", v)
 			} else {
-				fmt.Printf("%*.2f", colW, v)
+				fmt.Fprintf(w, "%.2f\t", v)
 			}
 		}
-		fmt.Println()
+		fmt.Fprintln(w)
 	}
+	w.Flush()
 }
 
 func outputCSV(results []result) {
