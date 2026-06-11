@@ -190,41 +190,23 @@ func outputTable(results []result, freqGHz float64) {
 
 // printGrid renders one metric as an algorithm-by-length grid. The value
 // selector picks which field of each result to show, so the same layout serves
-// both the cycles-per-byte and throughput tables.
+// both the cycles-per-byte and throughput tables. Results are ordered
+// size-major with the same alg/op rows repeated per size, so cells are indexed
+// positionally.
 func printGrid(results []result, value func(result) float64) {
-	// Collect ordered unique sizes and row keys.
-	var sizes []string
-	sizeSeen := make(map[string]bool)
-	var rows []string
-	rowSeen := make(map[string]bool)
-	for _, r := range results {
-		if !sizeSeen[r.Size] {
-			sizes = append(sizes, r.Size)
-			sizeSeen[r.Size] = true
-		}
-		key := r.Alg + " " + r.Op
-		if !rowSeen[key] {
-			rows = append(rows, key)
-			rowSeen[key] = true
-		}
-	}
-
-	vals := make(map[string]float64)
-	for _, r := range results {
-		vals[r.Alg+" "+r.Op+"/"+r.Size] = value(r)
-	}
+	nRows := len(results) / len(sizes)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignRight)
 	_, _ = fmt.Fprint(w, "\t")
 	for _, s := range sizes {
-		_, _ = fmt.Fprintf(w, "%s\t", s)
+		_, _ = fmt.Fprintf(w, "%s\t", s.Name)
 	}
 	_, _ = fmt.Fprintln(w)
 
-	for _, row := range rows {
-		_, _ = fmt.Fprintf(w, "%s\t", row)
-		for _, s := range sizes {
-			v := vals[row+"/"+s]
+	for i := range nRows {
+		_, _ = fmt.Fprintf(w, "%s %s\t", results[i].Alg, results[i].Op)
+		for j := range sizes {
+			v := value(results[j*nRows+i])
 			if v >= 100 {
 				_, _ = fmt.Fprintf(w, "%.0f\t", v)
 			} else {
