@@ -124,26 +124,47 @@ func crypt(key, nonce, ad, dst, src []byte, decrypt bool) [TagSize]byte {
 		g.trunk.closeBlock(adLast)
 	}
 
-	// Chunk 0: the trunk message phase, closed with MSG_LAST. For a message
-	// that fits in chunk 0 (including the empty message) the aggregation
+	// A message that fits in chunk 0 (including the empty message) is the
+	// trunk message phase alone, closed with MSG_LAST, and the aggregation
 	// phase is elided: the closing MSG_LAST block emits the root tag
 	// directly, mirroring a leaf.
-	n0 := min(len(src), ChunkSize)
-	g.trunk.bodyMore(dst[:n0], src[:n0], decrypt, msgMore)
-	g.trunk.closeBlock(msgLast)
 	if len(src) <= ChunkSize {
+		g.trunk.bodyMore(dst, src, decrypt, msgMore)
+		g.trunk.closeBlock(msgLast)
 		var tag [TagSize]byte
 		g.trunk.extractTag(&tag)
 		return tag
 	}
-	src, dst = src[ChunkSize:], dst[ChunkSize:]
 
-	// Complete leaf chunks at chunk IDs 1.., via the SIMD cascade.
-	//
-	// FUSION POINT: a future fused trunk+leaf kernel that interleaves the
-	// chunk-0 blocks above with the first leaf batch replaces the chunk-0
-	// phase plus the first batch consumed here; processComplete already
-	// supports entering with g.nLeaves pre-advanced.
+	// Lane-0 fusion: chunk 0 has the same kernel-visible block schedule as a
+	// leaf chunk and is contiguous with leaves 1..k-1 in the message, so on
+	// platforms whose kernels hand the permutation state back, the trunk's
+	// chunk-0 phase rides lane 0 of the first kernel call alongside up to
+	// seven leaves, eliminating the serial chunk-0 pass. The fused call
+	// absorbs the leaf tags and advances g.nLeaves; for k < 8 it consumes
+	// every complete leaf, and for k == 8 processComplete continues with
+	// g.nLeaves pre-advanced. On platforms without a fused path the call
+	// reports false and the trunk processes chunk 0 serially.
+	fused := false
+	if nComplete := (len(src) - ChunkSize) / ChunkSize; nComplete >= 1 {
+		k := min(1+nComplete, 8)
+		if decrypt {
+			fused = decryptChunk0Fused(&g, src[:k*ChunkSize], dst[:k*ChunkSize], k)
+		} else {
+			fused = encryptChunk0Fused(&g, src[:k*ChunkSize], dst[:k*ChunkSize], k)
+		}
+		if fused {
+			src, dst = src[k*ChunkSize:], dst[k*ChunkSize:]
+		}
+	}
+	if !fused {
+		// Chunk 0: the trunk message phase, closed with MSG_LAST.
+		g.trunk.bodyMore(dst[:ChunkSize], src[:ChunkSize], decrypt, msgMore)
+		g.trunk.closeBlock(msgLast)
+		src, dst = src[ChunkSize:], dst[ChunkSize:]
+	}
+
+	// Remaining complete leaf chunks, via the SIMD cascade.
 	if n := len(src) / ChunkSize; n > 0 {
 		g.processComplete(dst[:n*ChunkSize], src[:n*ChunkSize], n)
 		src, dst = src[n*ChunkSize:], dst[n*ChunkSize:]
