@@ -196,11 +196,17 @@
 
 // func encryptChunksBodyAVX512N(s *state8, src, dst *byte, n uint64)
 //
-// Register-resident AVX-512 kernel for a 2..7 chunk remainder. Identical to
-// encryptChunksBodyAVX512 except it gathers/scatters only the low n lanes (mask
-// K2), reading the n chunks directly from src/dst with no scratch buffer. Lanes
-// n..7 are independent garbage instances and are never read or written. The tail
-// block and tags are completed by finishEncryptChunksN in Go.
+// Register-resident AVX-512 kernel for a 2..7 chunk remainder: it
+// gathers/scatters only the low n lanes (mask K2), reading the n chunks
+// directly from src/dst with no scratch buffer. Lanes n..7 are independent
+// garbage instances and are never read or written. The tail block and tags
+// are completed by finishEncryptChunksN in Go.
+//
+// Gathers are the right tool below full width: a masked variant of the
+// transposed kernel (per-chunk mask registers on the tile loads/stores) was
+// measured slower at every n in 2..7 on Emerald Rapids — the transpose's
+// shuffle work is constant regardless of n, so it only amortizes at the full
+// 8-chunk width, where encryptChunksBodyAVX512T already runs.
 TEXT ·encryptChunksBodyAVX512N(SB), $64-32
 	MOVQ	s+0(FP), AX
 	MOVQ	src+8(FP), BX
