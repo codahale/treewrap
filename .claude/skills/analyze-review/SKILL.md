@@ -74,6 +74,7 @@ If only `mechanical-cleanup` remains, nudge: `Only mechanical-cleanup left — w
 
 ### If the user picks a `design` cluster
 
+0. Summarize the findings in the cluster to provide the user with enough context to be able to choose between candidate resolutions.
 1. Spawn one Agent (`subagent_type: general-purpose`) with:
    - The cluster's name, root cause, affected scope, and the **full F<n> blocks** of its findings (copy them verbatim from the report file).
    - Access to the manuscript (`paper/`, especially the files listed in `affected_scope`), `paper/refs.bib`, and `./refs/`.
