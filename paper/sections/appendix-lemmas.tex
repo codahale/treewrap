@@ -613,6 +613,46 @@ same bound applies. There are $\binom{Q+s}{s}$ possible position sets,
 and a union bound over them gives the claim.
 \end{proof}
 
+\begin{lemma}[Adaptive Candidate Preimage]
+\label{lem:adaptive-candidate-preimage}
+Fix a projection length $\tau$, a cap $Q$, and a target $t \in
+\bits^\tau$ chosen independently of $\ROflat$. Consider any interaction
+with a lazy random oracle $\ROflat : \bits^* \to \bits^\infty$ that
+builds a sequence of distinct \emph{candidate} inputs $Y_1,\dots,Y_m$
+with $m \leq Q+1$, under the same \emph{predictability} and
+\emph{unrevealed-value} premises as
+\Cref{lem:adaptive-candidate-collision}. Let $\mathsf{pre}_{\tau,t}$ be
+the event that some candidate's $\tau$-bit projection equals $t$:
+\[
+  \bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t
+  \quad
+  \text{for some } 1 \leq j \leq m .
+\]
+Then
+\[
+  \Pr[\mathsf{pre}_{\tau,t}]
+  \leq
+  (Q+1) \cdot 2^{-\tau}.
+\]
+\end{lemma}
+
+\begin{proof}
+For a fixed position $j \in \{1,\dots,Q+1\}$, let $E_j$ be the event
+that candidate position $j$ exists and
+$\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$. Expose the
+interaction in chronological order and condition on any
+positive-probability prefix immediately before candidate position $j$
+is appended. By the predictability premise that prefix determines
+$Y_j$; by the unrevealed-value premise no bit of $\ROflat(Y_j)$ has
+been revealed in it, so under lazy sampling the value of
+$\ROflat(Y_j)$ may be sampled after the prefix is fixed and is uniform
+and independent of the conditioning. Because $t$ is fixed independently
+of $\ROflat$, it is constant across this conditioning, so the $\tau$-bit
+projection of $Y_j$ equals $t$ with probability $2^{-\tau}$. If
+position $j$ is never appended, then $E_j$ is false, so the same bound
+applies. A union bound over the $Q+1$ positions gives the claim.
+\end{proof}
+
 \subsection{Adaptive Key Tests}
 \label{app:lem-key-tests}
 

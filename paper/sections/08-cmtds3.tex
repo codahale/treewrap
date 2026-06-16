@@ -1,11 +1,15 @@
-\section{Committing Security}
+\section{Committing Security and Context Discoverability}
 \label{sec:cmtds3}
 
 This section proves the random-oracle CMTDs-3 bound that the headline
 CMTDs-4 statement (\Cref{thm:cmtds4}) consumes via the trivial
 promotion of \Cref{app:committing-transfer}. The public-permutation
 CMTDs-3 statement follows by the flat-sponge lift of
-\Cref{app:flat-sponge-lift}.
+\Cref{app:flat-sponge-lift}. The same root-tag argument, with the
+$s$-way collision replaced by a preimage to a fixed target tag, gives
+the random-oracle context-discoverability bound
+(\Cref{thm:cdy-ro}) underlying the headline CDY statement
+(\Cref{thm:cdy}).
 
 \begin{theorem}[Random-Oracle CMTDs-3]
 \label{thm:cmtds3-ro}
@@ -95,4 +99,74 @@ $Q=\qRO(\mathcal{B})$ and $\tau=\tauroot$ gives
   =
   \RootColl_{\tauroot}(\qRO(\mathcal{B}), s).
 \]
+\end{proof}
+
+\begin{theorem}[Random-Oracle CDY]
+\label{thm:cdy-ro}
+For every query-independent target tag $T^* \in \bits^{\tauroot}$ and
+every context-discoverability adversary $\mathcal{B}$ in the \TW{}
+random-oracle model (\Cref{sec:ro-model}),
+\[
+  \Advcdy_\RO(\mathcal{B})
+  \;\leq\; \RootPre_{\tauroot}(\qRO(\mathcal{B}))
+  = \frac{\qRO(\mathcal{B}) + 1}{2^{\tauroot}}.
+\]
+\end{theorem}
+
+\begin{proof}
+As in \Cref{thm:cmtds3-ro}, the CDY analysis has no $\badkey$ event:
+the single key is adversary-supplied, so a direct query to a keyed
+transcript is one of $\mathcal{B}$'s visible $\ROflat$ queries and is
+counted in $\qRO(\mathcal{B})$. Fix the query-independent target
+$T^*$, which is therefore independent of $\ROflat$.
+
+Run the random-oracle CDY game (\Cref{sec:games-pp}) and define a
+candidate sequence exactly as in \Cref{thm:cmtds3-ro}'s direct oracle
+phase: when $\mathcal{B}$ makes a direct query to an input $Y$ that is
+not already in the sequence, append $Y$ immediately before answering
+the query if $\KeyedTWOut(Y)$ decodes to a root tag output-point class,
+namely $\Rmsg^+$ or $\Rtag$. This predicate depends on $Y$ alone
+through the exact decoder of \Cref{lem:bridge-decode}, which ignores the
+requested output length, and by Output-Point Separation
+(\Cref{cor:output-sep}) each distinct direct query contributes at most
+one candidate, first touched at its append step.
+
+After $\mathcal{B}$ outputs the ciphertext body $C$ and the single
+context $(K,N,A)$, stop appending if the syntax or ciphertext-validity
+precheck on $C \concat T^*$ fails. Otherwise let $R$ be the final root
+transcript reached by the one deterministic decryption check
+$\Dec_{K}^\RO(N,A,C \concat T^*)$, and append $\flatmap(R)$ immediately
+before its root tag oracle answer is sampled, unless that input is
+already in the sequence. If $\flatmap(R)$ was already touched by a
+direct query, then \Cref{lem:bridge-decode} and Output-Point Separation
+(\Cref{cor:output-sep}) imply the earlier query was a final-root
+candidate and the input is already in the sequence; otherwise
+\Cref{cor:output-sep} excludes all earlier challenger lookups outside
+the final-root class. Unlike \Cref{thm:cmtds3-ro}, there is a single
+context, so no appeal to Opening Triple Separation
+(\Cref{cor:triple-sep}) is needed: no pairwise distinctness among
+final-root inputs is required. Thus no earlier lookup of any kind has
+touched the newly appended candidate's input. The sequence therefore
+satisfies the predictability and unrevealed-value premises of Adaptive
+Candidate Preimage (\Cref{lem:adaptive-candidate-preimage}), and its
+length is at most $\qRO(\mathcal{B}) + 1$.
+
+On a winning execution the precheck passes and the single decryption
+check accepts. By \Cref{alg:dec}, acceptance is the constant-time
+equality $T' = T^*$, where $T'$ is the $\tauroot$-bit projection at the
+final root transcript $R$; in the random-oracle model
+$T' = \bigl\lfloor \ROflat(\flatmap(R)) \bigr\rfloor_{\tauroot}$. Hence
+the win event is contained in the event that some candidate's
+$\tauroot$-bit projection equals the fixed target $T^*$. Applying
+\Cref{lem:adaptive-candidate-preimage} with $Q = \qRO(\mathcal{B})$,
+$\tau = \tauroot$, and $t = T^*$ gives
+\[
+  \Pr[\text{the game returns } 1]
+  \leq
+  (\qRO(\mathcal{B}) + 1) \cdot 2^{-\tauroot}
+  =
+  \RootPre_{\tauroot}(\qRO(\mathcal{B})).
+\]
+The bound is uniform in $T^*$, so it holds for the maximum defining
+$\Advcdy_\RO(\mathcal{B})$.
 \end{proof}

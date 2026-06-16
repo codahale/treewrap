@@ -3,12 +3,13 @@
 
 \TW{} is a two-level tree of keyed duplexes over a single \Keccak[1600, 12]
 permutation that combines mode-level parallelism, constant memory, and
-committing security. We analyzed it in the public-permutation model, proving
-concrete bounds for all-in-one authenticated encryption, multi-user
-indistinguishability, and the strongest $s$-way full-input committing notion
-(\textsf{CMTDs-4}) by reasoning first against an intermediate random oracle and
+commitment security in both its collision and preimage facets. We analyzed it in
+the public-permutation model, proving concrete bounds for all-in-one
+authenticated encryption, multi-user indistinguishability, the strongest
+$s$-way full-input committing notion (\textsf{CMTDs-4}), and context
+discoverability by reasoning first against an intermediate random oracle and
 then lifting through the flat-sponge transform; at the implemented parameters
-all three meet a $128$-bit target. The accompanying \texttt{amd64} and
+all four meet a $128$-bit target. The accompanying \texttt{amd64} and
 \texttt{arm64} implementations turn the tree's leaf parallelism into
 multi-gigabyte-per-second throughput, within a small factor of
 hardware-accelerated AES-128-GCM and with a ciphertext that is independent of the

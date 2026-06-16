@@ -27,10 +27,10 @@
   bound first against an intermediate random oracle and then transferring it
   to the real permutation by the flat-sponge lift. We obtain concrete bounds for
   all-in-one authenticated encryption, multi-user indistinguishability, and
-  $s$-way committing security in the strongest full-input sense
-  (\textsf{CMTDs-4}), obtained directly rather than through a generic transform.
-  At the implemented parameters all three notions meet a
-  $128$-bit security target. Vectorized \texttt{amd64} and \texttt{arm64}
+  both facets of commitment security---$s$-way committing security in the
+  strongest full-input sense (\textsf{CMTDs-4}) and its preimage-resistance
+  counterpart, context discoverability. At the implemented parameters all four
+  notions meet a $128$-bit security target. Vectorized \texttt{amd64} and \texttt{arm64}
   implementations realize the tree's leaf parallelism, reaching
   multi-gigabyte-per-second throughput within a small factor of
   hardware-accelerated AES-128-GCM.

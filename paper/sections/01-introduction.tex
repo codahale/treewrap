@@ -25,8 +25,15 @@ open to different well-formed files under different keys \cite{ADGKLS22}, and
 partitioning-oracle attacks that recover passwords from systems built on
 non-committing AEAD \cite{LGR21}. The committing-AE line that addresses these
 threats was initiated by \cite{GLR17} and developed into formal committing
-notions with efficient generic transforms by \cite{BH22}. A mode that targets
-those notions natively, rather than through an add-on transform, avoids the
+notions with efficient generic transforms by \cite{BH22}. Commitment has two
+facets: committing security is a collision requirement---no two contexts open
+one ciphertext---while its preimage counterpart, \emph{context discoverability}
+\cite{MLGR23}, forbids an adversary from \emph{finding} even one decrypting
+context for a target ciphertext. The latter's absence underlies the recent
+context-discovery attacks that break \textsf{GCM}, \textsf{CCM}, \textsf{EAX},
+\textsf{SIV}, and \textsf{OCB3} \cite{MLGR23}, all of which delegate
+authenticity to an algebraically invertible MAC. A mode that targets these
+notions natively, rather than through an add-on transform, avoids the
 transform's overhead and binds commitment to the same permutation it already
 uses for confidentiality and integrity.
 
@@ -42,18 +49,21 @@ associated data, the first chunk, and every leaf tag into the single output tag,
 that tag is a sponge image of the entire $(K, N, A, M)$ input. The structure
 ensures only that distinct $(K, N, A)$ triples reach distinct root transcripts;
 the committing security itself rests on the indistinguishability of the sponge,
-which makes those transcripts' tags collision-resistant (\Cref{sec:cmtds3}). Every duplex
+which makes those transcripts' tags collision-resistant, and the same sponge
+image is preimage-resistant, which is what yields context discoverability
+(\Cref{sec:cmtds3}). Every duplex
 still operates on a bounded $1600$-bit state, so the memory footprint remains
 constant in the message length.
 
 We analyze \TW{} in the public-permutation model and obtain concrete bounds for
-three notions: all-in-one authenticated encryption in the sense of
+four notions: all-in-one authenticated encryption in the sense of
 \cite{RS06}, its multi-user indistinguishability lift in the sense of
-\cite{BT16}, and $s$-way committing security in the strongest full-input sense
-(\textsf{CMTDs-4}) of \cite{BH22}. Each bound is proved first against an
+\cite{BT16}, and the two facets of commitment---$s$-way committing security in
+the strongest full-input sense (\textsf{CMTDs-4}) of \cite{BH22} and context
+discoverability in the sense of \cite{MLGR23}. Each bound is proved first against an
 intermediate random oracle and then transferred to the real permutation by the
 flat-sponge lift of \cite{BDPV08}. At the implemented parameters
-($k = c = \tauroot = \tauleaf = 256$), all three notions meet a $128$-bit
+($k = c = \tauroot = \tauleaf = 256$), all four notions meet a $128$-bit
 security target for adversaries running up to $\Ntot \leq 2^{63}$ \Keccak{}
 calls---on the order of $2^{71}$ bytes of processed data, beyond any realistic
 deployment lifetime. Optimized \texttt{amd64} and \texttt{arm64} implementations
@@ -90,6 +100,17 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   \cite{BH22} committing notions (\textsf{CMT} and \textsf{CMTD} for
   $\ell \in \{1, 3, 4\}$) as direct bounds (\Cref{app:committing-transfer}).
   Committing security is native to the mode, with no generic transform.
+
+\item \textbf{Context discoverability.} We prove that \TW{} is
+  context-discovery resistant in the sense of \cite{MLGR23}: given a target
+  ciphertext fixed in advance, no adversary can find a decryption context under
+  which it decrypts, with a concrete root-preimage bound (\Cref{thm:cdy}). This
+  is the preimage counterpart of committing security and follows from the same
+  root tag; because \TW{}'s authenticity is not delegated to an invertible MAC,
+  the context-discovery attacks of \cite{MLGR23} against \textsf{GCM},
+  \textsf{CCM}, \textsf{EAX}, \textsf{SIV}, and \textsf{OCB3} do not apply. The
+  unrestricted notion we prove dominates the restricted per-component variants
+  of \cite{MLGR23}.
 
 \item \textbf{Proof methodology.} We carry out the analysis in a dedicated \TW{}
   random-oracle model and transfer every bound to the public-permutation setting
@@ -163,27 +184,33 @@ notions: the invisible-salamander \cite{DGRW18} and partitioning-oracle
 context-discovery and commitment attacks that break CCM, EAX, SIV, GCM, and
 OCB3 \cite{MLGR23}, and an $O(1)$ key-committing attack against all variants of
 AEGIS \cite{WP14} that refutes the prior belief that AEGIS was committing
-\cite{IR23}. \TW{} instead targets the strongest full-input notion,
-\textsf{CMTDs-4}, directly: its committing security follows from the
-indistinguishability of the sponge, rather than from a generic transform
-applied to a non-committing base scheme.
+\cite{IR23}. \cite{MLGR23} also introduce context discoverability, the
+preimage facet of commitment, and show that their discovery attacks exploit
+schemes whose authenticity is delegated to a non-preimage-resistant MAC such as
+GHASH or CMAC. \TW{} instead targets both facets directly: its committing and
+discoverability security follow from the indistinguishability of the sponge,
+which makes the root tag collision- and preimage-resistant, rather than from a
+generic transform applied to a non-committing base scheme. Because that tag is
+a sponge image and not an invertible MAC, the discovery attacks of \cite{MLGR23}
+have no analogue against \TW{}.
 
 \subsection{Paper Organization}
 \label{sec:organization}
 
 \Cref{sec:prelims} recalls the notation, sponge and duplex
-constructions over \Keccak{}, the authenticated-encryption and
-committing-security \cite{BH22} notions used throughout, and the
+constructions over \Keccak{}, the authenticated-encryption,
+committing-security \cite{BH22}, and context-discoverability
+\cite{MLGR23} notions used throughout, and the
 multi-user indistinguishability notion of \cite{BT16}.
 \Cref{sec:tw128} specifies the \TW{} construction and its parameters.
 \Cref{sec:security-model} fixes the public-permutation games, the
 intermediate random-oracle model, and the resource accounting that
 all later bounds reference. \Cref{sec:main-results} states the
-headline AE, mu-ind, and CMTDs-4 theorems and their
+headline AE, mu-ind, CMTDs-4, and CDY theorems and their
 concrete \TW{}-parameter forms; \Cref{sec:privacy,sec:authenticity}
 prove the random-oracle privacy and INT-CTXT bounds that feed those
 theorems, and \Cref{sec:cmtds3} proves the random-oracle
-CMTDs-3 bound. \Cref{sec:performance} reports the
+CMTDs-3 and CDY bounds. \Cref{sec:performance} reports the
 performance of the reference and optimized implementations.
 \Cref{sec:discussion} compares \TW{} to prior sponge AEADs and
 committing constructions and discusses limitations.

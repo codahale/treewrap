@@ -7,13 +7,21 @@
 \Cref{tab:scheme-compare} situates \TW{} against representative authenticated
 encryption schemes along the axes that distinguish it: the underlying primitive,
 whether the mode is parallelizable, the key, nonce, and tag sizes, associated-data
-support, nonce-misuse resistance, and full-input key commitment (\textsf{CMT-4}).
+support, nonce-misuse resistance, full-input key commitment (\textsf{CMT-4}), and
+context discoverability (CDY).
 The comparison is structural; the concrete forms of \TW{}'s own privacy, AE, and
 committing bounds, and the regimes in which each term dominates, are treated in
 \Cref{sec:bound-discussion}. The \textsf{CMT-4} column records full-input key
 commitment: \TW{} provides it within the mode, as does Ascon \cite{KSW23}, a
 committing transform supplies it for an arbitrary base scheme, and the remaining
-listed schemes do not provide it.
+listed schemes do not provide it. The CDY column records context-discovery
+resistance: \TW{} provides it within the mode (\Cref{thm:cdy}), and the
+remaining entries are marked ``?'' because, to our knowledge, no
+discoverability result---attack or proof---has been published for them. Context
+discoverability is a recent notion \cite{MLGR23}, so its absence of entries
+reflects the state of the literature rather than a negative result; the schemes
+\cite{MLGR23} do break on discoverability (\textsf{GCM}, \textsf{CCM},
+\textsf{EAX}, \textsf{SIV}, \textsf{OCB3}) are not among the rows above.
 
 \begin{table}[t]
 \centering
@@ -21,19 +29,21 @@ listed schemes do not provide it.
 \caption{Structural comparison of \TW{} with representative AEADs. Sizes are in
 bytes; AES-GCM-SIV also admits a $32$-byte key. ``Misuse-res.'' is nonce-misuse
 resistance in the sense of \cite{RS06}; \textsf{CMT-4} is full-input
-key-commitment in the sense of \cite{BH22}. A dash means the entry is inherited
-from the base scheme. \TW{}'s concrete bounds appear in
+key-commitment in the sense of \cite{BH22}; CDY is context discoverability in
+the sense of \cite{MLGR23}. A dash means the entry is inherited
+from the base scheme, and ``?'' that no result is established in the literature.
+\TW{}'s concrete bounds appear in
 \Cref{sec:bound-discussion}.}
 \label{tab:scheme-compare}
-\begin{tabular}{@{}llccccc@{}}
+\begin{tabular}{@{}llcccccc@{}}
 \toprule
-Scheme & Primitive & Par. & K/N/T & AD & Misuse & \textsf{CMT-4} \\
+Scheme & Primitive & Par. & K/N/T & AD & Misuse & \textsf{CMT-4} & CDY \\
 \midrule
-\TW{}                        & \Keccak[1600,12]   & yes & $32/32/32$ & yes & no  & yes \\
-Ascon-128a \cite{DEMS21}     & Ascon-$p$ ($320$ b) & no  & $16/16/16$ & yes & no  & yes \\
-Xoodyak \cite{DHPVV20}       & Xoodoo ($384$ b)   & no  & $16/16/16$ & yes & no  & no  \\
-AES-GCM-SIV \cite{GLL17}     & AES                & yes & $16/12/16$ & yes & yes & no  \\
-nAE $+$ \textsf{CTX} \cite{CR22} & any nAE        & ---  & ---        & yes & --- & yes \\
+\TW{}                        & \Keccak[1600,12]   & yes & $32/32/32$ & yes & no  & yes & yes \\
+Ascon-128a \cite{DEMS21}     & Ascon-$p$ ($320$ b) & no  & $16/16/16$ & yes & no  & yes & ?   \\
+Xoodyak \cite{DHPVV20}       & Xoodoo ($384$ b)   & no  & $16/16/16$ & yes & no  & no  & ?   \\
+AES-GCM-SIV \cite{GLL17}     & AES                & yes & $16/12/16$ & yes & yes & no  & ?   \\
+nAE $+$ \textsf{CTX} \cite{CR22} & any nAE        & ---  & ---        & yes & --- & yes & ?   \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -66,8 +76,10 @@ of the sponge-based NIST lightweight finalists proves Ascon committing while
 breaking others \cite{KSW23}, and some constructions, such as Strobe, have not
 been examined in that setting at all. What distinguishes \TW{} is that it targets
 the strongest $s$-way full-input notion (\textsf{CMT-4}) as a proven, designed
-property of the mode, established without leaving the single-permutation duplex
-setting.
+property of the mode, together with its preimage counterpart, context
+discoverability, established without leaving the single-permutation duplex
+setting; the discoverability guarantee in particular is not known to hold for
+the other members of the family.
 
 \subsection{Comparison with Committing AEAD Constructions}
 \label{sec:compare-commit}
@@ -83,7 +95,9 @@ undercutting their cost but by integration: it is committing as the mode itself,
 with the same permutation and the same tag that already provide confidentiality
 and integrity, so no separate commitment primitive, key-derivation step, or
 auxiliary hash is invoked, and the strongest $s$-way full-input notion follows
-from a single root tag collision bound (\Cref{sec:cmtds3}). This places \TW{}
+from a single root tag collision bound (\Cref{sec:cmtds3}); the same tag, being
+preimage-resistant, additionally yields context discoverability, which the
+context-committing transforms are not known to provide. This places \TW{}
 alongside the dedicated committing primitives---the compactly committing AEAD of
 \cite{GLR17} and the encryptment of \cite{DGRW18}---which likewise build
 commitment in rather than bolt it on, but which were designed for message

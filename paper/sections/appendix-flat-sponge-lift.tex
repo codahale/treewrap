@@ -230,13 +230,15 @@ mu-ind, construction-interface forwarding preserves the
 $\mathsf{New}$ calls and these caps user by user.
 \end{proof}
 
-\subsection{Public-Permutation Committing Corollary}
+\subsection{Public-Permutation Committing and Discoverability Corollaries}
 \label{app:lift-corollaries}
 
 Combining the lift bound of \Cref{lem:lift-bound}, the derived-adversary
 construction of \Cref{lem:derived-adversary}, and the random-oracle
 CMTDs-3 bound of \Cref{thm:cmtds3-ro} gives the public-permutation
-committing corollary consumed by \Cref{app:committing-transfer}. The
+committing corollary consumed by \Cref{app:committing-transfer}; the
+same combination applied to \Cref{thm:cdy-ro} gives the
+public-permutation context-discoverability corollary. The
 public-permutation privacy and INT-CTXT advantages are not stated as
 separate corollaries: the all-in-one AE theorem (\Cref{thm:ae}) applies
 this lift once to the all-in-one AE adversary and then splits the
@@ -284,4 +286,42 @@ $\mathcal{B}_{\mathrm{derived}}$, \Cref{thm:cmtds3-ro} gives
 By monotonicity of $\binom{\cdot + s}{s}$ in its first argument, this is
 at most $\RootColl_{\tauroot}(\Nprim, s)$.
 
+\end{proof}
+
+\begin{corollary}[Public-Permutation CDY]
+\label{cor:cdy-pp}
+For every context-discoverability adversary $\mathcal{A}$ against \TW{}
+with $\Nprim$ direct primitive queries and total cost at most $\Ntot$
+(both as in \Cref{sec:resources}),
+\[
+  \Advcdy_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
+  = \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}.
+\]
+\end{corollary}
+
+\begin{proof}
+The CDY game is a one-world win-event experiment with no construction
+oracle during the adversary's run. Its construction cost $N$ counts the
+single deterministic decryption check the challenger performs on
+$C \concat T^*$ on executions that pass the early rejecting checks. By
+the flat-sponge lift bound (\Cref{lem:lift-bound}), replacing
+$(\pi,\pi^{-1})$ by $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and the
+challenger check by its random-oracle counterpart costs at most
+$\Lift_c(\Ntot)$. Let $\mathcal{B}_{\mathrm{derived}} =
+\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ be the adversary of
+\Cref{lem:derived-adversary}, run against the same fixed target $T^*$.
+The derived-adversary construction gives
+\[
+  \Advcdy_\TW(\mathcal{A})
+  \leq \Lift_c(\Ntot)
+    + \Advcdy_\RO(\mathcal{B}_{\mathrm{derived}}),
+\]
+with $\qRO(\mathcal{B}_{\mathrm{derived}}) \leq \Nprim$. At
+$\mathcal{B}_{\mathrm{derived}}$, \Cref{thm:cdy-ro} gives
+$\RootPre_{\tauroot}(\qRO(\mathcal{B}_{\mathrm{derived}}))$, which by
+monotonicity of $\RootPre_{\tauroot}$ in its argument is at most
+$\RootPre_{\tauroot}(\Nprim)$. As the right-hand bound is uniform in
+$T^*$, it holds for the maximum defining $\Advcdy_\TW(\mathcal{A})$.
 \end{proof}

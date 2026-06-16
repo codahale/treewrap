@@ -33,11 +33,13 @@ resulting throughput on AMD64 and ARM64 hardware. Second, every duplex
 operates on a bounded 1600-bit state regardless of message length, so
 the memory footprint is constant in $\|M\|$. Third, the explicit
 aggregation of leaf tags through a single deterministic root transcript
-gives the construction its committing-security guarantee: distinct
+gives the construction its commitment-security guarantees: distinct
 $(K, N, A)$ triples force distinct final root transcripts before
 aggregation values matter
-(\Cref{cor:triple-sep,sec:cmtds3}), which is the structural fact behind
-the CMTDs-4 headline of \Cref{sec:headline}.
+(\Cref{cor:triple-sep,sec:cmtds3}), the structural fact behind
+the CMTDs-4 headline of \Cref{sec:headline}, while the same root tag,
+being a sponge image rather than an invertible MAC, is preimage-resistant
+and so yields the context-discoverability headline (\Cref{thm:cdy}).
 
 \begin{figure}[t]
   \centering

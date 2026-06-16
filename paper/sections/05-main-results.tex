@@ -4,14 +4,19 @@
 \subsection{Headline Theorems}
 \label{sec:headline}
 
-\TW{} delivers three headline guarantees in the lifted
+\TW{} delivers four headline guarantees in the lifted
 public-permutation model of \Cref{sec:games-pp}: all-in-one AE
 security \cite{RS06}, its multi-user indistinguishability lift
-\cite{BT16}, and $s$-way CMTDs-4 committing security
-\cite{BH22}. For the AE-style notions the ideal side exposes the
-BDPV simulator; committing security remains a real public-permutation
-success probability. \Cref{thm:ae,thm:mu-ind,thm:cmtds4} state these
-bounds; the loss terms $\Lift_c$, $\KeyGuess_k$, and $\RootColl_\tau$
+\cite{BT16}, and the two facets of commitment security---$s$-way
+CMTDs-4 committing security \cite{BH22} and context discoverability
+\cite{MLGR23}. Committing security is the collision facet and context
+discoverability the preimage facet; both follow from the same root tag
+and are stated co-equally. For the AE-style notions the ideal side
+exposes the BDPV simulator; the committing and discoverability bounds
+remain real public-permutation success probabilities.
+\Cref{thm:ae,thm:mu-ind,thm:cmtds4,thm:cdy} state these
+bounds; the loss terms $\Lift_c$, $\KeyGuess_k$, $\RootColl_\tau$, and
+$\RootPre_\tau$
 are unpacked in \Cref{sec:loss-terms}, and the random-oracle envelopes
 $\Epspriv$, $\Epsintctxt$ in \Cref{sec:thms-pp}.
 
@@ -365,12 +370,37 @@ uniformity with \Cref{thm:ae,thm:mu-ind}; the birthday threshold at
 $\tauroot = 256$ is unaffected.
 \end{remark}
 
+\begin{theorem}[Context Discoverability]
+\label{thm:cdy}
+For every context-discoverability adversary $\mathcal{A}$ against \TW{}
+with the resources of \Cref{sec:resources},
+\[
+  \Advcdy_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
+  \;=\;
+  \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}.
+\]
+\end{theorem}
+
+\begin{proof}
+Immediate from the public-permutation corollary \Cref{cor:cdy-pp},
+which lifts the random-oracle bound of \Cref{thm:cdy-ro} through the
+flat-sponge transform. Where \Cref{thm:cmtds4} bounds the probability
+that $s$ distinct contexts collide on one root tag, this bounds the
+probability that a single context reaches a root tag fixed in advance;
+the candidate-collision argument of \Cref{thm:cmtds3-ro} is replaced by
+the candidate-preimage argument of \Cref{thm:cdy-ro}, dropping the
+exponent from $\tauroot(s-1)$ to $\tauroot$.
+\end{proof}
+
 \subsection{Loss Terms}
 \label{sec:loss-terms}
 
-Three closed-form expressions recur across the headline bounds of
-\Cref{sec:headline}---$\Lift_c$ in all three, $\KeyGuess_k$ and
-$\RootColl_\tau$ in some. We collect them here for reference.
+Four closed-form expressions recur across the headline bounds of
+\Cref{sec:headline}---$\Lift_c$ in all four, with $\KeyGuess_k$,
+$\RootColl_\tau$, and $\RootPre_\tau$ in some. We collect them here for
+reference.
 
 \paragraph{Flat-sponge loss.}
 The flat-sponge differentiating loss is
@@ -431,12 +461,25 @@ lift of
 $\Nprim$ direct primitive queries can induce simulator-side
 $\ROflat$ queries that contribute to that sequence.
 
+\paragraph{Root-preimage term.}
+The root tag preimage term is
+\[
+  \RootPre_\tau(Q) = (Q + 1) \big/ 2^{\tau},
+\]
+with the abbreviation $\RootPre_{\tauroot}(Q) = \RootPre_\tau(Q)$ at
+$\tau = \tauroot$. It is the preimage analogue of $\RootColl_\tau$: a
+single query-independent target tag replaces the $s$-way internal
+collision, the $+s$ candidate-sequence slack collapses to the $+1$ of
+the single discoverability challenger decryption check, and the
+exponent drops from $\tau(s-1)$ to $\tau$. As in the root-collision
+term, the flat-sponge lift gives $Q = \Nprim$.
+
 \subsection{Supporting Bounds}
 \label{sec:thms-pp}
 
-The headline theorems of \Cref{sec:headline} feed on three
-random-oracle-model bounds---the privacy and INT-CTXT envelopes and
-the CMTDs-3 bound---whose proofs occupy
+The headline theorems of \Cref{sec:headline} feed on four
+random-oracle-model bounds---the privacy and INT-CTXT envelopes, the
+CMTDs-3 bound, and the CDY bound---whose proofs occupy
 \Cref{sec:privacy,sec:authenticity,sec:cmtds3}; the remaining
 committing-notion bounds live in \Cref{app:committing-transfer}.
 Resource-indexed
@@ -497,7 +540,19 @@ the final root transcripts whose tags are compared, since by
 \Cref{cor:triple-sep} distinct $(K, N, A)$ triples force distinct
 final root transcripts before aggregation values matter.
 
-\subsection{Lift Sketch}
+\paragraph{CDY bound.}
+The flat-RO CDY theorem of \Cref{sec:cmtds3} is the direct
+root-preimage bound
+\[
+  \Advcdy_{\RO}(\mathcal{B})
+  \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))
+  = (\qRO(\mathcal{B}) + 1) \big/ 2^{\tauroot},
+\]
+again with no key-guessing or leaf-collision term, by the same
+adversary-supplied-key accounting. A single context replaces the $s$
+tuples, so the candidate-collision argument becomes a
+candidate-preimage argument against the query-independent target tag
+and no triple-separation is invoked.
 \label{sec:lift-sketch}
 
 \Cref{app:flat-sponge-lift} carries out the flat-sponge lift in two
@@ -539,8 +594,8 @@ The implemented parameters of \Cref{sec:params} fix
 \[
   k = c = \tauroot = \tauleaf = 256.
 \]
-Substituting into \Cref{thm:ae,thm:mu-ind,thm:cmtds4} and using the
-random-oracle envelopes of \Cref{sec:thms-pp} gives the following
+Substituting into \Cref{thm:ae,thm:mu-ind,thm:cmtds4,thm:cdy} and using
+the random-oracle envelopes of \Cref{sec:thms-pp} gives the following
 closed-form bounds.
 
 \paragraph{All-in-one AE.}
@@ -584,15 +639,24 @@ CMTD-4 statement of \cite{BH22}:
 \]
 \end{remark}
 
+\paragraph{Context discoverability.}
+\[
+  \Advcdy_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\Nprim + 1}{2^{256}}.
+\]
+
 \subsection{Concrete Security Claim}
 \label{sec:concrete-claim}
 
-\TW{} attains a $128$-bit security target across all three notions of
+\TW{} attains a $128$-bit security target across all four notions of
 \Cref{sec:concrete}. The birthday term $\Lift_c(\Ntot) = \Ntot(\Ntot +
 1) / 2^{257}$ dominates the AE bound and is a leading term in the
 committing bounds, where the two-key specialization also has a
 co-leading root-collision term; it contributes alongside a multi-user
-hybrid term in the mu-ind bound. The headline work cap
+hybrid term in the mu-ind bound; and it is the sole leading term in the
+discoverability bound, whose root-preimage term is linear in $\Nprim$. The headline work cap
 $\Ntot \leq 2^{63}$ keeps the resulting total below $2^{-128}$ after
 the resource consequences of
 \Cref{sec:resources} are applied. Namely, $\Nprim \leq \Ntot$ by
@@ -625,6 +689,14 @@ since created-but-idle users need not contribute to $N$.
   $s \geq 3$, the root-collision term decays as $2^{-256(s - 1)}$ in
   the denominator, so it becomes negligible relative to the birthday
   term well before $\Ntot$ saturates.
+\item \emph{Context discoverability.} For every CDY adversary against
+  \TW{} with $\Ntot \leq 2^{63}$ \Keccak{} calls (so in particular
+  $\Nprim \leq 2^{63}$), $\Advcdy_\TW(\mathcal{A}) \leq 2^{-128}$. The
+  flat-sponge term is one $2^{-131}$-sized birthday term, up to
+  lower-order summands, and the root-preimage term satisfies
+  $(\Nprim + 1)/2^{256} \leq 2 \cdot 2^{-193}$, far below the
+  $128$-bit target; as in the committing bound, the flat-sponge
+  differentiating loss dominates.
 \end{itemize}
 
 Expressed in bytes of construction work, $\Ntot \leq 2^{63}$
@@ -646,7 +718,8 @@ INT-CTXT independently, hence the factor of two in the AE and
 mu-ind bounds), the leaf tag pairwise-collision term, and the
 verification-tag term. The CMTDs-4 bound substitutes the
 $s$-way root-collision term $\RootColl_{\tauroot}$ for the latter
-three. We comment on dominance and tightness.
+three, and the CDY bound the root-preimage term $\RootPre_{\tauroot}$.
+We comment on dominance and tightness.
 
 \paragraph{Dominance.}
 In the single-user AE bound, the birthday-on-capacity loss
@@ -660,7 +733,10 @@ $\Nleaf \leq \Ntot$. The CMTDs-4 bound is similar: the
 $s = 2$ root-collision term equals $(\Nprim + 1)(\Nprim + 2) /
 2^{257}$, which is within a small additive $\Ntot$-term of
 $\Lift_c$ under $\Nprim \leq \Ntot$, and it decays as $2^{-256(s -
-1)}$ in the denominator for $s \geq 3$.
+1)}$ in the denominator for $s \geq 3$. The CDY bound is dominated by
+$\Lift_c$ outright: its root-preimage term $(\Nprim + 1) / 2^{256}$ is
+linear in $\Nprim \leq \Ntot$ and hence below $\Lift_c$ for
+$\Ntot \geq 1$.
 
 The multi-user mu-ind bound is the exception. For
 $D \leq \Ntot(\Ntot+1) / (4 \Nprim)$ users (typical for any
