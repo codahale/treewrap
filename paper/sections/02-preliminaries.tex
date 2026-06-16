@@ -428,9 +428,9 @@ output a decryption context under which that ciphertext decrypts without
 error. The notion is parameterized by which components of the context
 the selector fixes and which the adversary supplies; the unrestricted
 form, in which the adversary supplies the entire context, dominates the
-restricted variants $\mathsf{CDY}^*_k$, $\mathsf{CDY}^*_n$, and
-$\mathsf{CDY}^*_a$ in which the selector additionally pins the key,
-nonce, or associated data. \cite{MLGR23} show that schemes which
+restricted variants of \cite{MLGR23}, in which the selector additionally
+pins two of the three context components and the adversary supplies only
+the remaining one. \cite{MLGR23} show that schemes which
 delegate authenticity to a non-preimage-resistant MAC, including
 \textsf{CCM}, \textsf{EAX}, \textsf{SIV}, \textsf{GCM}, and
 \textsf{OCB3}, admit efficient discoverability attacks. The notion is
