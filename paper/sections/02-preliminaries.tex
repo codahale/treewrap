@@ -28,32 +28,26 @@ For a set $S$, $\Perm(S)$ denotes the set of permutations on $S$; for a
 positive integer $b$, $\Perm(\bits^b)$ is the set of $b$-bit
 permutations.
 
-\paragraph{Adversaries and games.}
-An adversary $\mathcal{A}$ is a (possibly randomized) algorithm. A
-\emph{game} $\mathsf{G}$ is an experiment that samples its private
-randomness, runs $\mathcal{A}$ with access to a specified set of oracles
-$O_1, \dots, O_k$, and returns a Boolean outcome. We write
-$\mathcal{A}^{O_1, \dots, O_k}$ for the adversary's interface and
-$\Pr[\mathsf{G}^{\mathcal{A}} \Rightarrow 1]$ for the probability that
-$\mathsf{G}$ returns~$1$.
-
-\paragraph{Advantages.}
-For an indistinguishability-style experiment with two games $\mathsf{G}_0,
-\mathsf{G}_1$, the distinguishing advantage of $\mathcal{A}$ against a
-scheme $\Pi$ in security notion $\mathsf{X}$ is the absolute difference
+\paragraph{Games and advantages.}
+We write $\mathcal{A}^{O_1, \dots, O_k}$ for a (possibly randomized)
+adversary with oracle access to $O_1, \dots, O_k$, and
+$\Pr[\mathsf{G}^{\mathcal{A}} \Rightarrow 1]$ for the probability that a
+game $\mathsf{G}$---an experiment that runs $\mathcal{A}$ against
+specified oracles and returns a Boolean outcome---returns $1$. For a
+distinguishing experiment between two games $\mathsf{G}_0, \mathsf{G}_1$,
+the advantage of $\mathcal{A}$ against a scheme $\Pi$ in notion
+$\mathsf{X}$ is the absolute difference
 \[
   \Adv^{\mathsf{X}}_\Pi(\mathcal{A})
   = \bigl| \Pr[\mathsf{G}_0^{\mathcal{A}} \Rightarrow 1]
          - \Pr[\mathsf{G}_1^{\mathcal{A}} \Rightarrow 1] \bigr|.
 \]
-For a one-shot or win-event experiment without a hidden challenge bit,
-$\Adv^{\mathsf{X}}_\Pi(\mathcal{A})
-= \Pr[\mathsf{G}^{\mathcal{A}} \text{ wins}]$, where
-``$\mathsf{G}^{\mathcal{A}}$ wins'' denotes the event that the game
-returns $1$. A bit-guessing experiment with a hidden challenge bit
-instead uses the rescaled form
-$\bigl|2 \Pr[\mathsf{G}^{\mathcal{A}} \text{ wins}] - 1\bigr|$, as in
-the multi-user notion of \Cref{sec:mu-ind}.
+For a win-event experiment without a hidden challenge bit it is instead
+$\Pr[\mathsf{G}^{\mathcal{A}} \text{ wins}]$, the probability the game
+returns $1$; a bit-guessing experiment with a hidden challenge bit uses
+the rescaled form
+$\bigl|2 \Pr[\mathsf{G}^{\mathcal{A}} \text{ wins}] - 1\bigr|$, as in the
+multi-user notion of \Cref{sec:mu-ind}.
 
 \paragraph{Concrete security.}
 All bounds in this paper are concrete: each advantage is an explicit
