@@ -716,13 +716,13 @@ values at most $\Ntot$. The mu-ind user cap $D$ remains an independent hypothesi
 since created-but-idle users need not contribute to $N$.
 \begin{itemize}
 \item \emph{AE.} For every nonce-respecting AE adversary against \TW{}
-  with $\Ntot \leq 2^{63}$ \Keccak{} calls,
+  with $\Ntot \leq 2^{63}$ \Keccakp{} calls,
   $\Advae_\TW(\mathcal{A}) \leq 2^{-128}$. The flat-sponge and
   leaf-collision terms are each bounded by one $2^{-131}$-sized
   birthday term, up to lower-order summands, while
   $(2\Nprim+\Qv)/2^{256} \leq 3 \cdot 2^{-193}$.
 \item \emph{Multi-user indistinguishability.} For every $D$-user
-  mu-ind adversary against \TW{} with $\Ntot \leq 2^{63}$ \Keccak{}
+  mu-ind adversary against \TW{} with $\Ntot \leq 2^{63}$ \Keccakp{}
   calls and $D \leq 2^{63}$ users, $\Advmuind_\TW(\mathcal{A}) \leq
   2^{-128}$. At the threshold, the hybrid term satisfies
   $2D\Nprim/2^{256} \leq 2^{-129} = 4 \cdot 2^{-131}$; the
@@ -732,7 +732,7 @@ since created-but-idle users need not contribute to $N$.
   $7 \cdot 2^{-131} + 3 \cdot 2^{-194} < 8 \cdot 2^{-131} = 2^{-128}$.
 \item \emph{Committing security.} For every $s \geq 2$ and every
   $s$-way CMTDs-4 adversary against \TW{} with $\Ntot \leq
-  2^{63}$ \Keccak{} calls (so in particular $\Nprim \leq 2^{63}$),
+  2^{63}$ \Keccakp{} calls (so in particular $\Nprim \leq 2^{63}$),
   $\Advcmtds{4}_\TW(\mathcal{A}) \leq 2^{-128}$. In the two-key case
   $s=2$, the flat-sponge and root-collision terms are each bounded by
   one $2^{-131}$-sized birthday term, up to lower-order summands. For
@@ -740,7 +740,7 @@ since created-but-idle users need not contribute to $N$.
   the denominator, so it becomes negligible relative to the birthday
   term well before $\Ntot$ saturates.
 \item \emph{Context discoverability.} For every CDY adversary against
-  \TW{} with $\Ntot \leq 2^{63}$ \Keccak{} calls (so in particular
+  \TW{} with $\Ntot \leq 2^{63}$ \Keccakp{} calls (so in particular
   $\Nprim \leq 2^{63}$), $\Advcdy_\TW(\mathcal{A}) \leq 2^{-128}$. The
   flat-sponge term is one $2^{-131}$-sized birthday term, up to
   lower-order summands, and the root-preimage term satisfies
@@ -748,7 +748,7 @@ since created-but-idle users need not contribute to $N$.
   $128$-bit target; as in the committing bound, the flat-sponge
   differentiating loss dominates.
 \item \emph{Second-preimage resistance.} For every second-preimage
-  adversary against \TW{} with $\Ntot \leq 2^{63}$ \Keccak{} calls (so in
+  adversary against \TW{} with $\Ntot \leq 2^{63}$ \Keccakp{} calls (so in
   particular $\Nprim, \Nleaf \leq 2^{63}$), $\Advspr_\TW(\mathcal{A}) \leq
   2^{-128}$. The bound matches the discoverability bound up to an
   additional revealed-target leaf-preimage term: the flat-sponge term is
