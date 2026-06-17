@@ -305,8 +305,8 @@ the same phase suffix, and returns $(m_1 \concat \cdots \concat m_t,
 Z')$; we omit its pseudocode. In both helpers, each duplex call absorbs a data block followed by its
 phase suffix---$\sigma^-$ for a non-final block and $\sigma^+$ for the
 final block---and requests the output bits the caller consumes next:
-$\ell$ on the final call, and the next block's keystream length (or
-zero) on non-final calls. Each call is the duplex interface of
+$\ell$ (possibly zero) on the final call, and the next block's keystream
+length on non-final calls. Each call is the duplex interface of
 \Cref{sec:sponge} applied to the suffixed input of \Cref{sec:domain-sep}.
 
 The encryption procedure (\Cref{alg:enc}) instantiates the root duplex

@@ -997,8 +997,9 @@ encryption answers and the lazy direct-query answers are independent of
 the hidden key except through the immediate-abort rule, which removes
 exactly the keys in $S$; hence the hidden key is uniform on
 $\mathcal{V}$ under this conditioning. For every $K' \in \mathcal{V}$,
-running the pending encryption computation online reaches no counted
-transcript point whose bridged input was previously queried directly:
+running the online execution of $\Enc_{K'}^\RO$ on the pending query
+reaches no counted transcript point whose bridged input was previously
+queried directly:
 such a point $Y$ would give $\KeyedTWOut(Y) = (K',\mathcal{C})$ by
 \Cref{lem:bridge-decode}, placing $K'$ in $S$. The bridged transcript
 inputs reached for two distinct keys in $\mathcal{V}$ are disjoint,

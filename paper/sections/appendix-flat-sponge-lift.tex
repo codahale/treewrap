@@ -275,7 +275,8 @@ $\mathcal{A}$'s run, the construction cost $N$ of \Cref{lem:lift-bound}
 counts only the challenger's post-output deterministic checks---the
 decryption checks of the committing and discoverability games, the
 encryption checks of the CMTs games, and, in the second-preimage game,
-the honest target encryption performed before $\mathcal{A}$ runs---so
+the honest target encryption performed before $\mathcal{A}$ runs together
+with the single post-output decryption check---so
 $N + \Nprim \leq \Ntot$. By the flat-sponge lift bound
 (\Cref{lem:lift-bound}), replacing $(\pi,\pi^{-1})$ by
 $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and the challenger checks by their
