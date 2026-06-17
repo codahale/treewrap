@@ -600,36 +600,27 @@ and no triple-separation is invoked.
 \label{sec:lift-sketch}
 
 \Cref{app:flat-sponge-lift} carries out the flat-sponge lift in two
-hops. Hop~1 applies the indifferentiability theorem of \cite{BDPV08}
-with the bound of \Cref{lem:lift-bound}: the real permutation
-interface is replaced by the corresponding flat-RO \TW{} construction
-interface and the \cite{BDPV08} public-primitive simulator at cost at most
-$\Lift_c(\Ntot)$, where $\Ntot=N+\Nprim$ counts construction-internal
-sponge calls and direct primitive queries before the derived-adversary construction.
-Hop~2 defines a derived
-flat-RO adversary $\mathcal{B} =
-\mathcal{B}_{\text{derived}}(\mathcal{A})$ whose primitive queries
-are answered by running the simulator with direct $\ROflat$ queries;
-this hop is a lossless equality of joint distributions. One
-inspection of \cite[Algorithm~3]{BDPV08} shows that the simulator
-issues an $\ROflat$ call only on a forward primitive query whose
-input node is rooted and has no outgoing edge in the simulator's
-internal graph, whose constructed path is paddable, and only while
-the simulator is unsaturated (\Cref{lem:sim-ro-call-filter}); inverse
-queries and forward queries violating any of those conditions return
-$\ROflat$-free outputs.
-Every primitive query therefore induces at most one $\ROflat$ call,
-giving the key accounting
+hops. Hop~1 applies the \cite{BDPV08} indifferentiability theorem
+through \Cref{lem:lift-bound}, replacing the real permutation by the
+corresponding flat-RO \TW{} construction interface and the \cite{BDPV08}
+public-primitive simulator at cost at most $\Lift_c(\Ntot)$, where
+$\Ntot = N + \Nprim$ counts construction-internal sponge calls and
+direct primitive queries. Hop~2 (\Cref{lem:derived-adversary}) defines a
+derived flat-RO adversary
+$\mathcal{B} = \mathcal{B}_{\text{derived}}(\mathcal{A})$ that answers
+each primitive query by running the simulator against direct $\ROflat$
+queries; this is a lossless equality of joint distributions, and the
+simulator-call filter of \Cref{lem:sim-ro-call-filter} makes each
+primitive query induce at most one $\ROflat$ call, so
 \[
-  \qRO(\mathcal{B}_{\text{derived}}) \leq \Nprim,
+  \qRO(\mathcal{B}_{\text{derived}}) \leq \Nprim.
 \]
-so the random-oracle envelopes of \Cref{sec:thms-pp} are instantiated
-at $\Nprim$, not $\Ntot$, in the headline theorems. The same inspection
-underlies the CMTDs-3 candidate-sequence length bound
-$m \leq \Nprim + s$ of
+The random-oracle envelopes of \Cref{sec:thms-pp} are therefore
+instantiated at $\Nprim$, not $\Ntot$, in the headline theorems---as is
+the CMTDs-3 candidate-sequence length bound $m \leq \Nprim + s$ of
 \Cref{sec:cmtds3} and the direct CMTs-$\ell$ bounds of
-\Cref{app:committing-transfer}; the CMTs challenger encryption checks
-are construction-internal and are counted in $N$, not in $\Nprim$.
+\Cref{app:committing-transfer}, whose challenger encryption checks are
+construction-internal and counted in $N$, not in $\Nprim$.
 
 \subsection{Concrete TW128 Bounds}
 \label{sec:concrete}
