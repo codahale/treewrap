@@ -5,6 +5,8 @@
 - Full copies of all referenced works are available in ./refs.
   - If you add a citation, ensure a copy of the cited work is in ./refs.
   - Proactively read the cited works to ensure that your citation is accurate.
+  - The only point of this rule is to ensure that later reviews can be done with local access to the
+    full contents of referenced works.
 
 - Do not refer to identifiers from *.tmp.md files in your commit messages.
 
