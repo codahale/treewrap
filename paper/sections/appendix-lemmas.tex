@@ -653,6 +653,55 @@ position $j$ is never appended, then $E_j$ is false, so the same bound
 applies. A union bound over the $Q+1$ positions gives the claim.
 \end{proof}
 
+\begin{lemma}[Revealed-Target Candidate Preimage]
+\label{lem:revealed-target-preimage}
+Fix a projection length $\tau$ and a cap $Q$. Consider any interaction
+with a lazy random oracle $\ROflat : \bits^* \to \bits^\infty$ in which a
+distinguished input $X_0$ is queried before any candidate is appended,
+fixing the revealed value
+\[
+  t := \bigl\lfloor \ROflat(X_0) \bigr\rfloor_\tau .
+\]
+The interaction then builds a sequence of distinct \emph{candidate}
+inputs $Y_1,\dots,Y_m$ with $m \leq Q+1$, each distinct from $X_0$,
+under the same \emph{predictability} and \emph{unrevealed-value} premises
+as \Cref{lem:adaptive-candidate-collision}. Let $\mathsf{pre}_{\tau}$ be
+the event that some candidate's $\tau$-bit projection equals $t$:
+\[
+  \bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t
+  \quad
+  \text{for some } 1 \leq j \leq m .
+\]
+Then
+\[
+  \Pr[\mathsf{pre}_{\tau}]
+  \leq
+  (Q+1) \cdot 2^{-\tau}.
+\]
+\end{lemma}
+
+\begin{proof}
+The proof is that of \Cref{lem:adaptive-candidate-preimage} verbatim,
+except that the target $t$ is fixed not by independence from $\ROflat$
+but by the value revealed at the distinguished address $X_0$ before any
+candidate is appended. For a fixed position $j \in \{1,\dots,Q+1\}$, let
+$E_j$ be the event that candidate position $j$ exists and
+$\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$. Expose the
+interaction in chronological order and condition on any
+positive-probability prefix immediately before candidate position $j$ is
+appended. Because $X_0$ is queried before any candidate is appended,
+this prefix already determines $t$ through the sampled value
+$\ROflat(X_0)$. By the predictability premise the prefix determines
+$Y_j$; since $Y_j \neq X_0$ and, by the unrevealed-value premise, no bit
+of $\ROflat(Y_j)$ has been revealed in the prefix, under lazy sampling
+the value of $\ROflat(Y_j)$ may be sampled after the prefix is fixed and
+is uniform and independent of the conditioning, in particular of $t$,
+which is determined by $\ROflat$ at the distinct address $X_0$. Hence the
+$\tau$-bit projection of $Y_j$ equals $t$ with probability $2^{-\tau}$.
+If position $j$ is never appended, then $E_j$ is false, so the same bound
+applies. A union bound over the $Q+1$ positions gives the claim.
+\end{proof}
+
 \subsection{Adaptive Key Tests}
 \label{app:lem-key-tests}
 

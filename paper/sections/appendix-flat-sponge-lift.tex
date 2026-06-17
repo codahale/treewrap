@@ -238,7 +238,9 @@ construction of \Cref{lem:derived-adversary}, and the random-oracle
 CMTDs-3 bound of \Cref{thm:cmtds3-ro} gives the public-permutation
 committing corollary consumed by \Cref{app:committing-transfer}; the
 same combination applied to \Cref{thm:cdy-ro} gives the
-public-permutation context-discoverability corollary. The
+public-permutation context-discoverability corollary, and applied to
+\Cref{cor:spr-ro} gives the public-permutation second-preimage
+corollary. The
 public-permutation privacy and INT-CTXT advantages are not stated as
 separate corollaries: the all-in-one AE theorem (\Cref{thm:ae}) applies
 this lift once to the all-in-one AE adversary and then splits the
@@ -324,4 +326,44 @@ $\RootPre_{\tauroot}(\qRO(\mathcal{B}_{\mathrm{derived}}))$, which by
 monotonicity of $\RootPre_{\tauroot}$ in its argument is at most
 $\RootPre_{\tauroot}(\Nprim)$. As the right-hand bound is uniform in
 $T^*$, it holds for the maximum defining $\Advcdy_\TW(\mathcal{A})$.
+\end{proof}
+
+\begin{corollary}[Public-Permutation Second-Preimage]
+\label{cor:spr-pp}
+For every second-preimage adversary $\mathcal{A}$ against \TW{} with
+$\Nprim$ direct primitive queries and total cost at most $\Ntot$ (both as
+in \Cref{sec:resources}),
+\[
+  \Advspr_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
+  = \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}.
+\]
+\end{corollary}
+
+\begin{proof}
+The second-preimage game is a one-world win-event experiment with no
+construction oracle during the adversary's run. Its construction cost $N$
+counts the honest target encryption of the fixed opening $\omega_0$
+together with the single deterministic decryption check the challenger
+performs on $C_1 \concat T$ on executions that pass the early rejecting
+checks. By the flat-sponge lift bound (\Cref{lem:lift-bound}), replacing
+$(\pi,\pi^{-1})$ by $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and both the
+honest target encryption and the challenger check by their random-oracle
+counterparts costs at most $\Lift_c(\Ntot)$. Let
+$\mathcal{B}_{\mathrm{derived}} =
+\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ be the adversary of
+\Cref{lem:derived-adversary}, run against the same fixed opening
+$\omega_0$. The derived-adversary construction gives
+\[
+  \Advspr_\TW(\mathcal{A})
+  \leq \Lift_c(\Ntot)
+    + \Advspr_\RO(\mathcal{B}_{\mathrm{derived}}),
+\]
+with $\qRO(\mathcal{B}_{\mathrm{derived}}) \leq \Nprim$. At
+$\mathcal{B}_{\mathrm{derived}}$, \Cref{cor:spr-ro} gives
+$\RootPre_{\tauroot}(\qRO(\mathcal{B}_{\mathrm{derived}}))$, which by
+monotonicity of $\RootPre_{\tauroot}$ in its argument is at most
+$\RootPre_{\tauroot}(\Nprim)$. As the right-hand bound is uniform in
+$\omega_0$, it holds for the maximum defining $\Advspr_\TW(\mathcal{A})$.
 \end{proof}

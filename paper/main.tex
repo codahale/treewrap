@@ -29,8 +29,10 @@
   all-in-one authenticated encryption, multi-user indistinguishability, and
   both facets of commitment security---$s$-way committing security in the
   strongest full-input sense (\textsf{CMTDs-4}) and its preimage-resistance
-  counterpart, context discoverability. At the implemented parameters all four
-  notions meet a $128$-bit security target. Vectorized \texttt{amd64} and \texttt{arm64}
+  counterpart, context discoverability. The same root tag is also
+  second-preimage resistant, so a signature or commitment over an honestly
+  produced tag cannot be reopened to a different context. At the implemented
+  parameters all four notions meet a $128$-bit security target. Vectorized \texttt{amd64} and \texttt{arm64}
   implementations realize the tree's leaf parallelism, reaching
   multi-gigabyte-per-second throughput within a small factor of
   hardware-accelerated AES-128-GCM.

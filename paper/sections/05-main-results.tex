@@ -13,7 +13,12 @@ CMTDs-4 committing security \cite{BH22} and context discoverability
 discoverability the preimage facet; both follow from the same root tag
 and are stated co-equally. For the AE-style notions the ideal side
 exposes the BDPV simulator; the committing and discoverability bounds
-remain real public-permutation success probabilities.
+remain real public-permutation success probabilities. The
+discoverability analysis additionally yields a second-preimage corollary
+(\Cref{cor:spr}): where context discoverability fixes the target tag
+before the permutation, second-preimage resistance bounds the discovery
+of a distinct opening for an honestly realized tag, at the same
+$\RootPre_\tau$ rate.
 \Cref{thm:ae,thm:mu-ind,thm:cmtds4,thm:cdy} state these
 bounds; the loss terms $\Lift_c$, $\KeyGuess_k$, $\RootColl_\tau$, and
 $\RootPre_\tau$
@@ -394,6 +399,34 @@ the candidate-preimage argument of \Cref{thm:cdy-ro}, dropping the
 exponent from $\tauroot(s-1)$ to $\tauroot$.
 \end{proof}
 
+\begin{corollary}[Second-Preimage Resistance]
+\label{cor:spr}
+For every second-preimage adversary $\mathcal{A}$ against \TW{} with the
+resources of \Cref{sec:resources},
+\[
+  \Advspr_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
+  \;=\;
+  \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}.
+\]
+\end{corollary}
+
+\begin{proof}
+Immediate from the public-permutation corollary \Cref{cor:spr-pp}, which
+lifts the random-oracle second-preimage bound of \Cref{cor:spr-ro}
+through the flat-sponge transform. Where \Cref{thm:cdy} fixes the target
+tag before the permutation is sampled, this corollary fixes an honestly
+realized tag---a genuine encryption output, hence correlated with the
+permutation---and bounds the probability that the adversary finds a
+\emph{distinct} decryption context and body opening the same tag. The
+realized target is therefore not an instance of context discoverability,
+but the revealed-target candidate-preimage argument of \Cref{cor:spr-ro}
+attains the same $\RootPre_{\tauroot}$ rate: the honest target's final
+root tag lookup fixes the target value at an address that every distinct
+opening avoids.
+\end{proof}
+
 \subsection{Loss Terms}
 \label{sec:loss-terms}
 
@@ -473,7 +506,13 @@ single query-independent target tag replaces the $s$-way internal
 collision, the $+s$ candidate-sequence slack collapses to the $+1$ of
 the single discoverability challenger decryption check, and the
 exponent drops from $\tau(s-1)$ to $\tau$. As in the root-collision
-term, the flat-sponge lift gives $Q = \Nprim$.
+term, the flat-sponge lift gives $Q = \Nprim$. The same term bounds both
+preimage notions: the query-independent target of context
+discoverability (\Cref{thm:cdy}) and the realized target of
+second-preimage resistance (\Cref{cor:spr}), the latter via the
+revealed-target candidate-preimage argument in which the honest target's
+final root tag lookup fixes the target value at an address distinct from
+every candidate.
 
 \subsection{Supporting Bounds}
 \label{sec:thms-pp}
@@ -648,6 +687,14 @@ CMTD-4 statement of \cite{BH22}:
   + \frac{\Nprim + 1}{2^{256}}.
 \]
 
+\paragraph{Second-preimage resistance.}
+\[
+  \Advspr_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\Nprim + 1}{2^{256}}.
+\]
+
 \subsection{Concrete Security Claim}
 \label{sec:concrete-claim}
 
@@ -698,6 +745,14 @@ since created-but-idle users need not contribute to $N$.
   $(\Nprim + 1)/2^{256} \leq 2 \cdot 2^{-193}$, far below the
   $128$-bit target; as in the committing bound, the flat-sponge
   differentiating loss dominates.
+\item \emph{Second-preimage resistance.} For every second-preimage
+  adversary against \TW{} with $\Ntot \leq 2^{63}$ \Keccak{} calls (so in
+  particular $\Nprim \leq 2^{63}$), $\Advspr_\TW(\mathcal{A}) \leq
+  2^{-128}$. The bound coincides termwise with the discoverability bound:
+  the flat-sponge term is one $2^{-131}$-sized birthday term, up to
+  lower-order summands, and the realized-target root-preimage term
+  satisfies $(\Nprim + 1)/2^{256} \leq 2 \cdot 2^{-193}$, so the
+  flat-sponge differentiating loss again dominates.
 \end{itemize}
 
 Expressed in bytes of construction work, $\Ntot \leq 2^{63}$
@@ -734,8 +789,8 @@ $\Nleaf \leq \Ntot$. The CMTDs-4 bound is similar: the
 $s = 2$ root-collision term equals $(\Nprim + 1)(\Nprim + 2) /
 2^{257}$, which is within a small additive $\Ntot$-term of
 $\Lift_c$ under $\Nprim \leq \Ntot$, and it decays as $2^{-256(s -
-1)}$ in the denominator for $s \geq 3$. The CDY bound is dominated by
-$\Lift_c$ outright: its root-preimage term $(\Nprim + 1) / 2^{256}$ is
+1)}$ in the denominator for $s \geq 3$. The CDY and second-preimage bounds are dominated by
+$\Lift_c$ outright: their common root-preimage term $(\Nprim + 1) / 2^{256}$ is
 linear in $\Nprim \leq \Ntot$ and hence below $\Lift_c$ for
 $\Ntot \geq 3$.
 

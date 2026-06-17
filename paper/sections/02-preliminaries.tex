@@ -83,6 +83,7 @@ loss terms in \Cref{sec:loss-terms}.
     $\Lift_c(\Ntot)$        & $\Ntot(\Ntot+1) / 2^{c+1}$, \cite{BDPV08} flat-sponge loss   & \cref{sec:loss-terms} \\
     $\KeyGuess_k(Q)$        & $Q / 2^k$, ideal-system key guess                       & \cref{sec:loss-terms} \\
     $\RootColl_\tau(Q, s)$  & $\binom{Q+s}{s} / 2^{\tau(s-1)}$, $s$-way root-collision & \cref{sec:loss-terms} \\
+    $\RootPre_\tau(Q)$      & $(Q+1) / 2^{\tau}$, root-preimage / second-preimage      & \cref{sec:loss-terms} \\
     \bottomrule
   \end{tabular}
   \caption{Resource caps and loss terms.}
@@ -433,7 +434,15 @@ pins two of the three context components and the adversary supplies only
 the remaining one. \cite{MLGR23} show that schemes which
 delegate authenticity to a non-preimage-resistant MAC, including
 \textsf{CCM}, \textsf{EAX}, \textsf{SIV}, \textsf{GCM}, and
-\textsf{OCB3}, admit efficient discoverability attacks. The notion is
+\textsf{OCB3}, admit efficient discoverability attacks. A closely
+related preimage requirement fixes a target tag that is itself a genuine
+encryption output, rather than a primitive-independent constant, and
+forbids finding a \emph{distinct} opening of that realized tag; this
+second-preimage variant, in the standard sense of \cite{RS04}, is not
+subsumed by the query-independent discoverability notion---the realized
+tag is correlated with the primitive---and is the relevant notion when a
+higher-level protocol signs or commits to an honestly produced tag. The notion is
 instantiated for \TW{} in \Cref{sec:games-pp}; its preimage character
 is what makes \TW{}'s root tag, a sponge image rather than an invertible
-MAC, resist these attacks.
+MAC, resist these attacks, in both the query-independent and
+realized-target forms.

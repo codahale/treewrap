@@ -9,7 +9,10 @@ CMTDs-3 statement follows by the flat-sponge lift of
 $s$-way collision replaced by a preimage to a fixed target tag, gives
 the random-oracle context-discoverability bound
 (\Cref{thm:cdy-ro}) underlying the headline CDY statement
-(\Cref{thm:cdy}).
+(\Cref{thm:cdy}). A revealed-target variant of the same preimage
+argument gives the random-oracle second-preimage bound
+(\Cref{cor:spr-ro}) underlying the headline second-preimage corollary
+(\Cref{cor:spr}), the realized-tag companion to context discoverability.
 
 \begin{theorem}[Random-Oracle CMTDs-3]
 \label{thm:cmtds3-ro}
@@ -167,4 +170,95 @@ $\tau = \tauroot$, and $t = T^*$ gives
   =
   \RootPre_{\tauroot}(\qRO(\mathcal{B})).
 \]
+\end{proof}
+
+\begin{corollary}[Random-Oracle Second-Preimage]
+\label{cor:spr-ro}
+For every query-independent honest opening $\omega_0 = (K_0, N_0, A_0,
+M_0)$ in the \TW{} encryption domain and every second-preimage adversary
+$\mathcal{B}$ in the \TW{} random-oracle model (\Cref{sec:ro-model}),
+\[
+  \Advspr_\RO(\mathcal{B})
+  \;\leq\; \RootPre_{\tauroot}(\qRO(\mathcal{B}))
+  = \frac{\qRO(\mathcal{B}) + 1}{2^{\tauroot}}.
+\]
+\end{corollary}
+
+\begin{proof}
+As in \Cref{thm:cdy-ro}, the analysis has no $\badkey$ event: both the
+honest opening's key $K_0$ and the forged context's key $K_1$ are
+adversary-supplied, so a direct query to a keyed transcript is one of
+$\mathcal{B}$'s visible $\ROflat$ queries and is counted in
+$\qRO(\mathcal{B})$. Fix $\omega_0$.
+
+Run the random-oracle second-preimage game (\Cref{sec:ro-model}). Before
+$\mathcal{B}$ is run, the challenger computes the honest target
+$C_0 \concat T = \Enc_{K_0}^\RO(N_0, A_0, M_0)$; its final root tag
+lookup is at the address $X_0 = \flatmap(R_0)$, where $R_0$ is the final
+root transcript of the honest encryption, and it fixes the realized
+target $T = \lfloor \ROflat(X_0) \rfloor_{\tauroot}$. By Output-Point
+Separation (\Cref{cor:output-sep}), the only honest-encryption lookup in
+a root tag output-point class is the one at $X_0$: its remaining lookups
+(root and leaf initialization, associated-data, non-final and leaf
+message, and aggregation points) lie in other classes and are distinct
+from every root tag address.
+
+Define a candidate sequence as in \Cref{thm:cdy-ro}'s direct oracle
+phase, but excluding the target address: when $\mathcal{B}$ makes a
+direct query to an input $Y \neq X_0$ that is not already in the
+sequence, append $Y$ immediately before answering the query if
+$\KeyedTWOut(Y)$ decodes to a root tag output-point class, namely
+$\Rmsg^+$ or $\Rtag$. This predicate depends on $Y$ alone through the
+exact decoder of \Cref{lem:bridge-decode}, and by \Cref{cor:output-sep}
+each distinct direct query contributes at most one candidate, first
+touched at its append step. A direct query to $X_0$ itself only re-reads
+the already-revealed target and is not appended.
+
+After $\mathcal{B}$ outputs the ciphertext body $C_1$ and the single
+context $(K_1, N_1, A_1)$, stop appending if the syntax, ciphertext
+validity, or distinctness precheck on $(C_1, K_1, N_1, A_1)$ fails.
+Otherwise let $R_1$ be the final root transcript reached by the one
+deterministic decryption check $\Dec_{K_1}^\RO(N_1, A_1, C_1 \concat T)$,
+and append $\flatmap(R_1)$ immediately before its root tag oracle answer
+is sampled, unless that input is already in the sequence. On a winning
+execution the distinctness check passes, so
+$(C_1, K_1, N_1, A_1) \neq (C_0, K_0, N_0, A_0)$; by
+\Cref{lem:transcript-inj} and the separation corollaries
+(\Cref{cor:output-sep,cor:triple-sep}) a distinct opening forces
+$R_1 \neq R_0$, and by injectivity of $\flatmap$
+(\Cref{lem:bridge-decode}) hence $\flatmap(R_1) \neq X_0$. The winning
+candidate therefore lies at an address distinct from the target address
+$X_0$. As in \Cref{thm:cdy-ro}, if $\flatmap(R_1)$ was already touched by
+a direct query then \Cref{cor:output-sep} makes that earlier query a
+final-root candidate already in the sequence; otherwise \Cref{cor:output-sep}
+excludes all earlier lookups outside the final-root class, and the honest
+encryption's only root tag lookup is at the excluded address $X_0$. Thus
+no earlier lookup has revealed the newly appended candidate's value. The
+sequence therefore satisfies the predictability and unrevealed-value
+premises of Revealed-Target Candidate Preimage
+(\Cref{lem:revealed-target-preimage}), every candidate is distinct from
+$X_0$, and its length is at most $\qRO(\mathcal{B}) + 1$.
+
+On a winning execution the single decryption check accepts, so by
+\Cref{alg:dec} the $\tauroot$-bit projection at the final root transcript
+$R_1$ equals the realized target:
+\[
+  \bigl\lfloor \ROflat(\flatmap(R_1)) \bigr\rfloor_{\tauroot}
+  = T
+  = \bigl\lfloor \ROflat(X_0) \bigr\rfloor_{\tauroot}.
+\]
+Hence the win event is contained in the event that some candidate's
+$\tauroot$-bit projection equals the revealed target $T$. Applying
+\Cref{lem:revealed-target-preimage} with $Q = \qRO(\mathcal{B})$,
+$\tau = \tauroot$, distinguished address $X_0$, and revealed target $T$
+gives
+\[
+  \Advspr_\RO(\mathcal{B})
+  \leq
+  (\qRO(\mathcal{B}) + 1) \cdot 2^{-\tauroot}
+  =
+  \RootPre_{\tauroot}(\qRO(\mathcal{B})).
+\]
+Since the bound is uniform in $\omega_0$, it holds for the maximum
+defining $\Advspr_\RO$.
 \end{proof}
