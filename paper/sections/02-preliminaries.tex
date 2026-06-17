@@ -197,53 +197,24 @@ $C \concat T$, with $C$ the ciphertext body and $T$ the root tag.
 For every $(K, N, A, M) \in \mathcal{K} \times \mathcal{N} \times
 \mathcal{A} \times \mathcal{M}$, $\Dec_K(N, A, \Enc_K(N, A, M)) = M$.
 
-\paragraph{Privacy ($\mathsf{IND}\text{-}\$\text{-}\mathsf{CPA}$).}
-The privacy game samples $K \sample \mathcal{K}$ and gives the
-adversary $\mathcal{A}$ either the real encryption oracle
-$\Enc_K(\cdot, \cdot, \cdot)$ or the random-output oracle $\Rand$
-that, on every query $(N, A, M)$, returns a fresh uniformly random
-byte string of length $\|\Enc_K(N, A, M)\| = \|M\| + \tau/8$ where
-$\tau$ is the scheme's tag length in bits. The adversary is
-\emph{nonce-respecting}: distinct encryption queries must use
-distinct nonces. Define
-\[
-  \Advpriv_\SE(\mathcal{A})
-  = \bigl|
-    \Pr[\mathcal{A}^{\Enc_K} \Rightarrow 1]
-    - \Pr[\mathcal{A}^{\Rand} \Rightarrow 1]
-  \bigr|.
-\]
-
-\paragraph{Ciphertext integrity (INT-CTXT).}
-The INT-CTXT game samples $K \sample \mathcal{K}$ and gives
-$\mathcal{A}$ access to $\Enc_K$ and a verification oracle $\Ver_K$
-that returns $1$ if $\Dec_K(N, A, C) \neq \bot$ and $0$ otherwise.
-Each encryption query records the resulting tuple $(N, A, C)$. The
-adversary wins if some verification query returns $1$ on a tuple
-$(N, A, C)$ not previously recorded by the encryption oracle. No
-nonce uniqueness is imposed on either oracle. Define
-$\Advintctxt_\SE(\mathcal{A})$ as the probability that $\mathcal{A}$
-wins.
-
-\paragraph{All-in-one AE.}
-The all-in-one authenticated-encryption notion of \cite{RS06},
-instantiated for nonce-based AE following \cite{BT16}, combines
-privacy and integrity into a single experiment. The
-challenger samples $K \sample \mathcal{K}$ and grants $\mathcal{A}$
-either the pair $(\Enc_K, \Ver_K)$ or the ideal pair $(\Rand,
-\Replay)$. In the ideal pair, $\Rand$ returns a fresh uniformly
-random byte string of length $\|\Enc_K(N, A, M)\|$ on each accepted
-query $(N,A,M)$ and records the resulting tuple $(N,A,C)$ in a set
-$W$; $\Replay_W(N,A,C)$ returns $1$ if $(N,A,C) \in W$ and $0$
-otherwise. The adversary is nonce-respecting on encryption queries.
-Define
-\[
-  \Advae_\SE(\mathcal{A})
-  = \bigl|
-    \Pr[\mathcal{A}^{\Enc_K, \Ver_K} \Rightarrow 1]
-    - \Pr[\mathcal{A}^{\Rand, \Replay} \Rightarrow 1]
-  \bigr|.
-\]
+\paragraph{Privacy, integrity, and all-in-one AE.}
+We use the standard nonce-based security notions, stated concretely for
+\TW{} in \Cref{sec:games-pp}. \emph{Privacy}
+($\mathsf{IND}\text{-}\$\text{-}\mathsf{CPA}$) is the distinguishing
+advantage $\Advpriv_\SE(\mathcal{A})$ between the real encryption oracle
+$\Enc_K$ and a random-output oracle $\Rand$ that returns a fresh uniform
+byte string of the ciphertext length on each query, over
+nonce-respecting adversaries. \emph{Ciphertext integrity} (INT-CTXT) is
+the winning probability $\Advintctxt_\SE(\mathcal{A})$ in the game that
+grants $\mathcal{A}$ the oracles $\Enc_K$ and a verification oracle
+$\Ver_K$ and declares a win when some verification query accepts a tuple
+$(N, A, C)$ not produced by $\Enc_K$; no nonce uniqueness is imposed.
+\emph{All-in-one AE} \cite{RS06}, instantiated for nonce-based AE
+following \cite{BT16}, combines the two into a single experiment that
+grants either $(\Enc_K, \Ver_K)$ or the ideal pair $(\Rand, \Replay)$,
+where $\Replay$ accepts exactly the tuples $\Rand$ produced, and defines
+$\Advae_\SE(\mathcal{A})$ as the distinguishing advantage between them
+over nonce-respecting adversaries.
 
 \begin{lemma}[Bellare--Namprempre Composition]
 \label{lem:bn-composition}
