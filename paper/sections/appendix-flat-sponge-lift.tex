@@ -161,7 +161,7 @@ caps of $\mathcal{A}$:
   \qv(\mathcal{B}_{\mathrm{derived}}) &= \qv(\mathcal{A})
     \quad\text{(INT-CTXT, AE, mu-ind)}, \\
   \nleaf(\mathcal{B}_{\mathrm{derived}}) &\leq \nleaf(\mathcal{A})
-    \quad\text{(INT-CTXT, AE, mu-ind)}.
+    \quad\text{(INT-CTXT, AE, mu-ind, second-preimage)}.
 \end{align*}
 In the mu-ind game these resource inheritances hold per user, and the
 $\mathsf{New}$-query transcript is unchanged.
@@ -362,15 +362,16 @@ fixed $T^*$, then gives the claim.
 \begin{corollary}[Public-Permutation Second-Preimage]
 \label{cor:spr-pp}
 For every second-preimage adversary $\mathcal{A}$ against \TW{} with
-$\Nprim$ direct primitive queries and total cost at most $\Ntot$ (both as
-in \Cref{sec:resources}),
+$\Nprim$ direct primitive queries, total cost at most $\Ntot$, and
+distinct-final-leaf-transcript cap $\Nleaf$ (all as in
+\Cref{sec:resources}),
 \[
   \Advspr_\TW(\mathcal{A})
   \;\leq\;
   \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
-    + \frac{\Nprim + \Nleaf}{2^{\tauleaf}}
+    + \frac{\Nleaf}{2^{\tauleaf}}
   = \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}
-    + \frac{\Nprim + \Nleaf}{2^{\tauleaf}}.
+    + \frac{\Nleaf}{2^{\tauleaf}}.
 \]
 \end{corollary}
 
@@ -384,7 +385,7 @@ second-preimage adversary $\mathcal{B}$ satisfies
 \[
   \Advspr_\RO(\mathcal{B})
   \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))
-    + \frac{\qRO(\mathcal{B}) + \nleaf(\mathcal{B})}{2^{\tauleaf}},
+    + \frac{\nleaf(\mathcal{B})}{2^{\tauleaf}},
 \]
 nondecreasing in $\qRO(\mathcal{B})$ and $\nleaf(\mathcal{B})$. The Lift
 Application corollary (\Cref{cor:lift-application}), with
