@@ -337,7 +337,9 @@ in \Cref{sec:resources}),
   \Advspr_\TW(\mathcal{A})
   \;\leq\;
   \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
-  = \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}.
+    + \frac{\Nprim + \Nleaf}{2^{\tauleaf}}
+  = \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}
+    + \frac{\Nprim + \Nleaf}{2^{\tauleaf}}.
 \]
 \end{corollary}
 
@@ -360,10 +362,16 @@ $\omega_0$. The derived-adversary construction gives
   \leq \Lift_c(\Ntot)
     + \Advspr_\RO(\mathcal{B}_{\mathrm{derived}}),
 \]
-with $\qRO(\mathcal{B}_{\mathrm{derived}}) \leq \Nprim$. At
+with $\qRO(\mathcal{B}_{\mathrm{derived}}) \leq \Nprim$ and
+$\nleaf(\mathcal{B}_{\mathrm{derived}}) \leq \Nleaf$. At
 $\mathcal{B}_{\mathrm{derived}}$, \Cref{cor:spr-ro} gives
-$\RootPre_{\tauroot}(\qRO(\mathcal{B}_{\mathrm{derived}}))$, which by
-monotonicity of $\RootPre_{\tauroot}$ in its argument is at most
-$\RootPre_{\tauroot}(\Nprim)$. As the right-hand bound is uniform in
-$\omega_0$, it holds for the maximum defining $\Advspr_\TW(\mathcal{A})$.
+\[
+  \RootPre_{\tauroot}(\qRO(\mathcal{B}_{\mathrm{derived}}))
+  + \frac{\qRO(\mathcal{B}_{\mathrm{derived}})
+          + \nleaf(\mathcal{B}_{\mathrm{derived}})}{2^{\tauleaf}},
+\]
+which by monotonicity in its arguments is at most
+$\RootPre_{\tauroot}(\Nprim) + (\Nprim + \Nleaf)/2^{\tauleaf}$. As the
+right-hand bound is uniform in $\omega_0$, it holds for the maximum
+defining $\Advspr_\TW(\mathcal{A})$.
 \end{proof}

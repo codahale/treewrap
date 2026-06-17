@@ -180,7 +180,9 @@ $\mathcal{B}$ in the \TW{} random-oracle model (\Cref{sec:ro-model}),
 \[
   \Advspr_\RO(\mathcal{B})
   \;\leq\; \RootPre_{\tauroot}(\qRO(\mathcal{B}))
-  = \frac{\qRO(\mathcal{B}) + 1}{2^{\tauroot}}.
+    + \frac{\qRO(\mathcal{B}) + \nleaf(\mathcal{B})}{2^{\tauleaf}}
+  = \frac{\qRO(\mathcal{B}) + 1}{2^{\tauroot}}
+    + \frac{\qRO(\mathcal{B}) + \nleaf(\mathcal{B})}{2^{\tauleaf}}.
 \]
 \end{corollary}
 
@@ -222,13 +224,33 @@ deterministic decryption check $\Dec_{K_1}^\RO(N_1, A_1, C_1 \concat T)$,
 and append $\flatmap(R_1)$ immediately before its root tag oracle answer
 is sampled, unless that input is already in the sequence. On a winning
 execution the distinctness check passes, so
-$(C_1, K_1, N_1, A_1) \neq (C_0, K_0, N_0, A_0)$; by
-\Cref{lem:transcript-inj} and the separation corollaries
-(\Cref{cor:output-sep,cor:triple-sep}) a distinct opening forces
-$R_1 \neq R_0$, and by injectivity of $\flatmap$
-(\Cref{lem:bridge-decode}) hence $\flatmap(R_1) \neq X_0$. The winning
-candidate therefore lies at an address distinct from the target address
-$X_0$. As in \Cref{thm:cdy-ro}, if $\flatmap(R_1)$ was already touched by
+$(C_1, K_1, N_1, A_1) \neq (C_0, K_0, N_0, A_0)$.
+
+Let $\badleaf$ be the event that the decryption check generates a final
+leaf transcript distinct from the honest leaf transcript at the same leaf
+index but with an equal $\tauleaf$-bit leaf tag. The honest leaf tags of
+$\omega_0$ are fixed before $\mathcal{B}$ runs, so they form a revealed
+target set; the candidate leaf transcripts are $\mathcal{B}$'s direct
+queried leaf transcripts together with the decryption check's leaf
+transcripts, at most $\qRO(\mathcal{B}) + \nleaf(\mathcal{B})$ in all,
+each distinct from the honest leaf transcript sharing its leaf index. By
+Revealed-Target Leaf Preimage (\Cref{cor:revealed-target-leaf-preimage}),
+\[
+  \Pr[\badleaf]
+  \;\leq\;
+  \frac{\qRO(\mathcal{B}) + \nleaf(\mathcal{B})}{2^{\tauleaf}}.
+\]
+On executions where $\badleaf$ does not occur, a distinct opening forces
+$R_1 \neq R_0$: if the triples differ,
+$(K_1, N_1, A_1) \neq (K_0, N_0, A_0)$, Opening Triple Separation
+(\Cref{cor:triple-sep}) gives $\flatmap(R_1) \neq \flatmap(R_0)$
+directly; if instead the triples agree and $C_1 \neq C_0$, then the
+absence of $\badleaf$ supplies the no-leaf-tag-collision side condition of
+\Cref{lem:transcript-inj}, so $R_1 = R_0$ would recover the same absorbed
+ciphertext $C_1 = C_0$, a contradiction. In either sub-case, by
+injectivity of $\flatmap$ (\Cref{lem:bridge-decode}) hence
+$\flatmap(R_1) \neq X_0$. The winning candidate therefore lies at an
+address distinct from the target address $X_0$. As in \Cref{thm:cdy-ro}, if $\flatmap(R_1)$ was already touched by
 a direct query then \Cref{cor:output-sep} makes that earlier query a
 final-root candidate already in the sequence; otherwise \Cref{cor:output-sep}
 excludes all earlier lookups outside the final-root class, and the honest
@@ -247,17 +269,18 @@ $R_1$ equals the realized target:
   = T
   = \bigl\lfloor \ROflat(X_0) \bigr\rfloor_{\tauroot}.
 \]
-Hence the win event is contained in the event that some candidate's
-$\tauroot$-bit projection equals the revealed target $T$. Applying
-\Cref{lem:revealed-target-preimage} with $Q = \qRO(\mathcal{B})$,
-$\tau = \tauroot$, distinguished address $X_0$, and revealed target $T$
-gives
+Hence, on executions where $\badleaf$ does not occur, the win event is
+contained in the event that some candidate's $\tauroot$-bit projection
+equals the revealed target $T$. Applying \Cref{lem:revealed-target-preimage}
+with $Q = \qRO(\mathcal{B})$, $\tau = \tauroot$, distinguished address
+$X_0$, and revealed target $T$ bounds that event by
+$\RootPre_{\tauroot}(\qRO(\mathcal{B}))$. Combining with the $\badleaf$
+bound above,
 \[
   \Advspr_\RO(\mathcal{B})
   \leq
-  (\qRO(\mathcal{B}) + 1) \cdot 2^{-\tauroot}
-  =
-  \RootPre_{\tauroot}(\qRO(\mathcal{B})).
+  \RootPre_{\tauroot}(\qRO(\mathcal{B}))
+  + \frac{\qRO(\mathcal{B}) + \nleaf(\mathcal{B})}{2^{\tauleaf}}.
 \]
 Since the bound is uniform in $\omega_0$, it holds for the maximum
 defining $\Advspr_\RO$.

@@ -407,8 +407,10 @@ resources of \Cref{sec:resources},
   \Advspr_\TW(\mathcal{A})
   \;\leq\;
   \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
+    + \frac{\Nprim + \Nleaf}{2^{\tauleaf}}
   \;=\;
-  \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}.
+  \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}
+    + \frac{\Nprim + \Nleaf}{2^{\tauleaf}}.
 \]
 \end{corollary}
 
@@ -424,7 +426,9 @@ realized target is therefore not an instance of context discoverability,
 but the revealed-target candidate-preimage argument of \Cref{cor:spr-ro}
 attains the same $\RootPre_{\tauroot}$ rate: the honest target's final
 root tag lookup fixes the target value at an address that every distinct
-opening avoids.
+opening avoids. The honest opening's leaf tags are likewise a revealed
+fixed target, contributing the additional leaf-preimage term
+$(\Nprim + \Nleaf)/2^{\tauleaf}$ of \Cref{cor:spr-ro}.
 \end{proof}
 
 \subsection{Loss Terms}
@@ -692,7 +696,8 @@ CMTD-4 statement of \cite{BH22}:
   \Advspr_\TW(\mathcal{A})
   \;\leq\;
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
-  + \frac{\Nprim + 1}{2^{256}}.
+  + \frac{\Nprim + 1}{2^{256}}
+  + \frac{\Nprim + \Nleaf}{2^{256}}.
 \]
 
 \subsection{Concrete Security Claim}
@@ -747,11 +752,13 @@ since created-but-idle users need not contribute to $N$.
   differentiating loss dominates.
 \item \emph{Second-preimage resistance.} For every second-preimage
   adversary against \TW{} with $\Ntot \leq 2^{63}$ \Keccak{} calls (so in
-  particular $\Nprim \leq 2^{63}$), $\Advspr_\TW(\mathcal{A}) \leq
-  2^{-128}$. The bound coincides termwise with the discoverability bound:
-  the flat-sponge term is one $2^{-131}$-sized birthday term, up to
-  lower-order summands, and the realized-target root-preimage term
-  satisfies $(\Nprim + 1)/2^{256} \leq 2 \cdot 2^{-193}$, so the
+  particular $\Nprim, \Nleaf \leq 2^{63}$), $\Advspr_\TW(\mathcal{A}) \leq
+  2^{-128}$. The bound matches the discoverability bound up to an
+  additional revealed-target leaf-preimage term: the flat-sponge term is
+  one $2^{-131}$-sized birthday term, up to lower-order summands, and the
+  realized-target root-preimage and leaf-preimage terms satisfy
+  $(\Nprim + 1)/2^{256} \leq 2 \cdot 2^{-193}$ and
+  $(\Nprim + \Nleaf)/2^{256} \leq 2 \cdot 2^{-193}$, so the
   flat-sponge differentiating loss again dominates.
 \end{itemize}
 
@@ -792,7 +799,9 @@ $\Lift_c$ under $\Nprim \leq \Ntot$, and it decays as $2^{-256(s -
 1)}$ in the denominator for $s \geq 3$. The CDY and second-preimage bounds are dominated by
 $\Lift_c$ outright: their common root-preimage term $(\Nprim + 1) / 2^{256}$ is
 linear in $\Nprim \leq \Ntot$ and hence below $\Lift_c$ for
-$\Ntot \geq 3$.
+$\Ntot \geq 3$; the second-preimage bound's additional leaf-preimage term
+$(\Nprim + \Nleaf) / 2^{256}$ is likewise linear in
+$\Nprim, \Nleaf \leq \Ntot$ and below $\Lift_c$.
 
 The multi-user mu-ind bound is the exception. For
 $D \leq \Ntot(\Ntot+1) / (4 \Nprim)$ users (typical for any
