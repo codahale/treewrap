@@ -222,13 +222,18 @@ leaf transcript distinct from the honest leaf transcript at the same leaf
 index but with an equal $\tauleaf$-bit leaf tag. The honest leaf tags of
 $\omega_0$ are fixed before $\mathcal{B}$ runs, so they form a revealed
 target set; the candidate leaf transcripts are the decryption check's
-leaf transcripts that are distinct from the honest leaf transcript sharing
-their leaf index, at most $\nleaf(\mathcal{B})$ in all. Each such check
-leaf is generated construction-side and is appended immediately before its
-leaf-tag oracle answer is sampled, exactly as for the root-tag candidates
-above, so the candidates satisfy the predictability and unrevealed-value
-premises of Revealed-Target Leaf Preimage; the candidate set is then
-precisely the $\badleaf$ event. By Revealed-Target Leaf Preimage
+leaf transcripts at honest-occupied leaf indices that are distinct from
+the honest leaf transcript sharing their leaf index, at most
+$\nleaf(\mathcal{B})$ in all. A check leaf at a leaf index with no honest
+leaf transcript can never satisfy $\badleaf$---a same-index collision with
+an honest leaf---so restricting to honest-occupied indices loses nothing.
+Each candidate check leaf is construction-generated, hence predictable,
+and differs from the honest leaf transcript at its occupied index, so by
+\Cref{lem:transcript-inj} its bridged address is distinct from that
+index's revealed target address; the candidates therefore satisfy the
+predictability and address-separation premises of Revealed-Target Leaf
+Preimage, and the candidate set is precisely the $\badleaf$ event. By
+Revealed-Target Leaf Preimage
 (\Cref{cor:revealed-target-leaf-preimage}),
 \[
   \Pr[\badleaf]
@@ -239,13 +244,21 @@ On executions where $\badleaf$ does not occur, a distinct opening forces
 $R_1 \neq R_0$: if the triples differ,
 $(K_1, N_1, A_1) \neq (K_0, N_0, A_0)$, Opening Triple Separation
 (\Cref{cor:triple-sep}) gives $\flatmap(R_1) \neq \flatmap(R_0)$
-directly; if instead the triples agree and $C_1 \neq C_0$, then the
-absence of $\badleaf$ supplies the no-leaf-tag-collision side condition of
-\Cref{lem:transcript-inj}, so $R_1 = R_0$ would recover the same absorbed
-ciphertext $C_1 = C_0$, a contradiction. In either sub-case, by
-injectivity of $\flatmap$ (\Cref{lem:bridge-decode}) hence
-$\flatmap(R_1) \neq X_0$. The winning candidate therefore lies at an
-address distinct from the target address $X_0$. As in \Cref{thm:cdy-ro}, if $\flatmap(R_1)$ was already touched by
+directly; if instead the triples agree and $C_1 \neq C_0$, suppose
+$R_1 = R_0$. Equality of the flattened final-root inputs recovers the same
+positional aggregation string
+$T_1 \concat \cdots \concat T_n \concat \langle n \rangle_8$
+(\Cref{lem:transcript-inj}), so the check and honest computations share a
+leaf tag at every leaf index. Absence of $\badleaf$ then forces the
+index-aligned check and honest leaf transcripts to coincide, so
+\Cref{lem:transcript-inj} recovers the same absorbed ciphertext
+$C_1 = C_0$, a contradiction; hence $R_1 \neq R_0$. Recall
+$X_0 = \flatmap(R_0)$. In the first sub-case Opening Triple Separation
+already gives the address inequality
+$\flatmap(R_1) \neq \flatmap(R_0) = X_0$ directly; in the second,
+$R_1 \neq R_0$, so injectivity of $\flatmap$ (\Cref{lem:bridge-decode})
+gives $\flatmap(R_1) \neq \flatmap(R_0) = X_0$. The winning candidate
+therefore lies at an address distinct from the target address $X_0$. As in \Cref{thm:cdy-ro}, if $\flatmap(R_1)$ was already touched by
 a direct query then \Cref{cor:output-sep} makes that earlier query a
 final-root candidate already in the sequence; otherwise \Cref{cor:output-sep}
 excludes all earlier lookups outside the final-root class, and the honest

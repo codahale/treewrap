@@ -673,12 +673,18 @@ fixing for each occupied leaf index $j$ the revealed leaf tag
 \]
 of the honest final leaf transcript $X_j^\star$ at index $j$. The
 interaction then builds candidate final leaf transcripts
-$Y_1, \dots, Y_m$, each distinct from the honest leaf transcript sharing
-its leaf index, under the same \emph{predictability} and
-\emph{unrevealed-value} premises as \Cref{lem:adaptive-candidate-preimage}.
-Let $\mathsf{pre}_{\tauleaf}$ be the event that some candidate's
-$\tauleaf$-bit projection equals the revealed leaf tag at its own leaf
-index. Then
+$Y_1, \dots, Y_m$, each at an occupied leaf index and distinct from the
+honest leaf transcript sharing its leaf index, under the
+\emph{predictability} premise of \Cref{lem:adaptive-candidate-preimage}.
+Unlike that lemma, no \emph{unrevealed-value} premise is imposed on the
+candidates: because each revealed leaf tag $t_j$ is fixed before any
+candidate is appended and a candidate at index $j$ is bridged to an
+address distinct from the target address $\flatmap(X_j^\star)$ (by
+\Cref{lem:transcript-inj}, since the candidate differs from $X_j^\star$),
+the candidate's value is independent of $t_{j}$ regardless of when its
+own address is first sampled. Let $\mathsf{pre}_{\tauleaf}$ be the event
+that some candidate's $\tauleaf$-bit projection equals the revealed leaf
+tag at its own leaf index. Then
 \[
   \Pr[\mathsf{pre}_{\tauleaf}]
   \leq
@@ -697,16 +703,19 @@ $\RF(X) = \ROflat(\flatmap(X))$, each candidate corresponds to the
 $\ROflat$ input $\flatmap(Y_i)$ and its target $t_{j(i)}$ to the value
 revealed at the distinguished address $\flatmap(X_{j(i)}^\star)$, queried
 when the honest computation created $X_{j(i)}^\star$, before any candidate
-is appended. Fix $i$ and condition on the execution prefix immediately
-before $Y_i$ is appended. As in \Cref{lem:adaptive-candidate-preimage}, the
-prefix determines $\flatmap(Y_i)$ (predictability) and reveals no bit of
-$\ROflat(\flatmap(Y_i))$ (unrevealed-value); since
-$Y_i \neq X_{j(i)}^\star$ their bridged inputs differ
-(\Cref{lem:transcript-inj}), so under lazy sampling the projection of
-$Y_i$ is uniform and independent of $t_{j(i)}$, which was fixed at the
-distinct address $\flatmap(X_{j(i)}^\star)$. Hence the $\tauleaf$-bit
-projection of $Y_i$ equals $t_{j(i)}$ with probability $2^{-\tauleaf}$. A
-union bound over the $m$ candidates gives the claim.
+is appended. Fix $i$. Since $Y_i \neq X_{j(i)}^\star$, their bridged
+inputs differ (\Cref{lem:transcript-inj}), so $\flatmap(Y_i)$ and the
+target address $\flatmap(X_{j(i)}^\star)$ are distinct. The target
+$t_{j(i)}$ was fixed at $\flatmap(X_{j(i)}^\star)$ before any candidate,
+so under lazy sampling the value $\ROflat(\flatmap(Y_i))$---whenever its
+address is first sampled---is uniform and independent of $t_{j(i)}$,
+which depends only on $\ROflat$ at the distinct address
+$\flatmap(X_{j(i)}^\star)$. The append-time unrevealed-value premise of
+\Cref{lem:adaptive-candidate-preimage} is therefore unnecessary here:
+independence follows from address-separation alone. Hence the
+$\tauleaf$-bit projection of $Y_i$ equals $t_{j(i)}$ with probability
+$2^{-\tauleaf}$, and predictability bounds the candidates at $m$ distinct
+addresses. A union bound over the $m$ candidates gives the claim.
 
 Unlike the Leaf Tag Collision Bound (\Cref{lem:leaf-collision}), which
 assumes a hidden key and yields a birthday term in $\nleaf$, the
