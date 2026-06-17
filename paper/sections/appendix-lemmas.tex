@@ -673,7 +673,7 @@ queries, the hidden key is uniform on $\bits^k \setminus S_i$. Then
   \leq \KeyGuess_k(\qRO)
   = \qRO / 2^k,
 \]
-where $\qRO$ is the execution-uniform cap on direct $\ROflat$ queries.
+where $\qRO$ is the execution-uniform count of direct $\ROflat$ queries.
 \end{lemma}
 
 \begin{proof}
@@ -1295,7 +1295,7 @@ computation but returns reject to the adversary. Lazy sampling is
 deferred for each verification-first class's final root tag value: the
 continuation records the class address and the submitted tag, but while
 the class remains verification-first it does not expose that root tag
-value to the adversary. The execution-uniform cap $\qv(\mathcal{B})$
+value to the adversary. The execution-uniform count $\qv(\mathcal{B})$
 applies to this continuation.
 
 Fix a verification-first final root transcript class $\mathcal{C}$ and follow the

@@ -409,10 +409,11 @@ The flat-sponge differentiating loss is
 \]
 \cite[Lemmas~4 and~5]{BDPV08} give the differentiating probabilities
 in exact product form: the random-transformation probability is
-$f_T(\Ntot) = 1 - \prod_{i=1}^{\Ntot}(1 - i/2^c)$, and each factor of
-the random-permutation probability $f_P(\Ntot)$ is the corresponding
-$f_T$ factor divided by a quantity $1 - i/2^{r+c} \in (0, 1]$, hence
-at least as large, so $f_P(\Ntot) \leq f_T(\Ntot)$. For
+$f_T(\Ntot) = 1 - \prod_{i=1}^{\Ntot}(1 - i/2^c)$, and the factor of
+the random-permutation probability $f_P(\Ntot)$ corresponding to the
+$f_T$ factor at index $i$ is that factor divided by a quantity
+$1 - (i-1)/2^{r+c} \in (0, 1]$, hence at least as large, so
+$f_P(\Ntot) \leq f_T(\Ntot)$. For
 $\Ntot < 2^c$ every factor lies in $[0, 1]$ and
 \[
   f_P(\Ntot) \leq f_T(\Ntot)
