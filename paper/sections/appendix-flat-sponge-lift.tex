@@ -75,7 +75,7 @@ simulator-side $\ROflat$ call used throughout this appendix.
 \label{lem:lift-bound}
 Let $\mathsf{G}$ be any of the single-stage \TW{} games of
 \Cref{sec:games-pp,sec:mu-setting}: privacy, INT-CTXT, all-in-one AE,
-mu-ind, CMTDs-3, or
+mu-ind, CMTDs-3, CDY, or
 CMTs-$\ell$ for $\ell \in \{1,3,4\}$. Let
 $\mathcal{A}$ be a
 public-permutation $\mathsf{G}$ adversary with construction-interface
@@ -103,7 +103,7 @@ granularity as the underlying $\Keccak[1600, 12]$ calls. This includes
 verification computations whether they accept or reject, the per-user
 sum of construction calls in mu-ind, and the deterministic challenger
 decryption or encryption checks actually performed in the committing
-games.
+and discoverability games.
 
 Second, each direct adversary query to $(\pi,\pi^{-1})$ contributes one
 primitive-interface query and is counted in $\Nprim$. These two counts
@@ -124,7 +124,7 @@ which \Cref{sec:loss-terms} bounds by $\Lift_c(\Ntot)$.
 \label{lem:derived-adversary}
 Let $\mathsf{G}$ be any of the single-stage \TW{} games of
 \Cref{sec:games-pp,sec:mu-setting}: privacy, INT-CTXT, all-in-one AE,
-mu-ind, CMTDs-3, or
+mu-ind, CMTDs-3, CDY, or
 CMTs-$\ell$ for $\ell \in \{1,3,4\}$. Let
 $\mathcal{A}$ be a
 simulator-world $\mathsf{G}$ adversary whose public-primitive
@@ -135,7 +135,7 @@ $\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ to run $\mathcal{A}$
 internally, answer each primitive-interface query by running the
 same simulator against direct finite-output queries to its own
 $\ROflat$ oracle, and forward construction-interface queries (or, in
-the committing games, the final structured output) unchanged to the
+the committing and discoverability games, the final structured output) unchanged to the
 corresponding random-oracle experiment. Then the simulator-world
 execution of $\mathcal{A}$ and the random-oracle execution of
 $\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ have identical joint
@@ -170,7 +170,7 @@ answers from the selected game interface and public-primitive answers
 from $(\Sim^{\ROflat}, \Sim^{-1,\ROflat})$. In the derived
 random-oracle execution, $\mathcal{B}_{\mathrm{derived}}$ runs the
 same $\mathcal{A}$, forwards construction-interface queries (or the
-final committing-game output) unchanged, and answers primitive-interface
+final committing- or discoverability-game output) unchanged, and answers primitive-interface
 queries by invoking the same simulator code with the same lazy
 $\ROflat$ table. The construction interface or committing challenger
 therefore receives the same forwarded inputs, the simulator receives the
@@ -185,7 +185,7 @@ inputs. These calls are the direct $\ROflat$ queries of
 $\mathcal{B}_{\mathrm{derived}}$ and are counted in
 $\qRO(\mathcal{B}_{\mathrm{derived}})$. Construction-internal
 $\RF(\cdot)$ lookups made by $\Enc_K^\RO$, $\Dec_K^\RO$,
-$\Ver_K^\RO$, or a committing challenger are forwarded to the same
+$\Ver_K^\RO$, or a committing or discoverability challenger are forwarded to the same
 $\ROflat$ table but are not counted in $\qRO$, exactly as in
 \Cref{sec:resources}.
 
