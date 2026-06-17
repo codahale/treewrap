@@ -255,66 +255,37 @@ that accepts only previously-issued encryption tuples). The adversary
 also accesses an ideal primitive interface, shared between the two
 worlds. The adversary outputs a guess $b'$ and wins if $b' = b$.
 
-\paragraph{Game.}
+\paragraph{Game and advantage.}
 The game $\mathsf{G}^{\mathsf{mu\text{-}ind}}_\SE(\mathcal{A})$ of
 \cite[Fig.~3]{BT16} samples $b \sample \bits$ and maintains a user
 counter $v$, a set $V$ of $(d, N)$ pairs already used by encryption,
-and a set $W$ of recorded encryption tuples $(d, N, C, A)$. We write
-the user index as $d$ and the associated-data input as $A$, where
-\cite{BT16} writes $i$ and $H$ respectively, to match the notation of
-\Cref{sec:mu-setting}; unlike \cite{BT16}, whose advantage is the
-signed quantity $2\Pr[\mathsf{G}] - 1$, we take the absolute value so
-that the advantage equals the two-game distinguishing form below. The adversary has access to
-\begin{itemize}
-\item $\mathsf{New}()$: increment $v$, sample $K_v \sample
-  \mathcal{K}$.
-\item $\mathsf{Enc}(d, N, M, A)$: reject inactive users and repeated
-  user-nonce pairs. Otherwise compute $C_1 = \Enc_{K_d}(N, A, M)$,
-  sample $C_0 \sample \bits^{8\|C_1\|}$, record $(d, N)$ in $V$ and
-  $(d, N, C_b, A)$ in $W$, and return $C_b$.
-\item $\mathsf{Vf}(d, N, C, A)$: reject if $d \notin \{1, \dots,
-  v\}$; if $(d, N, C, A) \in W$ return $\mathsf{true}$; if $b = 0$
-  return $\mathsf{false}$; else return $[\Dec_{K_d}(N, A, C) \neq
-  \bot]$.
-\item The shared ideal primitive interface.
-\end{itemize}
-The adversary outputs $b' \in \bits$ and the game returns $1$ if
-$b' = b$ and $0$ otherwise. The advantage is
+and a set $W$ of recorded encryption tuples; its $\mathsf{New}$,
+$\mathsf{Enc}$, and $\mathsf{Vf}$ oracles, together with the shared
+ideal primitive interface, are instantiated for \TW{} in
+\Cref{sec:mu-setting}. We write the user index as $d$ and the
+associated-data input as $A$, where \cite{BT16} writes $i$ and $H$, and
+take the absolute value of their signed advantage so that
 \[
   \Advmuind_\SE(\mathcal{A})
   = \left|2 \Pr[\mathsf{G}^{\mathsf{mu\text{-}ind}}_\SE(\mathcal{A})
-          \text{ returns } 1] - 1\right|.
-\]
-
-\paragraph{Equivalence with the two-game form.}
-Since $b$ is uniform, a standard calculation gives
-\[
-  \Advmuind_\SE(\mathcal{A})
+          \text{ returns } 1] - 1\right|
   = \bigl|
       \Pr[\mathcal{A}^{\mathsf{Enc}, \mathsf{Vf}, b=1} \Rightarrow 1]
       - \Pr[\mathcal{A}^{\mathsf{Enc}, \mathsf{Vf}, b=0} \Rightarrow 1]
     \bigr|,
 \]
-so $\Advmuind_\SE$ coincides with the two-game distinguishing
-advantage between the real $(\Enc, \Ver)$ pair and the ideal
-$(\Rand, \Replay)$ pair, instantiated per user. The single-user case
-$u = 1$ recovers the all-in-one AE notion
-used in \Cref{sec:ae-defs}, augmented with the ideal primitive
-interface present in both worlds; in particular, $\Advmuind$
-generalizes $\Advae$, since an all-in-one adversary embeds into the
-$u = 1$ game with identical advantage by making no primitive queries.
+the second equality holding because $b$ is uniform. Thus
+$\Advmuind_\SE$ is the two-game distinguishing advantage between the
+real $(\Enc, \Ver)$ pair and the ideal $(\Rand, \Replay)$ pair
+instantiated per user. The single-user case $u = 1$ recovers the
+all-in-one AE notion of \Cref{sec:ae-defs}, augmented with the ideal
+primitive interface present in both worlds.
 
 \paragraph{Per-user nonce uniqueness.}
 Nonce uniqueness is enforced per user via the set $V$: the same nonce
 may appear under distinct users but not twice under the same user.
 This is strictly weaker than the global nonce-uniqueness requirement
 that would force every $(d, N)$ pair across all users to be unique.
-
-The multi-key committing-security story does not need a separate
-multi-user notion: the $s$-way CMTDs-$\ell$ games of
-\Cref{sec:commit-defs} already grant the adversary full control of
-all $s$ keys, so they are themselves the multi-key committing
-statement.
 
 \subsection{Committing Security and Context Discoverability}
 \label{sec:commit-defs}
