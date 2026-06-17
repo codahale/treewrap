@@ -104,17 +104,11 @@ $(K_i,N_i,A_i,M_i)_{i=1}^s$, computes
 \]
 and accepts iff all $C_i \concat T_i$ are equal.
 
-Build the same candidate sequence as in \Cref{thm:cmtds3-ro}. During
-$\mathcal{B}$'s direct oracle phase, append every distinct direct-query
-input whose decoded class is a root tag output-point class --- $\Rmsg^+$
-(the single-chunk root tag, with the aggregation phase elided when
-$n = 0$) or $\Rtag$ (the multi-chunk root tag) --- immediately before
-the corresponding direct $\ROflat$ lookup first samples that input. This
-predicate depends on the queried input alone through the exact decoder
-of \Cref{lem:bridge-decode}, and by \Cref{cor:output-sep} each input
-decodes to at most one output-point class. Since there is no
-construction oracle before $\mathcal{B}$ outputs its tuples, these
-candidates are first touched at their append steps.
+Build the root-tag candidate sequence as in the direct-oracle phase of
+\Cref{thm:cmtds3-ro}: each distinct direct query whose input decodes to
+a root tag output-point class ($\Rmsg^+$ or $\Rtag$) is appended before
+its $\ROflat$ lookup and, since there is no construction oracle before
+$\mathcal{B}$ outputs its tuples, first touched at its append step.
 
 After the tuple output, stop appending challenger candidates if the
 syntax or pairwise-$\WiC_\ell$ check fails. Otherwise, as the challenger

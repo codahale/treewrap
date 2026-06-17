@@ -615,12 +615,15 @@ and a union bound over them gives the claim.
 
 \begin{lemma}[Adaptive Candidate Preimage]
 \label{lem:adaptive-candidate-preimage}
-Fix a projection length $\tau$, a cap $Q$, and a target $t \in
-\bits^\tau$ chosen independently of $\ROflat$. Consider any interaction
+Fix a projection length $\tau$ and a cap $Q$, and a target $t \in
+\bits^\tau$ fixed in one of two ways: either (i) $t$ is chosen
+independently of $\ROflat$, or (ii) $t = \bigl\lfloor \ROflat(X_0)
+\bigr\rfloor_\tau$ is the value revealed at a distinguished input $X_0$
+queried before any candidate is appended. Consider any interaction
 with a lazy random oracle $\ROflat : \bits^* \to \bits^\infty$ that
 builds a sequence of distinct \emph{candidate} inputs $Y_1,\dots,Y_m$
-with $m \leq Q+1$, under the same \emph{predictability} and
-\emph{unrevealed-value} premises as
+with $m \leq Q+1$---each distinct from $X_0$ in case (ii)---under the
+same \emph{predictability} and \emph{unrevealed-value} premises as
 \Cref{lem:adaptive-candidate-collision}. Let $\mathsf{pre}_{\tau,t}$ be
 the event that some candidate's $\tau$-bit projection equals $t$:
 \[
@@ -642,70 +645,25 @@ that candidate position $j$ exists and
 $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$. Expose the
 interaction in chronological order and condition on any
 positive-probability prefix immediately before candidate position $j$
-is appended. By the predictability premise that prefix determines
-$Y_j$; by the unrevealed-value premise no bit of $\ROflat(Y_j)$ has
-been revealed in it, so under lazy sampling the value of
+is appended. In case (i) the target $t$ is a constant; in case (ii) the
+prefix already determines $t$ through the value $\ROflat(X_0)$ sampled
+when $X_0$ was queried, before any candidate is appended. By the
+predictability premise the prefix determines $Y_j$; by the
+unrevealed-value premise no bit of $\ROflat(Y_j)$ has been revealed in
+it, and in case (ii) $Y_j \neq X_0$, so under lazy sampling the value of
 $\ROflat(Y_j)$ may be sampled after the prefix is fixed and is uniform
-and independent of the conditioning. Because $t$ is fixed independently
-of $\ROflat$, it is constant across this conditioning, so the $\tau$-bit
-projection of $Y_j$ equals $t$ with probability $2^{-\tau}$. If
-position $j$ is never appended, then $E_j$ is false, so the same bound
-applies. A union bound over the $Q+1$ positions gives the claim.
-\end{proof}
-
-\begin{lemma}[Revealed-Target Candidate Preimage]
-\label{lem:revealed-target-preimage}
-Fix a projection length $\tau$ and a cap $Q$. Consider any interaction
-with a lazy random oracle $\ROflat : \bits^* \to \bits^\infty$ in which a
-distinguished input $X_0$ is queried before any candidate is appended,
-fixing the revealed value
-\[
-  t := \bigl\lfloor \ROflat(X_0) \bigr\rfloor_\tau .
-\]
-The interaction then builds a sequence of distinct \emph{candidate}
-inputs $Y_1,\dots,Y_m$ with $m \leq Q+1$, each distinct from $X_0$,
-under the same \emph{predictability} and \emph{unrevealed-value} premises
-as \Cref{lem:adaptive-candidate-collision}. Let $\mathsf{pre}_{\tau}$ be
-the event that some candidate's $\tau$-bit projection equals $t$:
-\[
-  \bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t
-  \quad
-  \text{for some } 1 \leq j \leq m .
-\]
-Then
-\[
-  \Pr[\mathsf{pre}_{\tau}]
-  \leq
-  (Q+1) \cdot 2^{-\tau}.
-\]
-\end{lemma}
-
-\begin{proof}
-The proof is that of \Cref{lem:adaptive-candidate-preimage} verbatim,
-except that the target $t$ is fixed not by independence from $\ROflat$
-but by the value revealed at the distinguished address $X_0$ before any
-candidate is appended. For a fixed position $j \in \{1,\dots,Q+1\}$, let
-$E_j$ be the event that candidate position $j$ exists and
-$\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$. Expose the
-interaction in chronological order and condition on any
-positive-probability prefix immediately before candidate position $j$ is
-appended. Because $X_0$ is queried before any candidate is appended,
-this prefix already determines $t$ through the sampled value
-$\ROflat(X_0)$. By the predictability premise the prefix determines
-$Y_j$; since $Y_j \neq X_0$ and, by the unrevealed-value premise, no bit
-of $\ROflat(Y_j)$ has been revealed in the prefix, under lazy sampling
-the value of $\ROflat(Y_j)$ may be sampled after the prefix is fixed and
-is uniform and independent of the conditioning, in particular of $t$,
-which is determined by $\ROflat$ at the distinct address $X_0$. Hence the
-$\tau$-bit projection of $Y_j$ equals $t$ with probability $2^{-\tau}$.
-If position $j$ is never appended, then $E_j$ is false, so the same bound
-applies. A union bound over the $Q+1$ positions gives the claim.
+and independent of the conditioning---in particular of $t$, which is
+either constant or determined by $\ROflat$ at the distinct address
+$X_0$. Hence the $\tau$-bit projection of $Y_j$ equals $t$ with
+probability $2^{-\tau}$. If position $j$ is never appended, then $E_j$
+is false, so the same bound applies. A union bound over the $Q+1$
+positions gives the claim.
 \end{proof}
 
 \begin{corollary}[Revealed-Target Leaf Preimage]
 \label{cor:revealed-target-leaf-preimage}
 Consider an interaction with a lazy random oracle as in
-\Cref{lem:revealed-target-preimage}, specialized to \TW{} leaf tags
+\Cref{lem:adaptive-candidate-preimage} case (ii), specialized to \TW{} leaf tags
 $\bigl\lfloor \RF(X) \bigr\rfloor_{\tauleaf}$ with
 $\RF(X) = \ROflat(\flatmap(X))$. Suppose honest construction computations
 create a set of final leaf transcripts before any candidate is appended,
@@ -717,7 +675,7 @@ of the honest final leaf transcript $X_j^\star$ at index $j$. The
 interaction then builds candidate final leaf transcripts
 $Y_1, \dots, Y_m$, each distinct from the honest leaf transcript sharing
 its leaf index, under the same \emph{predictability} and
-\emph{unrevealed-value} premises as \Cref{lem:revealed-target-preimage}.
+\emph{unrevealed-value} premises as \Cref{lem:adaptive-candidate-preimage}.
 Let $\mathsf{pre}_{\tauleaf}$ be the event that some candidate's
 $\tauleaf$-bit projection equals the revealed leaf tag at its own leaf
 index. Then
@@ -740,7 +698,7 @@ $\ROflat$ input $\flatmap(Y_i)$ and its target $t_{j(i)}$ to the value
 revealed at the distinguished address $\flatmap(X_{j(i)}^\star)$, queried
 when the honest computation created $X_{j(i)}^\star$, before any candidate
 is appended. Fix $i$ and condition on the execution prefix immediately
-before $Y_i$ is appended. As in \Cref{lem:revealed-target-preimage}, the
+before $Y_i$ is appended. As in \Cref{lem:adaptive-candidate-preimage}, the
 prefix determines $\flatmap(Y_i)$ (predictability) and reveals no bit of
 $\ROflat(\flatmap(Y_i))$ (unrevealed-value); since
 $Y_i \neq X_{j(i)}^\star$ their bridged inputs differ

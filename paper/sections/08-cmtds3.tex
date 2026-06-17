@@ -123,16 +123,11 @@ transcript is one of $\mathcal{B}$'s visible $\ROflat$ queries and is
 counted in $\qRO(\mathcal{B})$. Fix the query-independent target
 $T^*$, which is therefore independent of $\ROflat$.
 
-Run the random-oracle CDY game (\Cref{sec:ro-model}) and define a
-candidate sequence exactly as in \Cref{thm:cmtds3-ro}'s direct oracle
-phase: when $\mathcal{B}$ makes a direct query to an input $Y$ that is
-not already in the sequence, append $Y$ immediately before answering
-the query if $\KeyedTWOut(Y)$ decodes to a root tag output-point class,
-namely $\Rmsg^+$ or $\Rtag$. This predicate depends on $Y$ alone
-through the exact decoder of \Cref{lem:bridge-decode}, which ignores the
-requested output length, and by Output-Point Separation
-(\Cref{cor:output-sep}) each distinct direct query contributes at most
-one candidate, first touched at its append step.
+Run the random-oracle CDY game (\Cref{sec:ro-model}) and build the
+root-tag candidate sequence exactly as in the direct-oracle phase of
+\Cref{thm:cmtds3-ro}: each distinct direct query whose input decodes to
+a root tag output-point class ($\Rmsg^+$ or $\Rtag$) is appended before
+its $\ROflat$ lookup and first touched at its append step.
 
 After $\mathcal{B}$ outputs the ciphertext body $C$ and the single
 context $(K,N,A)$, stop appending if the syntax or ciphertext-validity
@@ -161,7 +156,7 @@ final root transcript $R$; in the random-oracle model
 $T' = \bigl\lfloor \ROflat(\flatmap(R)) \bigr\rfloor_{\tauroot}$. Hence
 the win event is contained in the event that some candidate's
 $\tauroot$-bit projection equals the fixed target $T^*$. Applying
-\Cref{lem:adaptive-candidate-preimage} with $Q = \qRO(\mathcal{B})$,
+\Cref{lem:adaptive-candidate-preimage} case (i) with $Q = \qRO(\mathcal{B})$,
 $\tau = \tauroot$, and $t = T^*$ gives
 \[
   \Advcdy_\RO(\mathcal{B})
@@ -205,16 +200,12 @@ a root tag output-point class is the one at $X_0$: its remaining lookups
 message, and aggregation points) lie in other classes and are distinct
 from every root tag address.
 
-Define a candidate sequence as in \Cref{thm:cdy-ro}'s direct oracle
-phase, but excluding the target address: when $\mathcal{B}$ makes a
-direct query to an input $Y \neq X_0$ that is not already in the
-sequence, append $Y$ immediately before answering the query if
-$\KeyedTWOut(Y)$ decodes to a root tag output-point class, namely
-$\Rmsg^+$ or $\Rtag$. This predicate depends on $Y$ alone through the
-exact decoder of \Cref{lem:bridge-decode}, and by \Cref{cor:output-sep}
-each distinct direct query contributes at most one candidate, first
-touched at its append step. A direct query to $X_0$ itself only re-reads
-the already-revealed target and is not appended.
+Build the root-tag candidate sequence as in the direct-oracle phase of
+\Cref{thm:cmtds3-ro}, with the single change that the target address
+$X_0$ is excluded: a direct query to $Y \neq X_0$ whose input decodes to
+a root tag output-point class is appended before its $\ROflat$ lookup,
+while a direct query to $X_0$ itself only re-reads the already-revealed
+target and is not appended.
 
 After $\mathcal{B}$ outputs the ciphertext body $C_1$ and the single
 context $(K_1, N_1, A_1)$, stop appending if the syntax, ciphertext
@@ -257,8 +248,8 @@ excludes all earlier lookups outside the final-root class, and the honest
 encryption's only root tag lookup is at the excluded address $X_0$. Thus
 no earlier lookup has revealed the newly appended candidate's value. The
 sequence therefore satisfies the predictability and unrevealed-value
-premises of Revealed-Target Candidate Preimage
-(\Cref{lem:revealed-target-preimage}), every candidate is distinct from
+premises of Adaptive Candidate Preimage
+(\Cref{lem:adaptive-candidate-preimage}), every candidate is distinct from
 $X_0$, and its length is at most $\qRO(\mathcal{B}) + 1$.
 
 On a winning execution the single decryption check accepts, so by
@@ -271,9 +262,9 @@ $R_1$ equals the realized target:
 \]
 Hence, on executions where $\badleaf$ does not occur, the win event is
 contained in the event that some candidate's $\tauroot$-bit projection
-equals the revealed target $T$. Applying \Cref{lem:revealed-target-preimage}
-with $Q = \qRO(\mathcal{B})$, $\tau = \tauroot$, distinguished address
-$X_0$, and revealed target $T$ bounds that event by
+equals the revealed target $T$. Applying \Cref{lem:adaptive-candidate-preimage}
+case (ii) with $Q = \qRO(\mathcal{B})$, $\tau = \tauroot$, distinguished
+address $X_0$, and revealed target $T$ bounds that event by
 $\RootPre_{\tauroot}(\qRO(\mathcal{B}))$. Combining with the $\badleaf$
 bound above,
 \[
