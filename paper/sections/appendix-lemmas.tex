@@ -963,58 +963,6 @@ inspect this predicate before returning the direct-oracle answer for
 the offending query; if it holds, no answer for that query is included
 in the adversary's view.
 
-\begin{lemma}[Privacy Viable-Key Prefix]
-\label{lem:priv-viable-prefix}
-Fix a nonce-respecting privacy adversary and an index $i \geq 0$. Let
-$H_i$ be the stopped privacy hybrid that samples $K \sample \bits^k$,
-answers the first $i$ accepted encryption queries by $\Rand$, answers
-all later accepted encryption queries by $\Enc_K^\RO$, answers direct
-$\ROflat$ queries by the lazy table, and aborts on
-$\badkey$. Condition on any positive-probability
-visible prefix that includes the submitted $(i+1)$-st accepted
-encryption query but not its oracle answer, and on no earlier
-$\badkey$. Let $S$ be the set of distinct keys
-$K'$ for which some prior direct query input $Y$ satisfies
-$\KeyedTWOut(Y) = (K',\mathcal{C})$ for a counted output-point class
-$\mathcal{C}$, and let
-\[
-  \mathcal{V} = \bits^k \setminus S .
-\]
-Then the hidden key is uniform on $\mathcal{V}$ under this conditioning.
-Moreover, for every $K' \in \mathcal{V}$, the online execution of
-$\Enc_{K'}^\RO$ on the pending query reaches no counted transcript
-point whose bridged input was previously queried directly by the
-adversary. The bridged transcript inputs reached for two distinct keys
-in $\mathcal{V}$ are disjoint.
-\end{lemma}
-
-\begin{proof}
-Before the $(i+1)$-st accepted encryption query in $H_i$, the accepted
-construction-interface queries, if any, were answered by $\Rand$. Thus
-the visible encryption answers and the lazy answers to direct
-$\ROflat$ queries are independent of the hidden key except through the
-immediate-abort rule. A prior direct query aborts exactly when its
-decoded candidate key equals the hidden key. Conditioning on the
-visible prefix and on no earlier abort therefore removes exactly the
-keys in $S$, leaving the hidden key uniform on
-$\bits^k \setminus S = \mathcal{V}$.
-
-Fix $K' \in \mathcal{V}$ and run the pending encryption computation
-online, with each later transcript address determined by the already
-fixed query input and by the outputs sampled earlier in this same
-computation. If a counted transcript point reached in this execution
-had appeared as a prior direct query input $Y$, then
-\Cref{lem:bridge-decode} would give
-$\KeyedTWOut(Y) = (K',\mathcal{C})$ for that point's counted class
-$\mathcal{C}$, so $K'$ would lie in $S$, contradicting
-$K' \in \mathcal{V}$. Hence no prior direct query has hit any counted
-point reached by the pending computation for a viable key. Finally,
-if two reached bridged transcript inputs for keys $K'_0 \neq K'_1$
-were equal, bridge injectivity and \Cref{lem:transcript-inj} would
-recover the same first duplex call. That call contains the fixed-width
-key field, forcing $K'_0 = K'_1$, a contradiction.
-\end{proof}
-
 \begin{lemma}[Privacy One-Query Replacement]
 \label{lem:priv-one-query-replacement}
 Fix a nonce-respecting privacy adversary and an index $i \geq 0$. Let
@@ -1037,13 +985,28 @@ accepted encryption query. If the adversary never makes that query, the
 coupling is immediate. Otherwise condition on any common
 positive-probability visible prefix that includes the submitted query
 but not its oracle answer, and on no earlier abort. Let the query be
-$(N,A,M)$, and let $\mathcal{V}$ be the viable key set of
-\Cref{lem:priv-viable-prefix} for this prefix.
+$(N,A,M)$.
 
-By \Cref{lem:priv-viable-prefix}, the hidden key is uniform on
-$\mathcal{V}$, and every viable key has no prior direct hit on any
-counted transcript point reached by the pending encryption computation.
-For the actual key in $H_i$, this no-hit condition is precisely the
+\emph{Viable-key prefix.} Let $S$ be the set of distinct keys $K'$ for
+which some prior direct query input $Y$ satisfies
+$\KeyedTWOut(Y) = (K',\mathcal{C})$ for a counted output-point class
+$\mathcal{C}$, and let $\mathcal{V} = \bits^k \setminus S$. Before the
+$(i+1)$-st accepted encryption query in $H_i$, the accepted
+construction-interface queries were answered by $\Rand$, so the visible
+encryption answers and the lazy direct-query answers are independent of
+the hidden key except through the immediate-abort rule, which removes
+exactly the keys in $S$; hence the hidden key is uniform on
+$\mathcal{V}$ under this conditioning. For every $K' \in \mathcal{V}$,
+running the pending encryption computation online reaches no counted
+transcript point whose bridged input was previously queried directly:
+such a point $Y$ would give $\KeyedTWOut(Y) = (K',\mathcal{C})$ by
+\Cref{lem:bridge-decode}, placing $K'$ in $S$. The bridged transcript
+inputs reached for two distinct keys in $\mathcal{V}$ are disjoint,
+since equal inputs would, by bridge injectivity and
+\Cref{lem:transcript-inj}, recover the same first duplex call and hence
+the same fixed-width key field.
+
+For the actual key in $H_i$, the no-hit condition is precisely the
 event $\neg\mathsf{hit}_{\mathsf{fresh}}$ of \Cref{lem:freshness} for
 the pending computation: any prior direct query that hit a counted
 transcript point reached by the computation would, by
@@ -1053,9 +1016,9 @@ Applying \Cref{lem:freshness} gives freshness for every construction
 output of the query that contributes to the returned ciphertext, to an
 internal leaf tag, or to the final root tag. Applying the same transcript
 freshness argument to each $K' \in \mathcal{V}$, and using the
-disjointness of key-indexed transcript inputs from
-\Cref{lem:priv-viable-prefix}, enumerate all such outputs in the order
-taken by the encryption computation.
+disjointness of key-indexed transcript inputs established above,
+enumerate all such outputs in the order taken by the encryption
+computation.
 
 Thus, to describe the conditional law, introduce an auxiliary online
 family of uniform coins indexed by a viable key and by the output
