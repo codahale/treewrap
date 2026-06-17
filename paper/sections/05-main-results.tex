@@ -158,10 +158,13 @@ $K_d$; any extra lazy-table entries
 written by the real user-$d$ encryption computation are unobservable
 before that abort. The accepted user-$d$ encryption queries are
 nonce-respecting because the mu-ind interface enforces nonce uniqueness
-per user. In the INT-CTXT hop,
-\Cref{lem:int-key-uniformity,lem:int-leaf-fresh-before-badkey,lem:int-encryption-first-replay,lem:int-verification-first-root-guess}
-refer only to user-$d$ hidden-key transcript points, user-$d$ final leaf
-transcripts, and user-$d$ non-replay verification submissions.
+per user. In the INT-CTXT hop, the analysis of \Cref{thm:intctxt-ro}---its
+visible-prefix key uniformity (\Cref{lem:int-key-uniformity}), its
+leaf-freshness and encryption-first-replay steps, and the
+verification-first root-guessing bound
+(\Cref{lem:int-verification-first-root-guess})---refers only to user-$d$
+hidden-key transcript points, user-$d$ final leaf transcripts, and
+user-$d$ non-replay verification submissions.
 
 It remains to justify that the same-RO environment does not enlarge the
 direct-query term. The real users $e > d$ may perform
