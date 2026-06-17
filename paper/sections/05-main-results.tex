@@ -310,15 +310,18 @@ Using $\qRO(\mathcal{B}) \leq \Nprim$, each hybrid step costs
 $2\KeyGuess_k(\Nprim)$ plus the per-user leaf-collision and
 verification-tag terms. Summing across $d = 1,\dots,D$ gives
 $2D \KeyGuess_k(\Nprim)$ for the key-guess contribution. The
-leaf-collision sum
-$\sum_d \nleaf^{(d)}(\nleaf^{(d)} - 1)$ is bounded by $\Nleaf(\Nleaf -
-1)$ by writing, for $x_d = \nleaf^{(d)}$,
-$\sum_d (x_d^2 - x_d) \leq (\sum_d x_d)^2 - \sum_d x_d$,
-where $\sum_d x_d^2 \leq (\sum_d x_d)^2$ holds for nonnegative $x_d$
-by expanding $(\sum_d x_d)^2$. Then
+leaf-collision contribution satisfies
+\[
+  \sum_d \frac{\nleaf^{(d)}(\nleaf^{(d)} - 1)}{2^{\tauleaf + 1}}
+  = \frac{1}{2^{\tauleaf}} \sum_d \binom{\nleaf^{(d)}}{2}
+  \leq \frac{1}{2^{\tauleaf}} \binom{\sum_d \nleaf^{(d)}}{2}
+  \leq \frac{\Nleaf(\Nleaf - 1)}{2^{\tauleaf + 1}},
+\]
+the first inequality because the unordered pairs drawn within the
+per-user blocks are a subset of all unordered pairs among
+$\sum_d \nleaf^{(d)}$ items, and the second by
 $\sum_d \nleaf^{(d)} = \nleaf \leq \Nleaf$ and monotonicity of
-$y(y-1)$ pass from $\nleaf(\nleaf - 1)$ to
-$\Nleaf(\Nleaf - 1)$. The verification-tag contribution satisfies
+$\binom{\cdot}{2}$. The verification-tag contribution satisfies
 \[
   \sum_d \qv^{(d)} / 2^{\tauroot}
   \leq \Qv / 2^{\tauroot}.
