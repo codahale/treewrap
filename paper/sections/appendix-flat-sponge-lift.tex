@@ -238,17 +238,71 @@ $\mathsf{New}$ calls and these caps user by user.
 \subsection{Public-Permutation Committing and Discoverability Corollaries}
 \label{app:lift-corollaries}
 
-Combining the lift bound of \Cref{lem:lift-bound}, the derived-adversary
-construction of \Cref{lem:derived-adversary}, and the random-oracle
-CMTDs-3 bound of \Cref{thm:cmtds3-ro} gives the public-permutation
-committing corollary consumed by \Cref{app:committing-transfer}; the
-same combination applied to \Cref{thm:cdy-ro} gives the
-public-permutation context-discoverability corollary, and applied to
-\Cref{cor:spr-ro} gives the public-permutation second-preimage
-corollary. The
-public-permutation privacy and INT-CTXT advantages are not stated as
+For the single-stage win-event games---those whose challenger exposes no
+construction interface during the adversary's run---the lift bound of
+\Cref{lem:lift-bound} and the derived-adversary construction of
+\Cref{lem:derived-adversary} combine into a single template, which we
+state once and then instantiate with each random-oracle bound.
+
+\begin{corollary}[Lift Application]
+\label{cor:lift-application}
+Let $\mathsf{G}$ be one of the single-stage win-event \TW{} games of
+\Cref{lem:lift-bound} whose challenger exposes no construction interface
+during the adversary's run---CMTDs-3, CMTs-$\ell$ for
+$\ell \in \{1,3,4\}$, CDY, or second-preimage---and suppose there is a
+function $\varepsilon_{\mathsf{G}}$, nondecreasing in each argument, such
+that every random-oracle $\mathsf{G}$-adversary $\mathcal{B}$ satisfies
+\[
+  \Adv^{\mathsf{G}}_{\RO}(\mathcal{B})
+  \;\leq\;
+  \varepsilon_{\mathsf{G}}\bigl(\qRO(\mathcal{B}),\,
+                                 \nleaf(\mathcal{B})\bigr).
+\]
+Then for every public-permutation $\mathsf{G}$-adversary $\mathcal{A}$
+against \TW{} with $\Nprim$ direct primitive queries, total cost at most
+$\Ntot$, and distinct-final-leaf-transcript cap $\Nleaf$ (all as in
+\Cref{sec:resources}),
+\[
+  \Adv^{\mathsf{G}}_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \varepsilon_{\mathsf{G}}(\Nprim, \Nleaf).
+\]
+\end{corollary}
+
+\begin{proof}
+Because the challenger exposes no construction interface during
+$\mathcal{A}$'s run, the construction cost $N$ of \Cref{lem:lift-bound}
+counts only the challenger's post-output deterministic checks---the
+decryption checks of the committing and discoverability games, the
+encryption checks of the CMTs games, and, in the second-preimage game,
+the honest target encryption performed before $\mathcal{A}$ runs---so
+$N + \Nprim \leq \Ntot$. By the flat-sponge lift bound
+(\Cref{lem:lift-bound}), replacing $(\pi,\pi^{-1})$ by
+$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and the challenger checks by their
+random-oracle counterparts costs at most $\Lift_c(\Ntot)$. Let
+$\mathcal{B}_{\mathrm{derived}} =
+\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ be the adversary of
+\Cref{lem:derived-adversary}, which gives
+\[
+  \Adv^{\mathsf{G}}_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+    + \Adv^{\mathsf{G}}_{\RO}(\mathcal{B}_{\mathrm{derived}})
+\]
+with $\qRO(\mathcal{B}_{\mathrm{derived}}) \leq \Nprim$ and
+$\nleaf(\mathcal{B}_{\mathrm{derived}}) \leq \Nleaf$. Applying the
+hypothesis at $\mathcal{B}_{\mathrm{derived}}$ and the monotonicity of
+$\varepsilon_{\mathsf{G}}$ yields the claim. When $\mathsf{G}$ is
+parameterized by a target fixed before $\mathcal{A}$ runs---the
+discoverability target $T^*$ or the second-preimage opening
+$\omega_0$---the coupling holds for each fixed target and the bound,
+being target-independent, holds for the maximum defining
+$\Adv^{\mathsf{G}}_\TW(\mathcal{A})$.
+\end{proof}
+
+The public-permutation privacy and INT-CTXT advantages are not stated as
 separate corollaries: the all-in-one AE theorem (\Cref{thm:ae}) applies
-this lift once to the all-in-one AE adversary and then splits the
+the lift once to the all-in-one AE adversary and then splits the
 resulting random-oracle advantage into the privacy and INT-CTXT
 envelopes of \Cref{sec:thms-pp}, adding $\Lift_c(\Ntot)$ a single time
 rather than the two copies that lifting privacy and INT-CTXT separately
@@ -268,31 +322,15 @@ total cost at most $\Ntot$ (both as in \Cref{sec:resources}),
 \end{corollary}
 
 \begin{proof}
-The CMTDs-3 game is a win-event experiment with no
-construction oracle during the adversary's run. Its construction cost
-$N$ counts the deterministic decryption checks performed by the
-challenger after $\mathcal{A}$ outputs its candidate ciphertext and
-opening tuples; on executions that pass the early rejecting checks,
-there are $s$ such checks. By the flat-sponge lift bound
-(\Cref{lem:lift-bound}), replacing $(\pi,\pi^{-1})$ by
-$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and the challenger checks by their
-random-oracle counterparts costs at most $\Lift_c(\Ntot)$. Let
-$\mathcal{B}_{\mathrm{derived}} =
-\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ be the adversary of
-\Cref{lem:derived-adversary}. The derived-adversary construction gives
-\[
-  \Advcmtds{3}_\TW(\mathcal{A})
-  \leq \Lift_c(\Ntot)
-    + \Advcmtds{3}_\RO(\mathcal{B}_{\mathrm{derived}}),
-\]
-with $\qRO(\mathcal{B}_{\mathrm{derived}}) \leq \Nprim$. At
-$\mathcal{B}_{\mathrm{derived}}$, \Cref{thm:cmtds3-ro} gives
-\[
-  \RootColl_{\tauroot}(\qRO(\mathcal{B}_{\mathrm{derived}}), s).
-\]
-By monotonicity of $\binom{\cdot + s}{s}$ in its first argument, this is
-at most $\RootColl_{\tauroot}(\Nprim, s)$.
-
+The CMTDs-3 challenger exposes no construction interface during
+$\mathcal{A}$'s run; on executions that pass the early rejecting checks
+it performs $s$ deterministic decryption checks on the candidate
+ciphertext and opening tuples. By \Cref{thm:cmtds3-ro}, every
+random-oracle CMTDs-3 adversary $\mathcal{B}$ satisfies
+$\Advcmtds{3}_\RO(\mathcal{B}) \leq
+\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$, which is nondecreasing in
+$\qRO(\mathcal{B})$ by monotonicity of $\binom{\cdot + s}{s}$. The Lift
+Application corollary (\Cref{cor:lift-application}) then gives the claim.
 \end{proof}
 
 \begin{corollary}[Public-Permutation CDY]
@@ -309,28 +347,15 @@ with $\Nprim$ direct primitive queries and total cost at most $\Ntot$
 \end{corollary}
 
 \begin{proof}
-The CDY game is a one-world win-event experiment with no construction
-oracle during the adversary's run. Its construction cost $N$ counts the
-single deterministic decryption check the challenger performs on
-$C \concat T^*$ on executions that pass the early rejecting checks. By
-the flat-sponge lift bound (\Cref{lem:lift-bound}), replacing
-$(\pi,\pi^{-1})$ by $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and the
-challenger check by its random-oracle counterpart costs at most
-$\Lift_c(\Ntot)$. Let $\mathcal{B}_{\mathrm{derived}} =
-\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ be the adversary of
-\Cref{lem:derived-adversary}, run against the same fixed target $T^*$.
-The derived-adversary construction gives
-\[
-  \Advcdy_\TW(\mathcal{A})
-  \leq \Lift_c(\Ntot)
-    + \Advcdy_\RO(\mathcal{B}_{\mathrm{derived}}),
-\]
-with $\qRO(\mathcal{B}_{\mathrm{derived}}) \leq \Nprim$. At
-$\mathcal{B}_{\mathrm{derived}}$, \Cref{thm:cdy-ro} gives
-$\RootPre_{\tauroot}(\qRO(\mathcal{B}_{\mathrm{derived}}))$, which by
-monotonicity of $\RootPre_{\tauroot}$ in its argument is at most
-$\RootPre_{\tauroot}(\Nprim)$. As the right-hand bound is uniform in
-$T^*$, it holds for the maximum defining $\Advcdy_\TW(\mathcal{A})$.
+The CDY challenger exposes no construction interface during
+$\mathcal{A}$'s run; on executions that pass the early rejecting checks
+it performs the single deterministic decryption check on $C \concat T^*$
+for the target $T^*$ fixed in advance. By \Cref{thm:cdy-ro}, every
+random-oracle CDY adversary $\mathcal{B}$ satisfies $\Advcdy_\RO(\mathcal{B})
+\leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))$, nondecreasing in
+$\qRO(\mathcal{B})$. The Lift Application corollary
+(\Cref{cor:lift-application}), whose target-parameterized case covers the
+fixed $T^*$, then gives the claim.
 \end{proof}
 
 \begin{corollary}[Public-Permutation Second-Preimage]
@@ -349,34 +374,20 @@ in \Cref{sec:resources}),
 \end{corollary}
 
 \begin{proof}
-The second-preimage game is a one-world win-event experiment with no
-construction oracle during the adversary's run. Its construction cost $N$
-counts the honest target encryption of the fixed opening $\omega_0$
-together with the single deterministic decryption check the challenger
-performs on $C_1 \concat T$ on executions that pass the early rejecting
-checks. By the flat-sponge lift bound (\Cref{lem:lift-bound}), replacing
-$(\pi,\pi^{-1})$ by $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and both the
-honest target encryption and the challenger check by their random-oracle
-counterparts costs at most $\Lift_c(\Ntot)$. Let
-$\mathcal{B}_{\mathrm{derived}} =
-\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ be the adversary of
-\Cref{lem:derived-adversary}, run against the same fixed opening
-$\omega_0$. The derived-adversary construction gives
+The second-preimage challenger exposes no construction interface during
+$\mathcal{A}$'s run; its construction work is the honest target
+encryption of the fixed opening $\omega_0$ (performed before
+$\mathcal{A}$ runs) together with the single deterministic decryption
+check on $C_1 \concat T$. By \Cref{cor:spr-ro}, every random-oracle
+second-preimage adversary $\mathcal{B}$ satisfies
 \[
-  \Advspr_\TW(\mathcal{A})
-  \leq \Lift_c(\Ntot)
-    + \Advspr_\RO(\mathcal{B}_{\mathrm{derived}}),
+  \Advspr_\RO(\mathcal{B})
+  \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))
+    + \frac{\qRO(\mathcal{B}) + \nleaf(\mathcal{B})}{2^{\tauleaf}},
 \]
-with $\qRO(\mathcal{B}_{\mathrm{derived}}) \leq \Nprim$ and
-$\nleaf(\mathcal{B}_{\mathrm{derived}}) \leq \Nleaf$. At
-$\mathcal{B}_{\mathrm{derived}}$, \Cref{cor:spr-ro} gives
-\[
-  \RootPre_{\tauroot}(\qRO(\mathcal{B}_{\mathrm{derived}}))
-  + \frac{\qRO(\mathcal{B}_{\mathrm{derived}})
-          + \nleaf(\mathcal{B}_{\mathrm{derived}})}{2^{\tauleaf}},
-\]
-which by monotonicity in its arguments is at most
-$\RootPre_{\tauroot}(\Nprim) + (\Nprim + \Nleaf)/2^{\tauleaf}$. As the
-right-hand bound is uniform in $\omega_0$, it holds for the maximum
-defining $\Advspr_\TW(\mathcal{A})$.
+nondecreasing in $\qRO(\mathcal{B})$ and $\nleaf(\mathcal{B})$. The Lift
+Application corollary (\Cref{cor:lift-application}), with
+$\nleaf(\mathcal{B}_{\mathrm{derived}}) \leq \Nleaf$ and the
+target-parameterized case covering the fixed $\omega_0$, then gives the
+claim.
 \end{proof}

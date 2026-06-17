@@ -173,25 +173,14 @@ $\Nprim$ direct primitive queries and total cost at most $\Ntot$,
 \end{corollary}
 
 \begin{proof}
-The CMTs-$\ell$ game is a win-event experiment with no
-construction oracle during the adversary's run. Its construction cost
-$N$ counts the deterministic encryption checks performed by the
-challenger after $\mathcal{A}$ outputs its tuples. By the flat-sponge
-lift bound (\Cref{lem:lift-bound}), replacing $(\pi,\pi^{-1})$ by
-$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and the challenger encryption
-checks by their random-oracle counterparts costs at most
-$\Lift_c(\Ntot)$. Let
-$\mathcal{B}_{\mathrm{derived}} =
-\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ be the adversary of
-\Cref{lem:derived-adversary}. The derived-adversary construction gives
-\[
-  \Advcmts{\ell}_\TW(\mathcal{A})
-  \leq \Lift_c(\Ntot)
-    + \Advcmts{\ell}_{\RO}(\mathcal{B}_{\mathrm{derived}}),
-\]
-with $\qRO(\mathcal{B}_{\mathrm{derived}}) \leq \Nprim$. Apply
-\Cref{lem:cmts-ro} and use monotonicity of
-$\RootColl_{\tauroot}(\cdot,s)$.
+The CMTs-$\ell$ challenger exposes no construction interface during
+$\mathcal{A}$'s run; its construction work is the $s$ deterministic
+encryption checks performed after $\mathcal{A}$ outputs its tuples. By
+\Cref{lem:cmts-ro}, every random-oracle CMTs-$\ell$ adversary
+$\mathcal{B}$ satisfies $\Advcmts{\ell}_{\RO}(\mathcal{B}) \leq
+\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$, nondecreasing in
+$\qRO(\mathcal{B})$. The Lift Application corollary
+(\Cref{cor:lift-application}) then gives the claim.
 \end{proof}
 
 \paragraph{Combined bound.}
