@@ -297,7 +297,12 @@ overwrite mechanism of \cite[\S6.2 and Algorithm~5]{BDPV11}: when the
 current rate prefix emitted as keystream is $Z$, XOR-absorbing
 $m \oplus Z$ has the same update on the message bytes as overwriting
 that prefix with $m$, with the phase tag still carried as part of the
-duplex input. In both helpers, each duplex call absorbs a data block followed by its
+duplex input. The decryption helper \Call{StreamDec}{} is identical to
+\Call{StreamEnc}{} with the roles of the plaintext and ciphertext blocks
+exchanged: it takes ciphertext blocks $c_i$ as input, recovers each
+plaintext block as $m_i = c_i \oplus Z$, absorbs the same $c_i$ under
+the same phase suffix, and returns $(m_1 \concat \cdots \concat m_t,
+Z')$; we omit its pseudocode. In both helpers, each duplex call absorbs a data block followed by its
 phase suffix---$\sigma^-$ for a non-final block and $\sigma^+$ for the
 final block---and requests the output bits the caller consumes next:
 $\ell$ on the final call, and the next block's keystream length (or
@@ -341,17 +346,6 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
       \State $c_t \gets m_t \oplus Z$
       \State $Z' \gets D.\duplexing(c_t \concat \sigma^+, \ell)$
       \State \Return $(c_1 \concat \cdots \concat c_t, Z')$
-    \EndProcedure
-    \Statex
-    \Procedure{StreamDec}{$D$, $c$, $Z$, $\sigma^-$, $\sigma^+$, $\ell$}
-      \State Partition $c$ into byte blocks $c_1, \dots, c_t$ of exactly $\rho$ bytes each, except that the last block may be shorter, with $t \geq 1$ (if $c = \varepsilon$, set $t = 1$ and $c_1 = \varepsilon$).
-      \For{$i \gets 1$ \textbf{to} $t - 1$}
-        \State $m_i \gets c_i \oplus Z$
-        \State $Z \gets D.\duplexing(c_i \concat \sigma^-, 8\|c_{i+1}\|)$
-      \EndFor
-      \State $m_t \gets c_t \oplus Z$
-      \State $Z' \gets D.\duplexing(c_t \concat \sigma^+, \ell)$
-      \State \Return $(m_1 \concat \cdots \concat m_t, Z')$
     \EndProcedure
   \end{algorithmic}
 \end{algorithm}
