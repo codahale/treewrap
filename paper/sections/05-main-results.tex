@@ -357,9 +357,9 @@ then gives the claim.
 \label{rem:rtag-cap}
 The $\Nprim$ in \Cref{thm:cmtds4}'s root-collision term counts every
 primitive query, not only those whose induced simulator $\ROflat$ call
-lands at the root tag output point ($\Rtag$ for multi-chunk
-ciphertexts, and $\Rmsg^+$ for single-chunk ciphertexts whose
-aggregation phase is elided). By \Cref{cor:output-sep}, calls
+lands at the root tag output point---$\Rtag$, or the elided-aggregation
+$\Rmsg^+$ for single-chunk ciphertexts (\Cref{tab:keyed-twout}). By
+\Cref{cor:output-sep}, calls
 landing at any other output-point class cannot contribute to the
 candidate sequence, and hence cannot contribute to the
 candidate-collision event of \Cref{thm:cmtds3-ro}'s proof. A sharper
