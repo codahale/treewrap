@@ -314,36 +314,22 @@ portion it should commit:
 \end{aligned}
 \]
 
-\paragraph{CMTD-$\ell$ and CMT-$\ell$ (two-key form).}
-Following \cite[Fig.~4]{BH22}, the two-key CMTD-$\ell$
-game samples no key. The adversary outputs a ciphertext $C$ together
-with two tuples $(K_1, N_1, A_1, M_1), (K_2, N_2, A_2, M_2)$ with
-$\WiC_\ell(K_1, N_1, A_1, M_1) \neq \WiC_\ell(K_2, N_2, A_2, M_2)$,
-and wins if $\Dec_{K_i}(N_i, A_i, C) = M_i$ for both $i \in \{1,
-2\}$. The CMT-$\ell$ game has the adversary output the
-two tuples (without $C$); the adversary wins if $\Enc_{K_1}(N_1, A_1, M_1) =
-\Enc_{K_2}(N_2, A_2, M_2)$. No tuple entry is allowed to be $\bot$
-and all entries must lie in the scheme's syntactic domain. Define
-$\Adv^{\mathsf{CMTD}\text{-}\ell}_\SE(\mathcal{A})$ and
-$\Adv^{\mathsf{CMT}\text{-}\ell}_\SE(\mathcal{A})$ as the
-probabilities that the adversary wins the respective game.
-
-\paragraph{$s$-way generalization.}
-For $s \geq 2$, \cite[Fig.~5]{BH22} extends the games to tuples
-$(K_i, N_i, A_i, M_i)_{i=1}^s$ with pairwise distinct
-$\WiC_\ell$-images. The $s$-way CMTDs-$\ell$ game has the adversary
-output a ciphertext $C$ alongside the tuples and returns $1$ if
-$\Dec_{K_i}(N_i, A_i, C) = M_i$ for every $i$. The $s$-way
-CMTs-$\ell$ game returns $1$ if all encryptions
-$\Enc_{K_i}(N_i, A_i, M_i)$ are equal. The two-tuple case $s = 2$
-recovers CMTD-$\ell$ and CMT-$\ell$. Advantages
-$\Advcmtds{\ell}_\SE(\mathcal{A})$ and
+\paragraph{CMTDs-$\ell$ and CMTs-$\ell$ games.}
+For $s \geq 2$, \cite[Fig.~5]{BH22} defines the $s$-way committing
+games on tuples $(K_i, N_i, A_i, M_i)_{i=1}^s$ with pairwise distinct
+$\WiC_\ell$-images, all entries in the scheme's syntactic domain and
+none equal to $\bot$. The $s$-way CMTDs-$\ell$ (decryption) game has
+the adversary output a ciphertext $C$ alongside the tuples and returns
+$1$ if $\Dec_{K_i}(N_i, A_i, C) = M_i$ for every $i$; the $s$-way
+CMTs-$\ell$ (encryption) game has the adversary output the tuples alone
+and returns $1$ if all encryptions $\Enc_{K_i}(N_i, A_i, M_i)$ are
+equal. Advantages $\Advcmtds{\ell}_\SE(\mathcal{A})$ and
 $\Advcmts{\ell}_\SE(\mathcal{A})$ are the probabilities that the
-adversary wins the respective $s$-way game; the parameter $s$ is
-suppressed from the notation when clear from context. The
-CMTDs-$\ell$ and CMTs-$\ell$
-definitions are instantiated for \TW{} in \Cref{sec:games-pp}, with the
-public-permutation lift deferred to that section.
+adversary wins the respective game; the parameter $s$ is suppressed
+from the notation when clear from context. The two-tuple case $s = 2$
+is the original CMTD-$\ell$/CMT-$\ell$ pair of \cite[Fig.~4]{BH22}.
+These definitions are instantiated for \TW{} in \Cref{sec:games-pp},
+with the public-permutation lift deferred to that section.
 
 \paragraph{Relations.}
 \cite[Figs.~4 and~5]{BH22} record the implications among the notions.
