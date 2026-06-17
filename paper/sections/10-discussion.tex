@@ -39,7 +39,7 @@ from the base scheme, and ``?'' that no result is established in the literature.
 \toprule
 Scheme & Primitive & Par. & K/N/T & AD & Misuse & \textsf{CMT-4} & CDY \\
 \midrule
-\TW{}                        & \Keccak[1600,12]   & yes & $32/32/32$ & yes & no  & yes & yes \\
+\TW{}                        & \Keccakp   & yes & $32/32/32$ & yes & no  & yes & yes \\
 Ascon-128a \cite{DEMS21}     & Ascon-$p$ ($320$ b) & no  & $16/16/16$ & yes & no  & yes & ?   \\
 Xoodyak \cite{DHPVV20}       & Xoodoo ($384$ b)   & no  & $16/16/16$ & yes & no  & no  & ?   \\
 AES-GCM-SIV \cite{GLL17}     & AES                & yes & $16/12/16$ & yes & yes & no  & ?   \\
@@ -56,7 +56,7 @@ nAE $+$ \textsf{CTX} \cite{CR22} & any nAE        & ---  & ---        & yes & --
 \cite{DEMS21} and Xoodyak \cite{DHPVV20}, target $128$-bit security on small
 permutations ($320$ and $384$ bits) with a strictly serial duplex: each call
 depends on the previous one, so there is no mode-level parallelism to exploit.
-\TW{} instead pays for a larger permutation, \Keccak[1600, 12], and a $256$-bit
+\TW{} instead pays for a larger permutation, \Keccakp, and a $256$-bit
 capacity---the same round count as KangarooTwelve \cite{BDPVVV16}---in exchange
 for a tree that processes leaf chunks in parallel and for the headroom that
 yields $128$-bit security with a comfortable margin. The cost of this choice is

@@ -92,7 +92,7 @@ The \Keccak{} family of permutations, introduced as part of the Keccak
 design and standardized within FIPS~202~\cite{FIPS202}, is parameterized
 by a state width $b$ and a round count $n_r$; we write $\Keccak[b, n_r]
 \in \Perm(\bits^b)$ for the corresponding permutation. \TW{} uses
-$\Keccak[1600, 12]$, the same primitive as
+\Keccakp{}, the same primitive as
 KangarooTwelve~\cite{BDPVVV16}, fixed throughout. In the
 public-permutation security model of \Cref{sec:games-pp} and the
 flat-sponge lift of \Cref{app:flat-sponge-lift}, this permutation is

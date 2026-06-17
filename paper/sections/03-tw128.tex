@@ -6,7 +6,7 @@
 
 \TW{} is a nonce-based authenticated-encryption scheme with associated
 data, built as a two-level tree of duplex objects over the
-\Keccak[1600, 12] permutation. A single \emph{root} duplex, initialized
+\Keccakp{} permutation. A single \emph{root} duplex, initialized
 with the key $K$ and nonce $N$, absorbs the associated data $A$ when it
 is nonempty, emits
 keystream for the first plaintext chunk $M_0$ of at most $\beta$ bytes,
@@ -181,9 +181,9 @@ $\log D$ bits in $D$ users; the concrete $D$-indexed envelope appears in
 \Cref{sec:concrete-claim}.
 
 \item $r = 1344$. With state width $b = 1600$ fixed by the
-\Keccak[1600, 12] choice, $r = b - c = 1344$ is the largest rate
+\Keccakp{} choice, $r = b - c = 1344$ is the largest rate
 compatible with the chosen capacity. The 12-round
-\Keccak[1600, 12] permutation matches KangarooTwelve's
+\Keccakp{} permutation matches KangarooTwelve's
 choice~\cite{BDPVVV16}, with a substantial cryptanalytic safety margin
 relative to the 24-round version used in SHA-3~\cite{FIPS202}.
 

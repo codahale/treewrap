@@ -7,7 +7,7 @@
 We evaluate three implementations of \TW{} sharing a common structure: a
 portable reference written in Go, an \texttt{amd64} implementation, and an
 \texttt{arm64} implementation. The two architecture-specific implementations
-replace only the \Keccak[1600, 12] permutation and the inner absorb/squeeze
+replace only the \Keccakp{} permutation and the inner absorb/squeeze
 loops with hand-written assembly; the framing, domain separation, padding, and
 tree bookkeeping remain in the shared Go code. The portable reference uses a
 scalar permutation and a scalar eight-instance loop, and serves both as a
@@ -555,7 +555,7 @@ this out: per-message latency is nearly flat across them at roughly $720$
 reference cycles on \texttt{amd64} ($730$ at $1$\,B versus $11.23 \times 64
 \approx 719$ at $64$\,B) and $620$ core cycles on \texttt{arm64} ($620$ versus
 $9.63 \times 64 \approx 616$), i.e.\ about $360$ and $310$ cycles per
-\Keccak[1600, 12] respectively. Because such messages bypass the leaf
+\Keccakp{} respectively. Because such messages bypass the leaf
 core entirely, leaf-level parallelism imposes no latency penalty on them.
 
 The latency/throughput trade-off appears instead in the intermediate regime,

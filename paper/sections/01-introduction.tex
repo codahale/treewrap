@@ -4,7 +4,7 @@
 Authenticated encryption with associated data is the workhorse of applied
 cryptography, and the sponge and duplex constructions over a single public
 permutation offer an attractive route to it. The duplex of \cite{BDPV11} turns
-one permutation---here \Keccak[1600, 12], the round-reduced permutation
+one permutation---here \Keccakp, the round-reduced permutation
 underlying the \cite{FIPS202} standard---into a single-pass authenticated cipher
 with a small, constant memory footprint and no separate block cipher or
 universal-hash key schedule. Its security rests on the indifferentiability of
@@ -76,7 +76,7 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
 \begin{itemize}
 \item \textbf{The \TW{} mode.} We specify \TW{}, a nonce-based AEAD with
   associated data built as a two-level tree of strict \cite{BDPV11} duplexes
-  over \Keccak[1600, 12] (\Cref{sec:tw128}): a serial root duplex that binds
+  over \Keccakp{} (\Cref{sec:tw128}): a serial root duplex that binds
   $(K, N, A)$, the first chunk, and the leaf tags into a single authentication
   tag, over a set of parallel, independently keyed leaf duplexes. All phases are
   domain-separated within one permutation, and the state is constant-size
@@ -162,7 +162,7 @@ interoperate.
 \paragraph{Tree hashing.}
 The two-level shape is inspired by tree hashing over the same permutation, in
 particular KangarooTwelve \cite{BDPVVV16}, which splits its input into
-fixed-size chunks hashed independently under \Keccak[1600, 12] and absorbs their
+fixed-size chunks hashed independently under \Keccakp{} and absorbs their
 chaining values into a root node. \TW{} reuses the round count and the
 final-node/leaf split of that design and adapts it to authenticated encryption:
 each leaf chunk is encrypted and tagged independently, and the leaf tags are

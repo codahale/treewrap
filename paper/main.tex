@@ -16,7 +16,7 @@
 \begin{abstract}
   We present \TW{}, a nonce-based authenticated-encryption mode with
   associated data built as a two-level tree of keyed duplexes over the
-  \Keccak[1600, 12] permutation. A serial root duplex binds
+  \Keccakp{} permutation. A serial root duplex binds
   the key, nonce, and associated data, encrypts the first message chunk, and
   aggregates a tag from every remaining chunk into a single authentication tag;
   the remaining chunks are handled by independent leaf duplexes that share no
