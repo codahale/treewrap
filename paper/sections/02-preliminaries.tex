@@ -246,16 +246,19 @@ the final value of the user counter $v$ in the game below. A challenge bit $b \s
 real construction interface (real ciphertexts, real verification) and
 an ideal interface (uniform strings of matching length, verification
 that accepts only previously-issued encryption tuples). The adversary
-also accesses an ideal primitive interface, shared between the two
-worlds. The adversary outputs a guess $b'$ and wins if $b' = b$.
+also accesses a public primitive interface: the real permutation
+$(\pi,\pi^{-1})$ in the real world and the simulator
+$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ in the ideal world. The adversary
+outputs a guess $b'$ and wins if $b' = b$.
 
 \paragraph{Game and advantage.}
 The game $\mathsf{G}^{\mathsf{mu\text{-}ind}}_\SE(\mathcal{A})$ of
 \cite[Fig.~3]{BT16} samples $b \sample \bits$ and maintains a user
 counter $v$, a set $V$ of $(d, N)$ pairs already used by encryption,
 and a set $W$ of recorded encryption tuples; its $\mathsf{New}$,
-$\mathsf{Enc}$, and $\mathsf{Vf}$ oracles, together with the shared
-ideal primitive interface, are instantiated for \TW{} in
+$\mathsf{Enc}$, and $\mathsf{Vf}$ oracles, together with the public
+primitive interface---the real permutation when $b = 1$ and the
+simulator when $b = 0$---are instantiated for \TW{} in
 \Cref{sec:mu-setting}. We write the user index as $d$ and the
 associated-data input as $A$, where \cite{BT16} writes $i$ and $H$, and
 take the absolute value of their signed advantage so that
@@ -272,8 +275,9 @@ the second equality holding because $b$ is uniform. Thus
 $\Advmuind_\SE$ is the two-game distinguishing advantage between the
 real $(\Enc, \Ver)$ pair and the ideal $(\Rand, \Replay)$ pair
 instantiated per user. The single-user case $u = 1$ recovers the
-all-in-one AE notion of \Cref{sec:ae-defs}, augmented with the ideal
-primitive interface present in both worlds.
+all-in-one AE notion of \Cref{sec:ae-defs}, augmented with the public
+primitive interface (the real permutation in the real world and the
+simulator in the ideal world).
 
 \paragraph{Per-user nonce uniqueness.}
 Nonce uniqueness is enforced per user via the set $V$: the same nonce
