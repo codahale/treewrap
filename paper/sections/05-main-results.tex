@@ -37,46 +37,15 @@ with the resources of \Cref{sec:resources},
 \end{theorem}
 
 \begin{proof}
-Let
-\[
-  p_0 =
-    \Pr[\mathcal{A}^{\Enc_K[\pi],\, \Ver_K[\pi],\, \pi,\, \pi^{-1}}
-        \Rightarrow 1],
-  \qquad
-  p_1 =
-    \Pr[\mathcal{A}^{\Rand,\, \Replay,\,
-                    \Sim^{\ROflat},\, \Sim^{-1,\ROflat}}
-        \Rightarrow 1].
-\]
-Then $\Advae_\TW(\mathcal{A}) = |p_0 - p_1|$ by
-\Cref{sec:games-pp}. By the flat-sponge lift bound
-(\Cref{lem:lift-bound}), replacing the real primitive interfaces by the
-simulator and replacing the construction by $(\Enc_K^\RO,\Ver_K^\RO)$
-costs at most $\Lift_c(\Ntot)$:
-\[
-  |p_0 - p_0'| \leq \Lift_c(\Ntot),
-  \quad
-  p_0' =
-    \Pr[\mathcal{A}^{\Enc_K^\RO,\,\Ver_K^\RO,\,
-                    \Sim^{\ROflat},\,\Sim^{-1,\ROflat}}
-        \Rightarrow 1].
-\]
-Let $\mathcal{B} =
-\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ be the adversary of
-\Cref{lem:derived-adversary}. The derived-adversary construction gives
-\[
-  p_0' =
-    \Pr[\mathcal{B}^{\Enc_K^\RO,\,\Ver_K^\RO,\,\ROflat} \Rightarrow 1],
-  \qquad
-  p_1 =
-    \Pr[\mathcal{B}^{\Rand,\,\Replay,\,\ROflat} \Rightarrow 1],
-\]
-with $\qRO(\mathcal{B}) \leq \Nprim$,
-$\nleaf(\mathcal{B}) \leq \Nleaf$, and
-$\qv(\mathcal{B}) \leq \Qv$. Therefore
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+all-in-one AE game, there is a random-oracle AE adversary
+$\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ with
+$\qRO(\mathcal{B}) \leq \Nprim$, $\nleaf(\mathcal{B}) \leq \Nleaf$, and
+$\qv(\mathcal{B}) \leq \Qv$ such that
 \[
   \Advae_\TW(\mathcal{A})
-  \leq \Lift_c(\Ntot) + \Adv^{\mathsf{ae}}_{\RO}(\mathcal{B}).
+  \;\leq\;
+  \Lift_c(\Ntot) + \Adv^{\mathsf{ae}}_{\RO}(\mathcal{B}).
 \]
 The all-in-one composition lemma (\Cref{lem:bn-composition}), applied
 in the random-oracle model, gives
@@ -118,55 +87,18 @@ execution-uniform user cap $D$ and the global resources of
 \end{theorem}
 
 \begin{proof}
-Let $\mathsf{Real}^{\mathsf{mu}}_\TW[\pi]$ denote the $b = 1$
-multi-user construction interface of \Cref{sec:mu-setting}, with user
-$d$ using $(\Enc_{K_d}[\pi],\Ver_{K_d}[\pi])$, and let
-$\mathsf{Ideal}^{\mathsf{mu}}$ denote the $b = 0$ interface with
-per-user $(\Rand,\Replay)$. Use the pre-sampled-key formulation of
-\Cref{sec:mu-setting}: sample keys $K_1,\dots,K_D$ at the start of the
-experiment, and let the $d$-th $\mathsf{New}$ call activate $K_d$.
-Unused keys are ignored. Define
-\[
-  p_0 =
-    \Pr[\mathcal{A}^{\mathsf{Real}^{\mathsf{mu}}_\TW[\pi],\,
-                    \pi,\,\pi^{-1}} \Rightarrow 1],
-  \qquad
-  p_1 =
-    \Pr[\mathcal{A}^{\mathsf{Ideal}^{\mathsf{mu}},\,
-                    \Sim^{\ROflat},\,\Sim^{-1,\ROflat}} \Rightarrow 1].
-\]
-Then $\Advmuind_\TW(\mathcal{A}) = |p_0 - p_1|$ by
-\Cref{sec:mu-ind,sec:mu-setting}. By the flat-sponge lift bound
-(\Cref{lem:lift-bound}), replacing $(\pi,\pi^{-1})$ on the real side by
-$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and each real user construction
-oracle by its random-oracle form costs at most $\Lift_c(\Ntot)$:
-\[
-  |p_0 - p_0'| \leq \Lift_c(\Ntot),
-  \quad
-  p_0' =
-    \Pr[\mathcal{A}^{\mathsf{Real}^{\mathsf{mu}}_{\RO},\,
-                    \Sim^{\ROflat},\,\Sim^{-1,\ROflat}} \Rightarrow 1],
-\]
-where $\mathsf{Real}^{\mathsf{mu}}_{\RO}$ uses
-$(\Enc_{K_d}^{\RO},\Ver_{K_d}^{\RO})$ for every created user $d$.
-Let $\mathcal{B} =
-\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ be the adversary of
-\Cref{lem:derived-adversary}. The derived-adversary construction gives
-\[
-  p_0' =
-    \Pr[\mathcal{B}^{\mathsf{Real}^{\mathsf{mu}}_{\RO},\,\ROflat}
-        \Rightarrow 1],
-  \qquad
-  p_1 =
-    \Pr[\mathcal{B}^{\mathsf{Ideal}^{\mathsf{mu}},\,\ROflat}
-        \Rightarrow 1],
-\]
-with $\qRO(\mathcal{B}) \leq \Nprim$ and the same per-user
-construction-side transcript caps. Therefore
+Use the pre-sampled-key formulation of \Cref{sec:mu-setting}: sample
+keys $K_1,\dots,K_D$ at the start of the experiment, and let the $d$-th
+$\mathsf{New}$ call activate $K_d$, unused keys being ignored. By the
+Lift Application corollary (\Cref{cor:lift-application}) for the mu-ind
+game, there is a random-oracle mu-ind adversary
+$\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ with
+$\qRO(\mathcal{B}) \leq \Nprim$ and the per-user construction-side caps
+of \Cref{sec:mu-setting} such that
 \[
   \Advmuind_\TW(\mathcal{A})
-  \leq \Lift_c(\Ntot)
-    + \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B}).
+  \;\leq\;
+  \Lift_c(\Ntot) + \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B}).
 \]
 Let $\mathsf{coll}$ denote the event that two of the pre-sampled keys
 $K_1,\dots,K_D$ collide;

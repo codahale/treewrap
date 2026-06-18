@@ -230,33 +230,32 @@ mu-ind, construction-interface forwarding preserves the
 $\mathsf{New}$ calls and these caps user by user.
 \end{proof}
 
-\subsection{Public-Permutation Committing and Discoverability Corollaries}
+\subsection{Lift Application and Public-Permutation Corollaries}
 \label{app:lift-corollaries}
 
-For the single-stage win-event games---those whose challenger exposes no
-construction interface during the adversary's run---the lift bound of
-\Cref{lem:lift-bound} and the derived-adversary construction of
-\Cref{lem:derived-adversary} combine into a single template, which we
-state once and then instantiate with each random-oracle bound.
+The lift bound of \Cref{lem:lift-bound} and the derived-adversary
+construction of \Cref{lem:derived-adversary} combine into a single
+template, stated once and then instantiated by the headline theorems of
+\Cref{sec:headline} and the public-permutation corollaries below.
 
 \begin{corollary}[Lift Application]
 \label{cor:lift-application}
-Let $\mathsf{G}$ be one of the single-stage win-event \TW{} games of
-\Cref{lem:lift-bound} whose challenger exposes no construction interface
-during the adversary's run---CMTDs-3, CMTs-$\ell$ for
-$\ell \in \{1,3,4\}$, tag-CMTDs-4, or CDY---and suppose there is a
-function $\varepsilon_{\mathsf{G}}$, nondecreasing in each argument, such
-that every random-oracle $\mathsf{G}$-adversary $\mathcal{B}$ satisfies
+Let $\mathsf{G}$ be any of the games of \Cref{lem:lift-bound}. For every
+public-permutation $\mathsf{G}$-adversary $\mathcal{A}$ against \TW{}
+with the resources of \Cref{sec:resources}, the derived adversary
+$\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ of
+\Cref{lem:derived-adversary} is a random-oracle $\mathsf{G}$-adversary
+with $\qRO(\mathcal{B}) \leq \Nprim$ and the construction-side caps of
+\Cref{lem:derived-adversary}---in particular $\qv(\mathcal{B}) \leq \Qv$
+and $\nleaf(\mathcal{B}) \leq \Nleaf$, where these apply---such that
 \[
-  \Adv^{\mathsf{G}}_{\RO}(\mathcal{B})
+  \Adv^{\mathsf{G}}_\TW(\mathcal{A})
   \;\leq\;
-  \varepsilon_{\mathsf{G}}\bigl(\qRO(\mathcal{B}),\,
-                                 \nleaf(\mathcal{B})\bigr).
+  \Lift_c(\Ntot) + \Adv^{\mathsf{G}}_{\RO}(\mathcal{B}).
 \]
-Then for every public-permutation $\mathsf{G}$-adversary $\mathcal{A}$
-against \TW{} with $\Nprim$ direct primitive queries, total cost at most
-$\Ntot$, and distinct-final-leaf-transcript cap $\Nleaf$ (all as in
-\Cref{sec:resources}),
+If moreover $\Adv^{\mathsf{G}}_{\RO}(\mathcal{B}) \leq
+\varepsilon_{\mathsf{G}}(\qRO(\mathcal{B}), \nleaf(\mathcal{B}))$ for some
+$\varepsilon_{\mathsf{G}}$ nondecreasing in each argument, then
 \[
   \Adv^{\mathsf{G}}_\TW(\mathcal{A})
   \;\leq\;
@@ -265,31 +264,23 @@ $\Ntot$, and distinct-final-leaf-transcript cap $\Nleaf$ (all as in
 \end{corollary}
 
 \begin{proof}
-Because the challenger exposes no construction interface during
-$\mathcal{A}$'s run, the construction cost $N$ of \Cref{lem:lift-bound}
-counts only the challenger's post-output deterministic checks---the
-decryption checks of the committing and discoverability games and the
-encryption checks of the CMTs games---so
-$N + \Nprim \leq \Ntot$. By the flat-sponge lift bound
-(\Cref{lem:lift-bound}), replacing $(\pi,\pi^{-1})$ by
-$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and the challenger checks by their
-random-oracle counterparts costs at most $\Lift_c(\Ntot)$. Let
-$\mathcal{B}_{\mathrm{derived}} =
-\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ be the adversary of
-\Cref{lem:derived-adversary}, which gives
-\[
-  \Adv^{\mathsf{G}}_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot)
-    + \Adv^{\mathsf{G}}_{\RO}(\mathcal{B}_{\mathrm{derived}})
-\]
-with $\qRO(\mathcal{B}_{\mathrm{derived}}) \leq \Nprim$ and
-$\nleaf(\mathcal{B}_{\mathrm{derived}}) \leq \Nleaf$. Applying the
-hypothesis at $\mathcal{B}_{\mathrm{derived}}$ and the monotonicity of
-$\varepsilon_{\mathsf{G}}$ yields the claim. When $\mathsf{G}$ is
+By the flat-sponge lift bound (\Cref{lem:lift-bound}), replacing the real
+public permutation and \TW{} construction by
+$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and the flat-RO construction
+interface costs at most $\Lift_c(\Ntot)$, where $\Ntot = N + \Nprim$
+counts both the construction calls of $N$---including any construction
+oracle exposed during $\mathcal{A}$'s run and, in the win-event games,
+the challenger's post-output decryption or encryption checks---and the
+$\Nprim$ direct primitive queries. The derived-adversary contract
+(\Cref{lem:derived-adversary}) expresses the resulting simulator-world
+execution as the identically distributed random-oracle execution of
+$\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$, with
+$\qRO(\mathcal{B}) \leq \Nprim$ and the stated construction-side
+inheritances, giving the first bound. The second follows by the
+monotonicity of $\varepsilon_{\mathsf{G}}$. When $\mathsf{G}$ is
 parameterized by a target fixed before $\mathcal{A}$ runs---the
 discoverability target $T^*$---the coupling holds for each fixed target
-and the bound, being target-independent, holds for the maximum defining
+and the target-independent bound holds for the maximum defining
 $\Adv^{\mathsf{G}}_\TW(\mathcal{A})$.
 \end{proof}
 
