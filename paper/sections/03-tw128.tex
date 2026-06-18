@@ -18,7 +18,7 @@ $M_1, \dots, M_n$, each handled by an independent leaf duplex
 initialized with $(K, N, j)$. The leaf duplex emits the keystream for
 $M_j$, absorbs the resulting ciphertext chunk $C_j$, and produces a
 $\tauleaf$-bit leaf tag $T_j$. When $n \geq 1$ the leaf tags, together
-with the eight-byte little-endian length $\langle n \rangle_8$, are
+with the eight-byte little-endian leaf count $\langle n \rangle_8$, are
 absorbed into the root duplex, which emits a single $\tauroot$-bit root
 tag $T$; when $n = 0$ the aggregation phase is elided and the closing
 message-phase call of the root chunk emits $T$ directly, mirroring the
@@ -91,7 +91,7 @@ context-discoverability headline (\Cref{thm:cdy,thm:tag-cdy}).
     The root duplex (bottom row) is
     initialized with $(K, N)$ and absorbs in turn the associated data
     $A$, the root ciphertext chunk $C_0$, each leaf tag
-    $T_1, \dots, T_n$, and the eight-byte little-endian length
+    $T_1, \dots, T_n$, and the eight-byte little-endian leaf count
     $\langle n \rangle_8$; it emits the root tag $T$. Each leaf duplex
     (top row) is initialized with $(K, N, j)$, emits keystream for
     plaintext chunk $M_j$, absorbs the resulting ciphertext chunk $C_j$,
