@@ -1,10 +1,11 @@
 \section{Committing Security and Context Discoverability}
 \label{sec:cmtds3}
 
-All three guarantees of this section rest on one argument: a
-chronological candidate sequence of root tag inputs, bounded by the
-adaptive candidate-collision and candidate-preimage lemmas of
-\Cref{app:lemmas}, which controls the probability that distinct
+All three guarantees of this section rest on one construction, isolated
+below as the Root-Tag Candidate Sequence lemma
+(\Cref{lem:root-candidate-seq}): a chronological candidate sequence of
+root tag inputs, whose collision or preimage probability the adaptive
+lemmas of \Cref{app:lemmas} bound, controlling the chance that distinct
 decryption contexts land on the same $\tauroot$-bit root tag projection.
 We instantiate it three ways in the random-oracle model;
 \Cref{app:flat-sponge-lift} transfers each instance to the
@@ -28,6 +29,59 @@ collision lemma (\Cref{lem:known-key-leaf-collision}); its
 public-permutation form is \Cref{cor:tag-cmtds4-pp}, feeding the headline
 \Cref{thm:tag-cmtds4}.
 
+\begin{lemma}[Root-Tag Candidate Sequence]
+\label{lem:root-candidate-seq}
+Consider a random-oracle game of \Cref{sec:ro-model} in which the
+adversary $\mathcal{B}$ first makes direct $\ROflat$ queries and then
+outputs values on which the challenger runs $m \geq 1$ deterministic
+decryption checks, the $i$-th reaching a final root transcript $R_i$
+whose root tag is read by a single $\ROflat$ lookup at $\flatmap(R_i)$.
+Every execution then admits a chronological sequence of root-tag inputs
+such that
+\begin{enumerate}
+\item each distinct direct query whose input $Y$ decodes under
+  $\KeyedTWOut$ to a root tag output-point class---$\Rmsg^+$ (the
+  single-chunk root tag, aggregation elided) or $\Rtag$ (the multi-chunk
+  root tag)---is appended as a candidate before its $\ROflat$ lookup, and
+  contributes at most one candidate;
+\item if the challenger reaches its checks, each $\flatmap(R_i)$ is in
+  the sequence, appended---if not already present---immediately before
+  the $i$-th root tag answer is sampled;
+\item no candidate's $\ROflat$ value is read before its append step, so
+  the sequence satisfies the predictability and unrevealed-value premises
+  of \Cref{lem:adaptive-candidate-collision,lem:adaptive-candidate-preimage};
+  and
+\item its length is at most $\qRO(\mathcal{B}) + m$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+The committing and discoverability games are keyless: all keys are
+adversary-supplied, so a direct query to a keyed transcript is one of
+$\mathcal{B}$'s visible $\ROflat$ queries counted in $\qRO(\mathcal{B})$,
+and there is no $\badkey$ event. No construction oracle runs during the
+direct-query phase, so each direct-query candidate is first read no
+earlier than its append step. The append predicate depends on $Y$ alone
+through the exact decoder of \Cref{lem:bridge-decode}, which ignores the
+requested output length, and by Output-Point Separation
+(\Cref{cor:output-sep}) each input decodes to at most one output-point
+class; hence each distinct direct query contributes at most one
+candidate, giving~(1).
+
+If the challenger reaches its $m$ checks, append $\flatmap(R_i)$
+immediately before the $i$-th root tag answer is sampled, unless it is
+already present. The intermediate $\ROflat$ lookups of check $i$ lie at
+non-root-tag output points, so by \Cref{cor:output-sep} they do not read
+$\flatmap(R_i)$. If $\flatmap(R_i)$ was touched earlier---by a direct
+query or by an earlier check $j < i$---then \Cref{lem:bridge-decode} and
+\Cref{cor:output-sep} make that earlier access a final-root lookup at the
+same address, which was therefore already appended, so the input is in
+the sequence and is not appended again. Otherwise its value is still
+unread when appended. Either way no candidate's value is read before its
+append step, giving~(2) and~(3). At most $\qRO(\mathcal{B})$ direct
+candidates and $m$ challenger candidates are appended, giving~(4).
+\end{proof}
+
 \begin{theorem}[Random-Oracle CMTDs-3]
 \label{thm:cmtds3-ro}
 For every $s \geq 2$ and every $s$-way CMTDs-3
@@ -41,73 +95,24 @@ adversary $\mathcal{B}$ in the \TW{} random-oracle model
 \end{theorem}
 
 \begin{proof}
-Unlike the privacy and INT-CTXT proofs, the CMTDs-3 analysis has no
-$\badkey$ event: all $s$ keys are
-adversary-supplied, so a direct query to a keyed transcript is one of
-$\mathcal{B}$'s visible $\ROflat$ queries and is counted in
-$\qRO(\mathcal{B})$.
+Run the random-oracle CMTDs-3 game (\Cref{sec:ro-model}). After
+rejecting on any failed syntax, message-length, or
+pairwise-distinct-triple check, its challenger performs $m = s$
+deterministic decryption checks $\Dec_{K_i}^\RO(N_i,A_i,C \concat T)$,
+reaching final root transcripts $R_1,\dots,R_s$. The Root-Tag Candidate
+Sequence lemma (\Cref{lem:root-candidate-seq}) yields a sequence of
+length at most $\qRO(\mathcal{B}) + s$ meeting the premises of
+\Cref{lem:adaptive-candidate-collision} and containing each
+$\flatmap(R_i)$.
 
-Run the random-oracle CMTDs-3 game (\Cref{sec:ro-model}) and define a
-candidate sequence for every execution. During $\mathcal{B}$'s direct
-oracle phase, when $\mathcal{B}$ makes a direct query to an input $Y$
-that is not already in the sequence, append $Y$ immediately before
-answering the query if $\KeyedTWOut(Y)$ decodes to a root tag
-output-point class, namely $\Rmsg^+$ (the single-chunk root tag, with
-the aggregation phase elided when $n = 0$) or $\Rtag$ (the multi-chunk
-root tag). This predicate depends on $Y$ alone through the exact decoder
-of \Cref{lem:bridge-decode}, which ignores the requested output length,
-so both the decision to append and the string $Y$ are determined before
-the query's $\ROflat$ lookup. By Output-Point Separation
-(\Cref{cor:output-sep}) each input decodes to at most one output-point
-class, so each distinct direct query contributes at most one candidate.
-Since there is no construction oracle before $\mathcal{B}$ outputs its
-tuples, each direct-query candidate is first touched at its append step.
-
-After $\mathcal{B}$ outputs $C \concat T$ and tuples
-$(K_i,N_i,A_i,M_i)_{i=1}^s$, stop appending challenger candidates if
-the syntax, message-length, or pairwise-distinct-triple check fails.
-Otherwise, as the
-challenger evaluates the $s$ deterministic decryption checks, let
-$R_i$ be the final root transcript reached by
-$\Dec_{K_i}^\RO(N_i,A_i,C \concat T)$ in check $i$, and append
-$\flatmap(R_i)$ immediately before the root tag oracle answer is
-sampled, unless that input is already in the sequence. If a challenger
-input was already touched by a direct query, then
-\Cref{lem:bridge-decode} and Output-Point Separation
-(\Cref{cor:output-sep}) imply that the earlier query was a final-root
-candidate and the input is already in the sequence. Otherwise,
-\Cref{cor:output-sep} excludes all earlier challenger lookups outside
-the final-root class, and Opening Triple Separation
-(\Cref{cor:triple-sep}) excludes earlier final-root lookups from the
-other checked triples. Thus no earlier lookup of any kind has touched
-a newly appended candidate's input. The sequence therefore satisfies
-the predictability and unrevealed-value premises of Adaptive Candidate
-Collision (\Cref{lem:adaptive-candidate-collision}), and its length is
-at most $\qRO(\mathcal{B}) + s$.
-
-On a winning execution, the challenger has accepted the syntax,
-message-length, and pairwise-distinct-triple checks, so the tuples are
-valid and the $(K_i,N_i,A_i)$ triples are pairwise distinct. By
-\Cref{cor:triple-sep}, the bridged final-root inputs
-\[
-  \flatmap(R_1),\dots,\flatmap(R_s)
-\]
-are pairwise distinct. Thus leaf tag collisions cannot merge the root
-inputs relevant to a CMTDs-3 win. Since every decryption check
-accepts, the
-$\tauroot$-bit projections at the $s$ distinct challenger final-root
-inputs all equal the supplied tag $T$:
-\[
-  \bigl\lfloor\ROflat(\flatmap(R_1))\bigr\rfloor_{\tauroot}
-  =
-  \cdots
-  =
-  \bigl\lfloor\ROflat(\flatmap(R_s))\bigr\rfloor_{\tauroot}
-  =
-  T .
-\]
-Hence the win event is contained in the $s$-way candidate-collision
-event. Applying \Cref{lem:adaptive-candidate-collision} with
+On a winning execution the pairwise-distinct-triple check passed, so the
+$(K_i,N_i,A_i)$ triples are pairwise distinct and, by Opening Triple
+Separation (\Cref{cor:triple-sep}), the bridged final-root inputs
+$\flatmap(R_1),\dots,\flatmap(R_s)$ are pairwise distinct; leaf tag
+collisions cannot merge them. Since every decryption check accepts, the
+$\tauroot$-bit projections at these $s$ distinct candidates all equal the
+supplied tag $T$, so the win event is contained in the $s$-way
+candidate-collision event. \Cref{lem:adaptive-candidate-collision} with
 $Q=\qRO(\mathcal{B})$ and $\tau=\tauroot$ gives
 \[
   \Advcmtds{3}_\RO(\mathcal{B})
@@ -185,31 +190,14 @@ $\badleaf^\star$ is at most the stated leaf-collision term, so it
 remains to bound the winning probability conditioned on
 $\neg\badleaf^\star$.
 
-Build the root tag candidate sequence exactly as in
-\Cref{thm:cmtds3-ro}'s direct-oracle phase: each distinct direct query
-whose input decodes to a root tag output-point class ($\Rmsg^+$ or
-$\Rtag$) is appended before its $\ROflat$ lookup. After
-$\mathcal{B}$ outputs
-\[
-  \bigl(T,(C_i,K_i,N_i,A_i,M_i)_{i=1}^s\bigr),
-\]
-stop appending challenger candidates if any syntax, message-length, or
-pairwise-full-input check fails. Otherwise, as the challenger evaluates
-the $s$ deterministic decryption checks, let $R_i$ be the final root
-transcript reached by
-$\Dec_{K_i}^{\RO}(N_i,A_i,C_i \concat T)$ in check $i$, and append
-$\flatmap(R_i)$ immediately before the root tag oracle answer is
-sampled, unless that input is already in the sequence. If a challenger
-input was already touched by a direct query, then
-\Cref{lem:bridge-decode} and \Cref{cor:output-sep} imply that the
-earlier query was a final-root candidate and the input is already in
-the sequence. Otherwise, \Cref{cor:output-sep} excludes earlier
-challenger lookups outside the final-root class; earlier final-root
-lookups either have a different address or have already caused this
-address to be appended. Thus newly appended root candidates satisfy the
-predictability and unrevealed-value premises of
-\Cref{lem:adaptive-candidate-collision}, and the sequence length is at
-most $\qRO(\mathcal{B})+s$.
+After rejecting on any failed syntax, message-length, or
+pairwise-full-input check, the challenger performs $m = s$ deterministic
+decryption checks $\Dec_{K_i}^{\RO}(N_i,A_i,C_i \concat T)$, reaching
+final root transcripts $R_1,\dots,R_s$. The Root-Tag Candidate Sequence
+lemma (\Cref{lem:root-candidate-seq}) yields a sequence of length at most
+$\qRO(\mathcal{B})+s$ meeting the premises of
+\Cref{lem:adaptive-candidate-collision} and containing each
+$\flatmap(R_i)$.
 
 On a winning execution with $\neg\badleaf^\star$, the full tuples
 $(K_i,N_i,A_i,M_i)$ are pairwise distinct and all decryption checks
@@ -252,37 +240,16 @@ random-oracle model (\Cref{sec:ro-model}),
 \end{theorem}
 
 \begin{proof}
-As in \Cref{thm:cmtds3-ro}, the CDY analysis has no $\badkey$ event:
-the single key is adversary-supplied, so a direct query to a keyed
-transcript is one of $\mathcal{B}$'s visible $\ROflat$ queries and is
-counted in $\qRO(\mathcal{B})$. Fix the query-independent target
-$T^*$, which is therefore independent of $\ROflat$.
-
-Run the random-oracle CDY game (\Cref{sec:ro-model}) and build the
-root tag candidate sequence exactly as in the direct-oracle phase of
-\Cref{thm:cmtds3-ro}: each distinct direct query whose input decodes to
-a root tag output-point class ($\Rmsg^+$ or $\Rtag$) is appended before
-its $\ROflat$ lookup and first touched at its append step.
-
-After $\mathcal{B}$ outputs the ciphertext body $C$ and the single
-context $(K,N,A)$, stop appending if the syntax or ciphertext-validity
-precheck on $C \concat T^*$ fails. Otherwise let $R$ be the final root
-transcript reached by the one deterministic decryption check
-$\Dec_{K}^\RO(N,A,C \concat T^*)$, and append $\flatmap(R)$ immediately
-before its root tag oracle answer is sampled, unless that input is
-already in the sequence. If $\flatmap(R)$ was already touched by a
-direct query, then \Cref{lem:bridge-decode} and Output-Point Separation
-(\Cref{cor:output-sep}) imply the earlier query was a final-root
-candidate and the input is already in the sequence; otherwise
-\Cref{cor:output-sep} excludes all earlier challenger lookups outside
-the final-root class. Unlike \Cref{thm:cmtds3-ro}, there is a single
-context, so no appeal to Opening Triple Separation
-(\Cref{cor:triple-sep}) is needed: no pairwise distinctness among
-final-root inputs is required. Thus no earlier lookup of any kind has
-touched the newly appended candidate's input. The sequence therefore
-satisfies the predictability and unrevealed-value premises of Adaptive
-Candidate Preimage (\Cref{lem:adaptive-candidate-preimage}), and its
-length is at most $\qRO(\mathcal{B}) + 1$.
+Run the random-oracle CDY game (\Cref{sec:ro-model}) for the
+query-independent target $T^*$, which is independent of $\ROflat$. After
+rejecting on a failed syntax or ciphertext-validity precheck on
+$C \concat T^*$, the challenger performs $m = 1$ deterministic decryption
+check $\Dec_{K}^\RO(N,A,C \concat T^*)$, reaching a final root transcript
+$R$. The Root-Tag Candidate Sequence lemma
+(\Cref{lem:root-candidate-seq}) yields a sequence of length at most
+$\qRO(\mathcal{B}) + 1$ meeting the premises of
+\Cref{lem:adaptive-candidate-preimage} and containing $\flatmap(R)$; with
+a single context no pairwise distinctness is needed.
 
 On a winning execution the precheck passes and the single decryption
 check accepts. By \Cref{alg:dec}, acceptance is the constant-time
