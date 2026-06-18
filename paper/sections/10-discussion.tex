@@ -9,9 +9,10 @@ encryption schemes along the axes that distinguish it: the underlying primitive,
 whether the mode is parallelizable, the key, nonce, and tag sizes, associated-data
 support, nonce-misuse resistance, full-input key commitment (\textsf{CMT-4}), and
 context discoverability (CDY).
-The comparison is structural; the concrete forms of \TW{}'s own privacy, AE, and
-committing bounds, and the regimes in which each term dominates, are treated in
-\Cref{sec:bound-discussion}. The \textsf{CMT-4} column records full-input
+The comparison is structural; \TW{}'s own concrete bounds and the regimes in
+which each term dominates are treated in \Cref{sec:bound-discussion}, and its
+measured throughput against hardware-accelerated AES-128-GCM in
+\Cref{sec:compare-perf}. The \textsf{CMT-4} column records full-input
 commitment: \TW{} provides it within the mode, as does Ascon \cite{KSW23}, a
 committing transform supplies it for an arbitrary base scheme, and the remaining
 listed schemes do not provide it. The CDY column records context-discovery
@@ -69,11 +70,10 @@ visible in \Cref{sec:performance}: on short, single-leaf inputs \TW{} is slower
 per byte than a compact serial duplex would be, and its advantage appears only
 once a message spans enough leaves to fill the vector units.
 
-Keyak \cite{BDPVV16} is the closest prior duplex AEAD in spirit, since its
-Motorist mode is already parallelizable. As discussed in \Cref{sec:related}, the
-difference is that Keyak fixes its degree of parallelism as a mode parameter
-that the encryptor and decryptor must share, whereas in \TW{} the number of
-leaves evaluated at once is an implementation choice invisible to the ciphertext.
+Keyak \cite{BDPVV16}, whose Motorist mode is already parallelizable, is the
+closest prior duplex AEAD in spirit; \Cref{sec:related} contrasts its
+wire-visible, encryptor-and-decryptor-shared degree of parallelism with \TW{}'s
+run-time leaf choice.
 Strobe \cite{Ham17} is a serial sponge framework aimed at whole protocols rather
 than at a standalone AEAD, and like Ascon and Xoodyak it does not parallelize.
 Committing security is not unique to \TW{} in this family: a dedicated analysis

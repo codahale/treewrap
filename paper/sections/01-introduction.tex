@@ -216,11 +216,9 @@ the underlying function rather than from a transform. Its schemes target
 session-based communication and process each message through a sequential duplex
 chain, whereas \TW{}, on the same native-committing single-permutation
 foundation, is structured as a two-level tree whose independent leaves are
-evaluated in parallel across SIMD lanes. \TW{}'s principal advantage is
-throughput on large messages, where this leaf parallelism fills vector units
-that a sequential duplex leaves idle; the cost is the session support that
-\cite{DHMVV24} provides and \TW{} does not
-(\Cref{sec:compare-commit,sec:performance}).
+evaluated in parallel across SIMD lanes. The resulting throughput advantage on
+large messages, and the session support \TW{} forgoes, are detailed in
+\Cref{sec:compare-commit,sec:performance}.
 
 \subsection{Paper Organization}
 \label{sec:organization}
