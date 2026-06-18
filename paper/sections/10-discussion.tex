@@ -123,7 +123,11 @@ two designs make different structural choices: \cite{DHMVV24} targets
 session-based communication, chaining a stream of messages through intermediate
 tags and generalizing the keyed duplex into a \emph{duplex cipher}, whereas \TW{}
 is a single two-level tree whose independent leaves expose run-time-selectable
-parallelism at constant memory (\Cref{sec:related,sec:impl}). Both demonstrate
+parallelism at constant memory (\Cref{sec:related,sec:impl}). Because a session
+chain processes each message serially, \TW{}'s principal advantage is throughput
+on large messages (\Cref{sec:performance}): its parallel leaves fill vector units
+a serial duplex leaves idle, at the cost of the session support \cite{DHMVV24}
+provides and \TW{} does not. Both demonstrate
 that committing AE needs no add-on transform once it is built on a
 well-scrutinized \Keccak{} permutation.
 
