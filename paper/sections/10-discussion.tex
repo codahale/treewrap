@@ -11,7 +11,7 @@ support, nonce-misuse resistance, full-input key commitment (\textsf{CMT-4}), an
 context discoverability (CDY).
 The comparison is structural; the concrete forms of \TW{}'s own privacy, AE, and
 committing bounds, and the regimes in which each term dominates, are treated in
-\Cref{sec:bound-discussion}. The \textsf{CMT-4} column records full-input key
+\Cref{sec:bound-discussion}. The \textsf{CMT-4} column records full-input
 commitment: \TW{} provides it within the mode, as does Ascon \cite{KSW23}, a
 committing transform supplies it for an arbitrary base scheme, and the remaining
 listed schemes do not provide it. The CDY column records context-discovery
@@ -31,8 +31,10 @@ schemes.
 \footnotesize
 \caption{Structural comparison of \TW{} with representative AEADs. Sizes are in
 bytes; AES-GCM-SIV also admits a $32$-byte key. ``Misuse-res.'' is nonce-misuse
-resistance in the sense of \cite{RS06}; \textsf{CMT-4} is full-input
-key-commitment in the sense of \cite{BH22}; CDY is context discoverability in
+resistance in the sense of \cite{RS06}; the \textsf{CMT-4} column records
+full-input commitment in the sense of \cite{BH22}, abstracting over its
+decryption (\textsf{CMTD}) and encryption (\textsf{CMT}) forms, of which \TW{}'s
+is the decryption form \textsf{CMTDs-4}; CDY is context discoverability in
 the sense of \cite{MLGR23}. A dash means the entry is inherited
 from the base scheme, and ``?'' that no result is established in the literature.
 \TW{}'s concrete bounds appear in
