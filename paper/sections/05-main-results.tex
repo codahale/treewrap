@@ -550,125 +550,69 @@ CMTD-4 statement of \cite{BH22}:
 \subsection{Concrete Security Claim}
 \label{sec:concrete-claim}
 
-\TW{} attains a $128$-bit security target across the standard notions of
-\Cref{sec:concrete}. The birthday term $\Lift_c(\Ntot) = \Ntot(\Ntot +
-1) / 2^{257}$ dominates the AE bound and is a leading term in the
-committing bounds, where the two-key specialization also has a
-co-leading root-collision term; it contributes alongside a multi-user
-hybrid term in the mu-ind bound; and it is the sole leading term in the
-discoverability bound, whose root-preimage term is linear in $\Nprim$.
-The tag-projected CMTDs-4 strengthening adds one leaf tag birthday term on
-$\Nprim+\Nleaf$. The headline work cap
-$\Ntot \leq 2^{63}$ keeps the resulting total below $2^{-128}$ after
-the resource consequences of
-\Cref{sec:resources} are applied. Namely, $\Nprim \leq \Ntot$ by
-definition, and the pathwise bounds $\qv \leq N$ and $\nleaf \leq N$
-allow the envelope parameters $\Qv$ and $\Nleaf$ to be instantiated at
-values at most $\Ntot$. The mu-ind user cap $D$ remains an independent hypothesis,
-since created-but-idle users need not contribute to $N$.
-\begin{itemize}
-\item \emph{AE.} For every nonce-respecting AE adversary against \TW{}
-  with $\Ntot \leq 2^{63}$ \Keccakp{} calls,
-  $\Advae_\TW(\mathcal{A}) \leq 2^{-128}$. The flat-sponge and
-  leaf-collision terms are each bounded by one $2^{-131}$-sized
-  birthday term, up to lower-order summands, while
-  $(2\Nprim+\Qv)/2^{256} \leq 3 \cdot 2^{-193}$.
-\item \emph{Multi-user indistinguishability.} For every $D$-user
-  mu-ind adversary against \TW{} with $\Ntot \leq 2^{63}$ \Keccakp{}
-  calls and $D \leq 2^{63}$ users, $\Advmuind_\TW(\mathcal{A}) \leq
-  2^{-128}$. At the threshold, the hybrid term satisfies
-  $2D\Nprim/2^{256} \leq 2^{-129} = 4 \cdot 2^{-131}$; the
-  flat-sponge term is at most $2^{-131}+2^{-194}$; the user-key
-  birthday and leaf-collision terms are each below $2^{-131}$; and
-  $\Qv/2^{256} \leq 2^{-193}$. Their sum is at most
-  $7 \cdot 2^{-131} + 3 \cdot 2^{-194} < 8 \cdot 2^{-131} = 2^{-128}$.
-\item \emph{Committing security.} For every $s \geq 2$ and every
-  $s$-way CMTDs-4 adversary against \TW{} with $\Ntot \leq
-  2^{63}$ \Keccakp{} calls (so in particular $\Nprim \leq 2^{63}$),
-  $\Advcmtds{4}_\TW(\mathcal{A}) \leq 2^{-128}$. In the two-key case
-  $s=2$, the flat-sponge and root-collision terms are each bounded by
-  one $2^{-131}$-sized birthday term, up to lower-order summands. For
-  $s \geq 3$, the root-collision term decays as $2^{-256(s - 1)}$ in
-  the denominator, so it becomes negligible relative to the birthday
-  term well before $\Ntot$ saturates.
-\item \emph{Tag-projected committing security.} For every $s \geq 2$
-  and every $s$-way tag-CMTDs-4 adversary against \TW{} with $\Ntot
-  \leq 2^{63}$ \Keccakp{} calls, $\Advtagcmtds{4}_\TW(\mathcal{A})
-  \leq 2^{-128}$. At $s=2$, the flat-sponge and root-collision terms
-  are each at most one $2^{-131}$-sized birthday term, while
-  $\LeafColl_{256}(\Nprim+\Nleaf)$ is at most
-  $\binom{2^{64}}{2}/2^{256} < 2^{-129}$ using
-  $\Nprim,\Nleaf \leq \Ntot$. Larger $s$ only decreases the
-  root-collision contribution.
-\item \emph{Context discoverability.} For every CDY adversary against
-  \TW{} with $\Ntot \leq 2^{63}$ \Keccakp{} calls (so in particular
-  $\Nprim \leq 2^{63}$),
-  $\Advcdy_\TW(\mathcal{A}) \leq
-  2^{-128}$. The
-  flat-sponge term is one $2^{-131}$-sized birthday term, up to
-  lower-order summands, and the root-preimage term satisfies
-  $(\Nprim + 1)/2^{256} \leq 2 \cdot 2^{-193}$, far below the
-  $128$-bit target; as in the committing bound, the flat-sponge
-  differentiating loss dominates.
-\end{itemize}
+\TW{} attains a $128$-bit security target across the notions of
+\Cref{sec:concrete}. This is an instantiation of the closed forms above
+under the resource consequences of \Cref{sec:resources}: $\Nprim \leq
+\Ntot$ by definition, and the pathwise bounds $\qv \leq N$ and
+$\nleaf \leq N$ let the envelope parameters $\Qv$ and $\Nleaf$ be taken at
+most $\Ntot$, so no separate top-level cap on $\Qv$ or $\Nleaf$ is
+required; only the mu-ind user cap $D$ remains an independent hypothesis,
+since created-but-idle users need not contribute to $N$. At the headline
+work cap $\Ntot \leq 2^{63}$ (and $D \leq 2^{63}$ for mu-ind) every bound
+is below $2^{-128}$, with the flat-sponge loss $\Lift_c(\Ntot)$ the
+dominant term in all but the multi-user case
+(\Cref{tab:concrete-security}).
 
-Expressed in bytes of construction work, $\Ntot \leq 2^{63}$
-corresponds to processing at most $\rho \cdot 2^{63} = 167 \cdot
-2^{63} < 2^{71}$ bytes of plaintext, associated data, ciphertext, and
-aggregation through the duplex (\Cref{sec:params}), well beyond any
-realistic deployment lifetime. The estimates above are direct
-instantiations of the closed-form expressions of \Cref{sec:concrete}
-using the derived resource bounds from \Cref{sec:resources}; no separate
-top-level cap on $\Qv$ or $\Nleaf$ is required.
+\begin{table}[t]
+\centering
+\caption{Concrete \TW{} security at the work cap $\Ntot \leq 2^{63}$
+(with $D \leq 2^{63}$ for mu-ind), under
+$k = c = \tauroot = \tauleaf = 256$ and the resource consequences
+$\Nprim, \Qv, \Nleaf \leq \Ntot$ of \Cref{sec:resources}. The committing
+rows hold for every $s \geq 2$; larger $s$ only shrinks the
+root-collision term.}
+\label{tab:concrete-security}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Notion & Dominant term & At the cap \\
+\midrule
+All-in-one AE & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+Multi-user ind. & $2D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
+Tag-CMTDs-4 & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+CMTDs-4 & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+Context discoverability & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+Term by term at the cap, with $\Nprim, \Qv, \Nleaf \leq \Ntot$: the
+flat-sponge loss $\Lift_c(\Ntot)$ and any leaf tag birthday term
+$\Nleaf(\Nleaf-1)/2^{257}$ are each at most one $2^{-131}$-sized term;
+the linear key-guess and verification contributions
+$(2\Nprim+\Qv)/2^{256}$ are at most $3 \cdot 2^{-193}$; the two-key
+root-collision term $\RootColl_{256}(\Nprim,2)$ likewise matches
+$\Lift_c$ at $\leq 2^{-131}$ and decays as $2^{-256(s-1)}$ for
+$s \geq 3$; the known-key $\LeafColl_{256}(\Nprim+\Nleaf)$ is below
+$2^{-129}$; and the root-preimage term $(\Nprim+1)/2^{256}$ is at most
+$2 \cdot 2^{-193}$. The single-user totals are therefore dominated by
+$\Lift_c$ and stay below $2^{-128}$. The multi-user bound is the
+exception: its hybrid-induced term $2D \cdot \KeyGuess_k(\Nprim) \leq
+2D\Ntot/2^{256}$ reaches $\approx 4\Lift_c$ at the upper end and
+dominates---staying at most $\Lift_c$ once
+$D \leq \Ntot(\Ntot+1)/(4\Nprim)$, typical of any practical
+deployment---and the total there is at most
+$7 \cdot 2^{-131} + 3 \cdot 2^{-194} < 8 \cdot 2^{-131} = 2^{-128}$.
+Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to at most
+$\rho \cdot 2^{63} = 167 \cdot 2^{63} < 2^{71}$ bytes of plaintext,
+associated data, ciphertext, and aggregation through the duplex
+(\Cref{sec:params}), well beyond any realistic deployment lifetime.
 
 \subsection{Discussion of the Bounds}
 \label{sec:bound-discussion}
 
-The closed-form bounds of \Cref{sec:concrete} aggregate four loss
-terms: the flat-sponge differentiating loss $\Lift_c$, the
-key-guessing contribution $\KeyGuess_k$ (entering privacy and
-INT-CTXT independently, hence the factor of two in the AE and
-mu-ind bounds), the leaf tag pairwise-collision term, and the
-verification-tag term. The CMTDs-4 bound substitutes the
-$s$-way root-collision term $\RootColl_{\tauroot}$ for the latter
-three; the tag-projected CMTDs-4 bound adds the known-key
-$\LeafColl_{\tauleaf}$ term; and the CDY bound uses the root-preimage
-term $\RootPre_{\tauroot}$.
-We comment on dominance and tightness.
-
-\paragraph{Dominance.}
-In the single-user AE bound, the birthday-on-capacity loss
-$\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{257}$ dominates for
-$6 \leq \Ntot < 2^{c}$. The key-guessing and
-verification-tag contributions $(2 \Nprim + \Qv) / 2^{256}$ are
-linear in their resource caps and bounded by $3 \Ntot / 2^{256}$,
-hence below $\Lift_c$ for $\Ntot \geq 6$. The leaf tag collision
-term $\Nleaf(\Nleaf - 1) / 2^{257}$ is at most $\Lift_c$ via
-$\Nleaf \leq \Ntot$. The CMTDs-4 bound is similar: the
-$s = 2$ root-collision term equals $(\Nprim + 1)(\Nprim + 2) /
-2^{257}$, which is within a small additive $\Ntot$-term of
-$\Lift_c$ under $\Nprim \leq \Ntot$, and it decays as $2^{-256(s -
-1)}$ in the denominator for $s \geq 3$. The tag-projected CMTDs-4
-bound has the same root-collision term plus
-$\LeafColl_{256}(\Nprim+\Nleaf)$, which is at most
-$\binom{2\Ntot}{2}/2^{256}$ under the resource consequences of
-\Cref{sec:resources}; at the concrete cap this is below $2^{-129}$.
-The CDY bound is dominated by
-$\Lift_c$ outright: its root-preimage term $(\Nprim + 1) / 2^{256}$ is
-linear in $\Nprim \leq \Ntot$ and hence below $\Lift_c$ for
-$\Ntot \geq 3$.
-
-The multi-user mu-ind bound is the exception. For
-$D \leq \Ntot(\Ntot+1) / (4 \Nprim)$ users (typical for any
-practical deployment), the hybrid-induced term remains at most
-$\Lift_c$. At the upper end of \Cref{sec:concrete-claim}'s parameters
-($\Ntot, D, \Nprim \leq 2^{63}$), the hybrid-induced term
-$2 D \cdot \KeyGuess_k(\Nprim) \leq 2 D \Ntot / 2^{256}$ reaches
-$\approx 4 \Lift_c$ and is the dominant term; the user-key
-birthday $D(D - 1) / 2^{257}$ and the leaf tag collision each
-contribute roughly $\Lift_c$. The $2^{-128}$ figure of
-\Cref{sec:concrete-claim} is an upper bound on the sum of these terms
-at the threshold.
+The bounds of \Cref{sec:concrete} aggregate the loss terms of
+\Cref{sec:loss-terms}, whose sizes at the work cap
+\Cref{tab:concrete-security} records and whose dominance
+\Cref{sec:concrete-claim} discusses. We comment on their tightness.
 
 \paragraph{Tightness.}
 \begin{itemize}
