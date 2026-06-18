@@ -208,6 +208,20 @@ generic transform applied to a non-committing base scheme. Because that tag is
 a sponge image and not an invertible MAC, the discovery attacks of \cite{MLGR23}
 have no analogue against \TW{}.
 
+Closest to \TW{} is the recent work of \cite{DHMVV24}, which also builds
+nonce-based AE natively on the SHA-3 functions \textsf{SHAKE} and
+\textsf{TurboSHAKE}---the latter over the same round-reduced \Keccak{}
+permutation as \TW{}---obtaining \textsf{CMT-4} from the collision resistance of
+the underlying function rather than from a transform. Its schemes target
+session-based communication and process each message through a sequential duplex
+chain, whereas \TW{}, on the same native-committing single-permutation
+foundation, is structured as a two-level tree whose independent leaves are
+evaluated in parallel across SIMD lanes. \TW{}'s principal advantage is
+throughput on large messages, where this leaf parallelism fills vector units
+that a sequential duplex leaves idle; the cost is the session support that
+\cite{DHMVV24} provides and \TW{} does not
+(\Cref{sec:compare-commit,sec:performance}).
+
 \subsection{Paper Organization}
 \label{sec:organization}
 
