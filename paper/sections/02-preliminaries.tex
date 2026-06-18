@@ -329,6 +329,32 @@ is the original CMTD-$\ell$/CMT-$\ell$ pair of \cite[Fig.~4]{BH22}.
 These definitions are instantiated for \TW{} in \Cref{sec:games-pp},
 with the public-permutation lift deferred to that section.
 
+\paragraph{Tag-projected committing games.}
+To express compact commitment, we also use a projection variant of the
+D-notions. Let $\gamma : \mathcal{C} \to \mathcal{D}$ be a public
+ciphertext projection. The $s$-way $\gamma$-CMTDs-$\ell$ game is the
+same as CMTDs-$\ell$ except that the adversary outputs ciphertexts
+$C_1,\dots,C_s$ rather than one common ciphertext, and the challenger
+requires
+\[
+  \gamma(C_1) = \cdots = \gamma(C_s)
+\]
+instead of requiring $C_1 = \cdots = C_s$. It then checks
+$\Dec_{K_i}(N_i,A_i,C_i)=M_i$ for every $i$, with the same syntax and
+pairwise-$\WiC_\ell$ checks as above. Thus ordinary CMTDs-$\ell$ is the
+special case in which $\gamma$ is the identity projection, and a
+nontrivial projection asks whether a shorter string is already a
+binding commitment. For \TW{}, whose ciphertexts are written
+$C \concat T$, the projection of interest is
+\[
+  \TagProj(C \concat T) = T .
+\]
+We call the resulting game tag-CMTDs-$\ell$. In tag-CMTDs-$\ell$, the
+common value $T$ is the compact commitment string, while the ciphertext
+bodies are opening data. This matches the compactly committing AEAD
+intuition of \cite{GLR17}, but is stated as a projection refinement of
+the \cite{BH22} CMTD games.
+
 \paragraph{Relations.}
 \cite[Figs.~4 and~5]{BH22} record the implications among the notions.
 For the D-notions we use:
@@ -364,3 +390,10 @@ delegate authenticity to a non-preimage-resistant MAC, including
 instantiated for \TW{} in \Cref{sec:games-pp}; its preimage character
 is what makes \TW{}'s root tag, a sponge image rather than an invertible
 MAC, resist these attacks.
+When the target ciphertext is itself projected through a public
+$\gamma$, the same experiment gives the projection analogue: the
+adversary is given a query-independent target value $d^*$ and wins by
+finding a ciphertext $C$ and context such that $\gamma(C)=d^*$ and
+$C$ decrypts. The \TW{} instantiation below is already
+tag-projected CDY, since it fixes only the root tag $T^*$ and leaves
+the ciphertext body free.

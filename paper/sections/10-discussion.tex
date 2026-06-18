@@ -22,6 +22,9 @@ discoverability is a recent notion \cite{MLGR23}, so its absence of entries
 reflects the state of the literature rather than a negative result; the schemes
 \cite{MLGR23} do break on discoverability (\textsf{GCM}, \textsf{CCM},
 \textsf{EAX}, \textsf{SIV}, \textsf{OCB3}) are not among the rows above.
+The table does not separately track tag-projected compactness, since that
+projection refinement has not been systematically analyzed for the comparison
+schemes.
 
 \begin{table}[t]
 \centering
@@ -95,8 +98,11 @@ undercutting their cost but by integration: it is committing as the mode itself,
 with the same permutation and the same tag that already provide confidentiality
 and integrity, so no separate commitment primitive, key-derivation step, or
 auxiliary hash is invoked, and the strongest $s$-way full-input notion follows
-from a single root tag collision bound (\Cref{sec:cmtds3}); the same tag, being
-preimage-resistant, additionally yields context discoverability, which the
+from a single root tag collision bound (\Cref{sec:cmtds3}). More strongly,
+\Cref{thm:tag-cmtds4} shows that the root tag alone is a compact commitment
+string even when the ciphertext bodies used as openings differ, up to the
+additional leaf tag birthday term. The same tag, being preimage-resistant,
+additionally yields tag-projected context discoverability, which the
 context-committing transforms are not known to provide. This places \TW{}
 alongside the dedicated committing primitives---the compactly committing AEAD of
 \cite{GLR17} and the encryptment of \cite{DGRW18}---which likewise build

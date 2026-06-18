@@ -49,21 +49,26 @@ associated data, the first chunk, and every leaf tag into the single output tag,
 that tag is a sponge image of the entire $(K, N, A, M)$ input. The structure
 ensures only that distinct $(K, N, A)$ triples reach distinct root transcripts;
 the committing security itself rests on the indistinguishability of the sponge,
-which makes those transcripts' tags collision-resistant, and the same sponge
-image is preimage-resistant, which is what yields context discoverability
+which makes those transcripts' tags collision-resistant. In fact the
+root tag alone can serve as the compact commitment string: even if
+different openings use different ciphertext bodies, a successful
+full-input collision must either collide the root tag candidates or
+first collide leaf tags. The same sponge image is preimage-resistant,
+which is what yields tag-projected context discoverability
 (\Cref{sec:cmtds3}). Every duplex
 still operates on a bounded $1600$-bit state, so the memory footprint remains
 constant in the message length.
 
 We analyze \TW{} in the public-permutation model and obtain concrete bounds for
-four notions: all-in-one authenticated encryption in the sense of
+the standard and tag-projected notions: all-in-one authenticated encryption in the sense of
 \cite{RS06}, its multi-user indistinguishability lift in the sense of
 \cite{BT16}, and the two facets of commitment---$s$-way committing security in
-the strongest full-input sense (\textsf{CMTDs-4}) of \cite{BH22} and context
-discoverability in the sense of \cite{MLGR23}. Each bound is proved first against an
+the strongest full-input sense (\textsf{CMTDs-4}) of \cite{BH22}, its
+tag-projected compact refinement, and context discoverability in the sense of
+\cite{MLGR23}. Each bound is proved first against an
 intermediate random oracle and then transferred to the real permutation by the
 flat-sponge lift of \cite{BDPV08}. At the implemented parameters
-($k = c = \tauroot = \tauleaf = 256$), all four notions meet a $128$-bit
+($k = c = \tauroot = \tauleaf = 256$), these guarantees meet a $128$-bit
 security target for adversaries running up to $\Ntot \leq 2^{63}$ \Keccakp{}
 calls---on the order of $2^{71}$ bytes of processed data, beyond any realistic
 deployment lifetime. Optimized \texttt{amd64} and \texttt{arm64} implementations
@@ -96,7 +101,9 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
 \item \textbf{Committing security.} We prove that \TW{} achieves $s$-way
   \textsf{CMTDs-4} committing security---commitment to the full
   $(K, N, A, M)$ input, for any number $s \geq 2$ of claimed openings---with a
-  concrete root-collision bound (\Cref{thm:cmtds4}), and we derive the remaining
+  concrete root-collision bound (\Cref{thm:cmtds4}), and that it satisfies a
+  tag-projected refinement in which the $256$-bit root tag alone is the compact
+  commitment string (\Cref{thm:tag-cmtds4}). We derive the remaining
   \cite{BH22} committing notions (\textsf{CMT} and \textsf{CMTD} for
   $\ell \in \{1, 3, 4\}$) as direct bounds (\Cref{app:committing-transfer}).
   Committing security is native to the mode, with no generic transform.
@@ -105,8 +112,9 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   context-discovery resistant in the sense of \cite{MLGR23}: given a target
   ciphertext fixed in advance, no adversary can find a decryption context under
   which it decrypts, with a concrete root-preimage bound (\Cref{thm:cdy}). This
-  is the preimage counterpart of committing security and follows from the same
-  root tag; because \TW{}'s authenticity is not delegated to an invertible MAC,
+  is the preimage counterpart of committing security and is already
+  tag-projected for \TW{}, since the target is only the root tag
+  (\Cref{thm:tag-cdy}); because \TW{}'s authenticity is not delegated to an invertible MAC,
   the context-discovery attacks of \cite{MLGR23} against \textsf{GCM},
   \textsf{CCM}, \textsf{EAX}, \textsf{SIV}, and \textsf{OCB3} do not apply. The
   unrestricted notion we prove dominates the restricted per-component variants
@@ -206,11 +214,11 @@ multi-user indistinguishability notion of \cite{BT16}.
 \Cref{sec:security-model} fixes the public-permutation games, the
 intermediate random-oracle model, and the resource accounting that
 all later bounds reference. \Cref{sec:main-results} states the
-headline AE, mu-ind, CMTDs-4, and CDY theorems and their
+headline AE, mu-ind, CMTDs-4, tag-CMTDs-4, and CDY theorems and their
 concrete \TW{}-parameter forms; \Cref{sec:privacy,sec:authenticity}
 prove the random-oracle privacy and INT-CTXT bounds that feed those
 theorems, and \Cref{sec:cmtds3} proves the random-oracle
-CMTDs-3 and CDY bounds. \Cref{sec:performance} reports the
+CMTDs-3, tag-CMTDs-4, and CDY bounds. \Cref{sec:performance} reports the
 performance of the reference and optimized implementations.
 \Cref{sec:discussion} compares \TW{} to prior sponge AEADs and
 committing constructions and discusses limitations.

@@ -4,18 +4,21 @@
 \subsection{Headline Theorems}
 \label{sec:headline}
 
-\TW{} delivers four headline guarantees in the lifted
+\TW{} delivers four standard headline guarantees in the lifted
 public-permutation model of \Cref{sec:games-pp}: all-in-one AE
 security \cite{RS06}, its multi-user indistinguishability lift
 \cite{BT16}, and the two facets of commitment security---$s$-way
 CMTDs-4 committing security \cite{BH22} and context discoverability
 \cite{MLGR23}. Committing security is the collision facet and context
 discoverability the preimage facet; both follow from the same root tag
-and are stated co-equally. For the AE-style notions the ideal side
+and are stated co-equally. We also state tag-projected refinements
+showing that the root tag alone is the compact commitment target. For
+the AE-style notions the ideal side
 exposes the BDPV simulator; the committing and discoverability bounds
 remain real public-permutation success probabilities.
-\Cref{thm:ae,thm:mu-ind,thm:cmtds4,thm:cdy} state these
-bounds; the loss terms $\Lift_c$, $\KeyGuess_k$, $\RootColl_\tau$, and
+\Cref{thm:ae,thm:mu-ind,thm:cmtds4,thm:tag-cmtds4,thm:cdy,thm:tag-cdy}
+state these bounds; the loss terms $\Lift_c$, $\KeyGuess_k$,
+$\RootColl_\tau$, $\LeafColl_\tau$, and
 $\RootPre_\tau$
 are unpacked in \Cref{sec:loss-terms}, and the random-oracle envelopes
 $\Epspriv$, $\Epsintctxt$ in \Cref{sec:thms-pp}.
@@ -376,6 +379,31 @@ uniformity with \Cref{thm:ae,thm:mu-ind}; the birthday threshold at
 $\tauroot = 256$ is unaffected.
 \end{remark}
 
+\begin{theorem}[Tag-Projected CMTDs-4 Committing Security]
+\label{thm:tag-cmtds4}
+For every $s \geq 2$ and every $s$-way tag-CMTDs-4
+adversary $\mathcal{A}$ against \TW{} with the resources of
+\Cref{sec:resources},
+\[
+  \Advtagcmtds{4}_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf)
+  + \RootColl_{\tauroot}(\Nprim, s).
+\]
+\end{theorem}
+
+\begin{proof}
+Immediate from the public-permutation corollary
+\Cref{cor:tag-cmtds4-pp}, which lifts the random-oracle bound of
+\Cref{thm:tag-cmtds4-ro}. The ordinary CMTDs-4 game is the special case
+in which the tag-CMTDs-4 adversary uses the same ciphertext body in all
+openings, but the theorem allows distinct bodies sharing only the final
+root tag. The additional $\LeafColl$ term accounts for the only extra
+way distinct bodies can merge before the root tag is compared: a
+collision among the leaf tags absorbed by the root transcript.
+\end{proof}
+
 \begin{theorem}[Context Discoverability]
 \label{thm:cdy}
 For every context-discoverability adversary $\mathcal{A}$ against \TW{}
@@ -400,13 +428,35 @@ the candidate-preimage argument of \Cref{thm:cdy-ro}, dropping the
 exponent from $\tauroot(s-1)$ to $\tauroot$.
 \end{proof}
 
+\begin{theorem}[Tag-Projected Context Discoverability]
+\label{thm:tag-cdy}
+For every tag-projected context-discoverability adversary
+$\mathcal{A}$ against \TW{} with the resources of
+\Cref{sec:resources},
+\[
+  \Advtagcdy_\TW(\mathcal{A})
+  =
+  \Advcdy_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim).
+\]
+\end{theorem}
+
+\begin{proof}
+The CDY game of \Cref{sec:games-pp} fixes only the root tag $T^*$ and
+lets the adversary choose the ciphertext body and context. This is
+exactly the $\TagProj(C\concat T)=T$ projection version of
+discoverability, so the equality of advantages is definitional and the
+bound is \Cref{thm:cdy}.
+\end{proof}
+
 \subsection{Loss Terms}
 \label{sec:loss-terms}
 
-Four closed-form expressions recur across the headline bounds of
-\Cref{sec:headline}---$\Lift_c$ in all four, with $\KeyGuess_k$,
-$\RootColl_\tau$, and $\RootPre_\tau$ in some. We collect them here for
-reference.
+Five closed-form expressions recur across the headline bounds of
+\Cref{sec:headline}---$\Lift_c$ throughout, with $\KeyGuess_k$,
+$\RootColl_\tau$, $\RootPre_\tau$, and $\LeafColl_\tau$ in some. We
+collect them here for reference.
 
 \paragraph{Flat-sponge loss.}
 The flat-sponge differentiating loss is
@@ -482,12 +532,26 @@ exponent drops from $\tau(s-1)$ to $\tau$. As in the root-collision
 term, the flat-sponge lift gives $Q = \Nprim$. The term bounds the
 query-independent target of context discoverability (\Cref{thm:cdy}).
 
+\paragraph{Leaf-collision term.}
+The known-key leaf tag collision term is
+\[
+  \LeafColl_\tau(Q) = \binom{Q}{2} \big/ 2^\tau.
+\]
+It is the pairwise birthday bound on $\tau$-bit leaf tag projections
+used by the tag-projected CMTDs-4 theorem. Unlike the hidden-key
+leaf collision term in the INT-CTXT bound, the compact committing game
+has adversary-supplied keys, so direct primitive queries can pre-read
+candidate leaf tag points. The random-oracle proof therefore counts
+both direct leaf tag candidates and challenger-generated final leaf
+transcripts; after the flat-sponge lift this gives
+$Q=\Nprim+\Nleaf$.
+
 \subsection{Supporting Bounds}
 \label{sec:thms-pp}
 
-The headline theorems of \Cref{sec:headline} feed on four
+The headline theorems of \Cref{sec:headline} feed on five
 random-oracle-model bounds---the privacy and INT-CTXT envelopes, the
-CMTDs-3 bound, and the CDY bound---whose proofs occupy
+CMTDs-3 bound, the tag-CMTDs-4 bound, and the CDY bound---whose proofs occupy
 \Cref{sec:privacy,sec:authenticity,sec:cmtds3}; the remaining
 committing-notion bounds live in \Cref{app:committing-transfer}.
 Resource-indexed
@@ -548,6 +612,20 @@ the final root transcripts whose tags are compared, since by
 \Cref{cor:triple-sep} distinct $(K, N, A)$ triples force distinct
 final root transcripts before aggregation values matter.
 
+\paragraph{Tag-CMTDs-4 bound.}
+The flat-RO tag-CMTDs-4 theorem of \Cref{sec:cmtds3} is
+\[
+  \Advtagcmtds{4}_{\RO}(\mathcal{B})
+  \leq
+  \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))
+  + \RootColl_{\tauroot}(\qRO(\mathcal{B}), s).
+\]
+The root-collision part is the same final-root candidate argument as
+CMTDs-3. The additional known-key leaf-collision term is needed because
+tag-projected openings may use different ciphertext bodies; absent such
+a leaf tag collision, pairwise distinct full inputs force pairwise
+distinct final root transcripts before the common tag is compared.
+
 \paragraph{CDY bound.}
 The flat-RO CDY theorem of \Cref{sec:cmtds3} is the direct
 root-preimage bound
@@ -582,7 +660,8 @@ primitive query induce at most one $\ROflat$ call, so
 The random-oracle envelopes of \Cref{sec:thms-pp} are therefore
 instantiated at $\Nprim$, not $\Ntot$, in the headline theorems---as is
 the CMTDs-3 candidate-sequence length bound $m \leq \Nprim + s$ of
-\Cref{sec:cmtds3} and the direct CMTs-$\ell$ bounds of
+\Cref{sec:cmtds3}, the tag-CMTDs-4 leaf/root candidate bounds, and the
+direct CMTs-$\ell$ bounds of
 \Cref{app:committing-transfer}, whose challenger encryption checks are
 construction-internal and counted in $N$, not in $\Nprim$.
 
@@ -593,9 +672,10 @@ The implemented parameters of \Cref{sec:params} fix
 \[
   k = c = \tauroot = \tauleaf = 256.
 \]
-Substituting into \Cref{thm:ae,thm:mu-ind,thm:cmtds4,thm:cdy} and using
-the random-oracle envelopes of \Cref{sec:thms-pp} gives the following
-closed-form bounds.
+Substituting into
+\Cref{thm:ae,thm:mu-ind,thm:cmtds4,thm:tag-cmtds4,thm:cdy,thm:tag-cdy}
+and using the random-oracle envelopes of \Cref{sec:thms-pp} gives the
+following closed-form bounds.
 
 \paragraph{All-in-one AE.}
 \[
@@ -638,8 +718,31 @@ CMTD-4 statement of \cite{BH22}:
 \]
 \end{remark}
 
+\paragraph{$s$-way tag-projected CMTDs-4 committing security.}
+For every $s \geq 2$,
+\[
+  \Advtagcmtds{4}_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\binom{\Nprim+\Nleaf}{2}}{2^{256}}
+  + \frac{\binom{\Nprim + s}{s}}{2^{256 (s - 1)}}.
+\]
+For $s=2$, this is the compact two-opening bound in which the common
+commitment is only the tag:
+\[
+\begin{aligned}
+  \Advtagcmtds{4}_\TW(\mathcal{A})
+\leq\;&
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{(\Nprim+\Nleaf)(\Nprim+\Nleaf-1)}{2^{257}} \\
+& + \frac{(\Nprim + 1)(\Nprim + 2)}{2^{257}} .
+\end{aligned}
+\]
+
 \paragraph{Context discoverability.}
 \[
+  \Advtagcdy_\TW(\mathcal{A})
+  =
   \Advcdy_\TW(\mathcal{A})
   \;\leq\;
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
@@ -649,13 +752,15 @@ CMTD-4 statement of \cite{BH22}:
 \subsection{Concrete Security Claim}
 \label{sec:concrete-claim}
 
-\TW{} attains a $128$-bit security target across all four notions of
+\TW{} attains a $128$-bit security target across the standard notions of
 \Cref{sec:concrete}. The birthday term $\Lift_c(\Ntot) = \Ntot(\Ntot +
 1) / 2^{257}$ dominates the AE bound and is a leading term in the
 committing bounds, where the two-key specialization also has a
 co-leading root-collision term; it contributes alongside a multi-user
 hybrid term in the mu-ind bound; and it is the sole leading term in the
-discoverability bound, whose root-preimage term is linear in $\Nprim$. The headline work cap
+discoverability bound, whose root-preimage term is linear in $\Nprim$.
+The tag-projected CMTDs-4 refinement adds one leaf tag birthday term on
+$\Nprim+\Nleaf$. The headline work cap
 $\Ntot \leq 2^{63}$ keeps the resulting total below $2^{-128}$ after
 the resource consequences of
 \Cref{sec:resources} are applied. Namely, $\Nprim \leq \Ntot$ by
@@ -688,9 +793,20 @@ since created-but-idle users need not contribute to $N$.
   $s \geq 3$, the root-collision term decays as $2^{-256(s - 1)}$ in
   the denominator, so it becomes negligible relative to the birthday
   term well before $\Ntot$ saturates.
+\item \emph{Tag-projected committing security.} For every $s \geq 2$
+  and every $s$-way tag-CMTDs-4 adversary against \TW{} with $\Ntot
+  \leq 2^{63}$ \Keccakp{} calls, $\Advtagcmtds{4}_\TW(\mathcal{A})
+  \leq 2^{-128}$. At $s=2$, the flat-sponge and root-collision terms
+  are each at most one $2^{-131}$-sized birthday term, while
+  $\LeafColl_{256}(\Nprim+\Nleaf)$ is at most
+  $\binom{2^{64}}{2}/2^{256} < 2^{-129}$ using
+  $\Nprim,\Nleaf \leq \Ntot$. Larger $s$ only decreases the
+  root-collision contribution.
 \item \emph{Context discoverability.} For every CDY adversary against
   \TW{} with $\Ntot \leq 2^{63}$ \Keccakp{} calls (so in particular
-  $\Nprim \leq 2^{63}$), $\Advcdy_\TW(\mathcal{A}) \leq 2^{-128}$. The
+  $\Nprim \leq 2^{63}$),
+  $\Advtagcdy_\TW(\mathcal{A})=\Advcdy_\TW(\mathcal{A}) \leq
+  2^{-128}$. The
   flat-sponge term is one $2^{-131}$-sized birthday term, up to
   lower-order summands, and the root-preimage term satisfies
   $(\Nprim + 1)/2^{256} \leq 2 \cdot 2^{-193}$, far below the
@@ -717,7 +833,9 @@ INT-CTXT independently, hence the factor of two in the AE and
 mu-ind bounds), the leaf tag pairwise-collision term, and the
 verification-tag term. The CMTDs-4 bound substitutes the
 $s$-way root-collision term $\RootColl_{\tauroot}$ for the latter
-three, and the CDY bound the root-preimage term $\RootPre_{\tauroot}$.
+three; the tag-projected CMTDs-4 bound adds the known-key
+$\LeafColl_{\tauleaf}$ term; and the CDY bound uses the root-preimage
+term $\RootPre_{\tauroot}$.
 We comment on dominance and tightness.
 
 \paragraph{Dominance.}
@@ -732,7 +850,12 @@ $\Nleaf \leq \Ntot$. The CMTDs-4 bound is similar: the
 $s = 2$ root-collision term equals $(\Nprim + 1)(\Nprim + 2) /
 2^{257}$, which is within a small additive $\Ntot$-term of
 $\Lift_c$ under $\Nprim \leq \Ntot$, and it decays as $2^{-256(s -
-1)}$ in the denominator for $s \geq 3$. The CDY bound is dominated by
+1)}$ in the denominator for $s \geq 3$. The tag-projected CMTDs-4
+bound has the same root-collision term plus
+$\LeafColl_{256}(\Nprim+\Nleaf)$, which is at most
+$\binom{2\Ntot}{2}/2^{256}$ under the resource consequences of
+\Cref{sec:resources}; at the concrete cap this is below $2^{-129}$.
+The CDY bound is dominated by
 $\Lift_c$ outright: its root-preimage term $(\Nprim + 1) / 2^{256}$ is
 linear in $\Nprim \leq \Ntot$ and hence below $\Lift_c$ for
 $\Ntot \geq 3$.
@@ -763,6 +886,10 @@ at the threshold.
   1}$.} The pairwise union bound is tight up to constants: a generic
   birthday attack on the $\tauleaf$-bit leaf tag projection matches
   the leading $\Nleaf^2 / 2^{\tauleaf + 1}$ rate.
+\item \emph{Known-key leaf collision $\LeafColl_\tau(Q)$.} The same
+  birthday attack applies when keys are adversary-supplied and direct
+  queries can target leaf tag points; the compact CMTDs-4 proof uses
+  $Q=\Nprim+\Nleaf$.
 \item \emph{Flat-sponge lift.} The term
   $\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{c + 1}$ bounds the exact
   random-permutation differentiating probability of

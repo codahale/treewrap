@@ -37,9 +37,13 @@ gives the construction its commitment-security guarantees: distinct
 $(K, N, A)$ triples force distinct final root transcripts before
 aggregation values matter
 (\Cref{cor:triple-sep,sec:cmtds3}), the structural fact behind
-the CMTDs-4 headline of \Cref{sec:headline}, while the same root tag,
-being a sponge image rather than an invertible MAC, is preimage-resistant
-and so yields the context-discoverability headline (\Cref{thm:cdy}).
+the CMTDs-4 headline of \Cref{sec:headline}. The tag-projected
+refinement keeps only the emitted root tag as the compact commitment
+string and treats the ciphertext body as opening data; distinct bodies
+can merge only through the leaf tag collision term of
+\Cref{thm:tag-cmtds4}. The same root tag, being a sponge image rather
+than an invertible MAC, is preimage-resistant and so yields the
+context-discoverability headline (\Cref{thm:cdy,thm:tag-cdy}).
 
 \begin{figure}[t]
   \centering

@@ -75,7 +75,7 @@ simulator-side $\ROflat$ call used throughout this appendix.
 \label{lem:lift-bound}
 Let $\mathsf{G}$ be any of the single-stage \TW{} games of
 \Cref{sec:games-pp,sec:mu-setting}: privacy, INT-CTXT, all-in-one AE,
-mu-ind, CMTDs-3, CDY, or
+mu-ind, CMTDs-3, tag-CMTDs-4, CDY, or
 CMTs-$\ell$ for $\ell \in \{1,3,4\}$. Let
 $\mathcal{A}$ be a
 public-permutation $\mathsf{G}$ adversary with construction-interface
@@ -124,7 +124,7 @@ which \Cref{sec:loss-terms} bounds by $\Lift_c(\Ntot)$.
 \label{lem:derived-adversary}
 Let $\mathsf{G}$ be any of the single-stage \TW{} games of
 \Cref{sec:games-pp,sec:mu-setting}: privacy, INT-CTXT, all-in-one AE,
-mu-ind, CMTDs-3, CDY, or
+mu-ind, CMTDs-3, tag-CMTDs-4, CDY, or
 CMTs-$\ell$ for $\ell \in \{1,3,4\}$. Let
 $\mathcal{A}$ be a
 simulator-world $\mathsf{G}$ adversary whose public-primitive
@@ -244,7 +244,7 @@ state once and then instantiate with each random-oracle bound.
 Let $\mathsf{G}$ be one of the single-stage win-event \TW{} games of
 \Cref{lem:lift-bound} whose challenger exposes no construction interface
 during the adversary's run---CMTDs-3, CMTs-$\ell$ for
-$\ell \in \{1,3,4\}$, or CDY---and suppose there is a
+$\ell \in \{1,3,4\}$, tag-CMTDs-4, or CDY---and suppose there is a
 function $\varepsilon_{\mathsf{G}}$, nondecreasing in each argument, such
 that every random-oracle $\mathsf{G}$-adversary $\mathcal{B}$ satisfies
 \[
@@ -324,6 +324,37 @@ $\Advcmtds{3}_\RO(\mathcal{B}) \leq
 \RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$, which is nondecreasing in
 $\qRO(\mathcal{B})$ by monotonicity of $\binom{\cdot + s}{s}$. The Lift
 Application corollary (\Cref{cor:lift-application}) then gives the claim.
+\end{proof}
+
+\begin{corollary}[Public-Permutation Tag-CMTDs-4]
+\label{cor:tag-cmtds4-pp}
+For every $s \geq 2$ and every $s$-way tag-CMTDs-4 adversary
+$\mathcal{A}$ against \TW{} with $\Nprim$ direct primitive queries,
+total cost at most $\Ntot$, and distinct-final-leaf-transcript cap
+$\Nleaf$ (all as in \Cref{sec:resources}),
+\[
+  \Advtagcmtds{4}_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf)
+  + \RootColl_{\tauroot}(\Nprim, s).
+\]
+\end{corollary}
+
+\begin{proof}
+The tag-CMTDs-4 challenger exposes no construction interface during
+$\mathcal{A}$'s run; on executions that pass the early rejecting checks
+it performs the $s$ deterministic decryption checks on the submitted
+bodies and common tag. By \Cref{thm:tag-cmtds4-ro}, every
+random-oracle tag-CMTDs-4 adversary $\mathcal{B}$ satisfies
+\[
+  \Advtagcmtds{4}_\RO(\mathcal{B})
+  \leq
+  \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))
+  + \RootColl_{\tauroot}(\qRO(\mathcal{B}),s),
+\]
+which is nondecreasing in both resource arguments. The Lift Application
+corollary (\Cref{cor:lift-application}) gives the claim.
 \end{proof}
 
 \begin{corollary}[Public-Permutation CDY]
