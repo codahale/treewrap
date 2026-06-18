@@ -330,10 +330,16 @@ These definitions are instantiated for \TW{} in \Cref{sec:games-pp},
 with the public-permutation lift deferred to that section.
 
 \paragraph{Tag-projected committing games.}
-To express compact commitment, we also use a projection variant of the
-D-notions. Let $\gamma : \mathcal{C} \to \mathcal{D}$ be a public
-ciphertext projection. The $s$-way $\gamma$-CMTDs-$\ell$ game is the
-same as CMTDs-$\ell$ except that the adversary outputs ciphertexts
+The \cite{BH22} CMTD notions above treat the entire ciphertext as the
+committing object: an adversary wins only by exhibiting one common
+ciphertext that two distinct contexts both decrypt. Many uses of
+commitment store, transmit, or compare a short tag rather than the full
+ciphertext, and ask that the short string alone be binding---this is the
+compactly committing AEAD goal introduced by \cite{GLR17} for message
+franking. To capture it we strengthen the D-notions through a public
+ciphertext projection. Let $\gamma : \mathcal{C} \to \mathcal{D}$ be such
+a projection. The $s$-way $\gamma$-CMTDs-$\ell$ game is the same as
+CMTDs-$\ell$ except that the adversary outputs ciphertexts
 $C_1,\dots,C_s$ rather than one common ciphertext, and the challenger
 requires
 \[
@@ -341,19 +347,26 @@ requires
 \]
 instead of requiring $C_1 = \cdots = C_s$. It then checks
 $\Dec_{K_i}(N_i,A_i,C_i)=M_i$ for every $i$, with the same syntax and
-pairwise-$\WiC_\ell$ checks as above. Thus ordinary CMTDs-$\ell$ is the
-special case in which $\gamma$ is the identity projection, and a
-nontrivial projection asks whether a shorter string is already a
-binding commitment. For \TW{}, whose ciphertexts are written
-$C \concat T$, the projection of interest is
+pairwise-$\WiC_\ell$ checks as above. Ordinary CMTDs-$\ell$ is the
+special case in which $\gamma$ is the identity projection, so for any
+$\gamma$ the projected game grants the adversary strictly more
+freedom---distinct openings need agree only on the projection---and an
+upper bound on the $\gamma$-CMTDs-$\ell$ advantage is therefore also an
+upper bound on the ordinary CMTDs-$\ell$ advantage, while additionally
+certifying $\gamma(C)$ as a binding commitment in its own right. For
+\TW{}, whose ciphertexts are written $C \concat T$, the projection of
+interest keeps only the root tag,
 \[
-  \TagProj(C \concat T) = T .
+  \TagProj(C \concat T) = T ,
 \]
-We call the resulting game tag-CMTDs-$\ell$. In tag-CMTDs-$\ell$, the
-common value $T$ is the compact commitment string, while the ciphertext
-bodies are opening data. This matches the compactly committing AEAD
-intuition of \cite{GLR17}, but is stated as a projection refinement of
-the \cite{BH22} CMTD games.
+and we call the resulting game tag-CMTDs-$\ell$: the $256$-bit tag $T$ is
+the compact commitment string and the ciphertext bodies are opening
+data. Proving tag-CMTDs-$4$ (\Cref{thm:tag-cmtds4}) establishes the binding,
+collision-resistant facet of this commitment for the full $(K,N,A,M)$
+encryption input, realizing the \cite{GLR17} compactly committing goal
+natively rather than through an added commitment primitive; its preimage
+facet, which a cryptographic hash commitment equally requires, is
+supplied by the context discoverability of the next paragraph.
 
 \paragraph{Relations.}
 \cite[Figs.~4 and~5]{BH22} record the implications among the notions.
@@ -394,6 +407,10 @@ When the target ciphertext is itself projected through a public
 $\gamma$, the same experiment gives the projection analogue: the
 adversary is given a query-independent target value $d^*$ and wins by
 finding a ciphertext $C$ and context such that $\gamma(C)=d^*$ and
-$C$ decrypts. The \TW{} instantiation below is already
-tag-projected CDY, since it fixes only the root tag $T^*$ and leaves
-the ciphertext body free.
+$C$ decrypts. The \TW{} instantiation below is already the tag-projected
+case, fixing only the root tag $T^*$ and leaving the ciphertext body
+free. It is the preimage facet of the same compact commitment whose
+collision facet is tag-CMTDs-$4$: together they make \TW{}'s root tag
+preimage- as well as collision-resistant as a commitment to the
+encryption input, the two guarantees a cryptographic hash commitment
+provides.

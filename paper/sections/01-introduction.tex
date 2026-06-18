@@ -64,7 +64,7 @@ the standard and tag-projected notions: all-in-one authenticated encryption in t
 \cite{RS06}, its multi-user indistinguishability lift in the sense of
 \cite{BT16}, and the two facets of commitment---$s$-way committing security in
 the strongest full-input sense (\textsf{CMTDs-4}) of \cite{BH22}, its
-tag-projected compact refinement, and context discoverability in the sense of
+tag-projected compact strengthening, and context discoverability in the sense of
 \cite{MLGR23}. Each bound is proved first against an
 intermediate random oracle and then transferred to the real permutation by the
 flat-sponge lift of \cite{BDPV08}. At the implemented parameters
@@ -101,9 +101,11 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
 \item \textbf{Committing security.} We prove that \TW{} achieves $s$-way
   \textsf{CMTDs-4} committing security---commitment to the full
   $(K, N, A, M)$ input, for any number $s \geq 2$ of claimed openings---with a
-  concrete root-collision bound (\Cref{thm:cmtds4}), and that it satisfies a
-  tag-projected refinement in which the $256$-bit root tag alone is the compact
-  commitment string (\Cref{thm:tag-cmtds4}). We derive the remaining
+  concrete root-collision bound (\Cref{thm:cmtds4}), and that it satisfies the
+  stronger tag-projected notion, in which the $256$-bit root tag alone is a
+  binding commitment to that input even when the claimed openings use distinct
+  ciphertext bodies (\Cref{thm:tag-cmtds4}), matching the compactly committing
+  AEAD goal of \cite{GLR17}. We derive the remaining
   \cite{BH22} committing notions (\textsf{CMT} and \textsf{CMTD} for
   $\ell \in \{1, 3, 4\}$) as direct bounds (\Cref{app:committing-transfer}).
   Committing security is native to the mode, with no generic transform.
@@ -114,7 +116,10 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   which it decrypts, with a concrete root-preimage bound (\Cref{thm:cdy}). This
   is the preimage counterpart of committing security and is already
   tag-projected for \TW{}, since the target is only the root tag
-  (\Cref{thm:tag-cdy}); because \TW{}'s authenticity is not delegated to an invertible MAC,
+  (\Cref{thm:tag-cdy}). Taken with the collision facet of tag-CMTDs-4, it
+  makes \TW{}'s $256$-bit root tag both collision- and preimage-resistant as a
+  commitment to the full encryption input---in one tag, as strong a commitment
+  as a cryptographic hash. Because \TW{}'s authenticity is not delegated to an invertible MAC,
   the context-discovery attacks of \cite{MLGR23} against \textsf{GCM},
   \textsf{CCM}, \textsf{EAX}, \textsf{SIV}, and \textsf{OCB3} do not apply. The
   unrestricted notion we prove dominates the restricted per-component variants
