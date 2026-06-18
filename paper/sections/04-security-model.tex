@@ -247,43 +247,21 @@ $\KeyedTWOut$ in \Cref{lem:bridge-decode}.
 The random-oracle-model games are the construction-interface variants
 of \Cref{sec:games-pp,sec:mu-setting}: the primitive interface is
 replaced by direct adversary access to $\ROflat$, and each construction
-oracle uses the corresponding ${}^\RO$ algorithm.
-\[
-  \Adv^{\mathsf{priv}}_{\RO}(\mathcal{B}) =
-  \bigl|
-    \Pr[\mathcal{B}^{\Enc_K^\RO,\, \ROflat} \Rightarrow 1]
-    - \Pr[\mathcal{B}^{\Rand,\, \ROflat} \Rightarrow 1]
-  \bigr|,
-\]
-\[
-  \Adv^{\mathsf{int\text{-}ctxt}}_{\RO}(\mathcal{B}) =
-  \Pr[\mathcal{B}^{\Enc_K^\RO,\, \Ver_K^\RO,\, \ROflat} \text{ wins}],
-\]
-\[
-  \Adv^{\mathsf{ae}}_{\RO}(\mathcal{B}) =
-  \bigl|
-    \Pr[\mathcal{B}^{\Enc_K^\RO,\, \Ver_K^\RO,\, \ROflat} \Rightarrow 1]
-    - \Pr[\mathcal{B}^{\Rand,\, \Replay,\, \ROflat} \Rightarrow 1]
-  \bigr|,
-\]
-\[
-  \Advcmtds{3}_{\RO}(\mathcal{B}) =
-  \Pr[\text{the random-oracle CMTDs-3 game returns } 1].
-\]
-\[
-  \Advtagcmtds{4}_{\RO}(\mathcal{B}) =
-  \Pr[\text{the random-oracle tag-CMTDs-4 game returns } 1].
-\]
-For $\ell \in \{1,3,4\}$,
-$\Advcmts{\ell}_{\RO}(\mathcal{B})$ denotes the corresponding
-random-oracle CMTs-$\ell$ game: the adversary has direct
-access to $\ROflat$, and the challenger computes its deterministic
-encryption checks with $\Enc^\RO$.
-For mu-ind, $\Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})$
+oracle uses the corresponding ${}^\RO$ algorithm, the ideal oracles
+$(\Rand,\Replay)$ being unchanged. Under this substitution
+$\Adv^{\mathsf{priv}}_{\RO}$, $\Adv^{\mathsf{int\text{-}ctxt}}_{\RO}$,
+and $\Adv^{\mathsf{ae}}_{\RO}$ are the \Cref{sec:games-pp} advantages
+with no simulator on the ideal side; the keyless
+$\Advcmtds{3}_{\RO}(\mathcal{B})$,
+$\Advtagcmtds{4}_{\RO}(\mathcal{B})$, and, for $\ell \in \{1,3,4\}$,
+$\Advcmts{\ell}_{\RO}(\mathcal{B})$ are the probabilities that the
+corresponding random-oracle committing games return $1$, the CMTs
+challenger computing its deterministic encryption checks with
+$\Enc^\RO$. For mu-ind, $\Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})$
 denotes the \Cref{sec:mu-setting} game with the same $\mathsf{New}$
-interface and per-user nonce discipline: when $b = 1$, user $d$ uses
-$(\Enc_{K_d}^{\RO}, \Ver_{K_d}^{\RO})$, and when $b = 0$, user $d$
-uses the ideal pair $(\Rand,\Replay)$. Equivalently, in the two-game
+interface and per-user nonce discipline---user $d$ using
+$(\Enc_{K_d}^{\RO}, \Ver_{K_d}^{\RO})$ when $b = 1$ and
+$(\Rand,\Replay)$ when $b = 0$---equivalently, in the two-game
 notation of \Cref{sec:mu-ind},
 \[
   \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B}) =
