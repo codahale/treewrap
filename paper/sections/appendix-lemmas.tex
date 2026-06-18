@@ -1258,3 +1258,118 @@ $G_{\mathcal{C}}$; otherwise it contributes to none. Thus
 $\sum_{\mathcal{C}} |G_{\mathcal{C}}| \leq \qv(\mathcal{B})$, and a union bound over the
 verification-first classes gives the claim.
 \end{proof}
+
+\subsection{Multi-User Hybrid Lemma}
+
+The multi-user indistinguishability theorem (\Cref{thm:mu-ind}) telescopes a
+hybrid over the $D$ users, replacing one real user by its ideal
+$(\Rand,\Replay)$ interface at each step. The following lemma bounds one such
+step, reusing the privacy accounting of
+\Cref{lem:priv-one-query-replacement} and the INT-CTXT accounting of
+\Cref{thm:intctxt-ro} within a shared random-oracle environment.
+
+\begin{lemma}[Mu-Ind Adjacent-Hybrid Bound]
+\label{lem:mu-single-user-envelope}
+Let $\mathcal{B}$ be a flat-RO mu-ind adversary in the pre-sampled-key
+formulation of \Cref{sec:mu-setting}, with keys
+$K_1,\dots,K_D$ sampled at the start of the experiment. Fix
+$d \in \{1,\dots,D\}$. Let $H_{d-1}^\star$ and $H_d^\star$ be the
+adjacent stopped hybrids that output a fixed bit if any two sampled keys
+collide, and otherwise run $\mathcal{B}$ with one shared lazy
+$\ROflat$ table as follows: users $e < d$ are answered by
+$(\Rand,\Replay)$, users $e > d$ are answered by
+$(\Enc_{K_e}^\RO,\Ver_{K_e}^\RO)$, and user $d$ is answered by
+$(\Enc_{K_d}^\RO,\Ver_{K_d}^\RO)$ in $H_{d-1}^\star$ and by
+$(\Rand,\Replay)$ in $H_d^\star$. If $\nleaf^{(d)}$ and $\qv^{(d)}$
+are the user-$d$ resource caps, then
+\[
+  \bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
+       - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr|
+  \leq
+  2\KeyGuess_k(\qRO(\mathcal{B}))
+  + \frac{\nleaf^{(d)}(\nleaf^{(d)}-1)}{2^{\tauleaf+1}}
+  + \frac{\qv^{(d)}}{2^{\tauroot}}.
+\]
+\end{lemma}
+
+\begin{proof}
+The fixed-output branch on a key collision is identical in
+$H_{d-1}^\star$ and $H_d^\star$, so only the branch with pairwise
+distinct keys contributes. On that branch, the two hybrids differ only
+in user $d$: users $e < d$ are ideal in both hybrids, and users
+$e > d$ are real in both hybrids.
+
+Let $\mathcal{E}_d$ denote the common surrounding environment. It runs
+$\mathcal{B}$, answers users $e < d$ by their $(\Rand,\Replay)$
+interfaces, answers users $e > d$ by
+$\Enc_{K_e}^\RO,\Ver_{K_e}^\RO$, forwards $\mathcal{B}$'s direct
+$\ROflat$ queries unchanged, and shares the same lazy $\ROflat$ table
+with user $d$. The Bellare--Namprempre insertion is pathwise in this
+environment. Insert the interface in which user $d$'s encryption oracle
+is still real but user $d$'s verification oracle is replaced by its
+replay table. The first hop is the user-$d$ INT-CTXT event; the second
+hop is the user-$d$ privacy replacement with the same environment and
+replay table. The replay table is determined by user $d$'s encryption
+answers and adds no direct $\ROflat$ queries or construction-generated
+transcripts.
+
+The privacy and INT-CTXT accounting used in these two hops is local to
+user $d$'s keyed transcript language. In the privacy hop, the
+one-query replacement of \Cref{lem:priv-one-query-replacement} only
+requires that no direct query has read a user-$d$ counted transcript
+before $\badkey^{(d)}$, the $\badkey$ event of
+\Cref{sec:privacy,sec:authenticity} instantiated at user $d$'s key
+$K_d$; any extra lazy-table entries
+written by the real user-$d$ encryption computation are unobservable
+before that abort. The accepted user-$d$ encryption queries are
+nonce-respecting because the mu-ind interface enforces nonce uniqueness
+per user. In the INT-CTXT hop, the analysis of \Cref{thm:intctxt-ro}---its
+visible-prefix key uniformity (\Cref{lem:int-key-uniformity}), its
+leaf-freshness and encryption-first-replay steps, and the
+verification-first root-guessing bound
+(\Cref{lem:int-verification-first-root-guess})---refers only to user-$d$
+hidden-key transcript points, user-$d$ final leaf transcripts, and
+user-$d$ non-replay verification submissions.
+
+It remains to justify that the same-RO environment does not enlarge the
+direct-query term. The real users $e > d$ may perform
+construction-internal $\ROflat$ lookups while simulating
+$\Enc_{K_e}^\RO$ and $\Ver_{K_e}^\RO$. Whenever such a lookup lies in a
+counted keyed transcript class, \Cref{lem:bridge-decode} decodes its
+candidate key as $K_e$; on the non-collision branch this is different
+from $K_d$. If the lookup is outside the counted keyed language, it is
+irrelevant to $\badkey^{(d)}$. Thus foreign-user
+construction lookups neither trigger user $d$'s key-test event nor
+pre-read a user-$d$ hidden transcript point. They also do not create
+user-$d$ leaf tag collisions or user-$d$ verification attempts, which
+are counted by $\nleaf^{(d)}$ and $\qv^{(d)}$.
+
+The key-test contribution is taken in the original pre-sampled-key
+experiment, not in a renormalized experiment conditioned on the
+non-collision branch. Fix the foreign keys and run the visible-prefix
+coupling used in the user-$d$ privacy and INT-CTXT proofs, with
+foreign-key transcript addresses left unchanged. Before the first
+user-$d$ key hit, the visible prefix is invariant under renaming $K_d$
+among keys not already tested and not equal to any fixed foreign key.
+For each fresh candidate key tested by one of $\mathcal{B}$'s original
+direct $\ROflat$ queries, the event contributing on the stopped branch
+is contained in $\{K_d \text{ equals that candidate}\}$; if the
+candidate is a foreign key, it contributes nothing on the
+non-collision branch. Hence each fresh original direct test costs at
+most $2^{-k}$ in the unconditioned key experiment, and at most
+$\qRO(\mathcal{B})$ such tests occur.
+
+The proofs of \Cref{thm:priv-ro,thm:intctxt-ro} therefore apply to the
+two user-$d$ hops with the same direct-query cap
+$\qRO(\mathcal{B})$ and the same user-$d$ construction resources
+$\nleaf^{(d)},\qv^{(d)}$. The surrounding environment affects oracle
+scheduling and foreign construction-internal table entries, but not the
+counted user-$d$ events. The privacy hop contributes
+$\KeyGuess_k(\qRO(\mathcal{B}))$, and the INT-CTXT hop contributes
+\[
+  \KeyGuess_k(\qRO(\mathcal{B}))
+  + \frac{\nleaf^{(d)}(\nleaf^{(d)}-1)}{2^{\tauleaf+1}}
+  + \frac{\qv^{(d)}}{2^{\tauroot}}.
+\]
+Combining the two hops gives the stated bound.
+\end{proof}
