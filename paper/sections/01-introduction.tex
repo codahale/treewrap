@@ -37,7 +37,8 @@ notions natively, rather than through an add-on transform, avoids the
 transform's overhead and binds commitment to the same permutation it already
 uses for confidentiality and integrity.
 
-\TW{} addresses both gaps with a two-level tree of keyed duplexes. A serial
+\TW{} (\emph{TreeWrap}) addresses both gaps with a two-level tree of keyed
+duplexes. A serial
 \emph{root} duplex, initialized with the key $K$ and nonce $N$, absorbs the
 associated data, encrypts the first message chunk, and absorbs a tag from every
 other chunk before emitting the final authentication tag. The remaining chunks
