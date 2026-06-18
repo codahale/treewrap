@@ -27,10 +27,10 @@
   bound first against an intermediate random oracle and then transferring it
   to the real permutation by the flat-sponge lift. We obtain concrete bounds for
   all-in-one authenticated encryption, multi-user indistinguishability, and
-  both facets of commitment security---$s$-way committing security in the
-  strongest full-input sense (\textsf{CMTDs-4}), the tag-projected variant in
-  which the root tag alone is the compact commitment, and its
-  preimage-resistance counterpart, tag-projected context discoverability. At
+  both facets of commitment security: the collision facet---$s$-way committing
+  security in the strongest full-input sense (\textsf{CMTDs-4}) and its
+  tag-projected strengthening, in which the root tag alone is the compact
+  commitment---and the preimage facet, tag-projected context discoverability. At
   the implemented parameters these notions meet a $128$-bit security target.
   Vectorized \texttt{amd64} and \texttt{arm64}
   implementations realize the tree's leaf parallelism, reaching

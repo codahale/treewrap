@@ -63,10 +63,10 @@ constant in the message length.
 We analyze \TW{} in the public-permutation model and obtain concrete bounds for
 the standard and tag-projected notions: all-in-one authenticated encryption in the sense of
 \cite{RS06}, its multi-user indistinguishability lift in the sense of
-\cite{BT16}, and the two facets of commitment---$s$-way committing security in
-the strongest full-input sense (\textsf{CMTDs-4}) of \cite{BH22}, its
-tag-projected compact strengthening, and context discoverability in the sense of
-\cite{MLGR23}. Each bound is proved first against an
+\cite{BT16}, and both facets of commitment: the collision facet---$s$-way
+committing security in the strongest full-input sense (\textsf{CMTDs-4}) of
+\cite{BH22} and its tag-projected compact strengthening---and the preimage
+facet, context discoverability in the sense of \cite{MLGR23}. Each bound is proved first against an
 intermediate random oracle and then transferred to the real permutation by the
 flat-sponge lift of \cite{BDPV08}. At the implemented parameters
 ($k = c = \tauroot = \tauleaf = 256$), these guarantees meet a $128$-bit
