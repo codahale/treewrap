@@ -55,7 +55,7 @@ root tag alone can serve as the compact commitment string: even if
 different openings use different ciphertext bodies, a successful
 full-input collision must either collide the root tag candidates or
 first collide leaf tags. The same sponge image is preimage-resistant,
-which is what yields tag-projected context discoverability
+yielding context discoverability against that fixed tag
 (\Cref{sec:cmtds3}). Every duplex
 still operates on a bounded $1600$-bit state, so the memory footprint remains
 constant in the message length.
@@ -102,7 +102,7 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
 \item \textbf{Committing security.} We prove that \TW{} achieves $s$-way
   \textsf{CMTDs-4} committing security---commitment to the full
   $(K, N, A, M)$ input, for any number $s \geq 2$ of claimed openings---with a
-  concrete root-collision bound (\Cref{thm:cmtds4}), and that it satisfies the
+  concrete root-collision bound (\Cref{cor:cmtds4}), and that it satisfies the
   stronger tag-projected notion, in which the $256$-bit root tag alone is a
   binding commitment to that input even when the claimed openings use distinct
   ciphertext bodies (\Cref{thm:tag-cmtds4}), matching the compactly committing
@@ -117,7 +117,7 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   decrypt successfully under it, with a concrete root-preimage bound
   (\Cref{thm:cdy}). This is the preimage counterpart of committing security;
   because the fixed target is only the $256$-bit root tag rather than a full
-  ciphertext, it is already the tag-projected form (\Cref{thm:tag-cdy}). Taken with the collision facet of tag-CMTDs-4, it
+  ciphertext, the result already concerns that compact tag. Taken with the collision facet of tag-CMTDs-4, it
   makes \TW{}'s $256$-bit root tag both collision- and preimage-resistant as a
   commitment to the full encryption input---in one tag, as strong a commitment
   as a cryptographic hash. Because \TW{}'s authenticity is not delegated to an invertible MAC,

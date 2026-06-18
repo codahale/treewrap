@@ -16,7 +16,7 @@ showing that the root tag alone is the compact commitment target. For
 the AE-style notions the ideal side
 exposes the BDPV simulator; the committing and discoverability bounds
 remain real public-permutation success probabilities.
-\Cref{thm:ae,thm:mu-ind,thm:cmtds4,thm:tag-cmtds4,thm:cdy,thm:tag-cdy}
+\Cref{thm:ae,thm:mu-ind,thm:tag-cmtds4,cor:cmtds4,thm:cdy}
 state these bounds; the loss terms $\Lift_c$, $\KeyGuess_k$,
 $\RootColl_\tau$, $\LeafColl_\tau$, and
 $\RootPre_\tau$
@@ -222,8 +222,32 @@ Combining with the $\mathsf{coll}$ penalty $D(D-1)/2^{k+1}$ and
 $\Lift_c(\Ntot)$ yields the stated bound.
 \end{proof}
 
-\begin{theorem}[CMTDs-4 Committing Security]
-\label{thm:cmtds4}
+\begin{theorem}[Tag-Projected CMTDs-4 Committing Security]
+\label{thm:tag-cmtds4}
+For every $s \geq 2$ and every $s$-way tag-CMTDs-4
+adversary $\mathcal{A}$ against \TW{} with the resources of
+\Cref{sec:resources},
+\[
+  \Advtagcmtds{4}_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf)
+  + \RootColl_{\tauroot}(\Nprim, s).
+\]
+\end{theorem}
+
+\begin{proof}
+Immediate from the public-permutation corollary
+\Cref{cor:tag-cmtds4-pp}, which lifts the random-oracle bound of
+\Cref{thm:tag-cmtds4-ro}. The theorem allows the $s$ openings to use
+distinct ciphertext bodies sharing only the final root tag; the
+$\LeafColl$ term accounts for the only extra way distinct bodies can
+merge before the root tag is compared---a collision among the leaf tags
+absorbed by the root transcript.
+\end{proof}
+
+\begin{corollary}[CMTDs-4 Committing Security]
+\label{cor:cmtds4}
 For every $s \geq 2$ and every $s$-way CMTDs-4
 adversary $\mathcal{A}$ against \TW{} with the resources of
 \Cref{sec:resources},
@@ -234,26 +258,22 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
   \;=\;
   \Lift_c(\Ntot) + \frac{\binom{\Nprim + s}{s}}{2^{\tauroot (s - 1)}}.
 \]
-\end{theorem}
+\end{corollary}
 
 \begin{proof}
-For deterministic $\Dec$, every CMTDs-4 winner is
-also a CMTDs-3 winner, yielding
-\[
-  \Advcmtds{4}_\TW(\mathcal{A}) \leq \Advcmtds{3}_\TW(\mathcal{A})
-\]
-by \Cref{app:committing-transfer}. The public-permutation
-CMTDs-3 bound from \Cref{cor:cmtds3-pp},
-\[
-  \Advcmtds{3}_\TW(\mathcal{A})
-  \leq \Lift_c(\Ntot) + \RootColl_{\tauroot}(\Nprim, s),
-\]
-then gives the claim.
+The CMTDs-4 game is the special case of \Cref{thm:tag-cmtds4} in which
+all $s$ openings share a single ciphertext body. With one common body no
+leaf tag collision can merge two openings, so the $\LeafColl$ term is
+absent and only the root-collision bound remains. Concretely, for
+deterministic $\Dec$ every CMTDs-4 winner is also a CMTDs-3 winner,
+yielding $\Advcmtds{4}_\TW(\mathcal{A}) \leq \Advcmtds{3}_\TW(\mathcal{A})$
+by \Cref{app:committing-transfer}, and the public-permutation CMTDs-3
+bound \Cref{cor:cmtds3-pp} then gives the claim.
 \end{proof}
 
 \begin{remark}[Looseness of the Root-Collision Cap]
 \label{rem:rtag-cap}
-The $\Nprim$ in \Cref{thm:cmtds4}'s root-collision term counts every
+The $\Nprim$ in \Cref{cor:cmtds4}'s root-collision term counts every
 primitive query, not only those whose induced simulator $\ROflat$ call
 lands at the root tag output point---$\Rtag$, or the elided-aggregation
 $\Rmsg^+$ for single-chunk ciphertexts (\Cref{tab:keyed-twout}). By
@@ -273,31 +293,6 @@ uniformity with \Cref{thm:ae,thm:mu-ind}; the birthday threshold at
 $\tauroot = 256$ is unaffected.
 \end{remark}
 
-\begin{theorem}[Tag-Projected CMTDs-4 Committing Security]
-\label{thm:tag-cmtds4}
-For every $s \geq 2$ and every $s$-way tag-CMTDs-4
-adversary $\mathcal{A}$ against \TW{} with the resources of
-\Cref{sec:resources},
-\[
-  \Advtagcmtds{4}_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot)
-  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf)
-  + \RootColl_{\tauroot}(\Nprim, s).
-\]
-\end{theorem}
-
-\begin{proof}
-Immediate from the public-permutation corollary
-\Cref{cor:tag-cmtds4-pp}, which lifts the random-oracle bound of
-\Cref{thm:tag-cmtds4-ro}. The ordinary CMTDs-4 game is the special case
-in which the tag-CMTDs-4 adversary uses the same ciphertext body in all
-openings, but the theorem allows distinct bodies sharing only the final
-root tag. The additional $\LeafColl$ term accounts for the only extra
-way distinct bodies can merge before the root tag is compared: a
-collision among the leaf tags absorbed by the root transcript.
-\end{proof}
-
 \begin{theorem}[Context Discoverability]
 \label{thm:cdy}
 For every context-discoverability adversary $\mathcal{A}$ against \TW{}
@@ -314,34 +309,12 @@ with the resources of \Cref{sec:resources},
 \begin{proof}
 Immediate from the public-permutation corollary \Cref{cor:cdy-pp},
 which lifts the random-oracle bound of \Cref{thm:cdy-ro} through the
-flat-sponge transform. Where \Cref{thm:cmtds4} bounds the probability
+flat-sponge transform. Where \Cref{cor:cmtds4} bounds the probability
 that $s$ distinct contexts collide on one root tag, this bounds the
 probability that a single context reaches a root tag fixed in advance;
 the candidate-collision argument of \Cref{thm:cmtds3-ro} is replaced by
 the candidate-preimage argument of \Cref{thm:cdy-ro}, dropping the
 exponent from $\tauroot(s-1)$ to $\tauroot$.
-\end{proof}
-
-\begin{theorem}[Tag-Projected Context Discoverability]
-\label{thm:tag-cdy}
-For every tag-projected context-discoverability adversary
-$\mathcal{A}$ against \TW{} with the resources of
-\Cref{sec:resources},
-\[
-  \Advtagcdy_\TW(\mathcal{A})
-  =
-  \Advcdy_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim).
-\]
-\end{theorem}
-
-\begin{proof}
-The CDY game of \Cref{sec:games-pp} fixes only the root tag $T^*$ and
-lets the adversary choose the ciphertext body and context. This is
-exactly the $\TagProj(C\concat T)=T$ projection version of
-discoverability, so the equality of advantages is definitional and the
-bound is \Cref{thm:cdy}.
 \end{proof}
 
 \subsection{Loss Terms}
@@ -567,7 +540,7 @@ The implemented parameters of \Cref{sec:params} fix
   k = c = \tauroot = \tauleaf = 256.
 \]
 Substituting into
-\Cref{thm:ae,thm:mu-ind,thm:cmtds4,thm:tag-cmtds4,thm:cdy,thm:tag-cdy}
+\Cref{thm:ae,thm:mu-ind,thm:tag-cmtds4,cor:cmtds4,thm:cdy}
 and using the random-oracle envelopes of \Cref{sec:thms-pp} gives the
 following closed-form bounds.
 
@@ -588,29 +561,6 @@ following closed-form bounds.
   + \frac{2 D \Nprim + \Qv}{2^{256}}
   + \frac{D(D - 1) + \Nleaf(\Nleaf - 1)}{2^{257}}.
 \]
-
-\paragraph{$s$-way CMTDs-4 committing security.}
-For every $s \geq 2$,
-\[
-  \Advcmtds{4}_\TW(\mathcal{A})
-  \;\leq\;
-  \frac{\Ntot(\Ntot + 1)}{2^{257}}
-  + \frac{\binom{\Nprim + s}{s}}{2^{256 (s - 1)}}.
-\]
-
-\begin{remark}[Two-Key CMTD-4 Specialization]
-\label{rem:cmtd4-s2}
-Setting $s = 2$ recovers the ordinary two-key
-CMTD-4 statement of \cite{BH22}:
-\[
-  \Advcmtds{4}_\TW(\mathcal{A})
-  \;\leq\;
-  \frac{\Ntot(\Ntot + 1)}{2^{257}}
-  + \frac{\binom{\Nprim + 2}{2}}{2^{256}}
-  \;=\;
-  \frac{\Ntot(\Ntot + 1) + (\Nprim + 1)(\Nprim + 2)}{2^{257}}.
-\]
-\end{remark}
 
 \paragraph{$s$-way tag-projected CMTDs-4 committing security.}
 For every $s \geq 2$,
@@ -633,10 +583,32 @@ commitment is only the tag:
 \end{aligned}
 \]
 
+\paragraph{$s$-way CMTDs-4 committing security.}
+For every $s \geq 2$, the all-bodies-equal special case drops the leaf
+tag term:
+\[
+  \Advcmtds{4}_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\binom{\Nprim + s}{s}}{2^{256 (s - 1)}}.
+\]
+
+\begin{remark}[Two-Key CMTD-4 Specialization]
+\label{rem:cmtd4-s2}
+Setting $s = 2$ recovers the ordinary two-key
+CMTD-4 statement of \cite{BH22}:
+\[
+  \Advcmtds{4}_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\binom{\Nprim + 2}{2}}{2^{256}}
+  \;=\;
+  \frac{\Ntot(\Ntot + 1) + (\Nprim + 1)(\Nprim + 2)}{2^{257}}.
+\]
+\end{remark}
+
 \paragraph{Context discoverability.}
 \[
-  \Advtagcdy_\TW(\mathcal{A})
-  =
   \Advcdy_\TW(\mathcal{A})
   \;\leq\;
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
@@ -699,7 +671,7 @@ since created-but-idle users need not contribute to $N$.
 \item \emph{Context discoverability.} For every CDY adversary against
   \TW{} with $\Ntot \leq 2^{63}$ \Keccakp{} calls (so in particular
   $\Nprim \leq 2^{63}$),
-  $\Advtagcdy_\TW(\mathcal{A})=\Advcdy_\TW(\mathcal{A}) \leq
+  $\Advcdy_\TW(\mathcal{A}) \leq
   2^{-128}$. The
   flat-sponge term is one $2^{-131}$-sized birthday term, up to
   lower-order summands, and the root-preimage term satisfies
