@@ -110,12 +110,7 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   the context-discovery attacks of \cite{MLGR23} against \textsf{GCM},
   \textsf{CCM}, \textsf{EAX}, \textsf{SIV}, and \textsf{OCB3} do not apply. The
   unrestricted notion we prove dominates the restricted per-component variants
-  of \cite{MLGR23}. The same analysis yields a second-preimage corollary
-  (\Cref{cor:spr}): even an honestly produced tag, correlated with the
-  permutation and so outside the query-independent discoverability notion,
-  cannot be reopened by a distinct decryption context, at the same
-  root-preimage rate---the relevant guarantee when a higher-level protocol
-  signs or commits to a realized tag.
+  of \cite{MLGR23}.
 
 \item \textbf{Proof methodology.} We carry out the analysis in a dedicated \TW{}
   random-oracle model and transfer every bound to the public-permutation setting

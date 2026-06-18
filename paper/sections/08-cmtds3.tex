@@ -9,10 +9,7 @@ CMTDs-3 statement follows by the flat-sponge lift of
 $s$-way collision replaced by a preimage to a fixed target tag, gives
 the random-oracle context-discoverability bound
 (\Cref{thm:cdy-ro}) underlying the headline CDY statement
-(\Cref{thm:cdy}). A revealed-target variant of the same preimage
-argument gives the random-oracle second-preimage bound
-(\Cref{cor:spr-ro}) underlying the headline second-preimage corollary
-(\Cref{cor:spr}), the realized-tag companion to context discoverability.
+(\Cref{thm:cdy}).
 
 \begin{theorem}[Random-Oracle CMTDs-3]
 \label{thm:cmtds3-ro}
@@ -156,7 +153,7 @@ final root transcript $R$; in the random-oracle model
 $T' = \bigl\lfloor \ROflat(\flatmap(R)) \bigr\rfloor_{\tauroot}$. Hence
 the win event is contained in the event that some candidate's
 $\tauroot$-bit projection equals the fixed target $T^*$. Applying
-\Cref{lem:adaptive-candidate-preimage} case (i) with $Q = \qRO(\mathcal{B})$,
+\Cref{lem:adaptive-candidate-preimage} with $Q = \qRO(\mathcal{B})$,
 $\tau = \tauroot$, and $t = T^*$ gives
 \[
   \Advcdy_\RO(\mathcal{B})
@@ -165,131 +162,4 @@ $\tau = \tauroot$, and $t = T^*$ gives
   =
   \RootPre_{\tauroot}(\qRO(\mathcal{B})).
 \]
-\end{proof}
-
-\begin{corollary}[Random-Oracle Second-Preimage]
-\label{cor:spr-ro}
-For every query-independent honest opening $\omega_0 = (K_0, N_0, A_0,
-M_0)$ in the \TW{} encryption domain and every second-preimage adversary
-$\mathcal{B}$ in the \TW{} random-oracle model (\Cref{sec:ro-model}),
-\[
-  \Advspr_\RO(\mathcal{B})
-  \;\leq\; \RootPre_{\tauroot}(\qRO(\mathcal{B}))
-    + \frac{\nleaf(\mathcal{B})}{2^{\tauleaf}}
-  = \frac{\qRO(\mathcal{B}) + 1}{2^{\tauroot}}
-    + \frac{\nleaf(\mathcal{B})}{2^{\tauleaf}}.
-\]
-\end{corollary}
-
-\begin{proof}
-As in \Cref{thm:cdy-ro}, the analysis has no $\badkey$ event: both the
-honest opening's key $K_0$ and the forged context's key $K_1$ are
-adversary-supplied, so a direct query to a keyed transcript is one of
-$\mathcal{B}$'s visible $\ROflat$ queries and is counted in
-$\qRO(\mathcal{B})$. Fix $\omega_0$.
-
-Run the random-oracle second-preimage game (\Cref{sec:ro-model}). Before
-$\mathcal{B}$ is run, the challenger computes the honest target
-$C_0 \concat T = \Enc_{K_0}^\RO(N_0, A_0, M_0)$; its final root tag
-lookup is at the address $X_0 = \flatmap(R_0)$, where $R_0$ is the final
-root transcript of the honest encryption, and it fixes the realized
-target $T = \lfloor \ROflat(X_0) \rfloor_{\tauroot}$. By Output-Point
-Separation (\Cref{cor:output-sep}), the only honest-encryption lookup in
-a root tag output-point class is the one at $X_0$: its remaining lookups
-(root and leaf initialization, associated-data, non-final and leaf
-message, and aggregation points) lie in other classes and are distinct
-from every root tag address.
-
-Build the root-tag candidate sequence as in the direct-oracle phase of
-\Cref{thm:cmtds3-ro}, with the single change that the target address
-$X_0$ is excluded: a direct query to $Y \neq X_0$ whose input decodes to
-a root tag output-point class is appended before its $\ROflat$ lookup,
-while a direct query to $X_0$ itself only re-reads the already-revealed
-target and is not appended.
-
-After $\mathcal{B}$ outputs the ciphertext body $C_1$ and the single
-context $(K_1, N_1, A_1)$, stop appending if the syntax, ciphertext
-validity, or distinctness precheck on $(C_1, K_1, N_1, A_1)$ fails.
-Otherwise let $R_1$ be the final root transcript reached by the one
-deterministic decryption check $\Dec_{K_1}^\RO(N_1, A_1, C_1 \concat T)$,
-and append $\flatmap(R_1)$ immediately before its root tag oracle answer
-is sampled, unless that input is already in the sequence. On a winning
-execution the distinctness check passes, so
-$(C_1, K_1, N_1, A_1) \neq (C_0, K_0, N_0, A_0)$.
-
-Let $\badleaf$ be the event that the decryption check generates a final
-leaf transcript distinct from the honest leaf transcript at the same leaf
-index but with an equal $\tauleaf$-bit leaf tag. The honest leaf tags of
-$\omega_0$ are fixed before $\mathcal{B}$ runs, so they form a revealed
-target set; the candidate leaf transcripts are the decryption check's
-leaf transcripts at honest-occupied leaf indices that are distinct from
-the honest leaf transcript sharing their leaf index, at most
-$\nleaf(\mathcal{B})$ in all. A check leaf at a leaf index with no honest
-leaf transcript can never satisfy $\badleaf$---a same-index collision with
-an honest leaf---so restricting to honest-occupied indices loses nothing.
-Each candidate check leaf is construction-generated, hence predictable,
-and differs from the honest leaf transcript at its occupied index, so by
-\Cref{lem:transcript-inj} its bridged address is distinct from that
-index's revealed target address; the candidates therefore satisfy the
-predictability and address-separation premises of Revealed-Target Leaf
-Preimage, and the candidate set is precisely the $\badleaf$ event. By
-Revealed-Target Leaf Preimage
-(\Cref{cor:revealed-target-leaf-preimage}),
-\[
-  \Pr[\badleaf]
-  \;\leq\;
-  \frac{\nleaf(\mathcal{B})}{2^{\tauleaf}}.
-\]
-On executions where $\badleaf$ does not occur, a distinct opening forces
-$R_1 \neq R_0$: if the triples differ,
-$(K_1, N_1, A_1) \neq (K_0, N_0, A_0)$, Opening Triple Separation
-(\Cref{cor:triple-sep}) gives $\flatmap(R_1) \neq \flatmap(R_0)$
-directly; if instead the triples agree and $C_1 \neq C_0$, suppose
-$R_1 = R_0$. Equality of the flattened final-root inputs recovers the same
-positional aggregation string
-$T_1 \concat \cdots \concat T_n \concat \langle n \rangle_8$
-(\Cref{lem:transcript-inj}), so the check and honest computations share a
-leaf tag at every leaf index. Absence of $\badleaf$ then forces the
-index-aligned check and honest leaf transcripts to coincide, so
-\Cref{lem:transcript-inj} recovers the same absorbed ciphertext
-$C_1 = C_0$, a contradiction; hence $R_1 \neq R_0$. Recall
-$X_0 = \flatmap(R_0)$. In the first sub-case Opening Triple Separation
-already gives the address inequality
-$\flatmap(R_1) \neq \flatmap(R_0) = X_0$ directly; in the second,
-$R_1 \neq R_0$, so injectivity of $\flatmap$ (\Cref{lem:bridge-decode})
-gives $\flatmap(R_1) \neq \flatmap(R_0) = X_0$. The winning candidate
-therefore lies at an address distinct from the target address $X_0$. As in \Cref{thm:cdy-ro}, if $\flatmap(R_1)$ was already touched by
-a direct query then \Cref{cor:output-sep} makes that earlier query a
-final-root candidate already in the sequence; otherwise \Cref{cor:output-sep}
-excludes all earlier lookups outside the final-root class, and the honest
-encryption's only root tag lookup is at the excluded address $X_0$. Thus
-no earlier lookup has revealed the newly appended candidate's value. The
-sequence therefore satisfies the predictability and unrevealed-value
-premises of Adaptive Candidate Preimage
-(\Cref{lem:adaptive-candidate-preimage}), every candidate is distinct from
-$X_0$, and its length is at most $\qRO(\mathcal{B}) + 1$.
-
-On a winning execution the single decryption check accepts, so by
-\Cref{alg:dec} the $\tauroot$-bit projection at the final root transcript
-$R_1$ equals the realized target:
-\[
-  \bigl\lfloor \ROflat(\flatmap(R_1)) \bigr\rfloor_{\tauroot}
-  = T
-  = \bigl\lfloor \ROflat(X_0) \bigr\rfloor_{\tauroot}.
-\]
-Hence, on executions where $\badleaf$ does not occur, the win event is
-contained in the event that some candidate's $\tauroot$-bit projection
-equals the revealed target $T$. Applying \Cref{lem:adaptive-candidate-preimage}
-case (ii) with $Q = \qRO(\mathcal{B})$, $\tau = \tauroot$, distinguished
-address $X_0$, and revealed target $T$ bounds that event by
-$\RootPre_{\tauroot}(\qRO(\mathcal{B}))$. Combining with the $\badleaf$
-bound above,
-\[
-  \Advspr_\RO(\mathcal{B})
-  \leq
-  \RootPre_{\tauroot}(\qRO(\mathcal{B}))
-  + \frac{\nleaf(\mathcal{B})}{2^{\tauleaf}}.
-\]
-Since the bound is uniform in $\omega_0$, it holds for the maximum
-defining $\Advspr_\RO$.
 \end{proof}

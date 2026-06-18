@@ -75,7 +75,7 @@ simulator-side $\ROflat$ call used throughout this appendix.
 \label{lem:lift-bound}
 Let $\mathsf{G}$ be any of the single-stage \TW{} games of
 \Cref{sec:games-pp,sec:mu-setting}: privacy, INT-CTXT, all-in-one AE,
-mu-ind, CMTDs-3, CDY, second-preimage, or
+mu-ind, CMTDs-3, CDY, or
 CMTs-$\ell$ for $\ell \in \{1,3,4\}$. Let
 $\mathcal{A}$ be a
 public-permutation $\mathsf{G}$ adversary with construction-interface
@@ -101,12 +101,9 @@ flat-sponge construction, and by the definition of $N$ in
 \Cref{sec:resources} these calls are counted at the same per-block
 granularity as the underlying \Keccakp{} calls. This includes
 verification computations whether they accept or reject, the per-user
-sum of construction calls in mu-ind, the deterministic challenger
+sum of construction calls in mu-ind, and the deterministic challenger
 decryption or encryption checks actually performed in the committing
-and discoverability games, and the second-preimage game's honest target
-encryption---performed before the adversary runs, with its ciphertext
-handed to the adversary as input---together with the single challenger
-decryption check.
+and discoverability games.
 
 Second, each direct adversary query to $(\pi,\pi^{-1})$ contributes one
 primitive-interface query and is counted in $\Nprim$. These two counts
@@ -127,7 +124,7 @@ which \Cref{sec:loss-terms} bounds by $\Lift_c(\Ntot)$.
 \label{lem:derived-adversary}
 Let $\mathsf{G}$ be any of the single-stage \TW{} games of
 \Cref{sec:games-pp,sec:mu-setting}: privacy, INT-CTXT, all-in-one AE,
-mu-ind, CMTDs-3, CDY, second-preimage, or
+mu-ind, CMTDs-3, CDY, or
 CMTs-$\ell$ for $\ell \in \{1,3,4\}$. Let
 $\mathcal{A}$ be a
 simulator-world $\mathsf{G}$ adversary whose public-primitive
@@ -138,9 +135,7 @@ $\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ to run $\mathcal{A}$
 internally, answer each primitive-interface query by running the
 same simulator against direct finite-output queries to its own
 $\ROflat$ oracle, and forward construction-interface queries (or, in
-the committing and discoverability games, the final structured output;
-or, in the second-preimage game, the honest target encryption
-precomputed before $\mathcal{A}$ runs and handed to it as input)
+the committing and discoverability games, the final structured output)
 unchanged to the corresponding random-oracle experiment. Then the simulator-world
 execution of $\mathcal{A}$ and the random-oracle execution of
 $\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ have identical joint
@@ -249,7 +244,7 @@ state once and then instantiate with each random-oracle bound.
 Let $\mathsf{G}$ be one of the single-stage win-event \TW{} games of
 \Cref{lem:lift-bound} whose challenger exposes no construction interface
 during the adversary's run---CMTDs-3, CMTs-$\ell$ for
-$\ell \in \{1,3,4\}$, CDY, or second-preimage---and suppose there is a
+$\ell \in \{1,3,4\}$, or CDY---and suppose there is a
 function $\varepsilon_{\mathsf{G}}$, nondecreasing in each argument, such
 that every random-oracle $\mathsf{G}$-adversary $\mathcal{B}$ satisfies
 \[
@@ -273,10 +268,8 @@ $\Ntot$, and distinct-final-leaf-transcript cap $\Nleaf$ (all as in
 Because the challenger exposes no construction interface during
 $\mathcal{A}$'s run, the construction cost $N$ of \Cref{lem:lift-bound}
 counts only the challenger's post-output deterministic checks---the
-decryption checks of the committing and discoverability games, the
-encryption checks of the CMTs games, and, in the second-preimage game,
-the honest target encryption performed before $\mathcal{A}$ runs together
-with the single post-output decryption check---so
+decryption checks of the committing and discoverability games and the
+encryption checks of the CMTs games---so
 $N + \Nprim \leq \Ntot$. By the flat-sponge lift bound
 (\Cref{lem:lift-bound}), replacing $(\pi,\pi^{-1})$ by
 $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and the challenger checks by their
@@ -295,9 +288,8 @@ $\nleaf(\mathcal{B}_{\mathrm{derived}}) \leq \Nleaf$. Applying the
 hypothesis at $\mathcal{B}_{\mathrm{derived}}$ and the monotonicity of
 $\varepsilon_{\mathsf{G}}$ yields the claim. When $\mathsf{G}$ is
 parameterized by a target fixed before $\mathcal{A}$ runs---the
-discoverability target $T^*$ or the second-preimage opening
-$\omega_0$---the coupling holds for each fixed target and the bound,
-being target-independent, holds for the maximum defining
+discoverability target $T^*$---the coupling holds for each fixed target
+and the bound, being target-independent, holds for the maximum defining
 $\Adv^{\mathsf{G}}_\TW(\mathcal{A})$.
 \end{proof}
 
@@ -357,39 +349,4 @@ random-oracle CDY adversary $\mathcal{B}$ satisfies $\Advcdy_\RO(\mathcal{B})
 $\qRO(\mathcal{B})$. The Lift Application corollary
 (\Cref{cor:lift-application}), whose target-parameterized case covers the
 fixed $T^*$, then gives the claim.
-\end{proof}
-
-\begin{corollary}[Public-Permutation Second-Preimage]
-\label{cor:spr-pp}
-For every second-preimage adversary $\mathcal{A}$ against \TW{} with
-$\Nprim$ direct primitive queries, total cost at most $\Ntot$, and
-distinct-final-leaf-transcript cap $\Nleaf$ (all as in
-\Cref{sec:resources}),
-\[
-  \Advspr_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
-    + \frac{\Nleaf}{2^{\tauleaf}}
-  = \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}
-    + \frac{\Nleaf}{2^{\tauleaf}}.
-\]
-\end{corollary}
-
-\begin{proof}
-The second-preimage challenger exposes no construction interface during
-$\mathcal{A}$'s run; its construction work is the honest target
-encryption of the fixed opening $\omega_0$ (performed before
-$\mathcal{A}$ runs) together with the single deterministic decryption
-check on $C_1 \concat T$. By \Cref{cor:spr-ro}, every random-oracle
-second-preimage adversary $\mathcal{B}$ satisfies
-\[
-  \Advspr_\RO(\mathcal{B})
-  \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))
-    + \frac{\nleaf(\mathcal{B})}{2^{\tauleaf}},
-\]
-nondecreasing in $\qRO(\mathcal{B})$ and $\nleaf(\mathcal{B})$. The Lift
-Application corollary (\Cref{cor:lift-application}), with
-$\nleaf(\mathcal{B}_{\mathrm{derived}}) \leq \Nleaf$ and the
-target-parameterized case covering the fixed $\omega_0$, then gives the
-claim.
 \end{proof}
