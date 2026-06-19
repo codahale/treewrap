@@ -556,8 +556,11 @@ under the resource consequences of \Cref{sec:resources}: $\Nprim \leq
 \Ntot$ by definition, and the pathwise bounds $\qv \leq N$ and
 $\nleaf \leq N$ let the envelope parameters $\Qv$ and $\Nleaf$ be taken at
 most $\Ntot$, so no separate top-level cap on $\Qv$ or $\Nleaf$ is
-required; only the mu-ind user cap $D$ remains an independent hypothesis,
-since created-but-idle users need not contribute to $N$. At the headline
+required; because $\Ntot = N + \Nprim$ counts construction-internal calls
+and direct queries disjointly, the same bound $\nleaf \leq N$ yields the
+joint constraint $\Nprim + \Nleaf \leq \Ntot$. Only the mu-ind user cap
+$D$ remains an independent hypothesis, since created-but-idle users need
+not contribute to $N$. At the headline
 work cap $\Ntot \leq 2^{63}$ (and $D \leq 2^{63}$ for mu-ind) every bound
 is below $2^{-128}$, with the flat-sponge loss $\Lift_c(\Ntot)$ the
 dominant term in all but the multi-user case
@@ -568,7 +571,8 @@ dominant term in all but the multi-user case
 \caption{Concrete \TW{} security at the work cap $\Ntot \leq 2^{63}$
 (with $D \leq 2^{63}$ for mu-ind), under
 $k = c = \tauroot = \tauleaf = 256$ and the resource consequences
-$\Nprim, \Qv, \Nleaf \leq \Ntot$ of \Cref{sec:resources}. The committing
+$\Nprim, \Qv, \Nleaf \leq \Ntot$ and $\Nprim + \Nleaf \leq \Ntot$ of
+\Cref{sec:resources}. The committing
 rows hold for every $s \geq 2$; larger $s$ only shrinks the
 root-collision term.}
 \label{tab:concrete-security}
@@ -591,8 +595,10 @@ the linear key-guess and verification contributions
 $(2\Nprim+\Qv)/2^{256}$ are at most $3 \cdot 2^{-193}$; the two-key
 root-collision term $\RootColl_{256}(\Nprim,2)$ likewise matches
 $\Lift_c$ at $\leq 2^{-131}$ and decays as $2^{-256(s-1)}$ for
-$s \geq 3$; the known-key $\LeafColl_{256}(\Nprim+\Nleaf)$ is below
-$2^{-129}$; and the root-preimage term $(\Nprim+1)/2^{256}$ is at most
+$s \geq 3$; the known-key $\LeafColl_{256}(\Nprim+\Nleaf)$, which the
+joint cap $\Nprim+\Nleaf \leq \Ntot$ bounds by $\binom{\Ntot}{2}/2^{256}$,
+is likewise $\leq 2^{-131}$; and the root-preimage term
+$(\Nprim+1)/2^{256}$ is at most
 $2 \cdot 2^{-193}$. The single-user totals are therefore dominated by
 $\Lift_c$ and stay below $2^{-128}$. The multi-user bound is the
 exception: its hybrid-induced term $2D \cdot \KeyGuess_k(\Nprim) \leq
