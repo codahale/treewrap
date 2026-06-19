@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-// staticAssert: *aead satisfies cipher.AEAD.
-var _ cipher.AEAD = (*aead)(nil)
+// staticAssert: *AEAD satisfies cipher.AEAD.
+var _ cipher.AEAD = (*AEAD)(nil)
 
 func TestAEADRoundTrip(t *testing.T) {
 	key := seq(KeySize)
