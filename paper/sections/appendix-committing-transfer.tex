@@ -58,16 +58,16 @@ and every $s$-way $X$-adversary $\mathcal{A}$ against \TW{},
 \end{corollary}
 
 \begin{proof}
-The D-notions reduce to CMTDs-4 by
-\Cref{lem:cmtds-identity-reductions} (the identity reduction for CMTDs-4
-itself), whose public-permutation bound is \Cref{cor:cmtds4-pp};
-monotonicity of $\Lift_c$ absorbs
-$\Ntot(\mathcal{A}^\ast) \leq \Ntot(\mathcal{A})$.
+CMTDs-4 is bounded directly by \Cref{cor:cmtds4-pp}. CMTDs-1 and
+CMTDs-3 reduce to CMTDs-4 by \Cref{lem:cmtds-identity-reductions}, whose
+public-permutation bound is again \Cref{cor:cmtds4-pp}; monotonicity of
+$\Lift_c$ absorbs $\Ntot(\mathcal{A}^\ast) \leq \Ntot(\mathcal{A})$.
 
 The E-notions are bounded directly by the final-root
 candidate-collision argument of \Cref{thm:cmtds4-ro}, with the
 challenger's $s$ deterministic \emph{encryption} checks supplying the
-candidate final-root transcripts in place of decryption checks. On a
+candidate final-root transcripts: \Cref{lem:root-candidate-seq} builds
+the candidate sequence for encryption or decryption checks alike. On a
 winning execution all $s$ encryptions are equal, hence of equal length
 and with one common root tag $T$; pairwise $\WiC_\ell$-distinctness
 forces pairwise distinct triples---for $\ell = 4$ via determinism, since
