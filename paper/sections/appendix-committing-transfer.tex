@@ -4,7 +4,7 @@
 The headline committing results bound full-input CMTDs-4
 (\Cref{cor:cmtds4}) and its tag-projected strengthening
 (\Cref{thm:tag-cmtds4}). The remaining \cite{BH22} committing
-notions---CMTDs-$\ell$ and the CMTs-$\ell$ source games for
+notions---CMTDs-$1$, CMTDs-$3$, and the CMTs-$\ell$ source games for
 $\ell \in \{1,3,4\}$---all reduce to the same root-collision bound, so we
 record the two reduction patterns once rather than accounting for each
 notion separately.
@@ -12,13 +12,13 @@ notion separately.
 \begin{lemma}[Forwarding Reductions for the D-Notions]
 \label{lem:cmtds-identity-reductions}
 Fix $s \geq 2$ and $X \in \{\mathsf{CMTDs\text{-}1},
-\mathsf{CMTDs\text{-}4}\}$. The identity reduction
+\mathsf{CMTDs\text{-}3}\}$. The identity reduction
 $\mathcal{A}^\ast = \mathcal{A}$---preceded, for
 $X = \mathsf{CMTDs\text{-}1}$, by the source-game syntax, length, and
 pairwise-$\WiC_1$ prechecks---turns every $s$-way $X$-adversary against
-\TW{} into an $s$-way CMTDs-3 adversary with
+\TW{} into an $s$-way CMTDs-4 adversary with
 \[
-  \Adv^X_\TW(\mathcal{A}) \leq \Advcmtds{3}_\TW(\mathcal{A}^\ast),
+  \Adv^X_\TW(\mathcal{A}) \leq \Advcmtds{4}_\TW(\mathcal{A}^\ast),
   \quad
   \Nprim(\mathcal{A}^\ast) = \Nprim(\mathcal{A}),
   \quad
@@ -27,16 +27,15 @@ pairwise-$\WiC_1$ prechecks---turns every $s$-way $X$-adversary against
 \end{lemma}
 
 \begin{proof}
-A CMTDs-4 winner has pairwise distinct full tuples
-$(K_i,N_i,A_i,M_i)$; by determinism of $\Dec$, equal triples
-$(K_i,N_i,A_i) = (K_j,N_j,A_j)$ would force $M_i = M_j$, so the triples
-are already pairwise distinct and the winner is a CMTDs-3 winner on the
-same output. For CMTDs-1, pairwise $\WiC_1$-distinctness makes the keys
-$K_i$, hence the triples, pairwise distinct; the prechecks are
-source-game rejections, and the eager length precheck is success
-preserving because \TW{} decryption returns $\bot$ or a message of
-length $\|C\|$, so no winning transcript is discarded. Either reduction
-makes no primitive-interface query and performs at most the source-game
+A CMTDs-3 winner has pairwise distinct $(K_i,N_i,A_i)$ triples, which are
+\emph{a fortiori} pairwise distinct full tuples $(K_i,N_i,A_i,M_i)$, so
+the winner is a CMTDs-4 winner on the same output. For CMTDs-1, pairwise
+$\WiC_1$-distinctness makes the keys $K_i$---hence the triples, hence the
+full tuples---pairwise distinct; the prechecks are source-game
+rejections, and the eager length precheck is success preserving because
+\TW{} decryption returns $\bot$ or a message of length $\|C\|$, so no
+winning transcript is discarded. Either reduction makes no
+primitive-interface query and performs at most the source-game
 decryption checks, so neither cost increases.
 \end{proof}
 
@@ -59,20 +58,21 @@ and every $s$-way $X$-adversary $\mathcal{A}$ against \TW{},
 \end{corollary}
 
 \begin{proof}
-The D-notions reduce to CMTDs-3 by
-\Cref{lem:cmtds-identity-reductions} (the identity reduction for CMTDs-3
-itself), whose public-permutation bound is \Cref{cor:cmtds3-pp};
+The D-notions reduce to CMTDs-4 by
+\Cref{lem:cmtds-identity-reductions} (the identity reduction for CMTDs-4
+itself), whose public-permutation bound is \Cref{cor:cmtds4-pp};
 monotonicity of $\Lift_c$ absorbs
 $\Ntot(\mathcal{A}^\ast) \leq \Ntot(\mathcal{A})$.
 
 The E-notions are bounded directly by the final-root
-candidate-collision argument of \Cref{thm:cmtds3-ro}, with the
+candidate-collision argument of \Cref{thm:cmtds4-ro}, with the
 challenger's $s$ deterministic \emph{encryption} checks supplying the
 candidate final-root transcripts in place of decryption checks. On a
 winning execution all $s$ encryptions are equal, hence of equal length
 and with one common root tag $T$; pairwise $\WiC_\ell$-distinctness
-forces pairwise distinct triples (for $\ell = 4$ via determinism, as
-above), so \Cref{cor:triple-sep} makes the $s$ final-root candidates
+forces pairwise distinct triples---for $\ell = 4$ via determinism, since
+equal triples with equal ciphertexts would decrypt to equal
+messages---so \Cref{cor:triple-sep} makes the $s$ final-root candidates
 distinct while their $\tauroot$-bit projections all equal $T$. The win
 is contained in the $s$-way candidate-collision event of
 \Cref{lem:adaptive-candidate-collision}, and the flat-sponge lift

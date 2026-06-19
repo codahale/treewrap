@@ -5,7 +5,7 @@ This appendix expands the sketch of \Cref{sec:lift-sketch} into the
 full argument: it supplies the flat-sponge lift machinery
 (\Cref{lem:lift-bound,lem:derived-adversary}) invoked by the headline
 theorems of \Cref{sec:headline}, and the public-permutation
-CMTDs-3 corollary (\Cref{cor:cmtds3-pp}) consumed by
+CMTDs-4 corollary (\Cref{cor:cmtds4-pp}) consumed by
 \Cref{app:committing-transfer}.
 
 \subsection{Simulator Convention}
@@ -75,7 +75,7 @@ simulator-side $\ROflat$ call used throughout this appendix.
 \label{lem:lift-bound}
 Let $\mathsf{G}$ be any of the single-stage \TW{} games of
 \Cref{sec:games-pp,sec:mu-setting}: privacy, INT-CTXT, all-in-one AE,
-mu-ind, CMTDs-3, tag-CMTDs-4, CDY, or
+mu-ind, CMTDs-4, tag-CMTDs-4, CDY, or
 CMTs-$\ell$ for $\ell \in \{1,3,4\}$. Let
 $\mathcal{A}$ be a
 public-permutation $\mathsf{G}$ adversary with construction-interface
@@ -124,7 +124,7 @@ which \Cref{sec:loss-terms} bounds by $\Lift_c(\Ntot)$.
 \label{lem:derived-adversary}
 Let $\mathsf{G}$ be any of the single-stage \TW{} games of
 \Cref{sec:games-pp,sec:mu-setting}: privacy, INT-CTXT, all-in-one AE,
-mu-ind, CMTDs-3, tag-CMTDs-4, CDY, or
+mu-ind, CMTDs-4, tag-CMTDs-4, CDY, or
 CMTs-$\ell$ for $\ell \in \{1,3,4\}$. Let
 $\mathcal{A}$ be a
 simulator-world $\mathsf{G}$ adversary whose public-primitive
@@ -292,13 +292,13 @@ envelopes of \Cref{sec:thms-pp}, adding $\Lift_c(\Ntot)$ a single time
 rather than the two copies that lifting privacy and INT-CTXT separately
 would incur.
 
-\begin{corollary}[Public-Permutation CMTDs-3]
-\label{cor:cmtds3-pp}
-For every $s \geq 2$ and every $s$-way CMTDs-3 adversary
+\begin{corollary}[Public-Permutation CMTDs-4]
+\label{cor:cmtds4-pp}
+For every $s \geq 2$ and every $s$-way CMTDs-4 adversary
 $\mathcal{A}$ against \TW{} with $\Nprim$ direct primitive queries and
 total cost at most $\Ntot$ (both as in \Cref{sec:resources}),
 \[
-  \Advcmtds{3}_\TW(\mathcal{A})
+  \Advcmtds{4}_\TW(\mathcal{A})
   \;\leq\;
   \Lift_c(\Ntot) + \RootColl_{\tauroot}(\Nprim, s)
   = \Lift_c(\Ntot) + \frac{\binom{\Nprim + s}{s}}{2^{\tauroot(s - 1)}}.
@@ -306,12 +306,12 @@ total cost at most $\Ntot$ (both as in \Cref{sec:resources}),
 \end{corollary}
 
 \begin{proof}
-The CMTDs-3 challenger exposes no construction interface during
+The CMTDs-4 challenger exposes no construction interface during
 $\mathcal{A}$'s run; on executions that pass the early rejecting checks
-it performs $s$ deterministic decryption checks on the candidate
-ciphertext and opening tuples. By \Cref{thm:cmtds3-ro}, every
-random-oracle CMTDs-3 adversary $\mathcal{B}$ satisfies
-$\Advcmtds{3}_\RO(\mathcal{B}) \leq
+it performs $s$ deterministic decryption checks on the common candidate
+ciphertext and opening tuples. By \Cref{thm:cmtds4-ro}, every
+random-oracle CMTDs-4 adversary $\mathcal{B}$ satisfies
+$\Advcmtds{4}_\RO(\mathcal{B}) \leq
 \RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$, which is nondecreasing in
 $\qRO(\mathcal{B})$ by monotonicity of $\binom{\cdot + s}{s}$. The Lift
 Application corollary (\Cref{cor:lift-application}) then gives the claim.

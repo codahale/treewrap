@@ -122,21 +122,21 @@ $\|C\|$.
   &\text{return $0$ if $C \concat T$ is not a valid \TW{} ciphertext}, \\
   &\text{return $0$ if any $(K_i, N_i, A_i, M_i)$ is not in the \TW{} syntactic domain}, \\
   &\text{return $0$ if any $\|M_i\| \neq \|C\|$}, \\
-  &\text{return $0$ if $(K_i, N_i, A_i)_{i=1}^s$ are not pairwise distinct}, \\
+  &\text{return $0$ if $(K_i, N_i, A_i, M_i)_{i=1}^s$ are not pairwise distinct}, \\
   &\text{return } \textstyle\bigwedge_{i=1}^s
      \bigl[\Dec_{K_i}[\pi](N_i, A_i, C \concat T) = M_i\bigr].
 \end{align*}
 The advantage is
 \[
-  \Advcmtds{3}_\TW(\mathcal{A})
+  \Advcmtds{4}_\TW(\mathcal{A})
   = \Pr[\text{the game returns } 1],
 \]
 with the probability taken over the uniform choice of $\pi$ and
 $\mathcal{A}$'s coins. No nonce uniqueness is imposed.
-For $\ell \in \{1, 4\}$, the CMTDs-$\ell$ game is identical except
+For $\ell \in \{1, 3\}$, the CMTDs-$\ell$ game is identical except
 that the pairwise-distinctness check is applied to the
-$\WiC_\ell$-images---the keys $K_i$ for $\ell = 1$ and the full tuples
-$(K_i, N_i, A_i, M_i)$ for $\ell = 4$---with the same check order and
+$\WiC_\ell$-images---the keys $K_i$ for $\ell = 1$ and the triples
+$(K_i, N_i, A_i)$ for $\ell = 3$---with the same check order and
 the same eager length rejection; $\Advcmtds{\ell}_\TW(\mathcal{A})$ is
 defined analogously.
 The CMTs-$\ell$ source games are instantiated
@@ -163,11 +163,11 @@ body for each claimed opening:
 \end{align*}
 The advantage is $\Advtagcmtds{4}_\TW(\mathcal{A})$. The ordinary
 CMTDs-4 game is the special case in which all $C_i$ are equal.
-\Cref{app:committing-transfer} promotes the CMTDs-3 bound proved in
-\Cref{sec:cmtds3} (\Cref{thm:cmtds3-ro}) to the headline
-CMTDs-4 statement of \Cref{sec:headline} and proves matching
-direct bounds for the CMTs-$\ell$ source games; \Cref{sec:cmtds3}
-proves the tag-projected CMTDs-4 bound directly.
+\Cref{sec:cmtds3} proves the CMTDs-4 bound (\Cref{thm:cmtds4-ro}) and
+the tag-projected CMTDs-4 bound (\Cref{thm:tag-cmtds4-ro}) directly,
+while \Cref{app:committing-transfer} forwards the remaining \cite{BH22}
+committing notions---CMTDs-$\ell$ and the CMTs-$\ell$ source games---to
+the same root-collision bound.
 
 \paragraph{Context discoverability.}
 The context-discoverability game is the preimage analogue of the
@@ -252,7 +252,7 @@ $(\Rand,\Replay)$ being unchanged. Under this substitution
 $\Adv^{\mathsf{priv}}_{\RO}$, $\Adv^{\mathsf{int\text{-}ctxt}}_{\RO}$,
 and $\Adv^{\mathsf{ae}}_{\RO}$ are the \Cref{sec:games-pp} advantages
 with no simulator on the ideal side; the keyless
-$\Advcmtds{3}_{\RO}(\mathcal{B})$,
+$\Advcmtds{4}_{\RO}(\mathcal{B})$,
 $\Advtagcmtds{4}_{\RO}(\mathcal{B})$, and, for $\ell \in \{1,3,4\}$,
 $\Advcmts{\ell}_{\RO}(\mathcal{B})$ are the probabilities that the
 corresponding random-oracle committing games return $1$, the CMTs
