@@ -465,7 +465,7 @@ The $n = 0$ and empty-body cases mirror their encryption counterparts
 (\Cref{sec:enc}): for $n = 0$ the aggregation phase is elided and the
 closing \sigmsglast call of the root chunk emits the candidate tag $T'$
 directly, and an empty body still performs the single empty \sigmsglast
-call of \Cref{alg:helpers}, now requesting $\tauroot$ output bits.
+call of \Cref{alg:helpers}, requesting $\tauroot$ output bits.
 
 \paragraph{Correctness.}
 For every $K \in \bits^k$, $N \in \bits^{\nu}$,
