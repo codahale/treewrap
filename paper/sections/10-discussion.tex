@@ -70,6 +70,31 @@ visible in \Cref{sec:performance}: on short, single-leaf inputs \TW{} is slower
 per byte than a compact serial duplex would be, and its advantage appears only
 once a message spans enough leaves to fill the vector units.
 
+\TW{} reuses KangarooTwelve's final-node/leaf split but not its Sakura coding,
+which renders that scheme's tree hashing sound: the frame bits and coded child
+count of a Sakura coding make every node input unambiguously decodable, so that
+any collision in the hash output entails a collision in the inner function. \TW{}
+adopts no such coding and does not need one. Its tree has a single fixed
+two-level shape---one root and a leaf count fixed by $\|C\|$ through
+$\leaves(\cdot)$---so it never distinguishes among a family of admissible
+topologies, the generality a Sakura coding exists to serve; the leaf count is
+moreover pinned by absorbing $\langle n \rangle_8$ before the root tag. The
+unambiguous parsing such a coding would supply is instead furnished by the
+per-call domain separation of \Cref{sec:domain-sep}: the prefixes $\prfxroot$,
+$\prfxleaf$ and the leaf index $\langle j \rangle_8$ fix the duplex instance, and
+the seven pairwise-distinct phase suffixes of \Cref{tab:suffixes} fix the phase
+and the final/non-final role of every call, so distinct transcripts flatten to
+distinct sponge inputs (\Cref{lem:transcript-inj,cor:output-sep}); binding the
+index into each leaf is in fact a finer separation than ordering leaves within an
+aggregation alone. More to the point, the committing and discoverability
+guarantees of \Cref{sec:cmtds3} do not rest on soundness of a tree coding at all:
+distinct $(K, N, A)$ triples already diverge in the root initialization and
+associated-data calls, before any leaf tag is aggregated (\Cref{cor:triple-sep}),
+so agreement among leaf tags cannot merge distinct contexts. The leaf encoding
+enters only the tag-projected bound of \Cref{thm:tag-cmtds4}, and there only
+through its explicit leaf tag collision term. A Sakura coding would re-establish
+parsing facts \TW{} already possesses, and would leave these bounds unchanged.
+
 Keyak \cite{BDPVV16}, whose Motorist mode is already parallelizable, is the
 closest prior duplex AEAD in spirit; \Cref{sec:related} contrasts its
 wire-visible, encryptor-and-decryptor-shared degree of parallelism with \TW{}'s
