@@ -195,11 +195,15 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
 \begin{proof}
 Immediate from the public-permutation corollary \Cref{cor:cmtds4-pp},
 which lifts the random-oracle root-collision bound of
-\Cref{thm:cmtds4-ro}. The CMTDs-4 game shares one ciphertext body across
-all $s$ openings, so a leaf tag collision cannot merge two openings and
-no $\LeafColl$ term arises; equivalently, \Cref{cor:cmtds4} is the
-all-bodies-equal special case of the tag-projected bound
-\Cref{thm:tag-cmtds4}, in which that term drops.
+\Cref{thm:cmtds4-ro}. The CMTDs-4 game is the all-bodies-equal restriction of the
+tag-CMTDs-4 game, but the sharper no-$\LeafColl$ bound is not obtained by
+specializing the displayed bound of \Cref{thm:tag-cmtds4}: its
+nonnegative $\LeafColl$ summand survives any restriction of the adversary
+class. The sharper bound instead comes from the dedicated root-collision
+derivation of \Cref{thm:cmtds4-ro}, where the single shared body forces
+the opening triples $(K_i,N_i,A_i)$ pairwise distinct---by Opening Triple
+Separation (\Cref{cor:triple-sep})---so a leaf tag collision cannot merge
+two openings and no $\LeafColl$ term arises.
 \end{proof}
 
 \begin{remark}[Looseness of the Root-Collision Cap]
