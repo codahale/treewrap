@@ -166,7 +166,9 @@ The four free parameters $c$, $k$, $\tauroot =
 \tauleaf$, and $\beta$ (the rate $r = b - c$ is then determined by
 the capacity) are chosen to give 128-bit
 single-key security against every term of the concrete bounds derived
-in \Cref{sec:concrete} while keeping per-byte cost low. Specifically:
+in \Cref{sec:concrete} while keeping per-byte cost low; the nonce
+width $\nu$ is fixed separately, by the headroom the wide permutation
+affords. Specifically:
 
 \begin{itemize}
 \item $c = 256$. The dominant single-key term is the \cite{BDPV08}
@@ -213,6 +215,22 @@ initialization duplex call plus $49$ message duplex calls. This amortizes
 the fixed per-leaf initialization cost over a large chunk while keeping
 the leaf state working set ($8183 < 2^{13}$ bytes) small enough for L1
 cache; \Cref{sec:throughput} reports the resulting cycles-per-byte figures.
+
+\item $\nu = 256$. The nonce width is not constrained by the concrete
+bounds, which assume a nonce-respecting adversary; it is set generously
+because the wide permutation makes a wide nonce nearly free. The root
+initialization absorbs $\prfxroot \concat K \concat N$, $560$ bits in
+all, in a single duplex call, comfortably within the $1336$-bit
+($\rho = 167$-byte) data field (\Cref{sec:params}), so widening the
+nonce to $256$ bits adds neither a permutation call nor any per-message
+cost. The width also removes any practical concern over random-nonce
+collisions: a uniformly random $256$-bit nonce repeats over $q$
+messages with probability at most $\binom{q}{2}/2^{256}$, negligible at
+the work cap of \Cref{sec:concrete-claim}. Deployments that do not
+require a full-width random nonce lose nothing by the choice: a
+narrower nonce---a $96$-bit packet counter, say---is carried in the
+fixed $\nu$-bit field by zero-padding, so a single mode serves both
+random-nonce and counter-based settings with no change of parameters.
 \end{itemize}
 
 \subsection{Domain Separation}
