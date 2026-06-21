@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"runtime"
 	"slices"
@@ -22,12 +23,28 @@ import (
 )
 
 type result struct {
-	Alg   string  `json:"alg"`
-	Op    string  `json:"op"`
-	Size  string  `json:"size"`
-	Bytes int     `json:"bytes"`
-	CPB   float64 `json:"cpb"`
-	GBps  float64 `json:"gbps"`
+	Alg     string  `json:"alg"`
+	Op      string  `json:"op"`
+	Size    string  `json:"size"`
+	Bytes   int     `json:"bytes"`
+	CPB     float64 `json:"cpb"`
+	CPBMin  float64 `json:"cpb_min"`
+	CPBQ1   float64 `json:"cpb_q1"`
+	CPBQ3   float64 `json:"cpb_q3"`
+	CPBMax  float64 `json:"cpb_max"`
+	GBps    float64 `json:"gbps"`
+	GBpsMin float64 `json:"gbps_min"`
+	GBpsQ1  float64 `json:"gbps_q1"`
+	GBpsQ3  float64 `json:"gbps_q3"`
+	GBpsMax float64 `json:"gbps_max"`
+}
+
+type sampleStats struct {
+	Min    float64
+	Q1     float64
+	Median float64
+	Q3     float64
+	Max    float64
 }
 
 func main() {
@@ -35,7 +52,17 @@ func main() {
 	nSamples := flag.Int("samples", 21, "number of measurement samples")
 	target := flag.Duration("target", 100*time.Millisecond, "minimum duration per calibration run")
 	format := flag.String("format", "table", "output format: table, csv, or json")
-	flag.Parse()
+	spread := flag.Bool("spread", true, "include min/Q1/median/Q3/max tables in table output")
+	parseFlags()
+
+	if *nSamples < 1 {
+		fmt.Fprintln(os.Stderr, "error: --samples must be at least 1")
+		os.Exit(2)
+	}
+	if *target <= 0 {
+		fmt.Fprintln(os.Stderr, "error: --target must be positive")
+		os.Exit(2)
+	}
 
 	runtime.LockOSThread()
 
@@ -64,10 +91,7 @@ func main() {
 		}
 		iters := calibrate(encFn, *target)
 		cpb, gbps := measure(encFn, iters, *nSamples, scale, size.N)
-		results = append(results, result{
-			Alg: "tw128", Op: "seal", Size: size.Name, Bytes: size.N,
-			CPB: cpb, GBps: gbps,
-		})
+		results = append(results, newResult("tw128", "seal", size.Name, size.N, cpb, gbps))
 
 		// TW128 open (decrypt + verify of a pre-sealed ciphertext). Allocate
 		// decDst before ct128: the sealed buffer's odd size (size.N +
@@ -81,10 +105,7 @@ func main() {
 		}
 		iters = calibrate(decFn, *target)
 		cpb, gbps = measure(decFn, iters, *nSamples, scale, size.N)
-		results = append(results, result{
-			Alg: "tw128", Op: "open", Size: size.Name, Bytes: size.N,
-			CPB: cpb, GBps: gbps,
-		})
+		results = append(results, newResult("tw128", "open", size.Name, size.N, cpb, gbps))
 
 		// AES-128-GCM seal (key schedule included in measurement).
 		gcmDst := make([]byte, 0, size.N+16)
@@ -95,10 +116,7 @@ func main() {
 		}
 		iters = calibrate(sealFn, *target)
 		cpb, gbps = measure(sealFn, iters, *nSamples, scale, size.N)
-		results = append(results, result{
-			Alg: "aes128gcm", Op: "seal", Size: size.Name, Bytes: size.N,
-			CPB: cpb, GBps: gbps,
-		})
+		results = append(results, newResult("aes128gcm", "seal", size.Name, size.N, cpb, gbps))
 
 		// AES-128-GCM open (key schedule included in measurement).
 		block, _ := aes.NewCipher(gcmKey)
@@ -112,10 +130,7 @@ func main() {
 		}
 		iters = calibrate(openFn, *target)
 		cpb, gbps = measure(openFn, iters, *nSamples, scale, size.N)
-		results = append(results, result{
-			Alg: "aes128gcm", Op: "open", Size: size.Name, Bytes: size.N,
-			CPB: cpb, GBps: gbps,
-		})
+		results = append(results, newResult("aes128gcm", "open", size.Name, size.N, cpb, gbps))
 	}
 
 	switch *format {
@@ -124,7 +139,34 @@ func main() {
 	case "json":
 		outputJSON(results)
 	default:
-		outputTable(results, *freq)
+		outputTable(results, *freq, *spread)
+	}
+}
+
+func parseFlags() {
+	args := os.Args[1:]
+	if len(args) > 0 && args[0] == "--" {
+		args = args[1:]
+	}
+	_ = flag.CommandLine.Parse(args)
+}
+
+func newResult(alg, op, size string, bytes int, cpb, gbps sampleStats) result {
+	return result{
+		Alg:     alg,
+		Op:      op,
+		Size:    size,
+		Bytes:   bytes,
+		CPB:     cpb.Median,
+		CPBMin:  cpb.Min,
+		CPBQ1:   cpb.Q1,
+		CPBQ3:   cpb.Q3,
+		CPBMax:  cpb.Max,
+		GBps:    gbps.Median,
+		GBpsMin: gbps.Min,
+		GBpsQ1:  gbps.Q1,
+		GBpsQ3:  gbps.Q3,
+		GBpsMax: gbps.Max,
 	}
 }
 
@@ -143,11 +185,11 @@ func calibrate(fn func(), target time.Duration) int {
 	}
 }
 
-// measure collects nSamples measurements and returns the median cycles per byte
-// and the median wall-clock throughput in GB/s (1e9 bytes/s). Both are taken from
-// the same loop, so the cycles-per-byte and throughput figures describe one
-// interleaved run rather than two separately-scheduled measurements.
-func measure(fn func(), iters, nSamples int, scale float64, bytes int) (cpb, gbps float64) {
+// measure collects nSamples measurements and returns cycles-per-byte and
+// wall-clock throughput statistics in GB/s (1e9 bytes/s). Both metrics are taken
+// from the same loop, so their figures describe one interleaved run rather than
+// two separately-scheduled measurements.
+func measure(fn func(), iters, nSamples int, scale float64, bytes int) (cpb, gbps sampleStats) {
 	fn() // warm up
 
 	cpbs := make([]float64, nSamples)
@@ -170,10 +212,37 @@ func measure(fn func(), iters, nSamples int, scale float64, bytes int) (cpb, gbp
 
 	slices.Sort(cpbs)
 	slices.Sort(gbpss)
-	return cpbs[len(cpbs)/2], gbpss[len(gbpss)/2]
+	return statsFromSorted(cpbs), statsFromSorted(gbpss)
 }
 
-func outputTable(results []result, freqGHz float64) {
+func statsFromSorted(xs []float64) sampleStats {
+	if len(xs) == 0 {
+		return sampleStats{}
+	}
+	return sampleStats{
+		Min:    xs[0],
+		Q1:     percentileSorted(xs, 0.25),
+		Median: xs[len(xs)/2],
+		Q3:     percentileSorted(xs, 0.75),
+		Max:    xs[len(xs)-1],
+	}
+}
+
+func percentileSorted(xs []float64, p float64) float64 {
+	if len(xs) == 1 {
+		return xs[0]
+	}
+	pos := p * float64(len(xs)-1)
+	lo := int(math.Floor(pos))
+	hi := int(math.Ceil(pos))
+	if lo == hi {
+		return xs[lo]
+	}
+	frac := pos - float64(lo)
+	return xs[lo]*(1-frac) + xs[hi]*frac
+}
+
+func outputTable(results []result, freqGHz float64, spread bool) {
 	fmt.Printf("cycles/byte (%s/%s", runtime.GOOS, runtime.GOARCH)
 	if freqGHz > 0 {
 		fmt.Printf(", %.2f GHz", freqGHz)
@@ -186,6 +255,22 @@ func outputTable(results []result, freqGHz float64) {
 	fmt.Printf("throughput (GB/s, 1e9 bytes/s, wall-clock) (%s/%s)\n", runtime.GOOS, runtime.GOARCH)
 	fmt.Println()
 	printGrid(results, func(r result) float64 { return r.GBps })
+
+	if spread {
+		fmt.Println()
+		fmt.Printf("cycles/byte spread (min, q1, median, q3, max) (%s/%s)\n", runtime.GOOS, runtime.GOARCH)
+		fmt.Println()
+		printSpread(results, func(r result) sampleStats {
+			return sampleStats{Min: r.CPBMin, Q1: r.CPBQ1, Median: r.CPB, Q3: r.CPBQ3, Max: r.CPBMax}
+		})
+
+		fmt.Println()
+		fmt.Printf("throughput spread (GB/s, min, q1, median, q3, max) (%s/%s)\n", runtime.GOOS, runtime.GOARCH)
+		fmt.Println()
+		printSpread(results, func(r result) sampleStats {
+			return sampleStats{Min: r.GBpsMin, Q1: r.GBpsQ1, Median: r.GBps, Q3: r.GBpsQ3, Max: r.GBpsMax}
+		})
+	}
 }
 
 // printGrid renders one metric as an algorithm-by-length grid. The value
@@ -218,13 +303,66 @@ func printGrid(results []result, value func(result) float64) {
 	_ = w.Flush()
 }
 
+func printSpread(results []result, stats func(result) sampleStats) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignRight)
+	_, _ = fmt.Fprintln(w, "alg\top\tsize\tmin\tq1\tmedian\tq3\tmax\t")
+	for _, r := range results {
+		s := stats(r)
+		_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n",
+			r.Alg,
+			r.Op,
+			r.Size,
+			formatValue(s.Min),
+			formatValue(s.Q1),
+			formatValue(s.Median),
+			formatValue(s.Q3),
+			formatValue(s.Max),
+		)
+	}
+	_ = w.Flush()
+}
+
+func formatValue(v float64) string {
+	if v >= 100 {
+		return fmt.Sprintf("%.0f", v)
+	}
+	return fmt.Sprintf("%.2f", v)
+}
+
 func outputCSV(results []result) {
 	w := csv.NewWriter(os.Stdout)
-	_ = w.Write([]string{"alg", "operation", "size", "bytes", "cpb", "gbps"})
+	_ = w.Write([]string{
+		"alg", "operation", "size", "bytes",
+		"cpb", "cpb_min", "cpb_q1", "cpb_q3", "cpb_max",
+		"gbps", "gbps_min", "gbps_q1", "gbps_q3", "gbps_max",
+	})
 	for _, r := range results {
-		_ = w.Write([]string{r.Alg, r.Op, r.Size, fmt.Sprint(r.Bytes), fmt.Sprintf("%.2f", r.CPB), fmt.Sprintf("%.4f", r.GBps)})
+		_ = w.Write([]string{
+			r.Alg,
+			r.Op,
+			r.Size,
+			fmt.Sprint(r.Bytes),
+			formatCPB(r.CPB),
+			formatCPB(r.CPBMin),
+			formatCPB(r.CPBQ1),
+			formatCPB(r.CPBQ3),
+			formatCPB(r.CPBMax),
+			formatGBps(r.GBps),
+			formatGBps(r.GBpsMin),
+			formatGBps(r.GBpsQ1),
+			formatGBps(r.GBpsQ3),
+			formatGBps(r.GBpsMax),
+		})
 	}
 	w.Flush()
+}
+
+func formatCPB(v float64) string {
+	return fmt.Sprintf("%.2f", v)
+}
+
+func formatGBps(v float64) string {
+	return fmt.Sprintf("%.4f", v)
 }
 
 func outputJSON(results []result) {
