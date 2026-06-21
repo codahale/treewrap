@@ -1195,6 +1195,12 @@ final root transcript class. Then
 \end{lemma}
 
 \begin{proof}
+Throughout, a \emph{non-replay verification submission} means a valid
+non-replay verification query; by the validity convention, an invalid
+verification query returns $0$ and performs no construction computation, so it
+realizes no bridged final root input, belongs to no final root transcript
+class, and contributes to no $G_{\mathcal{C}}$.
+
 Work in the game stopped at the first occurrence of
 $\badkey$ or $\badleaf$. For
 accounting, define an all-reject continuation: encryption queries are
