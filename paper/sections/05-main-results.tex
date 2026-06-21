@@ -563,7 +563,7 @@ $D$ remains an independent hypothesis, since created-but-idle users need
 not contribute to $N$. At the headline
 work cap $\Ntot \leq 2^{63}$ (and $D \leq 2^{63}$ for mu-ind) every bound
 is below $2^{-128}$, with the flat-sponge loss $\Lift_c(\Ntot)$ the
-dominant term in all but the multi-user case
+dominant scale in all but the multi-user case
 (\Cref{tab:concrete-security}).
 
 \begin{table}[t]
@@ -594,8 +594,8 @@ $\Nleaf(\Nleaf-1)/2^{257}$ are each at most one $2^{-131}$-sized term;
 the linear key-guess and verification contributions
 $(2\Nprim+\Qv)/2^{256}$ are at most $3 \cdot 2^{-193}$; the two-key
 root-collision term $\RootColl_{256}(\Nprim,2)$ likewise matches
-$\Lift_c$ at $\leq 2^{-131}$ and decays as $2^{-256(s-1)}$ for
-$s \geq 3$; the known-key $\LeafColl_{256}(\Nprim+\Nleaf)$, which the
+$\Lift_c$ at $\leq 2^{-131}$ and is $\binom{\Nprim+s}{s}/2^{256(s-1)}$,
+hence still well below $\Lift_c$ for $s \geq 3$ under the cap; the known-key $\LeafColl_{256}(\Nprim+\Nleaf)$, which the
 joint cap $\Nprim+\Nleaf \leq \Ntot$ bounds by $\binom{\Ntot}{2}/2^{256}$,
 is likewise $\leq 2^{-131}$; and the root-preimage term
 $(\Nprim+1)/2^{256}$ is at most
@@ -604,7 +604,8 @@ $\Lift_c$ and stay below $2^{-128}$. The multi-user bound is the
 exception: its hybrid-induced term $2D \cdot \KeyGuess_k(\Nprim) \leq
 2D\Ntot/2^{256}$ reaches $\approx 4\Lift_c$ at the upper end and
 dominates---staying at most $\Lift_c$ once
-$D \leq \Ntot(\Ntot+1)/(4\Nprim)$, typical of any practical
+$D \leq \Ntot(\Ntot+1)/(4\Nprim)$ (for $\Nprim > 0$; when
+$\Nprim = 0$ the hybrid-induced term vanishes), typical of any practical
 deployment---and the total there is at most
 $7 \cdot 2^{-131} + 2 \cdot 2^{-194} < 8 \cdot 2^{-131} = 2^{-128}$.
 Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to at most
