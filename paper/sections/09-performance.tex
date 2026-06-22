@@ -95,277 +95,6 @@ strides under a mask set by the public chunk count, and the AVX2 remainder
 kernel's redirection of inactive instances to its dummy block is likewise
 selected by the public chunk count. None of these depend on secret data.
 
-\begin{comment}
-=== AMD64 Benchmarking Host ===
-Google Compute Engine
---zone=us-central1-b --machine-type=c4-standard-4 --min-cpu-platform 'Intel Emerald Rapids' --image-project debian-cloud --image-family debian-12
-
-=== lscpu ===
-Architecture:                            x86_64
-CPU op-mode(s):                          32-bit, 64-bit
-Address sizes:                           52 bits physical, 57 bits virtual
-Byte Order:                              Little Endian
-CPU(s):                                  4
-On-line CPU(s) list:                     0-3
-Vendor ID:                               GenuineIntel
-Model name:                              INTEL(R) XEON(R) PLATINUM 8581C CPU @ 2.30GHz
-CPU family:                              6
-Model:                                   207
-Thread(s) per core:                      2
-Core(s) per socket:                      2
-Socket(s):                               1
-Stepping:                                2
-BogoMIPS:                                4600.00
-Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq monitor ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 wbnoinvd arat avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid cldemote movdiri movdir64b fsrm md_clear serialize tsxldtrk amx_bf16 avx512_fp16 amx_tile amx_int8 arch_capabilities
-Hypervisor vendor:                       KVM
-Virtualization type:                     full
-L1d cache:                               96 KiB (2 instances)
-L1i cache:                               64 KiB (2 instances)
-L2 cache:                                4 MiB (2 instances)
-L3 cache:                                260 MiB (1 instance)
-NUMA node(s):                            1
-NUMA node0 CPU(s):                       0-3
-Vulnerability Gather data sampling:      Not affected
-Vulnerability Indirect target selection: Not affected
-Vulnerability Itlb multihit:             Not affected
-Vulnerability L1tf:                      Not affected
-Vulnerability Mds:                       Not affected
-Vulnerability Meltdown:                  Not affected
-Vulnerability Mmio stale data:           Not affected
-Vulnerability Reg file data sampling:    Not affected
-Vulnerability Retbleed:                  Not affected
-Vulnerability Spec rstack overflow:      Not affected
-Vulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl
-Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
-Vulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI BHI_DIS_S
-Vulnerability Srbds:                     Not affected
-Vulnerability Tsa:                       Not affected
-Vulnerability Tsx async abort:           Not affected
-Vulnerability Vmscape:                   Not affected
-=== microcode/model (cpuinfo, core 0) ===
-processor	: 0
-vendor_id	: GenuineIntel
-cpu family	: 6
-model		: 207
-model name	: INTEL(R) XEON(R) PLATINUM 8581C CPU @ 2.30GHz
-stepping	: 2
-microcode	: 0xffffffff
-cpu MHz		: 2300.000
-cache size	: 266240 KB
-physical id	: 0
-siblings	: 4
-core id		: 0
-cpu cores	: 2
-apicid		: 0
-initial apicid	: 0
-fpu		: yes
-fpu_exception	: yes
-cpuid level	: 32
-wp		: yes
-flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq monitor ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 wbnoinvd arat avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid cldemote movdiri movdir64b fsrm md_clear serialize tsxldtrk amx_bf16 avx512_fp16 amx_tile amx_int8 arch_capabilities
-bugs		: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb bhi
-bogomips	: 4600.00
-clflush size	: 64
-cache_alignment	: 64
-address sizes	: 52 bits physical, 57 bits virtual
-power management:
-
-processor	: 1
-vendor_id	: GenuineIntel
-cpu family	: 6
-=== governor ===
-=== scaling driver ===
-=== turbo (intel_pstate: 1=disabled) ===
-=== turbo (acpi-cpufreq/amd boost: 1=enabled) ===
-=== SMT ===
-1
-=== kernel ===
-6.1.0-49-cloud-amd64
-
-=== go run ./cmd/cpb -- -samples 100 ===
-
-cycles/byte (linux/amd64)
-
-                   1B    64B  8KiB  32KiB  64KiB  1MiB  16MiB
-      tw128 seal  730  11.23  2.31   0.91   0.48  0.47   0.47
-      tw128 open  733  11.53  2.29   0.91   0.48  0.48   0.47
-  aes128gcm seal  897  15.60  0.46   0.38   0.37  0.36   0.36
-  aes128gcm open  923  15.38  0.45   0.37   0.36  0.35   0.35
-
-throughput (GB/s, 1e9 bytes/s, wall-clock) (linux/amd64)
-
-                    1B   64B  8KiB  32KiB  64KiB  1MiB  16MiB
-      tw128 seal  0.00  0.20  1.00   2.53   4.77  4.85   4.92
-      tw128 open  0.00  0.20  1.01   2.52   4.77  4.81   4.88
-  aes128gcm seal  0.00  0.15  5.04   6.04   6.24  6.47   6.46
-  aes128gcm open  0.00  0.15  5.14   6.20   6.42  6.63   6.66
-
-=== go run -tags tw128_disable_avx512 ./cmd/cpb -- -samples 100 ===
-cycles/byte (linux/amd64)
-
-                   1B    64B  8KiB  32KiB  64KiB  1MiB  16MiB
-      tw128 seal  835  13.05  2.81   1.35   1.35  1.27   1.24
-      tw128 open  864  13.33  2.82   1.42   1.35  1.33   1.35
-  aes128gcm seal  949  16.08  0.47   0.40   0.38  0.37   0.38
-  aes128gcm open  972  15.78  0.46   0.39   0.37  0.36   0.36
-
-throughput (GB/s, 1e9 bytes/s, wall-clock) (linux/amd64)
-
-                    1B   64B  8KiB  32KiB  64KiB  1MiB  16MiB
-      tw128 seal  0.00  0.18  0.82   1.70   1.71  1.81   1.85
-      tw128 open  0.00  0.17  0.82   1.62   1.71  1.74   1.70
-  aes128gcm seal  0.00  0.14  4.85   5.74   5.99  6.30   6.12
-  aes128gcm open  0.00  0.15  4.96   5.91   6.27  6.42   6.36
-\end{comment}
-
-\begin{comment}
-=== ARM64 Benchmarking Host ===
-=== chip / OS / kernel ===
-Apple M4 Pro
-ProductName:		macOS
-ProductVersion:		26.5
-BuildVersion:		25F71
-25.5.0 arm64
-=== hardware overview ===
-Hardware:
-
-    Hardware Overview:
-
-      Model Name: MacBook Pro
-      Model Identifier: Mac16,7
-      Model Number: Z1FU000A7LL/A
-      Chip: Apple M4 Pro
-      Total Number of Cores: 14 (10 Performance and 4 Efficiency)
-      Memory: 48 GB
-      System Firmware Version: 18000.120.36
-      OS Loader Version: 18000.120.36
-      Serial Number (system): CVYWHVY990
-      Hardware UUID: DED7318E-1E02-5F15-8E6C-A0DC7737B22D
-      Provisioning UDID: 00006040-000C31A10A92801C
-      Activation Lock Status: Enabled
-
-=== core topology (perflevel0=P-cores, perflevel1=E-cores) ===
-hw.ncpu: 14
-hw.physicalcpu: 14
-hw.logicalcpu: 14
-hw.perflevel0.physicalcpu: 10
-hw.perflevel0.logicalcpu: 10
-hw.perflevel1.physicalcpu: 4
-hw.perflevel1.logicalcpu: 4
-=== caches ===
-hw.l1icachesize: 131072
-hw.l1dcachesize: 65536
-hw.l2cachesize: 4194304
-hw.perflevel0.l2cachesize: 16777216
-hw.perflevel1.l2cachesize: 4194304
-hw.pagesize: 16384
-hw.memsize: 51539607552
-=== ISA optional features (incl. armv8_2_sha3) ===
-hw.optional.arm.FEAT_CRC32: 1
-hw.optional.arm.FEAT_FlagM: 1
-hw.optional.arm.FEAT_FlagM2: 1
-hw.optional.arm.FEAT_FHM: 1
-hw.optional.arm.FEAT_DotProd: 1
-hw.optional.arm.FEAT_SHA3: 1
-hw.optional.arm.FEAT_RDM: 1
-hw.optional.arm.FEAT_LSE: 1
-hw.optional.arm.FEAT_SHA256: 1
-hw.optional.arm.FEAT_SHA512: 1
-hw.optional.arm.FEAT_SHA1: 1
-hw.optional.arm.FEAT_AES: 1
-hw.optional.arm.FEAT_PMULL: 1
-hw.optional.arm.FEAT_SPECRES: 0
-hw.optional.arm.FEAT_SPECRES2: 0
-hw.optional.arm.FEAT_SB: 1
-hw.optional.arm.FEAT_FRINTTS: 1
-hw.optional.arm.FEAT_PACIMP: 1
-hw.optional.arm.FEAT_LRCPC: 1
-hw.optional.arm.FEAT_LRCPC2: 1
-hw.optional.arm.FEAT_FCMA: 1
-hw.optional.arm.FEAT_JSCVT: 1
-hw.optional.arm.FEAT_PAuth: 1
-hw.optional.arm.FEAT_PAuth2: 1
-hw.optional.arm.FEAT_FPAC: 1
-hw.optional.arm.FEAT_FPACCOMBINE: 1
-hw.optional.arm.FEAT_DPB: 1
-hw.optional.arm.FEAT_DPB2: 1
-hw.optional.arm.FEAT_BF16: 1
-hw.optional.arm.FEAT_EBF16: 0
-hw.optional.arm.FEAT_I8MM: 1
-hw.optional.arm.FEAT_WFxT: 1
-hw.optional.arm.FEAT_RPRES: 1
-hw.optional.arm.FEAT_CSSC: 0
-hw.optional.arm.FEAT_HBC: 0
-hw.optional.arm.FEAT_ECV: 1
-hw.optional.arm.FEAT_AFP: 1
-hw.optional.arm.FEAT_LSE2: 1
-hw.optional.arm.FEAT_CSV2: 1
-hw.optional.arm.FEAT_CSV3: 1
-hw.optional.arm.FEAT_DIT: 1
-hw.optional.arm.AdvSIMD: 1
-hw.optional.arm.AdvSIMD_HPFPCvt: 1
-hw.optional.arm.FEAT_FP16: 1
-hw.optional.arm.FEAT_SSBS: 0
-hw.optional.arm.FEAT_BTI: 1
-hw.optional.arm.FEAT_SME: 1
-hw.optional.arm.FEAT_SME2: 1
-hw.optional.arm.FEAT_SME2p1: 0
-hw.optional.arm.FEAT_MTE: 0
-hw.optional.arm.FEAT_MTE2: 0
-hw.optional.arm.FEAT_MTE3: 0
-hw.optional.arm.FEAT_MTE4: 0
-hw.optional.arm.FEAT_MTE_ASYNC: 0
-hw.optional.arm.FEAT_MTE_STORE_ONLY: 0
-hw.optional.arm.SME_F32F32: 1
-hw.optional.arm.SME_BI32I32: 1
-hw.optional.arm.SME_B16F32: 1
-hw.optional.arm.SME_F16F32: 1
-hw.optional.arm.SME_I8I32: 1
-hw.optional.arm.SME_I16I32: 1
-hw.optional.arm.FEAT_SME_F64F64: 1
-hw.optional.arm.FEAT_SME_I16I64: 1
-hw.optional.arm.FEAT_SME_F16F16: 0
-hw.optional.arm.FEAT_SME_B16B16: 0
-hw.optional.arm.FEAT_SVE_B16B16: 0
-hw.optional.arm.FP_SyncExceptions: 1
-hw.optional.arm.FEAT_MTE_CANONICAL_TAGS: 0
-hw.optional.arm.FEAT_MTE_NO_ADDRESS_TAGS: 0
-hw.optional.arm.caps: 1152375837601820671
-hw.optional.arm.sme_max_svl_b: 64
-hw.optional.floatingpoint: 1
-hw.optional.neon: 1
-hw.optional.neon_hpfp: 1
-hw.optional.neon_fp16: 1
-hw.optional.armv8_crc32: 1
-hw.optional.armv8_gpi: 1
-hw.optional.armv8_1_atomics: 1
-hw.optional.armv8_2_fhm: 1
-hw.optional.armv8_2_sha512: 1
-hw.optional.armv8_2_sha3: 1
-hw.optional.armv8_3_compnum: 1
-hw.optional.watchpoint: 4
-hw.optional.breakpoint: 6
-hw.optional.ucnormal_mem: 1
-hw.optional.arm64: 1
-
-=== go run ./cmd/cpb -- -samples 100 ===
-cycles/byte (darwin/arm64)
-
-                    1B    64B  8KiB  32KiB  64KiB  1MiB  16MiB
-      tw128 seal   620   9.63  1.93   0.91   0.88  0.87   0.89
-      tw128 open   658  10.61  1.99   0.90   0.86  0.85   0.86
-  aes128gcm seal  1083  17.32  0.55   0.46   0.44  0.44   0.44
-  aes128gcm open  1081  17.38  0.53   0.44   0.42  0.42   0.42
-
-throughput (GB/s, 1e9 bytes/s, wall-clock) (darwin/arm64)
-
-                    1B   64B  8KiB  32KiB  64KiB   1MiB  16MiB
-      tw128 seal  0.01  0.46  2.31   4.90   5.06   5.12   5.03
-      tw128 open  0.01  0.42  2.24   4.93   5.20   5.22   5.16
-  aes128gcm seal  0.00  0.26  8.17   9.68  10.18  10.05  10.20
-  aes128gcm open  0.00  0.26  8.37  10.24  10.56  10.51  10.70
-\end{comment}
-
 \subsection{Benchmark Methodology}
 \label{sec:bench-method}
 
@@ -379,15 +108,16 @@ core, $2$\,MiB L2 per core, and a $260$\,MiB shared L3, running Debian~12 (kerne
 frequency governor and turbo state are not under our control; we mitigate the
 resulting variance statistically (below). The \texttt{arm64} host is an Apple M4
 Pro ($10$ performance cores and $4$ efficiency cores; per performance core,
-$128$\,KiB L1i, $64$\,KiB L1d, and a $16$\,MiB shared L2) running macOS~26.5
+$128$\,KiB L1i, $64$\,KiB L1d, and a $16$\,MiB shared L2) running macOS~26.5.1
 (Darwin~25.5), with \texttt{FEAT\_SHA3} present. macOS exposes no userspace
 frequency control.
 
 Measurements are collected by a standalone harness (\texttt{cmd/cpb}) that locks
 its goroutine to an OS thread and, for each algorithm, operation, and message
 length, first calibrates an iteration count that fills at least $100$\,ms, then
-records $100$ samples and reports the median cycles per byte and the median
-wall-clock throughput. Both metrics are read from the same timed loop, so the
+records $100$ samples, from which it reports the median cycles per byte and
+median wall-clock throughput together with the interquartile range as a
+dispersion measure (\Cref{tab:dispersion}). Both metrics are read from the same timed loop, so the
 cycles-per-byte and throughput figures for a given measurement come from one
 interleaved run rather than two separately scheduled ones. Each sample reuses the
 same source and destination buffers, so the reported figures are warm-cache,
@@ -418,7 +148,7 @@ the key schedule and the GHASH key-power precomputation; this mirrors the
 \TW{} measurement, whose one-shot seal and open perform the root duplex
 initialization (one permutation) inside the timed call. Both directions are
 measured for each scheme; the two directions track each other to within a few
-percent across the sweep, with a worst-case divergence of $10\%$ (\TW{} on
+percent across the sweep, with a worst-case divergence of $8\%$ (\TW{} on
 \texttt{arm64} at $64$\,B).
 
 \subsection{Throughput}
@@ -437,19 +167,19 @@ and three complete leaves run four-wide in the \texttt{amd64} remainder kernels
 and as two full pairs on \texttt{arm64}, and $64$\,KiB is the first length
 whose eight complete chunks ($8\beta \approx 64$\,KiB) fill the eight-way
 ($\times 8$) core. On the \texttt{amd64} AVX-512 path \TW{} encryption falls
-$2.31 \to 0.91 \to 0.48$ across the $8$, $32$, and $64$\,KiB columns and is
-already at its bulk rate at $64$\,KiB, holding at $0.47$--$0.48$ through
-$16$\,MiB. The AVX2 path follows the same shape at lower throughput ($2.81 \to
-1.35$ over the same span, thereafter between $1.24$ and $1.35$); it runs the
+$1.89 \to 0.78 \to 0.40$ across the $8$, $32$, and $64$\,KiB columns and is
+already at its bulk rate at $64$\,KiB, holding at $0.39$--$0.40$ through
+$16$\,MiB. The AVX2 path follows the same shape at lower throughput ($2.20 \to
+1.10$ over the same span, thereafter between $1.02$ and $1.08$); it runs the
 eight instances as two groups of four rather than in a single $8$-wide
-register, leaving the AVX-512 core about $2.6\times$ faster in bulk. The
-\texttt{arm64} curve flattens earliest ($1.93 \to 0.91 \to 0.88 \to 0.87 \to
+register, leaving the AVX-512 core about $2.7\times$ faster in bulk. The
+\texttt{arm64} curve flattens earliest ($1.95 \to 0.91 \to 0.88 \to 0.88 \to
 0.89$ cycles per byte from $8$\,KiB to $16$\,MiB): the eight-way core itself
 processes its batch as four two-instance pairs, so the fused $2$-wide kernel
 runs at essentially the same per-chunk rate, and a $32$\,KiB message---chunk~$0$
-and three leaves as two full pairs---is already within $5\%$ of the $16$\,MiB
-floor. In wall-clock terms \TW{} reaches $4.92$\,GB/s on the \texttt{amd64}
-AVX-512 host and $5.03$\,GB/s on the M4 Pro for $16$\,MiB messages.
+and three leaves as two full pairs---is already within $3\%$ of the $16$\,MiB
+floor. In wall-clock terms \TW{} reaches $5.77$\,GB/s on the \texttt{amd64}
+AVX-512 host and $5.04$\,GB/s on the M4 Pro for $16$\,MiB messages.
 
 \begin{table}
 \centering
@@ -466,20 +196,20 @@ frequency. Cycle counts are not directly comparable across architectures
 & $1$\,B & $64$\,B & $8$\,KiB & $32$\,KiB & $64$\,KiB & $1$\,MiB & $16$\,MiB \\
 \midrule
 \multicolumn{8}{l}{\emph{Intel Xeon 8581C (Emerald Rapids), AVX-512}} \\
-\quad \TW{} encrypt      & 730 & 11.23 & 2.31 & 0.91 & 0.48 & 0.47 & 0.47 \\
-\quad \TW{} decrypt      & 733 & 11.53 & 2.29 & 0.91 & 0.48 & 0.48 & 0.47 \\
-\quad AES-128-GCM seal   & 897 & 15.60 & 0.46 & 0.38 & 0.37 & 0.36 & 0.36 \\
-\quad AES-128-GCM open   & 923 & 15.38 & 0.45 & 0.37 & 0.36 & 0.35 & 0.35 \\
+\quad \TW{} encrypt      & 590 & 9.27 & 1.89 & 0.78 & 0.40 & 0.39 & 0.40 \\
+\quad \TW{} decrypt      & 615 & 9.72 & 1.90 & 0.75 & 0.40 & 0.39 & 0.39 \\
+\quad AES-128-GCM seal   & 765 & 13.23 & 0.38 & 0.32 & 0.30 & 0.30 & 0.30 \\
+\quad AES-128-GCM open   & 785 & 12.79 & 0.37 & 0.31 & 0.30 & 0.29 & 0.29 \\
 \midrule
 \multicolumn{8}{l}{\emph{Intel Xeon 8581C (Emerald Rapids), AVX2}} \\
-\quad \TW{} encrypt      & 835 & 13.05 & 2.81 & 1.35 & 1.35 & 1.27 & 1.24 \\
-\quad \TW{} decrypt      & 864 & 13.33 & 2.82 & 1.42 & 1.35 & 1.33 & 1.35 \\
+\quad \TW{} encrypt      & 656 & 10.31 & 2.20 & 1.10 & 1.02 & 1.07 & 1.08 \\
+\quad \TW{} decrypt      & 683 & 10.70 & 2.21 & 1.11 & 1.08 & 1.07 & 1.08 \\
 \midrule
 \multicolumn{8}{l}{\emph{Apple M4 Pro, NEON\,+\,\texttt{FEAT\_SHA3}}} \\
-\quad \TW{} encrypt      & 620 & 9.63 & 1.93 & 0.91 & 0.88 & 0.87 & 0.89 \\
-\quad \TW{} decrypt      & 658 & 10.61 & 1.99 & 0.90 & 0.86 & 0.85 & 0.86 \\
-\quad AES-128-GCM seal   & 1083 & 17.32 & 0.55 & 0.46 & 0.44 & 0.44 & 0.44 \\
-\quad AES-128-GCM open   & 1081 & 17.38 & 0.53 & 0.44 & 0.42 & 0.42 & 0.42 \\
+\quad \TW{} encrypt      & 620 & 9.77 & 1.95 & 0.91 & 0.88 & 0.88 & 0.89 \\
+\quad \TW{} decrypt      & 667 & 10.59 & 2.00 & 0.89 & 0.87 & 0.87 & 0.87 \\
+\quad AES-128-GCM seal   & 1044 & 17.28 & 0.54 & 0.45 & 0.44 & 0.43 & 0.44 \\
+\quad AES-128-GCM open   & 1055 & 17.31 & 0.52 & 0.43 & 0.42 & 0.41 & 0.42 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -496,13 +226,49 @@ host and is unaffected by the \TW{} core selection.}
 & $8$\,KiB & $32$\,KiB & $64$\,KiB & $1$\,MiB & $16$\,MiB \\
 \midrule
 \multicolumn{6}{l}{\emph{Intel Xeon 8581C (Emerald Rapids)}} \\
-\quad \TW{} (AVX-512)  & 1.00 & 2.53 & 4.77 & 4.85 & 4.92 \\
-\quad \TW{} (AVX2)     & 0.82 & 1.70 & 1.71 & 1.81 & 1.85 \\
-\quad AES-128-GCM      & 5.04 & 6.04 & 6.24 & 6.47 & 6.46 \\
+\quad \TW{} (AVX-512)  & 1.22 & 2.95 & 5.78 & 5.94 & 5.77 \\
+\quad \TW{} (AVX2)     & 1.05 & 2.09 & 2.25 & 2.15 & 2.14 \\
+\quad AES-128-GCM      & 6.11 & 7.27 & 7.57 & 7.68 & 7.63 \\
 \midrule
 \multicolumn{6}{l}{\emph{Apple M4 Pro}} \\
-\quad \TW{} (NEON+SHA3) & 2.31 & 4.90 & 5.06 & 5.12 & 5.03 \\
-\quad AES-128-GCM       & 8.17 & 9.68 & 10.18 & 10.05 & 10.20 \\
+\quad \TW{} (NEON+SHA3) & 2.30 & 4.92 & 5.06 & 5.10 & 5.04 \\
+\quad AES-128-GCM       & 8.25 & 9.89 & 10.18 & 10.33 & 10.09 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Dispersion.}
+Each cell of \Cref{tab:cpb,tab:throughput} is the median of $100$ samples;
+\Cref{tab:dispersion} summarizes their spread as the interquartile range
+(IQR) relative to the median. The medians are stable: across the sweep the
+relative IQR of the \TW{} cycles-per-byte measurements is at most $1.6\%$
+on the \texttt{amd64} AVX-512 path, $2.1\%$ on AVX2, and $1.0\%$ on the M4
+Pro, with per-path medians of $1.2\%$, $1.4\%$, and $0.6\%$. The full
+min--max range is wider on the \texttt{amd64} guest---up to $16.5\%$
+(AVX-512) and $20.2\%$ (AVX2) at isolated lengths---because its turbo and
+governor states are not under our control (\Cref{sec:bench-method}); these
+are tail excursions that the IQR excludes, and the M4 Pro, whose frequency
+is steadier, keeps even its full range within $4.7\%$. We therefore report
+medians throughout and treat the IQR as the dispersion measure.
+
+\begin{table}
+\centering
+\caption{Cycles-per-byte measurement dispersion for \TW{} across the
+seven-length sweep (seal and open, $100$ samples per point), as the
+interquartile range relative to the median. The final column is the widest
+single-point min--max range; its size on the \texttt{amd64} guest reflects
+the turbo and governor states we cannot pin (\Cref{sec:bench-method}) and
+is excluded from the IQR as a tail effect.}
+\label{tab:dispersion}
+\begin{tabular}{l rrr}
+\toprule
+& \multicolumn{2}{c}{Relative IQR} & Max \\
+\cmidrule(lr){2-3}
+Path & median & max & range \\
+\midrule
+Xeon 8581C, AVX-512 & $1.2\%$ & $1.6\%$ & $16.5\%$ \\
+Xeon 8581C, AVX2    & $1.4\%$ & $2.1\%$ & $20.2\%$ \\
+Apple M4 Pro        & $0.6\%$ & $1.0\%$ & $\phantom{0}4.7\%$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -515,20 +281,20 @@ of the parallel leaf machinery. A message of at most $\rho = 167$ bytes occupies
 a single rate block and never enters leaf mode, so it costs exactly two
 permutations---one to initialize the root duplex and one to close the message
 block and extract the tag. The $1$\,B and $64$\,B columns of \Cref{tab:cpb} bear
-this out: per-message latency is nearly flat across them at roughly $720$
-reference cycles on \texttt{amd64} ($730$ at $1$\,B versus $11.23 \times 64
-\approx 719$ at $64$\,B) and $620$ core cycles on \texttt{arm64} ($620$ versus
-$9.63 \times 64 \approx 616$), i.e.\ about $360$ and $310$ cycles per
+this out: per-message latency is nearly flat across them at roughly $590$
+reference cycles on \texttt{amd64} ($590$ at $1$\,B versus $9.27 \times 64
+\approx 593$ at $64$\,B) and $620$ core cycles on \texttt{arm64} ($620$ versus
+$9.77 \times 64 \approx 625$), i.e.\ about $295$ and $310$ cycles per
 \Keccakp{} respectively. Because such messages bypass the leaf
 core entirely, leaf-level parallelism imposes no latency penalty on them.
 
 The latency/throughput trade-off appears instead in the intermediate regime,
 which lane-$0$ fusion has narrowed to roughly the one-to-eight-chunk band. The
 worst per-byte cost in the sweep is the single-chunk regime at $8$\,KiB
-($1.9$--$2.8$ cycles per byte across the three paths), where the message is the
+($1.9$--$2.2$ cycles per byte across the three paths), where the message is the
 chunk-$0$ phase alone on the single-duplex core. Once the message has complete
 leaf chunks for chunk~$0$ to share a kernel with, the cost falls quickly: by
-$32$\,KiB \TW{} is within a factor of two of its AVX-512 floor and within $5\%$
+$32$\,KiB \TW{} is within a factor of two of its AVX-512 floor and within $3\%$
 of its \texttt{arm64} floor, and the floor itself is reached once the eight-way
 core fills at $64$\,KiB. The root duplex also bounds the tail of a long
 message: the final tag cannot be produced until chunk~$0$ has been processed and
@@ -548,23 +314,23 @@ back-to-back at each length and reads both metrics from the same loop, so the
 cycles-per-byte and throughput comparisons hold under identical conditions and
 agree. In the bulk regime AES-128-GCM is faster on both architectures, as
 expected for a primitive with dedicated AES and carryless-multiply instructions:
-at $16$\,MiB it runs at $0.36$ cycles per byte on \texttt{amd64} and $0.44$ on
-\texttt{arm64}, against $0.47$ and $0.89$ for \TW{}---about $1.3\times$ and
+at $16$\,MiB it runs at $0.30$ cycles per byte on \texttt{amd64} and $0.44$ on
+\texttt{arm64}, against $0.40$ and $0.89$ for \TW{}---about $1.3\times$ and
 $2\times$ faster. The wall-clock throughputs show the same margins: \TW{} reaches
-$4.92$ and $5.03$\,GB/s against AES-128-GCM's $6.46$ and $10.20$\,GB/s. The wider
+$5.77$ and $5.04$\,GB/s against AES-128-GCM's $7.63$ and $10.09$\,GB/s. The wider
 \texttt{arm64} gap reflects the strength of Apple's AES and \texttt{PMULL} units.
 \TW{} attains these rates with a permutation that has no dedicated hardware
 support, relying only on the SHA-3 extension on \texttt{arm64} and on general SIMD
 on \texttt{amd64}.
 
 The ordering reverses for very short messages, where AES-128-GCM's key schedule
-and GHASH key-power precomputation dominate: at $1$\,B AES-128-GCM costs $897$
-and $1083$ cycles on the two hosts against \TW{}'s $730$ and $620$. This
+and GHASH key-power precomputation dominate: at $1$\,B AES-128-GCM costs $765$
+and $1044$ cycles on the two hosts against \TW{}'s $590$ and $620$. This
 comparison is setup-bound rather than representative of steady state, since each
 timed call rebuilds its cipher; it nonetheless reflects the per-message cost an
 application pays when it does not amortize key setup across messages. In the
-sub-bulk regime AES-128-GCM is several times faster at one chunk ($0.46$ versus
-$2.31$ cycles per byte at $8$\,KiB on \texttt{amd64}), but the gap narrows
+sub-bulk regime AES-128-GCM is several times faster at one chunk ($0.38$ versus
+$1.89$ cycles per byte at $8$\,KiB on \texttt{amd64}), but the gap narrows
 quickly once the fused kernels engage: about $2.4\times$ at $32$\,KiB, and the
 bulk ratio from $64$\,KiB on. \TW{}'s intended value relative to AES-128-GCM
 lies in the tree structure and committing-security properties analyzed in
