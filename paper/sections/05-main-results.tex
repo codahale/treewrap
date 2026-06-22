@@ -556,8 +556,20 @@ CMTD-4 statement of \cite{BH22}:
 \subsection{Concrete Security Claim}
 \label{sec:concrete-claim}
 
-\TW{} attains a $128$-bit security target across the notions of
-\Cref{sec:concrete}. This is an instantiation of the closed forms above
+\begin{corollary}[Concrete \TW{} Security]
+\label{cor:concrete-security}
+Under the implemented parameters $k = c = \tauroot = \tauleaf = 256$, every
+adversary with work cap $\Ntot \leq 2^{63}$---and, in the multi-user case,
+user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
+\TW{}'s notions: all-in-one AE (\Cref{thm:ae}), multi-user
+indistinguishability (\Cref{thm:mu-ind}), $s$-way T-CMTDs-4 and CMTDs-4
+committing security for every $s \geq 2$
+(\Cref{thm:tag-cmtds4,cor:cmtds4}), and context discoverability
+(\Cref{thm:cdy}).
+\end{corollary}
+
+\begin{proof}
+The claim instantiates the closed forms of \Cref{sec:concrete}
 under the resource consequences of \Cref{sec:resources}: $\Nprim \leq
 \Ntot$ by definition, and the pathwise bounds $\qv \leq N$ and
 $\nleaf \leq N$ let the envelope parameters $\Qv$ and $\Nleaf$ be taken at
@@ -618,6 +630,7 @@ Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to at most
 $\rho \cdot 2^{63} = 167 \cdot 2^{63} < 2^{71}$ bytes of plaintext,
 associated data, ciphertext, and aggregation through the duplex
 (\Cref{sec:params}), well beyond any realistic deployment lifetime.
+\end{proof}
 
 \subsection{Discussion of the Bounds}
 \label{sec:bound-discussion}
