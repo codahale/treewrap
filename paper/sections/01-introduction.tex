@@ -49,14 +49,11 @@ recovering the throughput a flat duplex forgoes; and because the root binds the
 associated data, the first chunk, and every leaf tag into the single output tag,
 that tag is a sponge image of the entire $(K, N, A, M)$ input. The structure
 ensures only that distinct $(K, N, A)$ triples reach distinct root transcripts;
-the committing security itself rests on the indistinguishability of the sponge,
-which makes those transcripts' tags collision-resistant. In fact the
-root tag alone can serve as the compact commitment string: even if
-different openings use different ciphertext bodies, a successful
-full-input collision must either collide the root tag candidates or
-first collide leaf tags. The same sponge image is preimage-resistant,
-yielding context discoverability against that fixed tag
-(\Cref{sec:cmtds3}). Every duplex
+the committing and context-discoverability security rests on the
+indifferentiability of the sponge, which makes the root tag both collision- and
+preimage-resistant. Because both hold for the tag projection alone, the single
+$256$-bit root tag is itself a secure, compact cryptographic commitment to the
+full $(K, N, A, M)$ context (\Cref{sec:cmtds3}). Every duplex
 still operates on a bounded $1600$-bit state, and the leaf tags are absorbed
 into the root as the leaves complete rather than buffered together, so the
 memory footprint remains constant in the message length.
@@ -116,16 +113,14 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   context-discovery resistant in the sense of \cite{MLGR23}: given a target tag
   fixed in advance, no adversary can find a context and ciphertext body that
   decrypt successfully under it, with a concrete root-preimage bound
-  (\Cref{thm:cdy}). This is the preimage counterpart of committing security;
-  because the fixed target is only the $256$-bit root tag rather than a full
-  ciphertext, the result already concerns that compact tag. Taken with the collision facet of tag-CMTDs-4, it
-  makes \TW{}'s $256$-bit root tag both collision- and preimage-resistant as a
-  commitment to the full encryption input---in one tag, as strong a commitment
-  as a cryptographic hash. Because \TW{}'s authenticity is not delegated to an invertible MAC,
-  the context-discovery attacks of \cite{MLGR23} against \textsf{GCM},
-  \textsf{CCM}, \textsf{EAX}, \textsf{SIV}, and \textsf{OCB3} do not apply. The
-  unrestricted notion we prove dominates the restricted per-component variants
-  of \cite{MLGR23}.
+  (\Cref{thm:cdy}). This is the preimage counterpart of committing security and
+  follows from the same sponge indifferentiability: the root tag is a
+  preimage-resistant sponge image, leaving an adversary no better than a generic
+  preimage search. The context-discovery attacks of \cite{MLGR23} break
+  \textsf{GCM}, \textsf{CCM}, \textsf{EAX}, \textsf{SIV}, and \textsf{OCB3} by
+  inverting the algebraic MACs to which those schemes delegate authenticity,
+  which a sponge image does not admit. The unrestricted notion we prove
+  dominates the restricted per-component variants of \cite{MLGR23}.
 
 \item \textbf{Proof methodology.} We carry out the analysis in a dedicated \TW{}
   random-oracle model and transfer every bound to the public-permutation setting
