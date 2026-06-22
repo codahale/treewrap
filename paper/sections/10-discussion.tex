@@ -194,9 +194,12 @@ sidesteps this by absorbing the ciphertext in both directions (\Cref{sec:tw128})
 so recasting it on the keyed duplex would first require repairing the mode. We
 retain the indifferentiability lift for its modularity, as the resulting
 $\Lift_c$ already meets the $128$-bit target (\Cref{sec:bound-discussion}). The
-leaf tag collision term
-$\Nleaf(\Nleaf-1)/2^{\tauleaf+1}$ is a pairwise union bound whose necessity for
-the AE guarantee, as opposed to an artifact of the accounting, is not settled.
+leaf tag collision term $\Nleaf(\Nleaf-1)/2^{\tauleaf+1}$ is tight for INT-CTXT,
+the notion it is proved against---a nonce-reusing adversary forges at that rate
+by colliding two leaf tags---but the headline AE and multi-user bounds carry it
+only through the INT-CTXT envelope, and the attack needs the nonce reuse their
+nonce-respecting games forbid; for those bounds the term is inherited slack
+rather than a matched one.
 
 \paragraph{Beyond-birthday and leakage.}
 All bounds are birthday-type on the $256$-bit capacity, delivering the

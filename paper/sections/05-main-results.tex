@@ -638,9 +638,13 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
   a generic birthday-style adversary against the random oracle
   matches the leading-order term.
 \item \emph{Leaf tag collision $\Nleaf (\Nleaf - 1) / 2^{\tauleaf +
-  1}$.} The pairwise union bound is tight up to constants: a generic
-  birthday attack on the $\tauleaf$-bit leaf tag projection matches
-  the leading $\Nleaf^2 / 2^{\tauleaf + 1}$ rate.
+  1}$.} Tight for INT-CTXT, the notion it is proved against: by reusing
+  a nonce, an adversary detects a leaf tag birthday collision through the
+  matching root tags and splices the colliding leaf chunk into a fresh
+  ciphertext that still verifies, forging at the leading
+  $\Nleaf^2 / 2^{\tauleaf + 1}$ rate. The AE and multi-user bounds carry
+  the term only through the INT-CTXT envelope; their nonce-respecting
+  encryption rules this attack out, so there it is inherited slack.
 \item \emph{Known-key leaf collision $\LeafColl_\tau(Q)$.} The same
   birthday attack applies when keys are adversary-supplied and direct
   queries can target leaf tag points; the compact CMTDs-4 proof uses
