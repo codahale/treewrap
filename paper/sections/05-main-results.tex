@@ -470,6 +470,28 @@ the candidate-preimage argument of \Cref{thm:cdy-ro}, dropping the
 exponent from $\tauroot(s-1)$ to $\tauroot$.
 \end{proof}
 
+\begin{corollary}[Root Tag as a Compact Commitment]
+\label{cor:tag-commitment}
+The $\tauroot$-bit root tag of a \TW{} ciphertext is a compact commitment
+to the full encryption context $(K, N, A, M)$ that is at once binding and
+preimage-resistant: no adversary can open one tag to $s \geq 2$ distinct
+contexts---whose openings may even use distinct ciphertext bodies---nor
+find any context opening to a tag fixed in advance, except with the
+respective advantages of \Cref{thm:tag-cmtds4,thm:cdy}. At the implemented
+parameters both are at most $2^{-128}$ (\Cref{cor:concrete-security}), so
+the single $256$-bit tag carries the collision- and preimage-resistance of
+a hash-based commitment to $(K, N, A, M)$, native to the mode.
+\end{corollary}
+
+\begin{proof}
+The binding (collision) facet is the $s$-way T-CMTDs-4 bound of
+\Cref{thm:tag-cmtds4}; the preimage facet is the
+context-discoverability bound of \Cref{thm:cdy}. Both quantify the
+adversary's success at the same $\tauroot$-bit projection of the same
+final root transcript, and \Cref{cor:concrete-security} evaluates both at
+the implemented parameters.
+\end{proof}
+
 \subsection{Concrete TW128 Bounds}
 \label{sec:concrete}
 
