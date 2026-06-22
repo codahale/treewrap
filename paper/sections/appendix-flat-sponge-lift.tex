@@ -74,8 +74,10 @@ simulator-side $\ROflat$ call used throughout this appendix.
 \label{lem:lift-bound}
 Let $\mathsf{G}$ be any of the single-stage \TW{} games of
 \Cref{sec:games-pp,sec:mu-setting}: privacy, INT-CTXT, all-in-one AE,
-mu-ind, CMTDs-4, T-CMTDs-4, CDY, or
-CMTs-$\ell$ for $\ell \in \{1,3,4\}$. Let
+mu-ind, CMTDs-4, T-CMTDs-4, T-CDY, $\mathsf{CDY}^\ast[\mathsf{ts}]$, or
+CMTs-$\ell$ for $\ell \in \{1,3,4\}$ (the $\mathsf{CDY}^\ast[\mathsf{ts}]$
+selector encryption is construction-internal, counted in $N$ like a
+challenger check). Let
 $\mathcal{A}$ be a
 public-permutation $\mathsf{G}$ adversary with construction-interface
 cost at most $N$ and at most $\Nprim$ direct primitive-interface
@@ -138,8 +140,10 @@ $\prod_i (1 - x_i) \geq 1 - \sum_i x_i$ for $x_i \in [0, 1]$.
 \label{lem:derived-adversary}
 Let $\mathsf{G}$ be any of the single-stage \TW{} games of
 \Cref{sec:games-pp,sec:mu-setting}: privacy, INT-CTXT, all-in-one AE,
-mu-ind, CMTDs-4, T-CMTDs-4, CDY, or
-CMTs-$\ell$ for $\ell \in \{1,3,4\}$. Let
+mu-ind, CMTDs-4, T-CMTDs-4, T-CDY, $\mathsf{CDY}^\ast[\mathsf{ts}]$, or
+CMTs-$\ell$ for $\ell \in \{1,3,4\}$ (the $\mathsf{CDY}^\ast[\mathsf{ts}]$
+selector encryption is construction-internal, counted in $N$ like a
+challenger check). Let
 $\mathcal{A}$ be a
 simulator-world $\mathsf{G}$ adversary whose public-primitive
 interface is answered by

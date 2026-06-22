@@ -156,10 +156,10 @@ while \Cref{app:committing-transfer} forwards the remaining \cite{BH22}
 committing notions---CMTDs-$\ell$ and the CMTs-$\ell$ source games---to
 the same root-collision bound.
 
-\paragraph{Context discoverability.}
-The context-discoverability game is the preimage analogue of the
-committing game, following the query-independent context selector of
-\cite{MLGR23}. It is parameterized by a target tag $T^* \in
+\paragraph{Tag-target context discoverability.}
+The tag-target context-discoverability (T-CDY) game of
+\Cref{sec:commit-defs} is the preimage analogue of the committing game.
+It is parameterized by a target tag $T^* \in
 \bits^{\tauroot}$ fixed before the primitive sampling, hence
 independent of $\pi$ and of the adversary's queries. There is no
 challenger-sampled key. After the primitive sampling, the adversary
@@ -175,7 +175,7 @@ check on the assembled ciphertext $C \concat T^*$.
 \end{align*}
 The advantage is the worst case over query-independent targets,
 \[
-  \Advcdy_\TW(\mathcal{A})
+  \Advtagcdy_\TW(\mathcal{A})
   = \max_{T^* \in \bits^{\tauroot}} \Pr[\text{the game returns } 1],
 \]
 with each probability taken over the uniform choice of $\pi$ and
@@ -184,19 +184,18 @@ exactly when the recomputed final root tag of $(K, N, A, C)$ equals
 $T^*$, so the game asks the adversary to discover a context whose
 ciphertext body extends to the fixed tag $T^*$; the win condition makes
 no reference to a claimed message, so the committing game's eager
-length and pairwise-distinctness checks are absent. The worst case over
-query-independent target tags above is the tag-target form of the
-unrestricted $\mathsf{CDY}^\ast$ notion of \cite[Fig.~5]{MLGR23}, whose
-advantage is itself a worst case over query-independent context
-selectors. Fixing only the tag while leaving $(K, N, A)$ and the body
-$C$ free makes this the maximal-freedom discovery target: it dominates
-each per-component restriction $\mathsf{CDY}^\ast_k$,
-$\mathsf{CDY}^\ast_n$, $\mathsf{CDY}^\ast_a$ of \cite{MLGR23}, whose
-selector fixes the entire target ciphertext and pins two of $(K, N, A)$
-while the adversary supplies the third---each grants a subset of the
-freedom allowed here at the matching tag, so the headline bound
-(\Cref{thm:cdy}) dominates them all.
-\Cref{app:flat-sponge-lift} lifts the CDY bound proved in
+length and pairwise-distinctness checks are absent. On the committing
+side replacing a shared ciphertext by a shared tag strengthens the notion,
+because the adversary outputs the ciphertext; here the target is given
+\emph{to} the adversary, so the same substitution does not strengthen, and
+T-CDY is a different, in general incomparable, notion from \cite{MLGR23}
+context discoverability (\Cref{sec:commit-defs}). We establish both for
+\TW{}: the T-CDY bound here, and for the \cite[Fig.~5]{MLGR23} restricted
+$\mathsf{CDY}^\ast[\mathsf{ts}]$ game of \Cref{sec:commit-defs}---whose
+query-independent selector produces the full target ciphertext under a
+hidden context---the bound of \Cref{thm:cdy-full}, which carries an
+additional key-test term for that hidden context.
+\Cref{app:flat-sponge-lift} lifts the T-CDY bound proved in
 \Cref{sec:cmtds3} (\Cref{thm:cdy-ro}) to the public-permutation
 statement of \Cref{sec:headline}.
 

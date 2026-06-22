@@ -16,10 +16,10 @@ First, the random-oracle CMTDs-4 bound (\Cref{thm:cmtds4-ro}) is the
 pure $s$-way root tag collision case; the headline CMTDs-4 statement
 (\Cref{cor:cmtds4}) is its flat-sponge lift, and
 \Cref{app:committing-transfer} forwards the remaining committing notions
-to the same root-collision bound. Second, the random-oracle CDY
+to the same root-collision bound. Second, the random-oracle T-CDY
 bound (\Cref{thm:cdy-ro}) runs the same argument with the $s$-way
 collision replaced by a preimage to a fixed target tag, underlying the
-headline CDY statement (\Cref{thm:cdy}).
+headline T-CDY statement (\Cref{thm:cdy}).
 Third, the T-CMTDs-4 bound (\Cref{thm:tag-cmtds4-ro}) keeps
 the root tag collision argument intact but, because compact openings may
 use different ciphertext bodies under one common tag, first rules out the
@@ -275,20 +275,20 @@ $\RootColl_{\tauroot}(\qRO(\mathcal{B}),s)$. Adding the
 $\badleaf^\star$ probability gives the theorem.
 \end{proof}
 
-\begin{theorem}[Random-Oracle CDY]
+\begin{theorem}[Random-Oracle T-CDY]
 \label{thm:cdy-ro}
 For every query-independent target tag $T^* \in \bits^{\tauroot}$ and
-every context-discoverability adversary $\mathcal{B}$ in the \TW{}
+every T-CDY adversary $\mathcal{B}$ in the \TW{}
 random-oracle model (\Cref{sec:ro-model}),
 \[
-  \Advcdy_\RO(\mathcal{B})
+  \Advtagcdy_\RO(\mathcal{B})
   \;\leq\; \RootPre_{\tauroot}(\qRO(\mathcal{B}))
   = \frac{\qRO(\mathcal{B}) + 1}{2^{\tauroot}}.
 \]
 \end{theorem}
 
 \begin{proof}
-Run the random-oracle CDY game (\Cref{sec:ro-model}) for the
+Run the random-oracle T-CDY game (\Cref{sec:ro-model}) for the
 query-independent target $T^*$, which is independent of $\ROflat$. After
 rejecting on a failed syntax or ciphertext-validity precheck on
 $C \concat T^*$, the challenger performs $m = 1$ deterministic decryption

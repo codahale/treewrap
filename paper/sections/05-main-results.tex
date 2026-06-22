@@ -94,7 +94,7 @@ $Q=\Nprim+\Nleaf$.
 
 The headline theorems of \Cref{sec:headline} feed on five
 random-oracle-model bounds---the privacy and INT-CTXT envelopes, the
-CMTDs-4 bound, the T-CMTDs-4 bound, and the CDY bound---whose proofs occupy
+CMTDs-4 bound, the T-CMTDs-4 bound, and the T-CDY bound---whose proofs occupy
 \Cref{sec:privacy,sec:authenticity,sec:cmtds3}; the remaining
 committing-notion bounds live in \Cref{app:committing-transfer}.
 Resource-indexed
@@ -170,11 +170,11 @@ tag-committing openings may use different ciphertext bodies; absent such
 a leaf tag collision, pairwise distinct full inputs force pairwise
 distinct final root transcripts before the common tag is compared.
 
-\paragraph{CDY bound.}
-The flat-RO CDY theorem of \Cref{sec:cmtds3} is the direct
+\paragraph{T-CDY bound.}
+The flat-RO T-CDY theorem of \Cref{sec:cmtds3} is the direct
 root-preimage bound
 \[
-  \Advcdy_{\RO}(\mathcal{B})
+  \Advtagcdy_{\RO}(\mathcal{B})
   \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))
   = (\qRO(\mathcal{B}) + 1) \big/ 2^{\tauroot},
 \]
@@ -216,15 +216,17 @@ construction-internal and counted in $N$, not in $\Nprim$.
 public-permutation model of \Cref{sec:games-pp}: all-in-one AE
 security \cite{RS06}, its multi-user indistinguishability lift
 \cite{BT16}, and the two facets of commitment security
-(\Cref{sec:commit-defs})---$s$-way CMTDs-4 committing security \cite{BH22}
+(\Cref{sec:commit-defs})---$s$-way committing security \cite{BH22}
 and context discoverability \cite{MLGR23}---which follow from the same
-root tag and are stated co-equally. We also state tag-committing
-strengthenings showing that the root tag alone is the compact commitment
-target. For
+root tag and are stated co-equally. On the committing side we give the
+tag strengthening T-CMTDs-4, with full-input CMTDs-4 a corollary; on the
+discoverability side we give the tag-target T-CDY and, separately, the
+\cite{MLGR23} notion (\Cref{thm:cdy-full}). The tag forms T-CMTDs-4 and
+T-CDY together certify the root tag as a compact commitment. For
 the AE-style notions the ideal side
 exposes the BDPV simulator; the committing and discoverability bounds
 remain real public-permutation success probabilities.
-\Cref{thm:ae,thm:mu-ind,thm:tag-cmtds4,cor:cmtds4,thm:cdy}
+\Cref{thm:ae,thm:mu-ind,thm:tag-cmtds4,cor:cmtds4,thm:cdy,thm:cdy-full}
 state these bounds in terms of the loss terms $\Lift_c$, $\KeyGuess_k$,
 $\RootColl_\tau$, $\LeafColl_\tau$, and $\RootPre_\tau$ of
 \Cref{sec:loss-terms} and the random-oracle envelopes $\Epspriv$,
@@ -442,12 +444,12 @@ uniformity with \Cref{thm:ae,thm:mu-ind}; the birthday threshold at
 $\tauroot = 256$ is unaffected.
 \end{remark}
 
-\begin{theorem}[Context Discoverability]
+\begin{theorem}[Tag-Target Context Discoverability]
 \label{thm:cdy}
-For every context-discoverability adversary $\mathcal{A}$ against \TW{}
+For every T-CDY adversary $\mathcal{A}$ against \TW{}
 with the resources of \Cref{sec:resources},
 \[
-  \Advcdy_\TW(\mathcal{A})
+  \Advtagcdy_\TW(\mathcal{A})
   \;\leq\;
   \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
   \;=\;
@@ -470,6 +472,46 @@ the candidate-preimage argument of \Cref{thm:cdy-ro}, dropping the
 exponent from $\tauroot(s-1)$ to $\tauroot$.
 \end{proof}
 
+\begin{theorem}[Context Discoverability \textnormal{of} \cite{MLGR23}]
+\label{thm:cdy-full}
+For every target specifier $\mathsf{ts}$ and every adversary $\mathcal{A}$
+against \TW{}, the restricted $\mathsf{CDY}^\ast[\mathsf{ts}]$ advantage
+of \cite[Fig.~5]{MLGR23}---and in particular each per-component variant
+$\mathsf{CDY}^\ast_k$, $\mathsf{CDY}^\ast_n$, $\mathsf{CDY}^\ast_a$---satisfies
+\[
+  \Advcdy_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim) + \KeyGuess_k(\Nprim).
+\]
+\end{theorem}
+
+\begin{proof}
+The restricted advantage requires $\mathcal{A}$ to win against every
+query-independent selector, so it is at most the success probability
+against the selector $S^\star$ that samples a fresh context
+$(K_0, N_0, A_0)$ with $K_0 \sample \bits^k$, encrypts a message under it
+to obtain the target ciphertext $C^* = C \concat T^*$, and reveals only
+the $\mathsf{ts}$-components. By the Lift Application corollary
+(\Cref{cor:lift-application}), the derived random-oracle adversary
+$\mathcal{B}$ has $\qRO(\mathcal{B}) \leq \Nprim$; it remains to bound the
+random-oracle success against $S^\star$. Here $T^* = \RF(R_0)$ is the root
+tag of the selector's final root transcript $R_0$ under $(K_0, N_0, A_0)$.
+A winning $\mathcal{A}$ outputs a context whose final root transcript $R$
+has $\RF(R)$ projecting to $T^*$. If $R = R_0$, then $\mathcal{A}$ has
+reconstructed the selector's transcript, which by
+\Cref{lem:bridge-decode} requires a direct $\ROflat$ query decoding under
+$\KeyedTWOut$ to the hidden key $K_0$; \Cref{lem:key-tests} bounds this by
+$\KeyGuess_k(\Nprim)$. If $R \neq R_0$, then $\RF(R)$ projects to the
+query-independent target $T^*$ at a candidate distinct from the one that
+defined it, which the Root tag Candidate Sequence lemma
+(\Cref{lem:root-candidate-seq}) and \Cref{lem:adaptive-candidate} bound by
+$\RootPre_{\tauroot}(\Nprim)$. Adding the lift gives the bound. For
+$\mathsf{ts} \neq \varnothing$ the selector reveals context components,
+which only spares $\mathcal{A}$ part of the search already charged to the
+preimage and key-test terms, so the same bound holds for each
+per-component variant.
+\end{proof}
+
 \begin{corollary}[Root Tag as a Compact Commitment]
 \label{cor:tag-commitment}
 The $\tauroot$-bit root tag of a \TW{} ciphertext is a compact commitment
@@ -485,8 +527,8 @@ a hash-based commitment to $(K, N, A, M)$, native to the mode.
 
 \begin{proof}
 The binding (collision) facet is the $s$-way T-CMTDs-4 bound of
-\Cref{thm:tag-cmtds4}; the preimage facet is the
-context-discoverability bound of \Cref{thm:cdy}. Both quantify the
+\Cref{thm:tag-cmtds4}; the preimage facet is the tag-target
+context-discoverability (T-CDY) bound of \Cref{thm:cdy}. Both quantify the
 adversary's success at the same $\tauroot$-bit projection of the same
 final root transcript, and \Cref{cor:concrete-security} evaluates both at
 the implemented parameters.
@@ -567,12 +609,20 @@ CMTD-4 statement of \cite{BH22}:
 \]
 \end{remark}
 
-\paragraph{Context discoverability.}
+\paragraph{Tag-target context discoverability.}
+\[
+  \Advtagcdy_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\Nprim + 1}{2^{256}}.
+\]
+
+\paragraph{Context discoverability \textnormal{(\cite{MLGR23})}.}
 \[
   \Advcdy_\TW(\mathcal{A})
   \;\leq\;
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
-  + \frac{\Nprim + 1}{2^{256}}.
+  + \frac{2\Nprim + 1}{2^{256}}.
 \]
 
 \subsection{Concrete Security Claim}
@@ -586,8 +636,9 @@ user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
 \TW{}'s notions: all-in-one AE (\Cref{thm:ae}), multi-user
 indistinguishability (\Cref{thm:mu-ind}), $s$-way T-CMTDs-4 and CMTDs-4
 committing security for every $s \geq 2$
-(\Cref{thm:tag-cmtds4,cor:cmtds4}), and context discoverability
-(\Cref{thm:cdy}).
+(\Cref{thm:tag-cmtds4,cor:cmtds4}), and context discoverability in both
+the tag-target form (\Cref{thm:cdy}) and the \cite{MLGR23} form
+(\Cref{thm:cdy-full}).
 \end{corollary}
 
 \begin{proof}
@@ -624,7 +675,8 @@ All-in-one AE & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 Multi-user ind. & $2D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
 T-CMTDs-4 & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 CMTDs-4 & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
-Context discoverability & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+T-CDY & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+CDY \cite{MLGR23} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
