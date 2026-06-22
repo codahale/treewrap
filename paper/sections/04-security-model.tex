@@ -108,48 +108,15 @@ lift, bounds it via the privacy and INT-CTXT envelopes of
 
 \paragraph{Committing security.}
 The $s$-way committing-security game follows \cite[Figs.~4 and~5]{BH22},
-extended to $s \geq 2$ tuples. There is no
-challenger-sampled key. After the primitive sampling, the adversary
-outputs a ciphertext $C \concat T$ together with $s$ tuples $(K_i, N_i,
-A_i, M_i)_{i=1}^s$. The challenger applies the following deterministic
+extended to $s \geq 2$ tuples, and is stated in the tag-projected form of
+\Cref{sec:commit-defs} ($\gamma = \TagProj$), which subsumes the
+full-ciphertext notion. There is no challenger-sampled key. After the
+primitive sampling, the adversary outputs a common tag $T$ together with,
+for each claimed opening, a ciphertext body $C_i$ and a tuple
+$(K_i, N_i, A_i, M_i)$. The challenger applies the following deterministic
 checks, with the eager length rejection justified by \Cref{alg:dec}:
-$\Dec_K(N,A,C \concat T)$ returns either $\bot$ or a message of length
-$\|C\|$.
-\begin{align*}
-  &\pi \sample \Perm(\bits^{1600}), \\
-  &\bigl(C \concat T,\, (K_i, N_i, A_i, M_i)_{i=1}^s\bigr)
-     \sample \mathcal{A}^{\pi,\, \pi^{-1}}, \\
-  &\text{return $0$ if $C \concat T$ is not a valid \TW{} ciphertext}, \\
-  &\text{return $0$ if any $(K_i, N_i, A_i, M_i)$ is not in the \TW{} syntactic domain}, \\
-  &\text{return $0$ if any $\|M_i\| \neq \|C\|$}, \\
-  &\text{return $0$ if $(K_i, N_i, A_i, M_i)_{i=1}^s$ are not pairwise distinct}, \\
-  &\text{return } \textstyle\bigwedge_{i=1}^s
-     \bigl[\Dec_{K_i}[\pi](N_i, A_i, C \concat T) = M_i\bigr].
-\end{align*}
-The advantage is
-\[
-  \Advcmtds{4}_\TW(\mathcal{A})
-  = \Pr[\text{the game returns } 1],
-\]
-with the probability taken over the uniform choice of $\pi$ and
-$\mathcal{A}$'s coins. No nonce uniqueness is imposed.
-For $\ell \in \{1, 3\}$, the CMTDs-$\ell$ game is identical except
-that the pairwise-distinctness check is applied to the
-$\WiC_\ell$-images---the keys $K_i$ for $\ell = 1$ and the triples
-$(K_i, N_i, A_i)$ for $\ell = 3$---with the same check order and
-the same eager length rejection; $\Advcmtds{\ell}_\TW(\mathcal{A})$ is
-defined analogously.
-The CMTs-$\ell$ source games are instantiated
-analogously from \Cref{sec:commit-defs}: after the primitive sampling,
-the adversary outputs $s$ tuples, the challenger checks syntax and
-pairwise $\WiC_\ell$-distinctness, and then returns $1$ iff the
-$s$ deterministic encryptions $\Enc_{K_i}[\pi](N_i,A_i,M_i)$ are all
-equal.
-
-The tag-projected full-input committing game instantiates
-\Cref{sec:commit-defs} with $\gamma=\TagProj$. After primitive
-sampling, the adversary outputs one candidate tag and one ciphertext
-body for each claimed opening:
+$\Dec_K(N,A,C_i \concat T)$ returns either $\bot$ or a message of length
+$\|C_i\|$.
 \begin{align*}
   &\pi \sample \Perm(\bits^{1600}), \\
   &\bigl(T,\,(C_i,K_i,N_i,A_i,M_i)_{i=1}^s\bigr)
@@ -161,8 +128,28 @@ body for each claimed opening:
   &\text{return } \textstyle\bigwedge_{i=1}^s
      \bigl[\Dec_{K_i}[\pi](N_i, A_i, C_i \concat T) = M_i\bigr].
 \end{align*}
-The advantage is $\Advtagcmtds{4}_\TW(\mathcal{A})$. The ordinary
-CMTDs-4 game is the special case in which all $C_i$ are equal.
+The advantage is
+\[
+  \Advtagcmtds{4}_\TW(\mathcal{A})
+  = \Pr[\text{the game returns } 1],
+\]
+over the uniform choice of $\pi$ and $\mathcal{A}$'s coins; no nonce
+uniqueness is imposed. The ordinary full-input CMTDs-4 game is the special
+case in which all bodies coincide, $C_1 = \cdots = C_s = C$, so the
+openings share the entire ciphertext $C \concat T$ rather than only its
+tag; its advantage is $\Advcmtds{4}_\TW(\mathcal{A})$.
+For $\ell \in \{1, 3\}$, the full-input CMTDs-$\ell$ game is this special
+case with the pairwise-distinctness check applied to the
+$\WiC_\ell$-images instead---the keys $K_i$ for $\ell = 1$ and the triples
+$(K_i, N_i, A_i)$ for $\ell = 3$---keeping the same check order and eager
+length rejection; $\Advcmtds{\ell}_\TW(\mathcal{A})$ is defined
+analogously.
+The CMTs-$\ell$ source games are instantiated
+analogously from \Cref{sec:commit-defs}: after the primitive sampling,
+the adversary outputs $s$ tuples, the challenger checks syntax and
+pairwise $\WiC_\ell$-distinctness, and then returns $1$ iff the
+$s$ deterministic encryptions $\Enc_{K_i}[\pi](N_i,A_i,M_i)$ are all
+equal.
 \Cref{sec:cmtds3} proves the CMTDs-4 bound (\Cref{thm:cmtds4-ro}) and
 the tag-projected CMTDs-4 bound (\Cref{thm:tag-cmtds4-ro}) directly,
 while \Cref{app:committing-transfer} forwards the remaining \cite{BH22}
