@@ -184,11 +184,18 @@ exactly when the recomputed final root tag of $(K, N, A, C)$ equals
 $T^*$, so the game asks the adversary to discover a context whose
 ciphertext body extends to the fixed tag $T^*$; the win condition makes
 no reference to a claimed message, so the committing game's eager
-length and pairwise-distinctness checks are absent. Fixing only the tag
-while leaving $(K, N, A)$ and $C$ free makes this the maximal-freedom
-discovery target: the restricted notions of \cite{MLGR23}, which
-additionally pin two of the three context components, are special cases, so the
-headline bound (\Cref{thm:cdy}) dominates each of them.
+length and pairwise-distinctness checks are absent. The worst case over
+query-independent target tags above is the tag-target form of the
+unrestricted $\mathsf{CDY}^\ast$ notion of \cite[Fig.~5]{MLGR23}, whose
+advantage is itself a worst case over query-independent context
+selectors. Fixing only the tag while leaving $(K, N, A)$ and the body
+$C$ free makes this the maximal-freedom discovery target: it dominates
+each per-component restriction $\mathsf{CDY}^\ast_k$,
+$\mathsf{CDY}^\ast_n$, $\mathsf{CDY}^\ast_a$ of \cite{MLGR23}, whose
+selector fixes the entire target ciphertext and pins two of $(K, N, A)$
+while the adversary supplies the third---each grants a subset of the
+freedom allowed here at the matching tag, so the headline bound
+(\Cref{thm:cdy}) dominates them all.
 \Cref{app:flat-sponge-lift} lifts the CDY bound proved in
 \Cref{sec:cmtds3} (\Cref{thm:cdy-ro}) to the public-permutation
 statement of \Cref{sec:headline}.
