@@ -666,7 +666,12 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
 \begin{itemize}
 \item \emph{$\KeyGuess_k(Q) = Q / 2^k$.} Tight at constants: a direct
   random-guess attack on a $k$-bit key matches the per-query success
-  probability $1 / 2^k$.
+  probability $1 / 2^k$. The multi-user bound's dominant term
+  $2D\,\KeyGuess_k(\Nprim) = 2D\Nprim / 2^k$ is likewise tight up to the
+  factor $2$: against the $D$ independent user keys each direct guess
+  matches some key with probability $D / 2^k$, so $\Nprim$ guesses
+  recover a user key---and distinguish---with probability
+  $\approx D\Nprim / 2^k$.
 \item \emph{$\RootColl_\tau(Q, s) = \binom{Q + s}{s} / 2^{\tau (s -
   1)}$.} Tight up to lower-order terms: it is the standard $s$-way
   multi-collision bound on a $\tau$-bit projection of $\ROflat$, and
