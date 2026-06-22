@@ -28,6 +28,52 @@ collision among the absorbed leaf tags---through the known-key leaf tag
 collision lemma (\Cref{lem:known-key-leaf-collision}); its
 public-permutation form is the headline \Cref{thm:tag-cmtds4}.
 
+The committing and discoverability arguments below rest on one structural
+fact, which we record first: distinct contexts reach distinct final root
+transcripts before any leaf tag is aggregated, so agreement among leaf tags
+cannot merge them.
+
+\begin{proposition}[Opening Triple Separation]
+\label{cor:triple-sep}
+If two \TW{} root computations have distinct $(K, N, A)$ triples, then
+their bridged final root transcript inputs under $\flatmap(\cdot)$ are
+distinct, regardless of whether each computation is an encryption or
+a decryption check on a common ciphertext.
+\end{proposition}
+
+\begin{proof}
+Suppose for contradiction that $\flatmap(R_i) = \flatmap(R_j)$. Since the
+bridge $\flatmap(\cdot)$ is injective on well-formed transcript prefixes
+(\Cref{lem:bridge-decode}), the native flattened inputs of the two
+final-root prefixes are equal. Then \Cref{lem:transcript-inj}
+recovers the full duplex-call sequence and reads off the pair
+$(\sigma,\sigph)$ for each call. The seven $4$-bit phase suffixes are
+pairwise distinct, so the \siginit, $\sigma_{\mathsf{ad}}^\pm$,
+$\sigma_{\mathsf{msg}}^\pm$, and (when present) $\sigma_{\mathsf{agg}}^\pm$
+calls in the recovered sequence are unambiguously identified. The
+aggregation phase is present exactly when $n \geq 1$, and
+$n = \leaves(C)$ is determined by the common ciphertext, so the two
+recovered sequences either both carry an aggregation phase or both omit
+it; either way the recovery of $(K, N, A)$ below uses only the
+\siginit and AD calls, which precede any message or aggregation block.
+
+Equality of the recovered sequences forces equality of the \siginit
+call, whose $\sigma$ is $\prfxroot \concat K \concat N$ with
+fixed-width $K$ and $N$, hence $K_i = K_j$ and $N_i = N_j$. It also
+forces equality of the recovered AD subsequences. By the AD bullet of
+\Cref{lem:transcript-inj} the associated-data phase contributes a
+$\sigadlast$-tagged block exactly when the associated data is nonempty,
+so the recovered sequences agree on the presence of the AD phase. If
+exactly one of $A_i, A_j$ were empty the recovered sequences would
+differ in the presence of a $\sigadlast$ call, contradicting their
+equality; hence either both are empty, giving $A_i = A_j = \varepsilon$,
+or both are nonempty, in which case the phase-recovery sub-claim of
+\Cref{lem:transcript-inj} inverts the $\rho$-byte-block partition map on
+the AD byte string and equal AD $\sigma$-block sequences imply
+$A_i = A_j$. In all cases $(K_i, N_i, A_i) = (K_j, N_j, A_j)$,
+contradicting the hypothesis of distinct triples.
+\end{proof}
+
 \begin{lemma}[Root tag Candidate Sequence]
 \label{lem:root-candidate-seq}
 Consider a random-oracle game of \Cref{sec:ro-model} in which the
