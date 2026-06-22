@@ -3,6 +3,10 @@
 // On AMD64, it reads the RDTSC counter directly (reference cycles, no scaling).
 // On ARM64, it reads CNTVCT_EL0 and scales to CPU cycles using CNTFRQ_EL0 and
 // the CPU frequency (auto-detected or via --freq).
+//
+// Unless --host=false is given, it also records the host environment (CPU,
+// caches, kernel, governor/turbo state, and ISA features) alongside the
+// numbers, so a run is a self-contained record of where it was measured.
 package main
 
 import (
@@ -53,6 +57,7 @@ func main() {
 	target := flag.Duration("target", 100*time.Millisecond, "minimum duration per calibration run")
 	format := flag.String("format", "table", "output format: table, csv, or json")
 	spread := flag.Bool("spread", true, "include min/Q1/median/Q3/max tables in table output")
+	host := flag.Bool("host", true, "record host/environment information alongside the results")
 	parseFlags()
 
 	if *nSamples < 1 {
@@ -62,6 +67,14 @@ func main() {
 	if *target <= 0 {
 		fmt.Fprintln(os.Stderr, "error: --target must be positive")
 		os.Exit(2)
+	}
+
+	// Collect host information before locking to the measurement thread; the
+	// probes shell out to lscpu/sysctl and should not run during timing.
+	var hi *hostInfo
+	if *host {
+		h := collectHostInfo()
+		hi = &h
 	}
 
 	runtime.LockOSThread()
@@ -135,11 +148,16 @@ func main() {
 
 	switch *format {
 	case "csv":
+		// Keep stdout pure CSV for downstream parsers; the host report, when
+		// requested, goes to stderr.
+		if hi != nil {
+			writeHostReport(os.Stderr, *hi)
+		}
 		outputCSV(results)
 	case "json":
-		outputJSON(results)
+		outputJSON(results, hi)
 	default:
-		outputTable(results, *freq, *spread)
+		outputTable(results, *freq, *spread, hi)
 	}
 }
 
@@ -242,7 +260,12 @@ func percentileSorted(xs []float64, p float64) float64 {
 	return xs[lo]*(1-frac) + xs[hi]*frac
 }
 
-func outputTable(results []result, freqGHz float64, spread bool) {
+func outputTable(results []result, freqGHz float64, spread bool, host *hostInfo) {
+	if host != nil {
+		writeHostReport(os.Stdout, *host)
+		fmt.Println()
+	}
+
 	fmt.Printf("cycles/byte (%s/%s", runtime.GOOS, runtime.GOARCH)
 	if freqGHz > 0 {
 		fmt.Printf(", %.2f GHz", freqGHz)
@@ -365,10 +388,17 @@ func formatGBps(v float64) string {
 	return fmt.Sprintf("%.4f", v)
 }
 
-func outputJSON(results []result) {
+// jsonReport bundles the host environment with the measurements so the JSON
+// output is a single self-contained record.
+type jsonReport struct {
+	Host    *hostInfo `json:"host,omitempty"`
+	Results []result  `json:"results"`
+}
+
+func outputJSON(results []result, host *hostInfo) {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
-	_ = enc.Encode(results)
+	_ = enc.Encode(jsonReport{Host: host, Results: results})
 }
 
 type size struct {
