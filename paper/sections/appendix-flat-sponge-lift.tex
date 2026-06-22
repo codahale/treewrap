@@ -3,9 +3,8 @@
 
 This appendix expands the sketch of \Cref{sec:lift-sketch} into the
 full argument: it supplies the flat-sponge lift machinery
-(\Cref{lem:lift-bound,lem:derived-adversary}) invoked by the headline
-theorems of \Cref{sec:headline}, and the public-permutation
-CMTDs-4 corollary (\Cref{cor:cmtds4-pp}) consumed by
+(\Cref{lem:lift-bound,lem:derived-adversary,cor:lift-application}) invoked
+by the headline theorems of \Cref{sec:headline} and by
 \Cref{app:committing-transfer}.
 
 \subsection{Simulator Convention}
@@ -230,13 +229,14 @@ mu-ind, construction-interface forwarding preserves the
 $\mathsf{New}$ calls and these caps user by user.
 \end{proof}
 
-\subsection{Lift Application and Public-Permutation Corollaries}
+\subsection{Lift Application}
 \label{app:lift-corollaries}
 
 The lift bound of \Cref{lem:lift-bound} and the derived-adversary
 construction of \Cref{lem:derived-adversary} combine into a single
 template, stated once and then instantiated by the headline theorems of
-\Cref{sec:headline} and the public-permutation corollaries below.
+\Cref{sec:headline} and the committing-notion bounds of
+\Cref{app:committing-transfer}.
 
 \begin{corollary}[Lift Application]
 \label{cor:lift-application}
@@ -291,84 +291,3 @@ resulting random-oracle advantage into the privacy and INT-CTXT
 envelopes of \Cref{sec:thms-pp}, adding $\Lift_c(\Ntot)$ a single time
 rather than the two copies that lifting privacy and INT-CTXT separately
 would incur.
-
-\begin{corollary}[Public-Permutation CMTDs-4]
-\label{cor:cmtds4-pp}
-For every $s \geq 2$ and every $s$-way CMTDs-4 adversary
-$\mathcal{A}$ against \TW{} with $\Nprim$ direct primitive queries and
-total cost at most $\Ntot$ (both as in \Cref{sec:resources}),
-\[
-  \Advcmtds{4}_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot) + \RootColl_{\tauroot}(\Nprim, s)
-  = \Lift_c(\Ntot) + \frac{\binom{\Nprim + s}{s}}{2^{\tauroot(s - 1)}}.
-\]
-\end{corollary}
-
-\begin{proof}
-The CMTDs-4 challenger exposes no construction interface during
-$\mathcal{A}$'s run; on executions that pass the early rejecting checks
-it performs $s$ deterministic decryption checks on the common candidate
-ciphertext and opening tuples. By \Cref{thm:cmtds4-ro}, every
-random-oracle CMTDs-4 adversary $\mathcal{B}$ satisfies
-$\Advcmtds{4}_\RO(\mathcal{B}) \leq
-\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$, which is nondecreasing in
-$\qRO(\mathcal{B})$ by monotonicity of $\binom{\cdot + s}{s}$. The Lift
-Application corollary (\Cref{cor:lift-application}) then gives the claim.
-\end{proof}
-
-\begin{corollary}[Public-Permutation Tag-CMTDs-4]
-\label{cor:tag-cmtds4-pp}
-For every $s \geq 2$ and every $s$-way tag-CMTDs-4 adversary
-$\mathcal{A}$ against \TW{} with $\Nprim$ direct primitive queries,
-total cost at most $\Ntot$, and distinct-final-leaf-transcript cap
-$\Nleaf$ (all as in \Cref{sec:resources}),
-\[
-  \Advtagcmtds{4}_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot)
-  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf)
-  + \RootColl_{\tauroot}(\Nprim, s).
-\]
-\end{corollary}
-
-\begin{proof}
-The tag-CMTDs-4 challenger exposes no construction interface during
-$\mathcal{A}$'s run; on executions that pass the early rejecting checks
-it performs the $s$ deterministic decryption checks on the submitted
-bodies and common tag. By \Cref{thm:tag-cmtds4-ro}, every
-random-oracle tag-CMTDs-4 adversary $\mathcal{B}$ satisfies
-\[
-  \Advtagcmtds{4}_\RO(\mathcal{B})
-  \leq
-  \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))
-  + \RootColl_{\tauroot}(\qRO(\mathcal{B}),s),
-\]
-which is nondecreasing in both resource arguments. The Lift Application
-corollary (\Cref{cor:lift-application}) gives the claim.
-\end{proof}
-
-\begin{corollary}[Public-Permutation CDY]
-\label{cor:cdy-pp}
-For every context-discoverability adversary $\mathcal{A}$ against \TW{}
-with $\Nprim$ direct primitive queries and total cost at most $\Ntot$
-(both as in \Cref{sec:resources}),
-\[
-  \Advcdy_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
-  = \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}.
-\]
-\end{corollary}
-
-\begin{proof}
-The CDY challenger exposes no construction interface during
-$\mathcal{A}$'s run; on executions that pass the early rejecting checks
-it performs the single deterministic decryption check on $C \concat T^*$
-for the target $T^*$ fixed in advance. By \Cref{thm:cdy-ro}, every
-random-oracle CDY adversary $\mathcal{B}$ satisfies $\Advcdy_\RO(\mathcal{B})
-\leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))$, nondecreasing in
-$\qRO(\mathcal{B})$. The Lift Application corollary
-(\Cref{cor:lift-application}), whose target-parameterized case covers the
-fixed $T^*$, then gives the claim.
-\end{proof}

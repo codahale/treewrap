@@ -169,10 +169,14 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
 \end{theorem}
 
 \begin{proof}
-Immediate from the public-permutation corollary
-\Cref{cor:tag-cmtds4-pp}, which lifts the random-oracle bound of
-\Cref{thm:tag-cmtds4-ro}. The theorem allows the $s$ openings to use
-distinct ciphertext bodies sharing only the final root tag; the
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+tag-CMTDs-4 game, the derived random-oracle adversary $\mathcal{B}$ has
+$\qRO(\mathcal{B}) \leq \Nprim$ and $\nleaf(\mathcal{B}) \leq \Nleaf$. The
+random-oracle bound of \Cref{thm:tag-cmtds4-ro} is nondecreasing in both
+$\qRO(\mathcal{B})$ and $\nleaf(\mathcal{B})$, so the monotone form of
+\Cref{cor:lift-application} gives the stated bound. The theorem allows the
+$s$ openings to use distinct ciphertext bodies sharing only the final root
+tag; the
 $\LeafColl$ term accounts for the only extra way distinct bodies can
 merge before the root tag is compared---a collision among the leaf tags
 absorbed by the root transcript.
@@ -193,9 +197,12 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
 \end{corollary}
 
 \begin{proof}
-Immediate from the public-permutation corollary \Cref{cor:cmtds4-pp},
-which lifts the random-oracle root-collision bound of
-\Cref{thm:cmtds4-ro}. The CMTDs-4 game is the all-bodies-equal restriction of the
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+CMTDs-4 game, the derived random-oracle adversary $\mathcal{B}$ has
+$\qRO(\mathcal{B}) \leq \Nprim$, and the random-oracle root-collision
+bound of \Cref{thm:cmtds4-ro} is nondecreasing in $\qRO(\mathcal{B})$, so
+the monotone form of \Cref{cor:lift-application} gives the stated bound.
+The CMTDs-4 game is the all-bodies-equal restriction of the
 tag-CMTDs-4 game, but the sharper no-$\LeafColl$ bound is not obtained by
 specializing the displayed bound of \Cref{thm:tag-cmtds4}: its
 nonnegative $\LeafColl$ summand survives any restriction of the adversary
@@ -242,9 +249,13 @@ with the resources of \Cref{sec:resources},
 \end{theorem}
 
 \begin{proof}
-Immediate from the public-permutation corollary \Cref{cor:cdy-pp},
-which lifts the random-oracle bound of \Cref{thm:cdy-ro} through the
-flat-sponge transform. Where \Cref{cor:cmtds4} bounds the probability
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+context-discoverability game---whose target-parameterized case covers the
+tag $T^*$ fixed in advance---the derived random-oracle adversary
+$\mathcal{B}$ has $\qRO(\mathcal{B}) \leq \Nprim$, and the random-oracle
+bound of \Cref{thm:cdy-ro} is nondecreasing in $\qRO(\mathcal{B})$, so the
+monotone form of \Cref{cor:lift-application} gives the stated bound. Where
+\Cref{cor:cmtds4} bounds the probability
 that $s$ distinct contexts collide on one root tag, this bounds the
 probability that a single context reaches a root tag fixed in advance;
 the candidate-collision argument of \Cref{thm:cmtds4-ro} is replaced by

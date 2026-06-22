@@ -14,20 +14,19 @@ concrete bounds.
 
 First, the random-oracle CMTDs-4 bound (\Cref{thm:cmtds4-ro}) is the
 pure $s$-way root tag collision case; the headline CMTDs-4 statement
-(\Cref{cor:cmtds4}) is its flat-sponge lift (\Cref{cor:cmtds4-pp}), and
+(\Cref{cor:cmtds4}) is its flat-sponge lift, and
 \Cref{app:committing-transfer} forwards the remaining committing notions
 to the same root-collision bound. Second, the random-oracle CDY
 bound (\Cref{thm:cdy-ro}) runs the same argument with the $s$-way
 collision replaced by a preimage to a fixed target tag, underlying the
-headline CDY statement (\Cref{thm:cdy}) through \Cref{cor:cdy-pp}.
+headline CDY statement (\Cref{thm:cdy}).
 Third, the tag-projected CMTDs-4 bound (\Cref{thm:tag-cmtds4-ro}) keeps
 the root tag collision argument intact but, because compact openings may
 use different ciphertext bodies under one common tag, first rules out the
 only other way distinct bodies can reach a common root transcript---a
 collision among the absorbed leaf tags---through the known-key leaf tag
 collision lemma (\Cref{lem:known-key-leaf-collision}); its
-public-permutation form is \Cref{cor:tag-cmtds4-pp}, feeding the headline
-\Cref{thm:tag-cmtds4}.
+public-permutation form is the headline \Cref{thm:tag-cmtds4}.
 
 \begin{lemma}[Root-Tag Candidate Sequence]
 \label{lem:root-candidate-seq}
