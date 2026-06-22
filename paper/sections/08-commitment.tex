@@ -48,7 +48,7 @@ such that
   the $i$-th root tag answer is sampled;
 \item no candidate's $\ROflat$ value is read before its append step, so
   the sequence satisfies the predictability and unrevealed-value premises
-  of \Cref{lem:adaptive-candidate-collision,lem:adaptive-candidate-preimage};
+  of \Cref{lem:adaptive-candidate};
   and
 \item its length is at most $\qRO(\mathcal{B}) + m$.
 \end{enumerate}
@@ -101,7 +101,7 @@ $\Dec_{K_i}^\RO(N_i,A_i,C \concat T)$ on the one common body
 $C \concat T$, reaching final root transcripts $R_1,\dots,R_s$. The
 Root tag Candidate Sequence lemma (\Cref{lem:root-candidate-seq}) yields
 a sequence of length at most $\qRO(\mathcal{B}) + s$ meeting the premises
-of \Cref{lem:adaptive-candidate-collision} and containing each
+of \Cref{lem:adaptive-candidate} and containing each
 $\flatmap(R_i)$.
 
 On a winning execution the pairwise-full-input check passed, so the
@@ -114,7 +114,7 @@ $\flatmap(R_1),\dots,\flatmap(R_s)$ are therefore pairwise distinct; leaf
 tag collisions cannot merge them. Since every decryption check accepts,
 the $\tauroot$-bit projections at these $s$ distinct candidates all equal
 the supplied tag $T$, so the win event is contained in the $s$-way
-candidate-collision event. \Cref{lem:adaptive-candidate-collision} with
+candidate-collision event. \Cref{lem:adaptive-candidate} with
 $Q=\qRO(\mathcal{B})$ and $\tau=\tauroot$ gives
 \[
   \Advcmtds{4}_\RO(\mathcal{B})
@@ -198,7 +198,7 @@ decryption checks $\Dec_{K_i}^{\RO}(N_i,A_i,C_i \concat T)$, reaching
 final root transcripts $R_1,\dots,R_s$. The Root tag Candidate Sequence
 lemma (\Cref{lem:root-candidate-seq}) yields a sequence of length at most
 $\qRO(\mathcal{B})+s$ meeting the premises of
-\Cref{lem:adaptive-candidate-collision} and containing each
+\Cref{lem:adaptive-candidate} and containing each
 $\flatmap(R_i)$.
 
 On a winning execution with $\neg\badleaf^\star$, the full tuples
@@ -224,7 +224,7 @@ Since every decryption check accepts, the $\tauroot$-bit projections at
 these $s$ distinct final-root candidates all equal the supplied tag
 $T$. The win event under $\neg\badleaf^\star$ is contained in the
 $s$-way root candidate-collision event, which
-\Cref{lem:adaptive-candidate-collision} bounds by
+\Cref{lem:adaptive-candidate} bounds by
 $\RootColl_{\tauroot}(\qRO(\mathcal{B}),s)$. Adding the
 $\badleaf^\star$ probability gives the theorem.
 \end{proof}
@@ -250,7 +250,7 @@ check $\Dec_{K}^\RO(N,A,C \concat T^*)$, reaching a final root transcript
 $R$. The Root tag Candidate Sequence lemma
 (\Cref{lem:root-candidate-seq}) yields a sequence of length at most
 $\qRO(\mathcal{B}) + 1$ meeting the premises of
-\Cref{lem:adaptive-candidate-preimage} and containing $\flatmap(R)$; with
+\Cref{lem:adaptive-candidate} and containing $\flatmap(R)$; with
 a single context no pairwise distinctness is needed.
 
 On a winning execution the precheck passes and the single decryption
@@ -260,7 +260,7 @@ final root transcript $R$; in the random-oracle model
 $T' = \bigl\lfloor \ROflat(\flatmap(R)) \bigr\rfloor_{\tauroot}$. Hence
 the win event is contained in the event that some candidate's
 $\tauroot$-bit projection equals the fixed target $T^*$. Applying
-\Cref{lem:adaptive-candidate-preimage} with $Q = \qRO(\mathcal{B})$,
+\Cref{lem:adaptive-candidate} with $Q = \qRO(\mathcal{B})$,
 $\tau = \tauroot$, and $t = T^*$ gives
 \[
   \Advcdy_\RO(\mathcal{B})

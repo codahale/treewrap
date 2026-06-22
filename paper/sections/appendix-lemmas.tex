@@ -89,7 +89,7 @@ corresponding accounting argument.
     \Cref{sec:cmtds3,app:committing-transfer} is mediated by
     \Cref{cor:triple-sep} for final-root distinctness and
     \Cref{cor:output-sep} for candidate-sequence filtering; the edge
-    from \Cref{lem:adaptive-candidate-collision} records the collision
+    from \Cref{lem:adaptive-candidate} records the collision
     accounting used by the CMTDs-4 and CMTs proofs. The edge from
     \Cref{lem:transcript-inj} into \Cref{lem:freshness} uses
     \Cref{cor:output-sep}; the verification-first root tag guessing
@@ -554,104 +554,70 @@ aggregation phase, so the $\Rmsg^+$ value is exposed as a tag only on
 the $n = 0$ path; since $n = \leaves(C)$ is fixed by $\|C\|$, the two
 uses never coincide on a single ciphertext.
 
-\subsection{Adaptive Candidate Collisions}
+\subsection{Adaptive Candidate Bounds}
 \label{app:lem-candidate-collisions}
 
-\begin{lemma}[Adaptive Candidate Collision]
-\label{lem:adaptive-candidate-collision}
-Fix $s \geq 2$, a projection length $\tau$, and a cap $Q$. Consider
-any interaction with a lazy random oracle $\ROflat : \bits^* \to
-\bits^\infty$ that builds a sequence of distinct \emph{candidate}
-inputs $Y_1,\dots,Y_m$ with $m \leq Q+s$. The process may make
-arbitrary non-candidate oracle queries and may choose each candidate
-adaptively from the full prior transcript. Whenever a new candidate
-$Y_j$ is appended, two premises hold: \emph{predictability}---both the
-decision to append and the string $Y_j$ are determined by the
-transcript preceding the append step---and \emph{unrevealed
-value}---no oracle lookup before the append step has requested a
-positive number of bits of $\ROflat(Y_j)$; zero-length lookups at
-$Y_j$ are permitted. Let
-$\mathsf{coll}_{s,\tau}$ be the event that some
-$s$ distinct candidates have equal $\tau$-bit projections:
-\[
-  \bigl\lfloor \ROflat(Y_{i_1}) \bigr\rfloor_\tau
-  =
-  \cdots
-  =
-  \bigl\lfloor \ROflat(Y_{i_s}) \bigr\rfloor_\tau
-  \quad
-  \text{for some } 1 \leq i_1 < \cdots < i_s \leq m .
-\]
-Then
-\[
-  \Pr[\mathsf{coll}_{s,\tau}]
-  \leq
-  \binom{Q+s}{s} \cdot 2^{-\tau(s-1)}.
-\]
+\begin{lemma}[Adaptive Candidate Collision and Preimage]
+\label{lem:adaptive-candidate}
+Consider any interaction with a lazy random oracle $\ROflat : \bits^* \to
+\bits^\infty$ that builds a sequence of distinct \emph{candidate} inputs
+$Y_1,\dots,Y_m$. The process may make arbitrary non-candidate oracle
+queries and may choose each candidate adaptively from the full prior
+transcript. Whenever a new candidate $Y_j$ is appended, two premises hold:
+\emph{predictability}---both the decision to append and the string $Y_j$
+are determined by the transcript preceding the append step---and
+\emph{unrevealed value}---no oracle lookup before the append step has
+requested a positive number of bits of $\ROflat(Y_j)$; zero-length lookups
+at $Y_j$ are permitted. Fix a projection length $\tau$ and a cap $Q$.
+\begin{enumerate}
+\item \emph{Collision.} For every $s \geq 2$, if $m \leq Q + s$ then the
+  probability $\Pr[\mathsf{coll}_{s,\tau}]$ that some $s$ distinct
+  candidates have equal $\tau$-bit projections,
+  \[
+    \bigl\lfloor \ROflat(Y_{i_1}) \bigr\rfloor_\tau = \cdots =
+    \bigl\lfloor \ROflat(Y_{i_s}) \bigr\rfloor_\tau
+    \quad \text{for some } 1 \leq i_1 < \cdots < i_s \leq m,
+  \]
+  satisfies
+  $\Pr[\mathsf{coll}_{s,\tau}] \leq \binom{Q+s}{s} \cdot 2^{-\tau(s-1)}$.
+\item \emph{Preimage.} For every target $t \in \bits^\tau$ chosen
+  independently of $\ROflat$, if $m \leq Q+1$ then the probability
+  $\Pr[\mathsf{pre}_{\tau,t}]$ that some candidate's $\tau$-bit projection
+  equals $t$, i.e.\ $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$ for
+  some $1 \leq j \leq m$, satisfies
+  $\Pr[\mathsf{pre}_{\tau,t}] \leq (Q+1) \cdot 2^{-\tau}$.
+\end{enumerate}
 \end{lemma}
 
 \begin{proof}
-For a fixed position set $I = \{i_1 < \cdots < i_s\}
+Both parts expose the interaction in chronological order and sample each
+candidate's $\ROflat$ value lazily at its append step, which the premises
+license: when $Y_j$ is appended its string is fixed by the prior
+transcript (predictability) and no bit of $\ROflat(Y_j)$ has yet been
+revealed (unrevealed value), so $\ROflat(Y_j)$ may be drawn then, uniform
+and independent of everything so far.
+
+\emph{Collision.} For a fixed position set $I = \{i_1 < \cdots < i_s\}
 \subseteq \{1,\dots,Q+s\}$, let $E_I$ be the event that these candidate
-positions exist and their $\tau$-bit projections are all equal. Expose
-the interaction in chronological order. Condition on any
-positive-probability prefix immediately before candidate position
-$i_r$ is appended, for $r \geq 2$, and on the values sampled at the
-earlier candidate positions in $I$. By the predictability premise,
-that prefix determines $Y_{i_r}$; by the unrevealed-value premise, no
-bit of $\ROflat(Y_{i_r})$ has been revealed in it, so under lazy
-sampling the value of $\ROflat(Y_{i_r})$ may be sampled after the
-prefix is fixed and is uniform and independent of the
-conditioning. Its $\tau$-bit projection therefore equals the already fixed
-projection of $Y_{i_1}$ with probability $2^{-\tau}$. Multiplying over
-$r = 2,\dots,s$ gives
-\[
-  \Pr[E_I] \leq 2^{-\tau(s-1)}.
-\]
-If some position in $I$ is never appended, then $E_I$ is false, so the
-same bound applies. There are $\binom{Q+s}{s}$ possible position sets,
-and a union bound over them gives the claim.
-\end{proof}
+positions exist and their $\tau$-bit projections are all equal. Condition
+on any positive-probability prefix immediately before position $i_r$ is
+appended, for $r \geq 2$, and on the values sampled at the earlier
+positions in $I$. By the above, $\ROflat(Y_{i_r})$ is then uniform and
+independent of the conditioning, so its $\tau$-bit projection equals the
+already fixed projection of $Y_{i_1}$ with probability $2^{-\tau}$.
+Multiplying over $r = 2,\dots,s$ gives $\Pr[E_I] \leq 2^{-\tau(s-1)}$; if
+some position in $I$ is never appended then $E_I$ is false and the bound
+still holds. A union bound over the $\binom{Q+s}{s}$ position sets gives
+the claim.
 
-\begin{lemma}[Adaptive Candidate Preimage]
-\label{lem:adaptive-candidate-preimage}
-Fix a projection length $\tau$ and a cap $Q$, and a target $t \in
-\bits^\tau$ chosen independently of $\ROflat$. Consider any interaction
-with a lazy random oracle $\ROflat : \bits^* \to \bits^\infty$ that
-builds a sequence of distinct \emph{candidate} inputs $Y_1,\dots,Y_m$
-with $m \leq Q+1$ under the
-same \emph{predictability} and \emph{unrevealed-value} premises as
-\Cref{lem:adaptive-candidate-collision}. Let $\mathsf{pre}_{\tau,t}$ be
-the event that some candidate's $\tau$-bit projection equals $t$:
-\[
-  \bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t
-  \quad
-  \text{for some } 1 \leq j \leq m .
-\]
-Then
-\[
-  \Pr[\mathsf{pre}_{\tau,t}]
-  \leq
-  (Q+1) \cdot 2^{-\tau}.
-\]
-\end{lemma}
-
-\begin{proof}
-For a fixed position $j \in \{1,\dots,Q+1\}$, let $E_j$ be the event
-that candidate position $j$ exists and
-$\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$. Expose the
-interaction in chronological order and condition on any
-positive-probability prefix immediately before candidate position $j$
-is appended; the target $t$ is a constant. By the
-predictability premise the prefix determines $Y_j$; by the
-unrevealed-value premise no bit of $\ROflat(Y_j)$ has been revealed in
-it, so under lazy sampling the value of
-$\ROflat(Y_j)$ may be sampled after the prefix is fixed and is uniform
-and independent of the conditioning. Hence the $\tau$-bit projection of
-$Y_j$ equals $t$ with
-probability $2^{-\tau}$. If position $j$ is never appended, then $E_j$
-is false, so the same bound applies. A union bound over the $Q+1$
-positions gives the claim.
+\emph{Preimage.} For a fixed position $j \in \{1,\dots,Q+1\}$, let $E_j$
+be the event that position $j$ exists and
+$\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$. Condition on any
+positive-probability prefix immediately before $Y_j$ is appended; the
+target $t$ is a constant. By the above, $\ROflat(Y_j)$ is uniform and
+independent of the conditioning, so its $\tau$-bit projection equals $t$
+with probability $2^{-\tau}$. If position $j$ is never appended, $E_j$ is
+false. A union bound over the $Q+1$ positions gives the claim.
 \end{proof}
 
 \subsection{Adaptive Key Tests}
