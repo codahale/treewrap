@@ -23,8 +23,8 @@ discoverability is a recent notion \cite{MLGR23}, so its absence of entries
 reflects the state of the literature rather than a negative result; the schemes
 \cite{MLGR23} do break on discoverability (\textsf{GCM}, \textsf{CCM},
 \textsf{EAX}, \textsf{SIV}, \textsf{OCB3}) are not among the rows above.
-The table does not separately track tag-projected compactness, since that
-projection strengthening has not been systematically analyzed for the comparison
+The table does not separately track tag-committing compactness, since that
+strengthening has not been systematically analyzed for the comparison
 schemes.
 
 \begin{table}[t]
@@ -91,7 +91,7 @@ guarantees of \Cref{sec:cmtds3} do not rest on soundness of a tree coding at all
 distinct $(K, N, A)$ triples already diverge in the root initialization and
 associated-data calls, before any leaf tag is aggregated (\Cref{cor:triple-sep}),
 so agreement among leaf tags cannot merge distinct contexts. The leaf encoding
-enters only the tag-projected bound of \Cref{thm:tag-cmtds4}, and there only
+enters only the T-CMTDs-4 bound of \Cref{thm:tag-cmtds4}, and there only
 through its explicit leaf tag collision term. A Sakura coding would re-establish
 parsing facts \TW{} already possesses, and would leave these bounds unchanged.
 

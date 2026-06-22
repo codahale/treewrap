@@ -59,11 +59,11 @@ into the root as the leaves complete rather than buffered together, so the
 memory footprint remains constant in the message length.
 
 We analyze \TW{} in the public-permutation model and obtain concrete bounds for
-the standard and tag-projected notions: all-in-one authenticated encryption in the sense of
+the standard and tag-committing notions: all-in-one authenticated encryption in the sense of
 \cite{RS06}, its multi-user indistinguishability lift in the sense of
 \cite{BT16}, and both facets of commitment: the collision facet---$s$-way
 committing security in the strongest full-input sense (\textsf{CMTDs-4}) of
-\cite{BH22} and its tag-projected compact strengthening---and the preimage
+\cite{BH22} and its tag-committing compact strengthening---and the preimage
 facet, context discoverability in the sense of \cite{MLGR23}. Each bound is proved first against an
 intermediate random oracle and then transferred to the real permutation by the
 flat-sponge lift of \cite{BDPV08}. At the implemented parameters
@@ -101,7 +101,7 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   \textsf{CMTDs-4} committing security---commitment to the full
   $(K, N, A, M)$ input, for any number $s \geq 2$ of claimed openings---with a
   concrete root-collision bound (\Cref{cor:cmtds4}), and that it satisfies the
-  stronger tag-projected notion, in which the $256$-bit root tag alone is a
+  stronger tag-committing notion, in which the $256$-bit root tag alone is a
   binding commitment to that input even when the claimed openings use distinct
   ciphertext bodies (\Cref{thm:tag-cmtds4}), matching the compactly committing
   AEAD goal of \cite{GLR17}. We derive the remaining
@@ -227,11 +227,11 @@ multi-user indistinguishability notion of \cite{BT16}.
 \Cref{sec:security-model} fixes the public-permutation games, the
 intermediate random-oracle model, and the resource accounting that
 all later bounds reference. \Cref{sec:main-results} states the
-headline AE, mu-ind, CMTDs-4, tag-CMTDs-4, and CDY theorems and their
+headline AE, mu-ind, CMTDs-4, T-CMTDs-4, and CDY theorems and their
 concrete \TW{}-parameter forms; \Cref{sec:privacy,sec:authenticity}
 prove the random-oracle privacy and INT-CTXT bounds that feed those
 theorems, and \Cref{sec:cmtds3} proves the random-oracle
-CMTDs-4, tag-CMTDs-4, and CDY bounds. \Cref{sec:performance} reports the
+CMTDs-4, T-CMTDs-4, and CDY bounds. \Cref{sec:performance} reports the
 performance of the reference and optimized implementations.
 \Cref{sec:discussion} compares \TW{} to prior sponge AEADs and
 committing constructions and discusses limitations.

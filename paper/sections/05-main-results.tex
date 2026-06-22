@@ -81,7 +81,7 @@ The known-key leaf tag collision term is
   \LeafColl_\tau(Q) = \binom{Q}{2} \big/ 2^\tau.
 \]
 It is the pairwise birthday bound on $\tau$-bit leaf tag projections
-used by the tag-projected CMTDs-4 theorem. Unlike the hidden-key
+used by the T-CMTDs-4 theorem. Unlike the hidden-key
 leaf collision term in the INT-CTXT bound, the compact committing game
 has adversary-supplied keys, so direct primitive queries can pre-read
 candidate leaf tag points. The random-oracle proof therefore counts
@@ -94,7 +94,7 @@ $Q=\Nprim+\Nleaf$.
 
 The headline theorems of \Cref{sec:headline} feed on five
 random-oracle-model bounds---the privacy and INT-CTXT envelopes, the
-CMTDs-4 bound, the tag-CMTDs-4 bound, and the CDY bound---whose proofs occupy
+CMTDs-4 bound, the T-CMTDs-4 bound, and the CDY bound---whose proofs occupy
 \Cref{sec:privacy,sec:authenticity,sec:cmtds3}; the remaining
 committing-notion bounds live in \Cref{app:committing-transfer}.
 Resource-indexed
@@ -156,8 +156,8 @@ full inputs yield pairwise distinct $(K, N, A)$ triples; by Opening
 Triple Separation (\Cref{cor:triple-sep}) these reach distinct final root
 transcripts before any leaf tag is aggregated.
 
-\paragraph{Tag-CMTDs-4 bound.}
-The flat-RO tag-CMTDs-4 theorem of \Cref{sec:cmtds3} is
+\paragraph{T-CMTDs-4 bound.}
+The flat-RO T-CMTDs-4 theorem of \Cref{sec:cmtds3} is
 \[
   \Advtagcmtds{4}_{\RO}(\mathcal{B})
   \leq
@@ -166,7 +166,7 @@ The flat-RO tag-CMTDs-4 theorem of \Cref{sec:cmtds3} is
 \]
 The root-collision part is the same final-root candidate argument as
 CMTDs-4. The additional known-key leaf-collision term is needed because
-tag-projected openings may use different ciphertext bodies; absent such
+tag-committing openings may use different ciphertext bodies; absent such
 a leaf tag collision, pairwise distinct full inputs force pairwise
 distinct final root transcripts before the common tag is compared.
 
@@ -204,7 +204,7 @@ primitive query induce at most one $\ROflat$ call, so
 The random-oracle envelopes of \Cref{sec:thms-pp} are therefore
 instantiated at $\Nprim$, not $\Ntot$, in the headline theorems---as is
 the CMTDs-4 candidate-sequence length bound $m \leq \Nprim + s$ of
-\Cref{sec:cmtds3}, the tag-CMTDs-4 leaf/root candidate bounds, and the
+\Cref{sec:cmtds3}, the T-CMTDs-4 leaf/root candidate bounds, and the
 direct CMTs-$\ell$ bounds of
 \Cref{app:committing-transfer}, whose challenger encryption checks are
 construction-internal and counted in $N$, not in $\Nprim$.
@@ -218,7 +218,7 @@ security \cite{RS06}, its multi-user indistinguishability lift
 \cite{BT16}, and the two facets of commitment security
 (\Cref{sec:commit-defs})---$s$-way CMTDs-4 committing security \cite{BH22}
 and context discoverability \cite{MLGR23}---which follow from the same
-root tag and are stated co-equally. We also state tag-projected
+root tag and are stated co-equally. We also state tag-committing
 strengthenings showing that the root tag alone is the compact commitment
 target. For
 the AE-style notions the ideal side
@@ -361,9 +361,9 @@ Combining with the $\mathsf{coll}$ penalty $D(D-1)/2^{k+1}$ and
 $\Lift_c(\Ntot)$ yields the stated bound.
 \end{proof}
 
-\begin{theorem}[Tag-Projected CMTDs-4 Committing Security]
+\begin{theorem}[T-CMTDs-4 Committing Security]
 \label{thm:tag-cmtds4}
-For every $s \geq 2$ and every $s$-way tag-CMTDs-4
+For every $s \geq 2$ and every $s$-way T-CMTDs-4
 adversary $\mathcal{A}$ against \TW{} with the resources of
 \Cref{sec:resources},
 \[
@@ -377,7 +377,7 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
 
 \begin{proof}
 By the Lift Application corollary (\Cref{cor:lift-application}) for the
-tag-CMTDs-4 game, the derived random-oracle adversary $\mathcal{B}$ has
+T-CMTDs-4 game, the derived random-oracle adversary $\mathcal{B}$ has
 $\qRO(\mathcal{B}) \leq \Nprim$ and $\nleaf(\mathcal{B}) \leq \Nleaf$. The
 random-oracle bound of \Cref{thm:tag-cmtds4-ro} is nondecreasing in both
 $\qRO(\mathcal{B})$ and $\nleaf(\mathcal{B})$, so the monotone form of
@@ -410,7 +410,7 @@ $\qRO(\mathcal{B}) \leq \Nprim$, and the random-oracle root-collision
 bound of \Cref{thm:cmtds4-ro} is nondecreasing in $\qRO(\mathcal{B})$, so
 the monotone form of \Cref{cor:lift-application} gives the stated bound.
 The CMTDs-4 game is the all-bodies-equal restriction of the
-tag-CMTDs-4 game, but the sharper no-$\LeafColl$ bound is not obtained by
+T-CMTDs-4 game, but the sharper no-$\LeafColl$ bound is not obtained by
 specializing the displayed bound of \Cref{thm:tag-cmtds4}: its
 nonnegative $\LeafColl$ summand survives any restriction of the adversary
 class. The sharper bound instead comes from the dedicated root-collision
@@ -500,7 +500,7 @@ following closed-form bounds.
   + \frac{D(D - 1) + \Nleaf(\Nleaf - 1)}{2^{257}}.
 \]
 
-\paragraph{$s$-way tag-projected CMTDs-4 committing security.}
+\paragraph{$s$-way T-CMTDs-4 committing security.}
 For every $s \geq 2$,
 \[
   \Advtagcmtds{4}_\TW(\mathcal{A})
@@ -588,7 +588,7 @@ Notion & Dominant term & At the cap \\
 \midrule
 All-in-one AE & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 Multi-user ind. & $2D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
-Tag-CMTDs-4 & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+T-CMTDs-4 & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 CMTDs-4 & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 Context discoverability & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 \bottomrule
