@@ -2,7 +2,7 @@
 \label{sec:cmtds3}
 
 All three guarantees of this section rest on one construction, isolated
-below as the Root-Tag Candidate Sequence lemma
+below as the Root tag Candidate Sequence lemma
 (\Cref{lem:root-candidate-seq}): a chronological candidate sequence of
 root tag inputs, whose collision or preimage probability the adaptive
 lemmas of \Cref{app:lemmas} bound, controlling the chance that distinct
@@ -28,14 +28,14 @@ collision among the absorbed leaf tags---through the known-key leaf tag
 collision lemma (\Cref{lem:known-key-leaf-collision}); its
 public-permutation form is the headline \Cref{thm:tag-cmtds4}.
 
-\begin{lemma}[Root-Tag Candidate Sequence]
+\begin{lemma}[Root tag Candidate Sequence]
 \label{lem:root-candidate-seq}
 Consider a random-oracle game of \Cref{sec:ro-model} in which the
 adversary $\mathcal{B}$ first makes direct $\ROflat$ queries and then
 outputs values on which the challenger runs $m \geq 1$ deterministic
 encryption or decryption checks, the $i$-th reaching a final root transcript $R_i$
 whose root tag is read by a single $\ROflat$ lookup at $\flatmap(R_i)$.
-Every execution then admits a chronological sequence of root-tag inputs
+Every execution then admits a chronological sequence of root tag inputs
 such that
 \begin{enumerate}
 \item each distinct direct query whose input $Y$ decodes under
@@ -70,7 +70,7 @@ candidate, giving~(1).
 If the challenger reaches its $m$ checks, append $\flatmap(R_i)$
 immediately before the $i$-th root tag answer is sampled, unless it is
 already present. The intermediate $\ROflat$ lookups of check $i$ lie at
-non-root-tag output points, so by \Cref{cor:output-sep} they do not read
+non-root tag output points, so by \Cref{cor:output-sep} they do not read
 $\flatmap(R_i)$. If $\flatmap(R_i)$ was touched earlier---by a direct
 query or by an earlier check $j < i$---then \Cref{lem:bridge-decode} and
 \Cref{cor:output-sep} make that earlier access a final-root lookup at the
@@ -99,7 +99,7 @@ rejecting on any failed syntax, message-length, or pairwise-full-input
 check, its challenger performs $m = s$ deterministic decryption checks
 $\Dec_{K_i}^\RO(N_i,A_i,C \concat T)$ on the one common body
 $C \concat T$, reaching final root transcripts $R_1,\dots,R_s$. The
-Root-Tag Candidate Sequence lemma (\Cref{lem:root-candidate-seq}) yields
+Root tag Candidate Sequence lemma (\Cref{lem:root-candidate-seq}) yields
 a sequence of length at most $\qRO(\mathcal{B}) + s$ meeting the premises
 of \Cref{lem:adaptive-candidate-collision} and containing each
 $\flatmap(R_i)$.
@@ -195,7 +195,7 @@ $\neg\badleaf^\star$.
 After rejecting on any failed syntax, message-length, or
 pairwise-full-input check, the challenger performs $m = s$ deterministic
 decryption checks $\Dec_{K_i}^{\RO}(N_i,A_i,C_i \concat T)$, reaching
-final root transcripts $R_1,\dots,R_s$. The Root-Tag Candidate Sequence
+final root transcripts $R_1,\dots,R_s$. The Root tag Candidate Sequence
 lemma (\Cref{lem:root-candidate-seq}) yields a sequence of length at most
 $\qRO(\mathcal{B})+s$ meeting the premises of
 \Cref{lem:adaptive-candidate-collision} and containing each
@@ -247,7 +247,7 @@ query-independent target $T^*$, which is independent of $\ROflat$. After
 rejecting on a failed syntax or ciphertext-validity precheck on
 $C \concat T^*$, the challenger performs $m = 1$ deterministic decryption
 check $\Dec_{K}^\RO(N,A,C \concat T^*)$, reaching a final root transcript
-$R$. The Root-Tag Candidate Sequence lemma
+$R$. The Root tag Candidate Sequence lemma
 (\Cref{lem:root-candidate-seq}) yields a sequence of length at most
 $\qRO(\mathcal{B}) + 1$ meeting the premises of
 \Cref{lem:adaptive-candidate-preimage} and containing $\flatmap(R)$; with
