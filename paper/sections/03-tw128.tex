@@ -30,8 +30,11 @@ duplexes operate on disjoint state and consume disjoint inputs once
 $(K, N)$ is fixed, so leaves $1, \dots, n$ can be evaluated in parallel
 across SIMD lanes; \Cref{sec:performance} quantifies the
 resulting throughput on AMD64 and ARM64 hardware. Second, every duplex
-operates on a bounded 1600-bit state regardless of message length, so
-the memory footprint is constant in $\|M\|$. Third, the explicit
+operates on a bounded $1600$-bit state regardless of message length, and
+the leaf tags are aggregated as a stream rather than buffered in full
+(\Cref{sec:enc}), so the working memory is constant in $\|M\|$ at a fixed
+degree of parallelism, scaling only with the number of leaves evaluated
+simultaneously. Third, the explicit
 aggregation of leaf tags through a single deterministic root transcript
 gives the construction its commitment-security guarantees: distinct
 $(K, N, A)$ triples force distinct final root transcripts before
@@ -424,6 +427,19 @@ requests $\tauroot$ bits, which is the root tag $T$.
 The leaf loop is annotated \textbf{in parallel} to make explicit that
 the $n$ leaf computations are mutually independent; \Cref{sec:impl}
 discusses the SIMD realizations.
+
+\paragraph{Streaming aggregation.}
+The string $G = T_1 \concat \cdots \concat T_n$ in
+\Cref{alg:enc,alg:dec} names the leaf tags only for specification. The
+closing \Call{Absorb}{} consumes $G \concat \langle n \rangle_8$ as
+$\rho$-byte blocks in leaf order and advances the root state after each,
+so an implementation need not hold $G$ in full: it can absorb each leaf
+tag, or each SIMD batch of leaf tags, into the root as the corresponding
+leaves complete, buffering only a bounded number of tags at a time. With
+the bounded $1600$-bit state of every duplex, this keeps the working
+memory constant in $\|M\|$ for a fixed degree of parallelism, growing
+only with the number of leaves evaluated at once rather than with the
+message length; \Cref{sec:impl} describes the batched realization.
 
 \subsection{Decryption}
 \label{sec:dec}

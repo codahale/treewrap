@@ -57,8 +57,9 @@ full-input collision must either collide the root tag candidates or
 first collide leaf tags. The same sponge image is preimage-resistant,
 yielding context discoverability against that fixed tag
 (\Cref{sec:cmtds3}). Every duplex
-still operates on a bounded $1600$-bit state, so the memory footprint remains
-constant in the message length.
+still operates on a bounded $1600$-bit state, and the leaf tags are absorbed
+into the root as the leaves complete rather than buffered together, so the
+memory footprint remains constant in the message length.
 
 We analyze \TW{} in the public-permutation model and obtain concrete bounds for
 the standard and tag-projected notions: all-in-one authenticated encryption in the sense of
