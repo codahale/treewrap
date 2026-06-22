@@ -411,9 +411,9 @@ keyed transcript decoder $\KeyedTWOut$ is one of the adversary's
 visible $\ROflat$ queries and is counted in $\qRO(\mathcal{B})$;
 leaf tag collisions cannot merge the final root transcripts whose tags
 are compared, since the common ciphertext body makes pairwise distinct
-full inputs yield pairwise distinct $(K, N, A)$ triples, which by
-\Cref{cor:triple-sep} force distinct final root transcripts before
-aggregation values matter.
+full inputs yield pairwise distinct $(K, N, A)$ triples; by Opening
+Triple Separation (\Cref{cor:triple-sep}) these reach distinct final root
+transcripts before any leaf tag is aggregated.
 
 \paragraph{Tag-CMTDs-4 bound.}
 The flat-RO tag-CMTDs-4 theorem of \Cref{sec:cmtds3} is
