@@ -366,8 +366,7 @@ data. Proving tag-CMTDs-$4$ (\Cref{thm:tag-cmtds4}) establishes the binding,
 collision-resistant facet of this commitment for the full $(K,N,A,M)$
 encryption input, realizing the \cite{GLR17} compactly committing goal
 natively rather than through an added commitment primitive; its preimage
-facet, which a cryptographic hash commitment equally requires, is
-supplied by the context discoverability of the next paragraph.
+facet is supplied by the context discoverability of the next paragraph.
 
 \paragraph{Relations.}
 \cite[Figs.~4 and~5]{BH22} record the implications among the notions.
@@ -402,8 +401,7 @@ delegate authenticity to a non-preimage-resistant MAC, including
 \textsf{CCM}, \textsf{EAX}, \textsf{SIV}, \textsf{GCM}, and
 \textsf{OCB3}, admit efficient discoverability attacks. The notion is
 instantiated for \TW{} in \Cref{sec:games-pp}; its preimage character
-is what makes \TW{}'s root tag, a sponge image rather than an invertible
-MAC, resist these attacks.
+is what makes \TW{}'s root tag, a sponge output, resist these attacks.
 When the target ciphertext is itself projected through a public
 $\gamma$, the same experiment gives the projection analogue: the
 adversary is given a query-independent target value $d^*$ and wins by

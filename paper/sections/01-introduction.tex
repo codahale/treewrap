@@ -47,7 +47,7 @@ operating on disjoint state and disjoint input. Because the leaves share nothing
 once $(K, N)$ is fixed, they can be evaluated in parallel across SIMD lanes,
 recovering the throughput a flat duplex forgoes; and because the root binds the
 associated data, the first chunk, and every leaf tag into the single output tag,
-that tag is a sponge image of the entire $(K, N, A, M)$ input. The structure
+that tag is the output of the sponge on the entire $(K, N, A, M)$ input. The structure
 ensures only that distinct $(K, N, A)$ triples reach distinct root transcripts;
 the committing and context-discoverability security rests on the
 indifferentiability of the sponge, which makes the root tag both collision- and
@@ -115,12 +115,11 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   decrypt successfully under it, with a concrete root-preimage bound
   (\Cref{thm:cdy}). This is the preimage counterpart of committing security and
   follows from the same sponge indifferentiability: the root tag is a
-  preimage-resistant sponge image, leaving an adversary no better than a generic
-  preimage search. The context-discovery attacks of \cite{MLGR23} break
-  \textsf{GCM}, \textsf{CCM}, \textsf{EAX}, \textsf{SIV}, and \textsf{OCB3} by
-  inverting the algebraic MACs to which those schemes delegate authenticity,
-  which a sponge image does not admit. The unrestricted notion we prove
-  dominates the restricted per-component variants of \cite{MLGR23}.
+  preimage-resistant sponge output, leaving an adversary no better than a generic
+  preimage search; \Cref{sec:related} contrasts this with the algebraic-MAC
+  inversion that the \cite{MLGR23} discovery attacks exploit. The unrestricted
+  notion we prove dominates the restricted per-component variants of
+  \cite{MLGR23}.
 
 \item \textbf{Proof methodology.} We carry out the analysis in a dedicated \TW{}
   random-oracle model and transfer every bound to the public-permutation setting
@@ -201,7 +200,7 @@ GHASH or CMAC. \TW{} instead targets both facets directly: its committing and
 discoverability security follow from the indistinguishability of the sponge,
 which makes the root tag collision- and preimage-resistant, rather than from a
 generic transform applied to a non-committing base scheme. Because that tag is
-a sponge image and not an invertible MAC, the discovery attacks of \cite{MLGR23}
+a sponge output and not an invertible MAC, the discovery attacks of \cite{MLGR23}
 have no analogue against \TW{}.
 
 Closest to \TW{} is the recent work of \cite{DHMVV24}, which also builds
