@@ -73,7 +73,7 @@ collision, the $+s$ candidate-sequence slack collapses to the $+1$ of
 the single discoverability challenger decryption check, and the
 exponent drops from $\tau(s-1)$ to $\tau$. As in the root-collision
 term, the flat-sponge lift gives $Q = \Nprim$. The term bounds the
-query-independent target of context discoverability (\Cref{thm:cdy}).
+query-independent target of context discoverability (\Cref{thm:pre}).
 
 \paragraph{Leaf-collision term.}
 The known-key leaf tag collision term is
@@ -81,7 +81,7 @@ The known-key leaf tag collision term is
   \LeafColl_\tau(Q) = \binom{Q}{2} \big/ 2^\tau.
 \]
 It is the pairwise birthday bound on $\tau$-bit leaf tag projections
-used by the T-CMTDs-4 theorem. Unlike the hidden-key
+used by the collision-resistance theorem (\Cref{thm:coll}). Unlike the hidden-key
 leaf collision term in the INT-CTXT bound, the compact committing game
 has adversary-supplied keys, so direct primitive queries can pre-read
 candidate leaf tag points. The random-oracle proof therefore counts
@@ -94,7 +94,7 @@ $Q=\Nprim+\Nleaf$.
 
 The headline theorems of \Cref{sec:headline} feed on five
 random-oracle-model bounds---the privacy and INT-CTXT envelopes, the
-CMTDs-4 bound, the T-CMTDs-4 bound, and the T-CDY bound---whose proofs occupy
+CMTDs-4 bound, the collision bound, the second-preimage bound, and the preimage bound---whose proofs occupy
 \Cref{sec:privacy,sec:authenticity,sec:cmtds3}; the remaining
 committing-notion bounds live in \Cref{app:committing-transfer}.
 Resource-indexed
@@ -156,25 +156,25 @@ full inputs yield pairwise distinct $(K, N, A)$ triples; by Opening
 Triple Separation (\Cref{cor:triple-sep}) these reach distinct final root
 transcripts before any leaf tag is aggregated.
 
-\paragraph{T-CMTDs-4 bound.}
-The flat-RO T-CMTDs-4 theorem of \Cref{sec:cmtds3} is
+\paragraph{Collision bound.}
+The flat-RO collision theorem of \Cref{sec:cmtds3} is
 \[
-  \Advtagcmtds{4}_{\RO}(\mathcal{B})
+  \AdvColl_{\RO}(\mathcal{B})
   \leq
   \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))
   + \RootColl_{\tauroot}(\qRO(\mathcal{B}), s).
 \]
 The root-collision part is the same final-root candidate argument as
 CMTDs-4. The additional known-key leaf-collision term is needed because
-tag-committing openings may use different ciphertext bodies; absent such
-a leaf tag collision, pairwise distinct full inputs force pairwise
+colliding inputs may use different ciphertext bodies; absent such
+a leaf tag collision, pairwise distinct inputs force pairwise
 distinct final root transcripts before the common tag is compared.
 
-\paragraph{T-CDY bound.}
-The flat-RO T-CDY theorem of \Cref{sec:cmtds3} is the direct
+\paragraph{Preimage bound.}
+The flat-RO preimage theorem of \Cref{sec:cmtds3} is the direct
 root-preimage bound
 \[
-  \Advtagcdy_{\RO}(\mathcal{B})
+  \AdvPre_{\RO}(\mathcal{B})
   \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))
   = (\qRO(\mathcal{B}) + 1) \big/ 2^{\tauroot},
 \]
@@ -204,7 +204,7 @@ primitive query induce at most one $\ROflat$ call, so
 The random-oracle envelopes of \Cref{sec:thms-pp} are therefore
 instantiated at $\Nprim$, not $\Ntot$, in the headline theorems---as is
 the CMTDs-4 candidate-sequence length bound $m \leq \Nprim + s$ of
-\Cref{sec:cmtds3}, the T-CMTDs-4 leaf/root candidate bounds, and the
+\Cref{sec:cmtds3}, the collision-resistance leaf/root candidate bounds, and the
 direct CMTs-$\ell$ bounds of
 \Cref{app:committing-transfer}, whose challenger encryption checks are
 construction-internal and counted in $N$, not in $\Nprim$.
@@ -212,21 +212,20 @@ construction-internal and counted in $N$, not in $\Nprim$.
 \subsection{Headline Theorems}
 \label{sec:headline}
 
-\TW{} delivers four standard headline guarantees in the lifted
+\TW{} delivers its headline guarantees in the lifted
 public-permutation model of \Cref{sec:games-pp}: all-in-one AE
 security \cite{RS06}, its multi-user indistinguishability lift
-\cite{BT16}, and the two facets of commitment security
-(\Cref{sec:commit-defs})---$s$-way committing security \cite{BH22}
-and context discoverability \cite{MLGR23}---which follow from the same
-root tag and are stated co-equally. On the committing side we give the
-tag strengthening T-CMTDs-4, with full-input CMTDs-4 a corollary; on the
-discoverability side we give the tag-target T-CDY and, separately, the
-\cite{MLGR23} notion (\Cref{thm:cdy-full}). The tag forms T-CMTDs-4 and
-T-CDY together certify the root tag as a compact commitment. For
+\cite{BT16}, and the commitment security of the root tag
+(\Cref{sec:commit-defs}). The last is stated as the \cite{RS04} hash
+security of the wrapper $\HTW$---collision, second-preimage, and preimage
+resistance---from which the \cite{BH22} full-input CMTDs-4 committing
+bound follows as a corollary; the \cite{MLGR23} context-discoverability
+notion, a ciphertext-level guarantee distinct from preimage resistance,
+is established separately (\Cref{thm:cdy-full}). For
 the AE-style notions the ideal side
-exposes the BDPV simulator; the committing and discoverability bounds
+exposes the BDPV simulator; the committing, hash, and discoverability bounds
 remain real public-permutation success probabilities.
-\Cref{thm:ae,thm:mu-ind,thm:tag-cmtds4,cor:cmtds4,thm:cdy,thm:cdy-full}
+\Cref{thm:ae,thm:mu-ind,thm:coll,thm:asec,thm:pre,cor:cmtds4,thm:cdy-full}
 state these bounds in terms of the loss terms $\Lift_c$, $\KeyGuess_k$,
 $\RootColl_\tau$, $\LeafColl_\tau$, and $\RootPre_\tau$ of
 \Cref{sec:loss-terms} and the random-oracle envelopes $\Epspriv$,
@@ -363,13 +362,12 @@ Combining with the $\mathsf{coll}$ penalty $D(D-1)/2^{k+1}$ and
 $\Lift_c(\Ntot)$ yields the stated bound.
 \end{proof}
 
-\begin{theorem}[T-CMTDs-4 Committing Security]
-\label{thm:tag-cmtds4}
-For every $s \geq 2$ and every $s$-way T-CMTDs-4
-adversary $\mathcal{A}$ against \TW{} with the resources of
-\Cref{sec:resources},
+\begin{theorem}[Collision Resistance of $\HTW$]
+\label{thm:coll}
+For every $s \geq 2$ and every $s$-way collision adversary $\mathcal{A}$
+against $\HTW$ with the resources of \Cref{sec:resources},
 \[
-  \Advtagcmtds{4}_\TW(\mathcal{A})
+  \AdvColl_\TW(\mathcal{A})
   \;\leq\;
   \Lift_c(\Ntot)
   + \LeafColl_{\tauleaf}(\Nprim+\Nleaf)
@@ -379,16 +377,44 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
 
 \begin{proof}
 By the Lift Application corollary (\Cref{cor:lift-application}) for the
-T-CMTDs-4 game, the derived random-oracle adversary $\mathcal{B}$ has
+collision game, the derived random-oracle adversary $\mathcal{B}$ has
 $\qRO(\mathcal{B}) \leq \Nprim$ and $\nleaf(\mathcal{B}) \leq \Nleaf$. The
-random-oracle bound of \Cref{thm:tag-cmtds4-ro} is nondecreasing in both
+random-oracle bound of \Cref{thm:coll-ro} is nondecreasing in both
 $\qRO(\mathcal{B})$ and $\nleaf(\mathcal{B})$, so the monotone form of
-\Cref{cor:lift-application} gives the stated bound. The theorem allows the
-$s$ openings to use distinct ciphertext bodies sharing only the final root
-tag; the
-$\LeafColl$ term accounts for the only extra way distinct bodies can
-merge before the root tag is compared---a collision among the leaf tags
-absorbed by the root transcript.
+\Cref{cor:lift-application} gives the stated bound. The $s$ colliding
+inputs may differ in their messages, hence in their ciphertext bodies; the
+$\LeafColl$ term accounts for the only way two distinct inputs sharing a
+context $(K, N, A)$ can reach the same final root transcript---a collision
+among the leaf tags it absorbs---while distinct contexts already reach
+distinct final root transcripts by Opening Triple Separation
+(\Cref{cor:triple-sep}).
+\end{proof}
+
+\begin{theorem}[Always-Second-Preimage Resistance of $\HTW$]
+\label{thm:asec}
+For every aSec adversary $\mathcal{A}$ against $\HTW$ with the resources
+of \Cref{sec:resources},
+\[
+  \AdvaSec_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \RootPre_{\tauroot}(\Nprim)
+  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf).
+\]
+\end{theorem}
+
+\begin{proof}
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+aSec game, the derived random-oracle adversary $\mathcal{B}$ has
+$\qRO(\mathcal{B}) \leq \Nprim$ and $\nleaf(\mathcal{B}) \leq \Nleaf$; the
+random-oracle bound of \Cref{thm:asec-ro} is nondecreasing in both, so the
+monotone form of \Cref{cor:lift-application} gives the stated bound.
+Collision resistance (\Cref{thm:coll}) already implies eSec and hence Sec
+in the sense of \cite{RS04}, both with the looser root-collision term; the
+always-notion is the one \cite{RS04} shows collision resistance does not
+imply, and the direct argument replaces that birthday term by the linear
+root-preimage term, the second preimage being sought against the single
+fixed tag $\HTW(X)$ of the challenge input $X$.
 \end{proof}
 
 \begin{corollary}[CMTDs-4 Committing Security]
@@ -406,20 +432,18 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
 \end{corollary}
 
 \begin{proof}
-By the Lift Application corollary (\Cref{cor:lift-application}) for the
-CMTDs-4 game, the derived random-oracle adversary $\mathcal{B}$ has
-$\qRO(\mathcal{B}) \leq \Nprim$, and the random-oracle root-collision
-bound of \Cref{thm:cmtds4-ro} is nondecreasing in $\qRO(\mathcal{B})$, so
-the monotone form of \Cref{cor:lift-application} gives the stated bound.
-The CMTDs-4 game is the all-bodies-equal restriction of the
-T-CMTDs-4 game, but the sharper no-$\LeafColl$ bound is not obtained by
-specializing the displayed bound of \Cref{thm:tag-cmtds4}: its
+A CMTDs-4 winner exhibits $s$ distinct inputs $(K_i,N_i,A_i,M_i)$ whose
+encryptions share one common ciphertext $C \concat T$; in particular they
+share the tag $T$, so they are an $s$-way collision of $\HTW$, and
+$\Advcmtds{4}_\TW \leq \AdvColl_\TW$. The sharper no-$\LeafColl$ bound is
+not obtained by specializing the displayed bound of \Cref{thm:coll}, whose
 nonnegative $\LeafColl$ summand survives any restriction of the adversary
-class. The sharper bound instead comes from the dedicated root-collision
-derivation of \Cref{thm:cmtds4-ro}, where the single shared body forces
-the opening triples $(K_i,N_i,A_i)$ pairwise distinct---by Opening Triple
-Separation (\Cref{cor:triple-sep})---so a leaf tag collision cannot merge
-two openings and no $\LeafColl$ term arises.
+class. It comes instead from the dedicated root-collision derivation of
+\Cref{thm:cmtds4-ro} for this all-bodies-equal case, lifted by
+\Cref{cor:lift-application}: the single shared body $C$ forces the triples
+$(K_i,N_i,A_i)$ pairwise distinct---by Opening Triple Separation
+(\Cref{cor:triple-sep})---so a leaf tag collision cannot merge two
+openings and no $\LeafColl$ term arises.
 \end{proof}
 
 \begin{remark}[Looseness of the Root-Collision Cap]
@@ -444,12 +468,13 @@ uniformity with \Cref{thm:ae,thm:mu-ind}; the birthday threshold at
 $\tauroot = 256$ is unaffected.
 \end{remark}
 
-\begin{theorem}[Tag-Target Context Discoverability]
-\label{thm:cdy}
-For every T-CDY adversary $\mathcal{A}$ against \TW{}
-with the resources of \Cref{sec:resources},
+\begin{theorem}[Preimage Resistance of $\HTW$]
+\label{thm:pre}
+For every target tag $T^* \in \bits^{\tauroot}$ fixed in advance and every
+preimage adversary $\mathcal{A}$ against $\HTW$ with the resources of
+\Cref{sec:resources},
 \[
-  \Advtagcdy_\TW(\mathcal{A})
+  \AdvPre_\TW(\mathcal{A})
   \;\leq\;
   \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
   \;=\;
@@ -459,17 +484,16 @@ with the resources of \Cref{sec:resources},
 
 \begin{proof}
 By the Lift Application corollary (\Cref{cor:lift-application}) for the
-context-discoverability game---whose target-parameterized case covers the
-tag $T^*$ fixed in advance---the derived random-oracle adversary
-$\mathcal{B}$ has $\qRO(\mathcal{B}) \leq \Nprim$, and the random-oracle
-bound of \Cref{thm:cdy-ro} is nondecreasing in $\qRO(\mathcal{B})$, so the
-monotone form of \Cref{cor:lift-application} gives the stated bound. Where
-\Cref{cor:cmtds4} bounds the probability
-that $s$ distinct contexts collide on one root tag, this bounds the
-probability that a single context reaches a root tag fixed in advance;
-the candidate-collision argument of \Cref{thm:cmtds4-ro} is replaced by
-the candidate-preimage argument of \Cref{thm:cdy-ro}, dropping the
-exponent from $\tauroot(s-1)$ to $\tauroot$.
+preimage game---whose target $T^*$ is fixed before the primitive
+sampling---the derived random-oracle adversary $\mathcal{B}$ has
+$\qRO(\mathcal{B}) \leq \Nprim$, and the random-oracle bound of
+\Cref{thm:pre-ro} is nondecreasing in $\qRO(\mathcal{B})$, so the monotone
+form of \Cref{cor:lift-application} gives the stated bound. Where
+\Cref{thm:coll} bounds the probability that $s$ distinct inputs share a
+tag, this bounds the probability that a single input reaches a tag fixed
+in advance: the candidate-collision argument of \Cref{thm:coll-ro} is
+replaced by the candidate-preimage argument of \Cref{thm:pre-ro}, dropping
+the exponent from $\tauroot(s-1)$ to $\tauroot$.
 \end{proof}
 
 \begin{theorem}[Context Discoverability \textnormal{of} \cite{MLGR23}]
@@ -500,7 +524,11 @@ A winning $\mathcal{A}$ outputs a context whose final root transcript $R$
 has $\RF(R)$ projecting to $T^*$. If $R = R_0$, then $\mathcal{A}$ has
 reconstructed the selector's transcript, which by
 \Cref{lem:bridge-decode} requires a direct $\ROflat$ query decoding under
-$\KeyedTWOut$ to the hidden key $K_0$; \Cref{lem:key-tests} bounds this by
+$\KeyedTWOut$ to the hidden key $K_0$. Since $K_0$ is sampled uniformly
+and the only values revealed to $\mathcal{A}$---the body and tag of
+$C^*$---are $\RF$ projections independent of $K_0$, it remains uniform
+over the keys no direct query has yet tested; this is the visible-prefix
+invariant of \Cref{lem:key-tests}, which bounds the event by
 $\KeyGuess_k(\Nprim)$. If $R \neq R_0$, then $\RF(R)$ projects to the
 query-independent target $T^*$ at a candidate distinct from the one that
 defined it, which the Root tag Candidate Sequence lemma
@@ -514,24 +542,24 @@ per-component variant.
 
 \begin{corollary}[Root Tag as a Compact Commitment]
 \label{cor:tag-commitment}
-The $\tauroot$-bit root tag of a \TW{} ciphertext is a compact commitment
-to the full encryption context $(K, N, A, M)$ that is at once binding and
-preimage-resistant: no adversary can open one tag to $s \geq 2$ distinct
-contexts---whose openings may even use distinct ciphertext bodies---nor
-find any context opening to a tag fixed in advance, except with the
-respective advantages of \Cref{thm:tag-cmtds4,thm:cdy}. At the implemented
-parameters both are at most $2^{-128}$ (\Cref{cor:concrete-security}), so
-the single $256$-bit tag carries the collision- and preimage-resistance of
-a hash-based commitment to $(K, N, A, M)$, native to the mode.
+The wrapper $\HTW$ is a secure hash of the full encryption context
+$(K, N, A, M)$ in the sense of \cite{RS04}: collision-resistant
+(\Cref{thm:coll}), second-preimage-resistant (\Cref{thm:asec}), and
+preimage-resistant (\Cref{thm:pre}). At the implemented parameters all
+three advantages are at most $2^{-128}$ (\Cref{cor:concrete-security}), so
+the single $\tauroot$-bit root tag is a binding, preimage-resistant
+compact commitment to $(K, N, A, M)$, native to the mode.
 \end{corollary}
 
 \begin{proof}
-The binding (collision) facet is the $s$-way T-CMTDs-4 bound of
-\Cref{thm:tag-cmtds4}; the preimage facet is the tag-target
-context-discoverability (T-CDY) bound of \Cref{thm:cdy}. Both quantify the
-adversary's success at the same $\tauroot$-bit projection of the same
-final root transcript, and \Cref{cor:concrete-security} evaluates both at
-the implemented parameters.
+Collision resistance is \Cref{thm:coll}, second-preimage resistance
+\Cref{thm:asec}, and preimage resistance \Cref{thm:pre}; all three quantify
+the adversary's success at the same $\tauroot$-bit projection of the final
+root transcript, and \Cref{cor:concrete-security} evaluates them at the
+implemented parameters. Binding (collision resistance) is the property a
+compact commitment must have, and preimage resistance certifies that the
+tag alone reveals no opening; together they are the guarantees of a
+hash-based commitment.
 \end{proof}
 
 \subsection{Concrete TW128 Bounds}
@@ -542,7 +570,7 @@ The implemented parameters of \Cref{sec:params} fix
   k = c = \tauroot = \tauleaf = 256.
 \]
 Substituting into
-\Cref{thm:ae,thm:mu-ind,thm:tag-cmtds4,cor:cmtds4,thm:cdy}
+\Cref{thm:ae,thm:mu-ind,thm:coll,cor:cmtds4,thm:pre}
 and using the random-oracle envelopes of \Cref{sec:thms-pp} gives the
 following closed-form bounds.
 
@@ -564,25 +592,35 @@ following closed-form bounds.
   + \frac{D(D - 1) + \Nleaf(\Nleaf - 1)}{2^{257}}.
 \]
 
-\paragraph{$s$-way T-CMTDs-4 committing security.}
+\paragraph{$s$-way collision resistance of $\HTW$.}
 For every $s \geq 2$,
 \[
-  \Advtagcmtds{4}_\TW(\mathcal{A})
+  \AdvColl_\TW(\mathcal{A})
   \;\leq\;
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
   + \frac{\binom{\Nprim+\Nleaf}{2}}{2^{256}}
   + \frac{\binom{\Nprim + s}{s}}{2^{256 (s - 1)}}.
 \]
-For $s=2$, this is the compact two-opening bound in which the common
-commitment is only the tag:
+For $s=2$, this is the ordinary two-input collision bound:
 \[
 \begin{aligned}
-  \Advtagcmtds{4}_\TW(\mathcal{A})
+  \AdvColl_\TW(\mathcal{A})
 \leq\;&
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
   + \frac{(\Nprim+\Nleaf)(\Nprim+\Nleaf-1)}{2^{257}} \\
 & + \frac{(\Nprim + 1)(\Nprim + 2)}{2^{257}} .
 \end{aligned}
+\]
+
+\paragraph{Always-second-preimage resistance of $\HTW$.}
+The linear root-preimage term replaces the collision bound's birthday
+root term:
+\[
+  \AdvaSec_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\Nprim + 1}{2^{256}}
+  + \frac{\binom{\Nprim+\Nleaf}{2}}{2^{256}}.
 \]
 
 \paragraph{$s$-way CMTDs-4 committing security.}
@@ -609,9 +647,9 @@ CMTD-4 statement of \cite{BH22}:
 \]
 \end{remark}
 
-\paragraph{Tag-target context discoverability.}
+\paragraph{Preimage resistance of $\HTW$.}
 \[
-  \Advtagcdy_\TW(\mathcal{A})
+  \AdvPre_\TW(\mathcal{A})
   \;\leq\;
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
   + \frac{\Nprim + 1}{2^{256}}.
@@ -634,11 +672,12 @@ Under the implemented parameters $k = c = \tauroot = \tauleaf = 256$, every
 adversary with work cap $\Ntot \leq 2^{63}$---and, in the multi-user case,
 user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
 \TW{}'s notions: all-in-one AE (\Cref{thm:ae}), multi-user
-indistinguishability (\Cref{thm:mu-ind}), $s$-way T-CMTDs-4 and CMTDs-4
-committing security for every $s \geq 2$
-(\Cref{thm:tag-cmtds4,cor:cmtds4}), and context discoverability in both
-the tag-target form (\Cref{thm:cdy}) and the \cite{MLGR23} form
-(\Cref{thm:cdy-full}).
+indistinguishability (\Cref{thm:mu-ind}), the \cite{RS04} hash security of
+$\HTW$---$s$-way collision resistance for every $s \geq 2$, always-second-preimage
+resistance, and preimage resistance
+(\Cref{thm:coll,thm:asec,thm:pre})---the \cite{BH22}
+CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}), and \cite{MLGR23}
+context discoverability (\Cref{thm:cdy-full}).
 \end{corollary}
 
 \begin{proof}
@@ -673,9 +712,10 @@ Notion & Dominant term & At the cap \\
 \midrule
 All-in-one AE & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 Multi-user ind. & $2D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
-T-CMTDs-4 & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
-CMTDs-4 & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
-T-CDY & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+$\HTW$ collision (Coll) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+$\HTW$ second-preimage (aSec) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+$\HTW$ preimage (Pre) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+CMTDs-4 \cite{BH22} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 CDY \cite{MLGR23} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 \bottomrule
 \end{tabular}
@@ -728,7 +768,14 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
   1)}$.} Tight up to lower-order terms: it is the standard $s$-way
   multi-collision bound on a $\tau$-bit projection of $\ROflat$, and
   a generic birthday-style adversary against the random oracle
-  matches the leading-order term.
+  matches the leading-order term. It is the root term of the collision
+  bound ($\HTW$ Coll, \Cref{thm:coll}).
+\item \emph{$\RootPre_\tau(Q) = (Q + 1) / 2^\tau$.} Tight at constants: a
+  generic preimage search against a fixed $\tau$-bit target matches the
+  per-query $2^{-\tau}$ rate. It is the root term of the preimage (Pre),
+  always-second-preimage (aSec), and discoverability bounds, where the
+  single fixed target replaces the birthday $\RootColl$ of the collision
+  bound by a linear term.
 \item \emph{Leaf tag collision $\Nleaf (\Nleaf - 1) / 2^{\tauleaf +
   1}$.} Tight for INT-CTXT, the notion it is proved against: by reusing
   a nonce, an adversary detects a leaf tag birthday collision through the
@@ -739,8 +786,8 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
   encryption rules this attack out, so there it is inherited slack.
 \item \emph{Known-key leaf collision $\LeafColl_\tau(Q)$.} The same
   birthday attack applies when keys are adversary-supplied and direct
-  queries can target leaf tag points; the compact CMTDs-4 proof uses
-  $Q=\Nprim+\Nleaf$.
+  queries can target leaf tag points; the collision and
+  always-second-preimage proofs use $Q=\Nprim+\Nleaf$.
 \item \emph{Flat-sponge lift.} The term
   $\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{c + 1}$ dominates the
   random-permutation differentiating bound $f_P(\Ntot)$ of

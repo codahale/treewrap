@@ -44,12 +44,10 @@ $\|A\| \leq A_{\max}$, and $M$ is a byte string with
 $\|M\| \leq M_{\max}$. A verification or decryption input is valid when
 $N \in \bits^\nu$, $A$ is a byte string with $\|A\| \leq A_{\max}$, and
 the full ciphertext parses as $C \concat T$ with $\|C\| \leq M_{\max}$
-and $T \in \bits^{\tauroot}$. In the committing games, each submitted
-tuple must be a valid encryption input including
+and $T \in \bits^{\tauroot}$. In the hash and committing games, each
+submitted input $(K, N, A, M)$ must be a valid encryption input including
 $K \in \bits^k$, and a submitted CMTDs ciphertext must be a valid
-verification/decryption ciphertext; in the tag-committing
-game below, each submitted body joined to the common tag must be a
-valid verification/decryption ciphertext. Invalid encryption queries
+verification/decryption ciphertext. Invalid encryption queries
 are rejected and not recorded, invalid verification queries return $0$,
 and invalid committing-game outputs make the game return $0$. Such rejected
 inputs contribute no construction cost and create no construction
@@ -106,98 +104,79 @@ derived privacy and INT-CTXT adversaries, combined with the flat-sponge
 lift, bounds it via the privacy and INT-CTXT envelopes of
 \Cref{sec:thms-pp}; the precise bound is \Cref{thm:ae}.
 
-\paragraph{Committing security.}
-The $s$-way committing-security game follows \cite[Figs.~4 and~5]{BH22},
-extended to $s \geq 2$ tuples, and is stated in the tag-committing form of
-\Cref{sec:commit-defs}, which subsumes the
-full-ciphertext notion. There is no challenger-sampled key. After the
-primitive sampling, the adversary outputs a common tag $T$ together with,
-for each claimed opening, a ciphertext body $C_i$ and a tuple
-$(K_i, N_i, A_i, M_i)$. The challenger applies the following deterministic
-checks, with the eager length rejection justified by \Cref{alg:dec}:
-$\Dec_K(N,A,C_i \concat T)$ returns either $\bot$ or a message of length
-$\|C_i\|$.
+\paragraph{Hash games.}
+The collision, second-preimage, and preimage games for the wrapper $\HTW$
+(\Cref{sec:commit-defs}) have no challenger-sampled key; all inputs are
+adversary-supplied. In the $s$-way collision game the adversary outputs
+$s$ inputs, and the challenger returns $1$ iff they are pairwise distinct,
+in the \TW{} domain, and share a root tag:
 \begin{align*}
-  &\pi \sample \Perm(\bits^{1600}), \\
-  &\bigl(T,\,(C_i,K_i,N_i,A_i,M_i)_{i=1}^s\bigr)
-     \sample \mathcal{A}^{\pi,\, \pi^{-1}}, \\
-  &\text{return $0$ if any $C_i \concat T$ is not a valid \TW{} ciphertext}, \\
-  &\text{return $0$ if any $(K_i, N_i, A_i, M_i)$ is not in the \TW{} syntactic domain}, \\
-  &\text{return $0$ if any $\|M_i\| \neq \|C_i\|$}, \\
-  &\text{return $0$ if $(K_i, N_i, A_i, M_i)_{i=1}^s$ are not pairwise distinct}, \\
-  &\text{return } \textstyle\bigwedge_{i=1}^s
-     \bigl[\Dec_{K_i}[\pi](N_i, A_i, C_i \concat T) = M_i\bigr].
+  &\pi \sample \Perm(\bits^{1600}), \quad
+   (K_i,N_i,A_i,M_i)_{i=1}^s \sample \mathcal{A}^{\pi,\, \pi^{-1}}, \\
+  &\text{return $0$ unless the inputs are pairwise distinct and in the \TW{} domain}, \\
+  &\text{return } \bigl[\HTW[\pi](K_1,N_1,A_1,M_1) = \cdots =
+     \HTW[\pi](K_s,N_s,A_s,M_s)\bigr],
 \end{align*}
-The advantage is
-\[
-  \Advtagcmtds{4}_\TW(\mathcal{A})
-  = \Pr[\text{the game returns } 1],
-\]
-over the uniform choice of $\pi$ and $\mathcal{A}$'s coins; no nonce
-uniqueness is imposed. The ordinary full-input CMTDs-4 game is the special
-case in which all bodies coincide, $C_1 = \cdots = C_s = C$, so the
-openings share the entire ciphertext $C \concat T$ rather than only its
-tag; its advantage is $\Advcmtds{4}_\TW(\mathcal{A})$.
-For $\ell \in \{1, 3\}$, the full-input CMTDs-$\ell$ game is this special
-case with the pairwise-distinctness check applied to the
-$\WiC_\ell$-images instead---the keys $K_i$ for $\ell = 1$ and the triples
-$(K_i, N_i, A_i)$ for $\ell = 3$---keeping the same check order and eager
-length rejection; $\Advcmtds{\ell}_\TW(\mathcal{A})$ is defined
-analogously.
-The CMTs-$\ell$ source games are instantiated
-analogously from \Cref{sec:commit-defs}: after the primitive sampling,
-the adversary outputs $s$ tuples, the challenger checks syntax and
-pairwise $\WiC_\ell$-distinctness, and then returns $1$ iff the
-$s$ deterministic encryptions $\Enc_{K_i}[\pi](N_i,A_i,M_i)$ are all
-equal.
-\Cref{sec:cmtds3} proves the CMTDs-4 bound (\Cref{thm:cmtds4-ro}) and
-the T-CMTDs-4 bound (\Cref{thm:tag-cmtds4-ro}) directly,
-while \Cref{app:committing-transfer} forwards the remaining \cite{BH22}
-committing notions---CMTDs-$\ell$ and the CMTs-$\ell$ source games---to
-the same root-collision bound.
+with advantage $\AdvColl_\TW(\mathcal{A}) = \Pr[\text{the game returns }
+1]$; no nonce uniqueness is imposed. The always-second-preimage (aSec)
+game samples a challenge input $X$ uniformly from the \TW{} domain, gives
+it to $\mathcal{A}$, and returns $1$ iff $\mathcal{A}$ outputs $X' \neq X$
+in the domain with $\HTW(X') = \HTW(X)$, with advantage $\AdvaSec_\TW$;
+following \cite{RS04} the always-notion concerns the fixed permutation,
+here the deployed instance the public-permutation model represents by a
+random $\pi$. The preimage game fixes a target tag
+$T^* \in \bits^{\tauroot}$ before the primitive sampling and returns $1$
+iff $\mathcal{A}(T^*)$ outputs an input $X$ in the domain with
+$\HTW(X) = T^*$, the advantage $\AdvPre_\TW$ taken as the worst case over
+query-independent targets.
 
-\paragraph{Tag-target context discoverability.}
-The tag-target context-discoverability (T-CDY) game of
-\Cref{sec:commit-defs} is the preimage analogue of the committing game.
-It is parameterized by a target tag $T^* \in
-\bits^{\tauroot}$ fixed before the primitive sampling, hence
-independent of $\pi$ and of the adversary's queries. There is no
-challenger-sampled key. After the primitive sampling, the adversary
-outputs a ciphertext body $C$ together with a single decryption context
-$(K, N, A)$, and the challenger runs the one deterministic decryption
-check on the assembled ciphertext $C \concat T^*$.
+\paragraph{Committing games.}
+The \cite{BH22} committing games are instantiated as in
+\Cref{sec:commit-defs}, with no challenger-sampled key. The $s$-way
+CMTDs-$\ell$ (decryption) game has the adversary output a ciphertext
+$C \concat T$ and $s$ tuples $(K_i,N_i,A_i,M_i)$ with pairwise distinct
+$\WiC_\ell$-images, and returns $1$ iff
+$\Dec_{K_i}[\pi](N_i,A_i,C \concat T) = M_i$ for every $i$, with the eager
+length rejection justified by \Cref{alg:dec} ($\Dec_K(N,A,C)$ returns
+$\bot$ or a message of length $\|C\|$); its advantage is
+$\Advcmtds{\ell}_\TW(\mathcal{A})$. The CMTs-$\ell$ (encryption) game has
+the adversary output the $s$ tuples alone and returns $1$ iff the
+encryptions $\Enc_{K_i}[\pi](N_i,A_i,M_i)$ are all equal; its advantage is
+$\Advcmts{\ell}_\TW(\mathcal{A})$. A CMTDs-4 or CMTs-4 winner's tuples
+share a common tag, hence are a collision of $\HTW$, so \Cref{cor:cmtds4}
+bounds CMTDs-4 through \Cref{thm:cmtds4-ro} and
+\Cref{app:committing-transfer} forwards the remaining \cite{BH22} notions
+to the same root-collision bound.
+
+\paragraph{Context discoverability.}
+The \cite[Fig.~5]{MLGR23} context-discoverability game
+(\Cref{sec:commit-defs}) is a ciphertext-level preimage notion, distinct
+from the preimage resistance of $\HTW$ above. It is parameterized by a
+target specifier $\mathsf{ts}$ and a query-independent context selector
+$S$ that produces a target ciphertext $C^*$ and reveals the
+$\mathsf{ts}$-named components $\mathsf{rev}$ of a decryption context;
+there is no challenger-sampled key.
 \begin{align*}
-  &\pi \sample \Perm(\bits^{1600}), \\
-  &\bigl(C,\, (K, N, A)\bigr) \sample \mathcal{A}^{\pi,\, \pi^{-1}}(T^*), \\
-  &\text{return $0$ if $C \concat T^*$ is not a valid \TW{} ciphertext}, \\
-  &\text{return $0$ if $(K, N, A)$ is not in the \TW{} syntactic domain}, \\
-  &\text{return } \bigl[\Dec_{K}[\pi](N, A, C \concat T^*) \neq \bot\bigr].
+  &\pi \sample \Perm(\bits^{1600}), \quad
+   (C^*, \mathsf{rev}) \sample S[\pi], \\
+  &(K, N, A) \sample \mathcal{A}^{\pi,\, \pi^{-1}}(C^*, \mathsf{rev}), \\
+  &\text{return $0$ if $C^*$ is not a valid \TW{} ciphertext, if
+    $(K,N,A)$ is outside the domain,} \\
+  &\qquad\text{or if $(K,N,A)$ disagrees with $\mathsf{rev}$ on its
+    $\mathsf{ts}$-components}, \\
+  &\text{return } \bigl[\Dec_{K}[\pi](N, A, C^*) \neq \bot\bigr].
 \end{align*}
-The advantage is the worst case over query-independent targets,
-\[
-  \Advtagcdy_\TW(\mathcal{A})
-  = \max_{T^* \in \bits^{\tauroot}} \Pr[\text{the game returns } 1],
-\]
-with each probability taken over the uniform choice of $\pi$ and
-$\mathcal{A}$'s coins. By \Cref{alg:dec}, the single check accepts
-exactly when the recomputed final root tag of $(K, N, A, C)$ equals
-$T^*$, so the game asks the adversary to discover a context whose
-ciphertext body extends to the fixed tag $T^*$; the win condition makes
-no reference to a claimed message, so the committing game's eager
-length and pairwise-distinctness checks are absent. On the committing
-side replacing a shared ciphertext by a shared tag strengthens the notion,
-because the adversary outputs the ciphertext; here the target is given
-\emph{to} the adversary, so the same substitution does not strengthen, and
-T-CDY is a different, in general incomparable, notion from \cite{MLGR23}
-context discoverability (\Cref{sec:commit-defs}). We establish both for
-\TW{}: the T-CDY bound here, and for the \cite[Fig.~5]{MLGR23} restricted
-$\mathsf{CDY}^\ast[\mathsf{ts}]$ game of \Cref{sec:commit-defs}---whose
-query-independent selector produces the full target ciphertext under a
-hidden context---the bound of \Cref{thm:cdy-full}, which carries an
-additional key-test term for that hidden context.
-\Cref{app:flat-sponge-lift} lifts the T-CDY bound proved in
-\Cref{sec:cmtds3} (\Cref{thm:cdy-ro}) to the public-permutation
-statement of \Cref{sec:headline}.
+The restricted advantage $\Advcdy_\TW(\mathcal{A})$ is the worst case over
+query-independent selectors $S$, matching
+$\mathsf{CDY}^\ast[\mathsf{ts}]$ and, at
+$\mathsf{ts} = \{n,a\}, \{k,a\}, \{k,n\}$, its per-component variants
+$\mathsf{CDY}^\ast_k, \mathsf{CDY}^\ast_n, \mathsf{CDY}^\ast_a$. Because
+the selector holds a hidden context, the \TW{} bound
+(\Cref{thm:cdy-full}) carries a key-test term that the keyless preimage
+game of $\HTW$ does not.
+\Cref{app:flat-sponge-lift} lifts the hash and committing bounds of
+\Cref{sec:cmtds3} to the public-permutation statements of
+\Cref{sec:headline}.
 
 \subsection{The TW128 Random-Oracle Model}
 \label{sec:ro-model}
@@ -244,11 +223,12 @@ oracle uses the corresponding ${}^\RO$ algorithm, the ideal oracles
 $(\Rand,\Replay)$ being unchanged. Under this substitution
 $\Adv^{\mathsf{priv}}_{\RO}$, $\Adv^{\mathsf{int\text{-}ctxt}}_{\RO}$,
 and $\Adv^{\mathsf{ae}}_{\RO}$ are the \Cref{sec:games-pp} advantages
-with no simulator on the ideal side; the keyless
-$\Advcmtds{4}_{\RO}(\mathcal{B})$,
-$\Advtagcmtds{4}_{\RO}(\mathcal{B})$, and, for $\ell \in \{1,3,4\}$,
+with no simulator on the ideal side; the keyless hash advantages
+$\AdvColl_{\RO}(\mathcal{B})$, $\AdvaSec_{\RO}(\mathcal{B})$,
+$\AdvPre_{\RO}(\mathcal{B})$ of $\HTW$, the committing
+$\Advcmtds{4}_{\RO}(\mathcal{B})$, and, for $\ell \in \{1,3,4\}$,
 $\Advcmts{\ell}_{\RO}(\mathcal{B})$ are the probabilities that the
-corresponding random-oracle committing games return $1$, the CMTs
+corresponding random-oracle hash and committing games return $1$, the CMTs
 challenger computing its deterministic encryption checks with
 $\Enc^\RO$. For mu-ind, $\Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})$
 denotes the \Cref{sec:mu-setting} game with the same $\mathsf{New}$
@@ -295,15 +275,15 @@ unless they affect the final bound.
   associated-data block, root message block, leaf initialization, leaf
   message block, and aggregation block across the entire query
   sequence. Valid INT-CTXT verification computations are counted whether
-  they accept or reject. In the committing and discoverability games
-  there is no adversary
-  construction oracle: for CMTDs-$\ell$, $N$ counts only
-  the deterministic decryption checks actually performed by the
-  challenger on the common ciphertext; for T-CMTDs-4, $N$ counts only
-  the deterministic decryption checks actually performed by the
-  challenger on the submitted bodies and common tag; for the
+  they accept or reject. In the hash, committing, and discoverability
+  games there is no adversary
+  construction oracle: for the $\HTW$ collision game, $N$ counts the $s$
+  deterministic encryptions on the submitted inputs (and the one or two
+  encryptions of the second-preimage and preimage games); for
+  CMTDs-$\ell$, $N$ counts only the deterministic decryption checks
+  performed by the challenger on the common ciphertext; for the
   context-discoverability game, $N$ counts only the single deterministic
-  decryption check the challenger performs on $C \concat T^*$; while for the
+  decryption check the challenger performs on $C^*$; while for the
   CMTs-$\ell$ source games of
   \Cref{app:committing-transfer}, $N$ counts only the deterministic
   encryption checks actually used by the challenger to compare the $s$
@@ -336,7 +316,7 @@ unless they affect the final bound.
   $\mathcal{B}$, and a cap on it. Distinct final leaf transcripts are
   generated by valid encryption computations, by valid INT-CTXT
   verification computations (whether they accept or reject), and by
-  committing, tag-committing, and discoverability challenger
+  hash, committing, and discoverability challenger
   construction checks that pass the early validity checks.
 \end{description}
 

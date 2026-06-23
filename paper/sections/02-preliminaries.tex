@@ -294,11 +294,12 @@ nonce-based AEAD schemes, parameterized by how much of the
 encryption input is committed and by whether commitment is
 established through decryption (the D-notions) or through encryption
 agreement (the E-notions). We recall their definitions and the
-$s$-way generalization used throughout this paper, then recall the
-complementary \emph{context-discoverability} notion of \cite{MLGR23}.
-The two capture orthogonal facets of commitment: committing security is
-a collision requirement on the map from contexts to ciphertexts, while
-context discoverability is the corresponding preimage requirement.
+$s$-way generalization, the complementary \emph{context-discoverability}
+notion of \cite{MLGR23}, and then frame the root tag itself as a hash
+function whose \cite{RS04} security---collision, second-preimage, and
+preimage resistance---captures the binding and preimage facets of the tag
+as a compact commitment and yields the \cite{BH22} committing notions as a
+consequence.
 
 \paragraph{What-is-committed functions.}
 For $\ell \in \{1, 3, 4\}$, the \emph{what-is-committed} function
@@ -330,31 +331,40 @@ is the original CMTD-$\ell$/CMT-$\ell$ pair of \cite[Fig.~4]{BH22}.
 These definitions are instantiated for \TW{} in \Cref{sec:games-pp},
 with the public-permutation lift deferred to that section.
 
-\paragraph{Tag-committing games.}
-The \cite{BH22} CMTD notions above treat the entire ciphertext as the
-committing object: an adversary wins only by exhibiting one common
-ciphertext that two distinct contexts both decrypt. Many uses of
-commitment store, transmit, or compare a short tag rather than the full
-ciphertext, and ask that the short string alone be binding---this is the
-compactly committing AEAD goal introduced by \cite{GLR17} for message
-franking. \TW{} ciphertexts are written $C \concat T$ with $T$ the
-$256$-bit root tag, and we strengthen the D-notions to ask that this tag
-alone be the commitment. The $s$-way T-CMTDs-$\ell$ game is the same as
-CMTDs-$\ell$ except that the adversary outputs ciphertext bodies
-$C_1,\dots,C_s$ sharing one common tag $T$ rather than one common
-ciphertext, and the challenger checks
-$\Dec_{K_i}(N_i,A_i,C_i \concat T)=M_i$ for every $i$, with the same syntax
-and pairwise-$\WiC_\ell$ checks as above. Ordinary CMTDs-$\ell$ is the
-special case $C_1 = \cdots = C_s$, so T-CMTDs-$\ell$ grants the adversary
-strictly more freedom---distinct openings need agree only on the tag---and
-an upper bound on its advantage is therefore also an upper bound on the
-ordinary CMTDs-$\ell$ advantage, while additionally certifying the tag $T$
-as a binding commitment in its own right. Proving T-CMTDs-$4$
-(\Cref{thm:tag-cmtds4}) establishes the binding, collision-resistant facet
-of this commitment for the full $(K,N,A,M)$ encryption input, realizing
-the \cite{GLR17} compactly committing goal natively rather than through an
-added commitment primitive; its preimage facet is supplied by the context
-discoverability of the next paragraph.
+\paragraph{The root tag as a hash.}
+Many uses of commitment store, transmit, or compare a short tag rather
+than the full ciphertext, and ask that the short string alone be
+binding---the compactly committing AEAD goal introduced by \cite{GLR17}
+for message franking. \TW{} ciphertexts are written $C \concat T$ with
+$T$ the $\tauroot$-bit root tag, and we capture this goal directly, by
+treating the map from the encryption input to the tag as a hash function:
+write $\HTW(K, N, A, M)$ for the root tag $T$ of
+$\Enc_K(N, A, M) = C \concat T$, the \TW{} wrapper that discards the
+ciphertext body and returns only the tag. Keyed by the permutation, this
+is a hash family, and we ask that it satisfy the standard security notions
+of \cite{RS04}, over the \TW{} input domain:
+\begin{description}
+  \item[Collision resistance (Coll).] No adversary finds distinct inputs
+    $X_1, \dots, X_s$ (any $s \geq 2$) with
+    $\HTW(X_1) = \cdots = \HTW(X_s)$.
+  \item[Always-second-preimage resistance (aSec).] For the fixed deployed
+    permutation, given a challenge input $X$, no adversary finds
+    $X' \neq X$ with $\HTW(X') = \HTW(X)$.
+  \item[Preimage resistance (Pre).] For a target tag $T^*$ fixed in
+    advance, no adversary finds $X$ with $\HTW(X) = T^*$.
+\end{description}
+Their advantages $\AdvColl_\TW$, $\AdvaSec_\TW$, $\AdvPre_\TW$ are the
+respective success probabilities, instantiated for \TW{} in
+\Cref{sec:games-pp}. Coll is the binding facet and Pre the preimage facet
+of the tag taken as a compact commitment to $(K, N, A, M)$---the two
+guarantees a cryptographic hash commitment provides. Of the \cite{RS04}
+second-preimage notions, collision resistance already implies the
+everywhere and average-case forms (eSec and Sec), so we prove the
+always-form aSec, the one it does not imply, and with a sharper bound.
+Collision resistance moreover gives the \cite{BH22} committing
+notions directly: a single ciphertext that two contexts both decrypt is a
+fortiori a pair of distinct inputs sharing a tag, so $\mathsf{Coll}$
+bounds CMTDs-$\ell$ and CMTs-$\ell$ (\Cref{sec:headline}).
 
 \paragraph{Relations.}
 \cite[Figs.~4 and~5]{BH22} record the implications among the notions.
@@ -395,29 +405,7 @@ non-preimage-resistant MAC, including \textsf{CCM}, \textsf{EAX},
 discoverability attacks; the preimage character of the notion is what
 makes \TW{}'s root tag, a sponge output, resist them.
 
-\paragraph{Tag-target context discoverability.}
-For the compact-commitment goal we also want the preimage counterpart of
-the \emph{tag} alone: that no adversary can find a context decrypting to a
-given root tag. We capture it by the construction that turns CMTDs into
-the tag-committing T-CMTDs---replace the full target ciphertext by the tag
-alone---obtaining the $\mathsf{T}\text{-}\mathsf{CDY}$ game, which fixes a
-target root tag $T^* \in \bits^{\tauroot}$ in advance and asks the
-adversary to output \emph{both} a ciphertext body $C$ and a full context
-$(K, N, A)$ with $C \concat T^*$ decrypting under $(K, N, A)$, the
-advantage taken as the worst case over query-independent targets. On the
-committing side this tag substitution \emph{strengthens} the notion, since
-the adversary outputs the ciphertext and sharing only a tag frees the
-bodies; here it does \emph{not}, because the target is instead given
-\emph{to} the adversary, and revealing the whole ciphertext rather than
-the tag can only help a discoverer. The two notions are in general
-incomparable---a scheme that exposed its context in the ciphertext body
-would be discoverable in the \cite{MLGR23} sense yet keep a
-preimage-resistant tag---so we treat them separately and establish both
-for \TW{} (\Cref{thm:cdy,thm:cdy-full}), which holds because a \TW{}
-ciphertext body is encryption output that reveals no more about the
-decrypting context than the tag does. T-CDY is the preimage facet of the
-same compact commitment whose collision facet is T-CMTDs-$4$: together
-they make \TW{}'s root tag preimage- as well as collision-resistant as a
-commitment to the full $(K, N, A, M)$ encryption input, the two guarantees
-a cryptographic hash commitment provides. Both notions are instantiated
-for \TW{} in \Cref{sec:games-pp}.
+The preimage resistance of \HTW{} (Pre, above) is the tag-level preimage
+guarantee that the \cite{MLGR23} context-discoverability notion is the
+ciphertext-level counterpart of; the two are distinct, and \TW{} is shown
+to satisfy both (\Cref{thm:pre,thm:cdy-full}).

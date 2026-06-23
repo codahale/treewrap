@@ -40,11 +40,11 @@ gives the construction its commitment-security guarantees: by Opening
 Triple Separation (\Cref{cor:triple-sep,sec:cmtds3}), distinct
 $(K, N, A)$ triples force distinct final root transcripts before
 aggregation values matter, the structural fact behind
-the CMTDs-4 headline of \Cref{sec:headline}. The tag-committing
-strengthening (\Cref{thm:tag-cmtds4}) keeps only the emitted root tag as
-the commitment string, distinct bodies merging only through its leaf tag
+the CMTDs-4 headline of \Cref{sec:headline}. Collision resistance of the
+root-tag wrapper (\Cref{thm:coll}) treats the emitted root tag as the
+commitment string, distinct bodies merging only through its leaf tag
 collision term, and the same root tag, preimage-resistant as a sponge
-output, yields the context-discoverability headline (\Cref{thm:cdy}).
+output, gives the preimage headline (\Cref{thm:pre}).
 
 \begin{figure}[t]
   \centering

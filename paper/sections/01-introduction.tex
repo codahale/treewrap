@@ -59,12 +59,12 @@ into the root as the leaves complete rather than buffered together, so the
 memory footprint remains constant in the message length.
 
 We analyze \TW{} in the public-permutation model and obtain concrete bounds for
-the standard and tag-committing notions: all-in-one authenticated encryption in the sense of
+all-in-one authenticated encryption in the sense of
 \cite{RS06}, its multi-user indistinguishability lift in the sense of
-\cite{BT16}, and both facets of commitment: the collision facet---$s$-way
-committing security in the strongest full-input sense (\textsf{CMTDs-4}) of
-\cite{BH22} and its tag-committing compact strengthening---and the preimage
-facet, given both as the tag-target \textsf{T-CDY} and as the \cite{MLGR23}
+\cite{BT16}, and the commitment security of the root tag, stated as the
+\cite{RS04} hash security of the tag wrapper---collision, second-preimage, and
+preimage resistance---from which the \cite{BH22} full-input committing notion
+(\textsf{CMTDs-4}) follows as a corollary, alongside the \cite{MLGR23}
 context-discoverability notion. Each bound is proved first against an
 intermediate random oracle and then transferred to the real permutation by the
 flat-sponge lift of \cite{BDPV08}. At the implemented parameters
@@ -98,33 +98,26 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   (\Cref{thm:mu-ind}), obtained by a key-collision-stopped hybrid over the
   users that reuses the single-user privacy and \textsf{INT-CTXT} envelopes.
 
-\item \textbf{Committing security.} We prove that \TW{} achieves $s$-way
-  \textsf{CMTDs-4} committing security---commitment to the full
-  $(K, N, A, M)$ input, for any number $s \geq 2$ of claimed openings---with a
-  concrete root-collision bound (\Cref{cor:cmtds4}), and that it satisfies the
-  stronger tag-committing notion, in which the $256$-bit root tag alone is a
-  binding commitment to that input even when the claimed openings use distinct
-  ciphertext bodies (\Cref{thm:tag-cmtds4}), matching the compactly committing
-  AEAD goal of \cite{GLR17}. We derive the remaining
-  \cite{BH22} committing notions (\textsf{CMT} and \textsf{CMTD} for
-  $\ell \in \{1, 3, 4\}$) as direct bounds (\Cref{app:committing-transfer}).
-  Committing security is native to the mode, with no generic transform.
+\item \textbf{Commitment via a secure hash.} We show that the wrapper
+  $\HTW$ returning the root tag is a secure hash of the full $(K, N, A, M)$
+  input in the sense of \cite{RS04}---collision-, second-preimage-, and
+  preimage-resistant (\Cref{thm:coll,thm:asec,thm:pre})---so the single
+  $256$-bit root tag is a binding, preimage-resistant compact commitment to
+  the input, matching the compactly committing AEAD goal of \cite{GLR17}
+  natively, with no generic transform. The \cite{BH22} full-input committing
+  notions follow as corollaries: $s$-way \textsf{CMTDs-4} from collision
+  resistance (\Cref{cor:cmtds4}), and the remaining \textsf{CMT}/\textsf{CMTD}
+  for $\ell \in \{1, 3, 4\}$ in \Cref{app:committing-transfer}.
 
-\item \textbf{Context discoverability.} We prove that \TW{} resists context
-  discovery in two forms. The first is a tag-target notion, \textsf{T-CDY}:
-  given a target tag fixed in advance, no adversary can find a context and
-  ciphertext body that decrypt successfully under it, with a concrete
-  root-preimage bound
-  (\Cref{thm:cdy}). This is the preimage counterpart of committing security and
-  follows from the same sponge indifferentiability: the root tag is a
-  preimage-resistant sponge output, leaving an adversary no better than a generic
-  preimage search; \Cref{sec:related} contrasts this with the algebraic-MAC
-  inversion that the \cite{MLGR23} discovery attacks exploit. The second is the
-  published \cite{MLGR23} restricted notion $\mathsf{CDY}^\ast$ and its
-  per-component variants $\mathsf{CDY}^\ast_k$, $\mathsf{CDY}^\ast_n$,
-  $\mathsf{CDY}^\ast_a$, established with the same root tag through an added
-  key-test term (\Cref{thm:cdy-full}). The tag-target and full-ciphertext
-  notions are distinct---neither strengthens the other---so we prove both.
+\item \textbf{Context discoverability.} We additionally prove that \TW{}
+  satisfies the published \cite{MLGR23} context-discoverability notion
+  $\mathsf{CDY}^\ast$ and its per-component variants---a ciphertext-level
+  guarantee, distinct from preimage resistance of the tag, established with a
+  concrete bound (\Cref{thm:cdy-full})---so no adversary, given a target
+  ciphertext fixed in advance, can find a decrypting context. This is the
+  facet whose absence underlies the discovery attacks of \cite{MLGR23};
+  \Cref{sec:related} contrasts \TW{}'s sponge-based resistance with the
+  algebraic-MAC inversion those attacks exploit.
 
 \item \textbf{Proof methodology.} We carry out the analysis in a dedicated \TW{}
   random-oracle model and transfer every bound to the public-permutation setting
@@ -232,11 +225,12 @@ multi-user indistinguishability notion of \cite{BT16}.
 \Cref{sec:security-model} fixes the public-permutation games, the
 intermediate random-oracle model, and the resource accounting that
 all later bounds reference. \Cref{sec:main-results} states the
-headline AE, mu-ind, CMTDs-4, T-CMTDs-4, and T-CDY theorems and their
+headline AE, mu-ind, hash (collision, second-preimage, preimage), CMTDs-4,
+and context-discoverability theorems and their
 concrete \TW{}-parameter forms; \Cref{sec:privacy,sec:authenticity}
 prove the random-oracle privacy and INT-CTXT bounds that feed those
 theorems, and \Cref{sec:cmtds3} proves the random-oracle
-CMTDs-4, T-CMTDs-4, and T-CDY bounds. \Cref{sec:performance} reports the
+hash and CMTDs-4 bounds. \Cref{sec:performance} reports the
 performance of the reference and optimized implementations.
 \Cref{sec:discussion} compares \TW{} to prior sponge AEADs and
 committing constructions and discusses limitations.
