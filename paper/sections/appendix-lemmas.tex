@@ -745,13 +745,20 @@ tag class $\Ltag(j)$ and are appended as candidates; together with the
 $\nleaf(\mathcal{B})$ construction-generated transcripts the sequence has
 length at most $\qRO(\mathcal{B}) + \nleaf(\mathcal{B})$.
 
-\emph{(2) Hidden key.} Before $\mathsf{hit}_{\mathsf{leaf}}$ no direct
-query has hit the bridged input of a hidden-key final leaf transcript: by
-\Cref{lem:bridge-decode} such a query would decode under $\KeyedTWOut$ to
-the hidden key and its $\Ltag(j)$ class. The candidates are therefore
-exactly the construction-generated final leaf transcripts, the sequence
-has length at most $\nleaf(\mathcal{B})$, and each leaf tag is fresh when
-its transcript is first created. By Leaf-Transcript Recovery
+\emph{(2) Hidden key.} A direct query may still decode under
+$\KeyedTWOut$ to a $\Ltag(j)$ class for an adversary-chosen key other than
+the hidden key, and is appended as a candidate. But every $\badleaf$ pair
+is a pair of construction-generated transcripts, and under a hidden key
+these are all generated with that key, so it suffices to count collisions
+within the subsequence of construction-generated hidden-key final leaf
+transcripts, of length at most $\nleaf(\mathcal{B})$. Before
+$\mathsf{hit}_{\mathsf{leaf}}$ no direct query has hit the bridged input
+of any such transcript: by \Cref{lem:bridge-decode} such a query would
+decode under $\KeyedTWOut$ to the hidden key and its $\Ltag(j)$ class,
+which is exactly $\mathsf{hit}_{\mathsf{leaf}}$. Each leaf tag in the
+subsequence is therefore fresh when its transcript is first created, and
+the union bound over its $\binom{\nleaf(\mathcal{B})}{2}$ pairs gives the
+displayed bound. By Leaf-Transcript Recovery
 (\Cref{lem:leaf-recovery}), conditioned on no leaf tag collision, equal
 root aggregation inputs identify the same leaf transcript sequence.
 \end{proof}
