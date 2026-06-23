@@ -63,6 +63,9 @@ corresponding accounting argument.
       % Derived lemmas -> INT-CTXT.
       \draw[arr] (lc.east) to[out=30,  in=200] (c7.west);
 
+      % Leaf Tag Collision also feeds the committing collision/aSec proofs.
+      \draw[arr] (lc.east) to[out=-25, in=160] (c8.west);
+
       % Candidate collision accounting -> committing proofs.
       \draw[arr] (cc.east) to[out=0,  in=180] (c8.west);
 
@@ -84,13 +87,21 @@ corresponding accounting argument.
   }
   \caption{Dependency graph of the supporting lemmas in this
     appendix and their consumers. Solid boxes are lemmas; dashed
-    boxes are the proof sections that consume them. The edge from
+    boxes are the proof sections that consume them. The Bridge \&
+    Decode box is \Cref{lem:bridge-decode} together with the exact
+    keyed decoder it specifies (\Cref{def:keyed-twout}). The edge from
     \Cref{lem:transcript-inj} into the committing proofs of
     \Cref{sec:cmtds3,app:committing-transfer} is mediated by
     \Cref{cor:triple-sep} for final-root distinctness and
-    \Cref{cor:output-sep} for candidate-sequence filtering; the edge
+    \Cref{cor:output-sep} for candidate-sequence filtering, while the
+    recovery of a full ciphertext from a final-root transcript---used by
+    both the INT-CTXT and committing proofs---is the refinement
+    \Cref{lem:leaf-recovery}; the edge
     from \Cref{lem:adaptive-candidate} records the collision
-    accounting used by the CMTDs-4 and CMTs proofs. The edge from
+    accounting used by the CMTDs-4 and CMTs proofs. The Leaf Tag
+    Collision box (\Cref{lem:leaf-collision}) feeds INT-CTXT through its
+    hidden-key bound and the committing collision and second-preimage
+    proofs through its adversary-supplied-key bound. The edge from
     \Cref{lem:transcript-inj} into \Cref{lem:freshness} uses
     \Cref{cor:output-sep}; the verification-first root tag guessing
     accounting reached through the same separation is carried out in
