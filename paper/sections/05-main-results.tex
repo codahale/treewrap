@@ -185,29 +185,19 @@ candidate-preimage argument against the query-independent target tag
 and no triple-separation is invoked.
 \label{sec:lift-sketch}
 
-\Cref{app:flat-sponge-lift} carries out the flat-sponge lift in two
-hops. Hop~1 applies the \cite{BDPV08} indifferentiability theorem
-through \Cref{lem:lift-bound}, replacing the real permutation by the
-corresponding flat-RO \TW{} construction interface and the \cite{BDPV08}
-public-primitive simulator at cost at most $\Lift_c(\Ntot)$, where
-$\Ntot = N + \Nprim$ counts construction-internal sponge calls and
-direct primitive queries. Hop~2 (\Cref{lem:derived-adversary}) defines a
+\Cref{app:flat-sponge-lift} carries out the lift in two hops: Hop~1
+(\Cref{lem:lift-bound}) replaces the real permutation by the \cite{BDPV08}
+public-primitive simulator and the flat-RO construction interface at cost
+at most $\Lift_c(\Ntot)$, with $\Ntot = N + \Nprim$, and Hop~2
+(\Cref{lem:derived-adversary}) couples the result, without loss, to a
 derived flat-RO adversary
-$\mathcal{B} = \mathcal{B}_{\text{derived}}(\mathcal{A})$ that answers
-each primitive query by running the simulator against direct $\ROflat$
-queries; this is a lossless equality of joint distributions, and the
-simulator-call filter of \Cref{lem:sim-ro-call-filter} makes each
-primitive query induce at most one $\ROflat$ call, so
-\[
-  \qRO(\mathcal{B}_{\text{derived}}) \leq \Nprim.
-\]
-The random-oracle envelopes of \Cref{sec:thms-pp} are therefore
-instantiated at $\Nprim$, not $\Ntot$, in the headline theorems---as is
-the CMTDs-4 candidate-sequence length bound $m \leq \Nprim + s$ of
-\Cref{sec:cmtds3}, the collision-resistance leaf/root candidate bounds, and the
-direct CMTs-$\ell$ bounds of
-\Cref{app:committing-transfer}, whose challenger encryption checks are
-construction-internal and counted in $N$, not in $\Nprim$.
+$\mathcal{B} = \mathcal{B}_{\text{derived}}(\mathcal{A})$ whose simulator
+answers induce at most one $\ROflat$ call each
+(\Cref{lem:sim-ro-call-filter}), so $\qRO(\mathcal{B}) \leq \Nprim$. The
+random-oracle envelopes of \Cref{sec:thms-pp} are therefore instantiated
+at $\Nprim$ rather than $\Ntot$; the committing, hash, and discoverability
+challengers' encryption and decryption checks are construction-internal
+and counted in $N$.
 
 \subsection{Headline Theorems}
 \label{sec:headline}

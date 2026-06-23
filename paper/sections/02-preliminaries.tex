@@ -74,11 +74,11 @@ loss terms in \Cref{sec:loss-terms}.
     $\qRO$, $\QRO$ & Direct random-oracle queries / cap (RO-model)    & \cref{sec:resources} \\
     $\nleaf$, $\Nleaf$ & Distinct construction-generated final leaf transcripts / cap & \cref{sec:resources} \\
     \midrule
-    $\Lift_c(\Ntot)$        & $\Ntot(\Ntot+1) / 2^{c+1}$, \cite{BDPV08} flat-sponge loss   & \cref{sec:loss-terms} \\
-    $\KeyGuess_k(Q)$        & $Q / 2^k$, ideal-system key guess                       & \cref{sec:loss-terms} \\
-    $\RootColl_\tau(Q, s)$  & $\binom{Q+s}{s} / 2^{\tau(s-1)}$, $s$-way root-collision & \cref{sec:loss-terms} \\
-    $\RootPre_\tau(Q)$      & $(Q+1) / 2^{\tau}$, root-preimage                        & \cref{sec:loss-terms} \\
-    $\LeafColl_\tau(Q)$     & $\binom{Q}{2} / 2^{\tau}$, known-key leaf-collision      & \cref{sec:loss-terms} \\
+    $\Lift_c(\Ntot)$        & \cite{BDPV08} flat-sponge loss   & \cref{sec:loss-terms} \\
+    $\KeyGuess_k(Q)$        & Ideal-system key guess           & \cref{sec:loss-terms} \\
+    $\RootColl_\tau(Q, s)$  & $s$-way root-collision           & \cref{sec:loss-terms} \\
+    $\RootPre_\tau(Q)$      & Root-preimage                    & \cref{sec:loss-terms} \\
+    $\LeafColl_\tau(Q)$     & Known-key leaf-collision         & \cref{sec:loss-terms} \\
     \bottomrule
   \end{tabular}
   \caption{Resource caps and loss terms.}
