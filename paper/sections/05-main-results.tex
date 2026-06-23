@@ -97,7 +97,10 @@ The headline theorems of \Cref{sec:headline} feed on six
 random-oracle-model bounds---the privacy and INT-CTXT envelopes, the
 CMTDs-4 bound, the collision bound, the second-preimage bound, and the preimage bound---whose proofs occupy
 \Cref{sec:privacy,sec:authenticity,sec:cmtds3}; the remaining
-committing-notion bounds live in \Cref{app:committing-transfer}.
+committing-notion bounds live in \Cref{app:committing-transfer}. The
+multi-user lift of the privacy envelope additionally invokes the
+adjacent-hybrid bound of \Cref{lem:mu-single-user-envelope}
+(\Cref{app:lemmas}).
 Resource-indexed
 suprema range over flat-RO adversaries (\Cref{sec:ro-model}) with the
 displayed resources, and the flat-sponge lift of
@@ -191,12 +194,12 @@ root-preimage bound
   \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))
   = (\qRO(\mathcal{B}) + 1) \big/ 2^{\tauroot},
 \]
-again with no key-guessing or leaf-collision term, by the same
-adversary-supplied-key accounting. A single context replaces the $s$
-tuples, so the candidate-collision argument becomes a
+again with no key-guessing term, by the same adversary-supplied-key
+accounting, and no leaf-collision term, since a single submitted input
+admits no pairwise leaf-tag collision case. A single context replaces
+the $s$ tuples, so the candidate-collision argument becomes a
 candidate-preimage argument against the query-independent target tag
 and no triple-separation is invoked.
-\label{sec:lift-sketch}
 
 \Cref{app:flat-sponge-lift} carries out the lift in two hops: Hop~1
 (\Cref{lem:lift-bound}) replaces the real permutation by the \cite{BDPV08}
@@ -221,8 +224,10 @@ security \cite{RS06}, its multi-user indistinguishability lift
 \cite{BT16}, and the commitment security of the root tag
 (\Cref{sec:commit-defs}). The last is stated as the \cite{RS04} hash
 security of the wrapper $\HTW$---collision, second-preimage, and preimage
-resistance---from which the \cite{BH22} full-input CMTDs-4 committing
-bound follows as a corollary; the \cite{MLGR23} context-discoverability
+resistance. Collision resistance yields the \cite{BH22} full-input
+CMTDs-4 committing notion only as a weaker implication; the sharper
+no-$\LeafColl$ CMTDs-4 bound stated below comes instead from a dedicated
+root-collision derivation. The \cite{MLGR23} context-discoverability
 notion, a ciphertext-level guarantee distinct from preimage resistance,
 is established separately (\Cref{thm:cdy-full}). For
 the AE-style notions the ideal side
@@ -694,7 +699,7 @@ root-collision term.}
 \label{tab:concrete-security}
 \begin{tabular}{@{}lcc@{}}
 \toprule
-Notion & Dominant term & At the cap \\
+Notion & Dominant scale & At the cap \\
 \midrule
 All-in-one AE & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 Multi-user ind. & $2D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\

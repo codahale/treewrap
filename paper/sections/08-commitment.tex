@@ -86,10 +86,13 @@ Every execution then admits a chronological sequence of root tag inputs
 such that
 \begin{enumerate}
 \item each distinct direct query whose input $Y$ decodes under
-  $\KeyedTWOut$ to a root tag output-point class---$\Rmsg^+$ (the
-  single-chunk root tag, aggregation elided) or $\Rtag$ (the multi-chunk
-  root tag)---is appended as a candidate before its $\ROflat$ lookup, and
-  contributes at most one candidate;
+  $\KeyedTWOut$ to a root tag output-point class---$\Rmsg^+$ (the final
+  root message block, which carries the root tag only on the no-leaf path)
+  or $\Rtag$ (the aggregated root tag)---is appended as a candidate before
+  its $\ROflat$ lookup, and contributes at most one candidate; multi-chunk
+  computations also reach $\Rmsg^+$ with zero requested output before
+  aggregation, so this predicate over-approximates the root tag candidate
+  set, which only loosens the count;
 \item if the challenger reaches its checks, each $\flatmap(R_i)$ is in
   the sequence, appended---if not already present---immediately before
   the $i$-th root tag answer is sampled;
@@ -102,7 +105,8 @@ such that
 \end{lemma}
 
 \begin{proof}
-The committing and discoverability games are keyless: all keys are
+The committing, discoverability, and hash (collision, second-preimage,
+and preimage) games are keyless: all keys are
 adversary-supplied, so a direct query to a keyed transcript is one of
 $\mathcal{B}$'s visible $\ROflat$ queries counted in $\qRO(\mathcal{B})$,
 and there is no $\badkey$ event. No construction oracle runs during the

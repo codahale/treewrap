@@ -631,9 +631,9 @@ component $Z$ sampled uniformly from $\bits^w$ for some $w \geq k$---the
 standard case being the hidden key, $Z = K$ and $w = k$, used in
 \Cref{sec:privacy,sec:authenticity}---direct adversary access to
 $\ROflat$, and an immediate abort event $\badkey$ that fires on a
-direct query $(Y,\ell)$ exactly when $\KeyedTWOut_Z(Y) = (Z,\mathcal{C})$
-for some counted output-point class $\mathcal{C}$ of
-\Cref{tab:keyed-twout}. Suppose that, before the
+direct query $(Y,\ell)$ exactly when $Y$ decodes to some counted
+output-point class $\mathcal{C}$ of \Cref{tab:keyed-twout} with
+$\KeyedTWOut_Z(Y) = Z$. Suppose that, before the
 abort, the following invariant holds for every direct query position
 $i$: after conditioning on the full visible execution prefix and on
 the set $S_i$ of distinct decoded candidate $Z$-values from earlier direct
@@ -760,7 +760,7 @@ subsequence is therefore fresh when its transcript is first created, and
 the union bound over its $\binom{\nleaf(\mathcal{B})}{2}$ pairs gives the
 displayed bound. By Leaf-Transcript Recovery
 (\Cref{lem:leaf-recovery}), conditioned on no leaf tag collision, equal
-root aggregation inputs identify the same leaf transcript sequence.
+flattened final-root inputs identify the same leaf transcript sequence.
 \end{proof}
 
 \subsection{Transcript Freshness}
