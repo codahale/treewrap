@@ -1278,7 +1278,7 @@ are the user-$d$ resource caps, then
   \bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
        - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr|
   \leq
-  2\KeyGuess_k(\qRO(\mathcal{B}))
+  \KeyGuess_k(\qRO(\mathcal{B}))
   + \frac{\nleaf^{(d)}(\nleaf^{(d)}-1)}{2^{\tauleaf+1}}
   + \frac{\qv^{(d)}}{2^{\tauroot}}.
 \]
@@ -1288,80 +1288,147 @@ are the user-$d$ resource caps, then
 The fixed-output branch on a key collision is identical in
 $H_{d-1}^\star$ and $H_d^\star$, so only the branch with pairwise
 distinct keys contributes. On that branch, the two hybrids differ only
-in user $d$: users $e < d$ are ideal in both hybrids, and users
-$e > d$ are real in both hybrids.
+in user $d$: users $e < d$ are ideal in both hybrids, users
+$e > d$ are real in both hybrids, and user $d$ is answered by
+$(\Enc_{K_d}^\RO,\Ver_{K_d}^\RO)$ in $H_{d-1}^\star$ and by
+$(\Rand,\Replay)$ in $H_d^\star$.
 
 Let $\mathcal{E}_d$ denote the common surrounding environment. It runs
 $\mathcal{B}$, answers users $e < d$ by their $(\Rand,\Replay)$
 interfaces, answers users $e > d$ by
 $\Enc_{K_e}^\RO,\Ver_{K_e}^\RO$, forwards $\mathcal{B}$'s direct
-$\ROflat$ queries unchanged, and shares the same lazy $\ROflat$ table
-with user $d$. The Bellare--Namprempre insertion is pathwise in this
-environment. Insert the interface in which user $d$'s encryption oracle
-is still real but user $d$'s verification oracle is replaced by its
-replay table. The first hop is the user-$d$ INT-CTXT event; the second
-hop is the user-$d$ privacy replacement with the same environment and
-replay table. The replay table is determined by user $d$'s encryption
-answers and adds no direct $\ROflat$ queries or construction-generated
-transcripts.
+$\ROflat$ queries unchanged, and shares one lazy $\ROflat$ table with
+user $d$. The modular Bellare--Namprempre argument would insert the
+intermediate interface that keeps user $d$'s encryption real but
+replaces its verification by the replay table, and bound the two hops
+separately; this charges the user-$d$ key-test event once in the
+INT-CTXT hop and once again in the privacy hop. We instead couple
+$H_{d-1}^\star$ and $H_d^\star$ directly, so that this event is charged
+only once.
 
-The privacy and INT-CTXT accounting used in these two hops is local to
-user $d$'s keyed transcript language. In the privacy hop, the
-one-query replacement of \Cref{lem:priv-one-query-replacement} only
-requires that no direct query has read a user-$d$ counted transcript
-before $\badkey^{(d)}$, the $\badkey$ event of
-\Cref{sec:privacy,sec:authenticity} instantiated at user $d$'s key
-$K_d$; any extra lazy-table entries
-written by the real user-$d$ encryption computation are unobservable
-before that abort. The accepted user-$d$ encryption queries are
-nonce-respecting because the mu-ind interface enforces nonce uniqueness
-per user. In the INT-CTXT hop, the analysis of \Cref{thm:intctxt-ro}---its
-visible-prefix key uniformity (\Cref{lem:int-key-uniformity}), its
-leaf-freshness and encryption-first-replay steps, and the
-verification-first root-guessing bound
-(\Cref{lem:int-verification-first-root-guess})---refers only to user-$d$
-hidden-key transcript points, user-$d$ final leaf transcripts, and
-user-$d$ non-replay verification submissions.
+\paragraph{Coupling until divergence.} Run the two hybrids on shared
+adversary coins and one shared lazy $\ROflat$ table. Introduce the
+user-$d$ instances of the abort events of
+\Cref{sec:privacy,sec:authenticity}: $\badkey^{(d)}$, that a direct
+$\ROflat$ query decodes under $\KeyedTWOut$ to $K_d$ and a counted
+output-point class; $\badleaf^{(d)}$, that two distinct user-$d$
+construction-generated final leaf transcripts receive the same
+$\tauleaf$-bit projection; and $\forge^{(d)}$, that a non-replay
+user-$d$ verification query is accepted by $\Ver_{K_d}^\RO$.
 
-It remains to justify that the same-RO environment does not enlarge the
-direct-query term. The real users $e > d$ may perform
-construction-internal $\ROflat$ lookups while simulating
-$\Enc_{K_e}^\RO$ and $\Ver_{K_e}^\RO$. Whenever such a lookup lies in a
-counted keyed transcript class, \Cref{lem:bridge-decode} decodes its
-candidate key as $K_e$; on the non-collision branch this is different
-from $K_d$. If the lookup is outside the counted keyed language, it is
-irrelevant to $\badkey^{(d)}$. Thus foreign-user
-construction lookups neither trigger user $d$'s key-test event nor
-pre-read a user-$d$ hidden transcript point. They also do not create
-user-$d$ leaf tag collisions or user-$d$ verification attempts, which
-are counted by $\nleaf^{(d)}$ and $\qv^{(d)}$.
+Couple the two hybrids on shared adversary coins and one shared lazy
+$\ROflat$ table, with user $d$'s $\Rand$ answers in $H_d^\star$ set equal
+to user $d$'s real encryption answers in $H_{d-1}^\star$. We show the two
+hybrids' visible transcripts agree until $\badkey^{(d)} \cup \forge^{(d)}$.
 
-The key-test contribution is taken in the original pre-sampled-key
-experiment, not in a renormalized experiment conditioned on the
-non-collision branch. Fix the foreign keys and run the visible-prefix
-coupling used in the user-$d$ privacy and INT-CTXT proofs, with
-foreign-key transcript addresses left unchanged. Before the first
-user-$d$ key hit, the visible prefix is invariant under renaming $K_d$
-among keys not already tested and not equal to any fixed foreign key.
-For each fresh candidate key tested by one of $\mathcal{B}$'s original
-direct $\ROflat$ queries, the event contributing on the stopped branch
-is contained in $\{K_d \text{ equals that candidate}\}$; if the
-candidate is a foreign key, it contributes nothing on the
-non-collision branch. Hence each fresh original direct test costs at
-most $2^{-k}$ in the unconditioned key experiment, and at most
-$\qRO(\mathcal{B})$ such tests occur.
+\emph{The coupled $H_d^\star$ has the true $H_d^\star$ law.} Each real
+user-$d$ encryption output is a projection of $\ROflat$ at the distinct
+transcript points of its computation---distinct within a computation and,
+by encryption nonce-uniqueness and Transcript Injectivity
+(\Cref{lem:transcript-inj}), across distinct encryptions---so until a
+direct query reads such a point the outputs are jointly uniform of the
+prescribed lengths, the freshness of
+\Cref{lem:priv-one-query-replacement,lem:priv-stopped-bound}. The present
+environment adds a real user-$d$ verification oracle, absent from the
+privacy game. Because only encryption queries are nonce-unique, a
+non-replay verification may reuse an encryption nonce and lazily read a
+keystream or root tag point the same-nonce encryption later reaches; but
+lazy sampling draws each point uniformly when first read, so its value is
+unchanged and stays marginally uniform. In $H_d^\star$ the user-$d$
+verification oracle is $\Replay$, which answers from the recorded
+ciphertexts without reading $\ROflat$. Hence the coupled $H_d^\star$
+transcript has the law of the true $H_d^\star$ until $\badkey^{(d)}$: its
+encryption answers are the marginally uniform strings of $\Rand$ and its
+verification answers are the replay decisions, with no further $\ROflat$
+dependence. (Conditioning on a particular $H_{d-1}^\star$ verification
+outcome can constrain a coupled tag, but that is a property of the joint
+coupling; the coupled $H_d^\star$ marginal is what must match the true
+$H_d^\star$, and it does.)
 
-The proofs of \Cref{thm:priv-ro,thm:intctxt-ro} therefore apply to the
-two user-$d$ hops with the same direct-query cap
-$\qRO(\mathcal{B})$ and the same user-$d$ construction resources
-$\nleaf^{(d)},\qv^{(d)}$. The surrounding environment affects oracle
-scheduling and foreign construction-internal table entries, but not the
-counted user-$d$ events. The privacy hop contributes
-$\KeyGuess_k(\qRO(\mathcal{B}))$, and the INT-CTXT hop contributes
+\emph{Agreement until $\badkey^{(d)} \cup \forge^{(d)}$.} Encryption
+answers are equal by construction. A verification query whose tuple is
+recorded returns accept in both hybrids through the shared replay-table
+membership check, which precedes the real-versus-ideal decryption branch
+(\Cref{sec:mu-setting}), so real decryption is never run on a recorded
+tuple. A non-replay query returns reject in $H_d^\star$ and the bit
+$[\,\Ver_{K_d}^\RO\text{ accepts}\,]$ in $H_{d-1}^\star$; the two agree
+unless that bit is accept, the event $\forge^{(d)}$. A real verification
+reads hidden-key points but exposes only this bit, which is independent
+of the keystream values it reads---decryption absorbs the submitted
+ciphertext, not the recovered plaintext (\Cref{lem:duplex-flat})---and
+depends on an encryption output only through the root tag it recomputes.
+In the reused-nonce case above this correlates the $H_{d-1}^\star$ bit
+with that encryption's tag, but the $H_d^\star$ verification is $\Replay$
+and the coupled encryption answers coincide, so the two coordinates still
+agree on such a query unless it accepts. Direct-query answers are read
+from the shared table and agree until a direct query reads a user-$d$
+hidden-key point ($\badkey^{(d)}$). Therefore the visible transcripts
+agree until $\badkey^{(d)} \cup \forge^{(d)}$, and a union bound ordered
+by first occurrence (inserting the leaf abort to split
+$\Pr[\forge^{(d)} \text{ before } \badkey^{(d)}]$) gives
 \[
+  \bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
+       - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr|
+  \leq
+  \Pr[\badkey^{(d)}]
+  + \Pr[\badleaf^{(d)} \text{ before } \badkey^{(d)}]
+  + \Pr[\forge^{(d)} \text{ before } \badkey^{(d)} \cup \badleaf^{(d)}].
+\]
+
+\paragraph{The environment does not enlarge the user-$d$ events.} The
+real users $e > d$ perform construction-internal $\ROflat$ lookups while
+simulating $\Enc_{K_e}^\RO$ and $\Ver_{K_e}^\RO$. Whenever such a lookup
+lies in a counted keyed transcript class, \Cref{lem:bridge-decode}
+decodes its candidate key as $K_e$, which on the non-collision branch
+differs from $K_d$; a lookup outside the counted keyed language is
+irrelevant to $\badkey^{(d)}$. Foreign-user lookups therefore neither
+trigger user $d$'s key-test event nor pre-read a user-$d$ hidden
+transcript point, and they create no user-$d$ leaf tag collision or
+user-$d$ non-replay verification submission, which are counted by
+$\nleaf^{(d)}$ and $\qv^{(d)}$. The three accounting events are thus
+local to user $d$'s keyed transcript language.
+
+\paragraph{Bounding the three terms.} For $\Pr[\badkey^{(d)}]$, the
+visible-prefix key uniformity of \Cref{lem:int-key-uniformity} holds for
+$K_d$ in the environment $\mathcal{E}_d$. The key-test contribution is
+taken in the original pre-sampled-key experiment, not in one
+renormalized to the non-collision branch: fix the foreign keys and run
+the visible-prefix coupling with foreign-key transcript addresses left
+unchanged; before the first user-$d$ key hit, the visible prefix is
+invariant under renaming $K_d$ among keys not already tested and not
+equal to a fixed foreign key. For each fresh candidate key tested by one
+of $\mathcal{B}$'s direct $\ROflat$ queries, the contributing event is
+contained in $\{K_d \text{ equals that candidate}\}$, costing at most
+$2^{-k}$, and a foreign candidate contributes nothing; with at most
+$\qRO(\mathcal{B})$ such tests, \Cref{lem:key-tests} gives
+$\Pr[\badkey^{(d)}] \leq \KeyGuess_k(\qRO(\mathcal{B}))$.
+For the leaf term, before $\badkey^{(d)}$ no direct query has pre-read
+the bridged input of a user-$d$ hidden-key final leaf transcript---such
+a query would decode under $\KeyedTWOut$ to $K_d$ and its $\Ltag(j)$
+class and would itself be $\badkey^{(d)}$---so the hidden-key instance of
+\Cref{lem:leaf-collision} gives
+$\Pr[\badleaf^{(d)} \text{ before } \badkey^{(d)}] \leq
+\nleaf^{(d)}(\nleaf^{(d)}-1)/2^{\tauleaf+1}$.
+For the forgery term, before $\badkey^{(d)} \cup \badleaf^{(d)}$ every
+encryption-first final root transcript class admits no accepting
+non-replay submission---by the final-root determinacy of
+\Cref{lem:transcript-inj} and Leaf-Transcript Recovery
+(\Cref{lem:leaf-recovery}), a non-replay submission in such a class
+reaches the already-returned root tag and fails the tag comparison---so
+every accepting non-replay submission is verification-first, and
+\Cref{lem:int-verification-first-root-guess} gives
+$\Pr[\forge^{(d)} \text{ before } \badkey^{(d)} \cup \badleaf^{(d)}]
+\leq \qv^{(d)}/2^{\tauroot}$.
+
+Summing the three bounds gives
+\[
+  \bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
+       - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr|
+  \leq
   \KeyGuess_k(\qRO(\mathcal{B}))
   + \frac{\nleaf^{(d)}(\nleaf^{(d)}-1)}{2^{\tauleaf+1}}
-  + \frac{\qv^{(d)}}{2^{\tauroot}}.
+  + \frac{\qv^{(d)}}{2^{\tauroot}},
 \]
-Combining the two hops gives the stated bound.
+with the user-$d$ key-test event $\badkey^{(d)}$ charged a single time
+rather than once per Bellare--Namprempre hop.
 \end{proof}

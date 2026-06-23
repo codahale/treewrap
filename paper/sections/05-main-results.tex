@@ -296,7 +296,7 @@ execution-uniform user cap $D$ and the global resources of
   \;\leq\;
   \Lift_c(\Ntot)
   + \frac{D(D - 1)}{2^{k + 1}}
-  + 2D \cdot \KeyGuess_k(\Nprim)
+  + D \cdot \KeyGuess_k(\Nprim)
   + \frac{\Nleaf(\Nleaf - 1)}{2^{\tauleaf + 1}}
   + \frac{\Qv}{2^{\tauroot}}.
 \]
@@ -341,15 +341,15 @@ hybrid bound
   \bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
        - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr|
   \leq
-  2\KeyGuess_k(\qRO(\mathcal{B}))
+  \KeyGuess_k(\qRO(\mathcal{B}))
   + \frac{\nleaf^{(d)}(\nleaf^{(d)}-1)}{2^{\tauleaf+1}}
   + \frac{\qv^{(d)}}{2^{\tauroot}}.
 \]
 
 Using $\qRO(\mathcal{B}) \leq \Nprim$, each hybrid step costs
-$2\KeyGuess_k(\Nprim)$ plus the per-user leaf-collision and
+$\KeyGuess_k(\Nprim)$ plus the per-user leaf-collision and
 verification-tag terms. Summing across $d = 1,\dots,D$ gives
-$2D \KeyGuess_k(\Nprim)$ for the key-guess contribution. The
+$D \KeyGuess_k(\Nprim)$ for the key-guess contribution. The
 leaf-collision contribution satisfies
 \[
   \sum_d \frac{\nleaf^{(d)}(\nleaf^{(d)} - 1)}{2^{\tauleaf + 1}}
@@ -579,7 +579,7 @@ following closed-form bounds.
   \Advmuind_\TW(\mathcal{A})
   \;\leq\;
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
-  + \frac{2 D \Nprim + \Qv}{2^{256}}
+  + \frac{D \Nprim + \Qv}{2^{256}}
   + \frac{D(D - 1) + \Nleaf(\Nleaf - 1)}{2^{257}}.
 \]
 
@@ -702,7 +702,7 @@ root-collision term.}
 Notion & Dominant scale & At the cap \\
 \midrule
 All-in-one AE & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
-Multi-user ind. & $2D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
+Multi-user ind. & $D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
 $\HTW$ collision (Coll) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 $\HTW$ second-preimage (aSec) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 $\HTW$ preimage (Pre) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
@@ -724,13 +724,13 @@ is likewise $\leq 2^{-131}$; and the root-preimage term
 $(\Nprim+1)/2^{256}$ is at most
 $2 \cdot 2^{-193}$. The single-user totals are therefore dominated by
 $\Lift_c$ and stay below $2^{-128}$. The multi-user bound is the
-exception: its hybrid-induced term $2D \cdot \KeyGuess_k(\Nprim) \leq
-2D\Ntot/2^{256}$ reaches $\approx 4\Lift_c$ at the upper end and
+exception: its hybrid-induced term $D \cdot \KeyGuess_k(\Nprim) \leq
+D\Ntot/2^{256}$ reaches $\approx 2\Lift_c$ at the upper end and
 dominates---staying at most $\Lift_c$ once
-$D \leq \Ntot(\Ntot+1)/(4\Nprim)$ (for $\Nprim > 0$; when
+$D \leq \Ntot(\Ntot+1)/(2\Nprim)$ (for $\Nprim > 0$; when
 $\Nprim = 0$ the hybrid-induced term vanishes), typical of any practical
 deployment---and the total there is at most
-$7 \cdot 2^{-131} + 2 \cdot 2^{-194} < 8 \cdot 2^{-131} = 2^{-128}$.
+$5 \cdot 2^{-131} + 2 \cdot 2^{-194} < 8 \cdot 2^{-131} = 2^{-128}$.
 Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to at most
 $\rho \cdot 2^{63} = 167 \cdot 2^{63} < 2^{71}$ bytes of plaintext,
 associated data, ciphertext, and aggregation through the duplex
@@ -750,11 +750,11 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
 \item \emph{$\KeyGuess_k(Q) = Q / 2^k$.} Tight at constants: a direct
   random-guess attack on a $k$-bit key matches the per-query success
   probability $1 / 2^k$. The multi-user bound's dominant term
-  $2D\,\KeyGuess_k(\Nprim) = 2D\Nprim / 2^k$ is likewise tight up to the
-  factor $2$: against the $D$ independent user keys each direct guess
-  matches some key with probability $D / 2^k$, so $\Nprim$ guesses
+  $D\,\KeyGuess_k(\Nprim) = D\Nprim / 2^k$ is likewise tight at the
+  leading constant: against the $D$ independent user keys each direct
+  guess matches some key with probability $D / 2^k$, so $\Nprim$ guesses
   recover a user key---and distinguish---with probability
-  $\approx D\Nprim / 2^k$.
+  $\approx D\Nprim / 2^k$, matching the bound.
 \item \emph{$\RootColl_\tau(Q, s) = \binom{Q + s}{s} / 2^{\tau (s -
   1)}$.} Tight up to lower-order terms: it is the standard $s$-way
   multi-collision bound on a $\tau$-bit projection of $\ROflat$, and
