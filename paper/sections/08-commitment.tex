@@ -25,8 +25,8 @@ Third, the random-oracle collision bound (\Cref{thm:coll-ro}) keeps
 the root tag collision argument intact but, because colliding inputs may
 use different ciphertext bodies, first rules out the
 only other way distinct bodies can reach a common root transcript---a
-collision among the absorbed leaf tags---through the known-key leaf tag
-collision lemma (\Cref{lem:known-key-leaf-collision}); its
+collision among the absorbed leaf tags---through the leaf tag collision
+bound (\Cref{lem:leaf-collision}); its
 public-permutation form is the headline \Cref{thm:coll}.
 
 The committing and discoverability arguments below rest on one structural
@@ -172,53 +172,6 @@ $Q=\qRO(\mathcal{B})$ and $\tau=\tauroot$ gives
 \]
 \end{proof}
 
-\begin{lemma}[Random-Oracle Known-Key Leaf Collision]
-\label{lem:known-key-leaf-collision}
-For any \TW{} random-oracle-model game with adversary-supplied keys and
-adversary $\mathcal{B}$, let $\badleaf^\star$ be the event that two
-distinct construction-generated final leaf transcripts receive the same
-$\tauleaf$-bit $\RF$ projection. Then
-\[
-  \Pr[\badleaf^\star]
-  \leq
-  \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))
-  =
-  \frac{\binom{\qRO(\mathcal{B})+\nleaf(\mathcal{B})}{2}}{2^{\tauleaf}}.
-\]
-\end{lemma}
-
-\begin{proof}
-Build a leaf tag candidate sequence. During
-$\mathcal{B}$'s direct oracle phase, append each distinct direct query
-input $Y$ before answering it if $\KeyedTWOut(Y)$ decodes to a final
-leaf tag output-point class $\Ltag[j]$. As the game's construction
-computations create distinct final leaf transcripts, append the bridged
-input of each immediately before its leaf tag
-oracle answer is sampled, unless that input is already in the sequence.
-If the input was touched earlier by a direct query, then
-\Cref{lem:bridge-decode} and \Cref{cor:output-sep} imply that the
-earlier query was already appended as a leaf tag candidate. If it was
-touched earlier by a construction computation, then
-\Cref{cor:output-sep}, transcript injectivity
-(\Cref{lem:transcript-inj}), and bridge injectivity imply that the same
-final leaf transcript had already been generated; repeated evaluations
-are not new collision opportunities. Thus every newly appended
-candidate satisfies the predictability and unrevealed-value premises of
-the adaptive candidate-collision argument, and the sequence length is at
-most $\qRO(\mathcal{B})+\nleaf(\mathcal{B})$.
-
-For any fixed unordered pair of candidate positions, expose the two
-positions in chronological order. When the later candidate is appended,
-its $\tauleaf$-bit projection is still unrevealed and uniform
-independently of the earlier one, so the pair collides with probability
-$2^{-\tauleaf}$. A union bound over at most
-$\binom{\qRO(\mathcal{B})+\nleaf(\mathcal{B})}{2}$ pairs gives the
-claim. The event $\badleaf^\star$ is contained in this candidate
-collision event because every construction-generated final leaf
-transcript is either appended when first created or was already appended
-by a direct query to the same bridged input.
-\end{proof}
-
 \begin{theorem}[Random-Oracle Collision Resistance of $\HTW$]
 \label{thm:coll-ro}
 For every $s \geq 2$ and every $s$-way collision
@@ -232,11 +185,13 @@ adversary $\mathcal{B}$ in the \TW{} random-oracle model,
 \end{theorem}
 
 \begin{proof}
-Run the random-oracle collision game. By
-\Cref{lem:known-key-leaf-collision}, the probability of
-$\badleaf^\star$ is at most the stated leaf-collision term, so it
-remains to bound the probability of the win event under
-$\neg\badleaf^\star$.
+Run the random-oracle collision game. Let $\badleaf^\star$ be the event
+that two distinct construction-generated final leaf transcripts receive
+the same $\tauleaf$-bit $\RF$ projection. By the adversary-supplied-key
+bound of \Cref{lem:leaf-collision}, $\Pr[\badleaf^\star] \leq
+\LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))$, the stated
+leaf-collision term, so it remains to bound the probability of the win
+event under $\neg\badleaf^\star$.
 
 After rejecting unless the $s$ output inputs are pairwise distinct and in
 the \TW{} domain, the challenger performs $m = s$ deterministic
@@ -329,10 +284,11 @@ For every aSec adversary $\mathcal{B}$ in the \TW{} random-oracle model
 Run the random-oracle aSec game. The challenger draws the challenge input
 $X$, encrypts it to obtain $T = \HTW(X)$ at a final root transcript $R_X$,
 and gives $X$ to $\mathcal{B}$, which outputs an input $X' \neq X$; the
-win event is $\HTW(X') = T$. By \Cref{lem:known-key-leaf-collision} the
-probability of a collision $\badleaf^\star$ among the leaf transcripts of
-the encryptions of $X$ and $X'$ is at most the stated leaf term, so it
-remains to bound the win under $\neg\badleaf^\star$.
+win event is $\HTW(X') = T$. By the adversary-supplied-key bound of
+\Cref{lem:leaf-collision} the probability of a collision
+$\badleaf^\star$ among the leaf transcripts of the encryptions of $X$ and
+$X'$ is at most the stated leaf term, so it remains to bound the win
+under $\neg\badleaf^\star$.
 
 Here $T = \lfloor \RF(R_X) \rfloor_{\tauroot}$ is the root tag of the
 challenge transcript $R_X$. Encrypting $X'$ reaches a final root
