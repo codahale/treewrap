@@ -347,17 +347,70 @@ their absorbed leaf ciphertext bodies. Together with the common root
 ciphertext blocks this recovers the same full absorbed ciphertext.
 \end{proof}
 
-\paragraph{Bridge injectivity on transcript prefixes.}
-For \TW{}, the \cite[Theorem~3]{BDPV11} bridge has $r = r_{\max}$ and
-maps a native flattened input $U$ to $U \concat 1 \concat 0^q$, where
-$q = (-|U|-2) \bmod r$. Any string in this image has a unique inverse:
-$q$ is the number of trailing zero bits, the preceding bit is the
-inserted $1$, and deleting this suffix recovers $U$. Thus equality of
-bridged images $\flatmap(X)=\flatmap(X')$ for well-formed typed \TW{}
-prefixes implies equality of their native flattened inputs, after which
-\Cref{lem:transcript-inj} gives the same recovery consequences as above.
-This injectivity is what underlies Opening Triple Separation
-(\Cref{cor:triple-sep}), stated and proved in \Cref{sec:cmtds3}: distinct
+\subsection{Bridge and Typed Decoding}
+\label{app:lem-bridge-decode}
+
+\begin{lemma}[Bridge and Typed Decoding]
+\label{lem:bridge-decode}
+The random-oracle games used in
+\Cref{sec:privacy,sec:authenticity,sec:cmtds3,app:committing-transfer}
+are ordinary random-oracle games on a single random oracle
+$\ROflat : \bits^* \to \bits^\infty$ over the unpadded
+\cite{BDPV08} $H$-input domain (\Cref{sec:ro-model}), with \TW{} root and
+leaf duplex outputs answered by the typed restriction
+\[
+  \RF(X) = \ROflat(\flatmap(X)),
+  \qquad \flatmap(X) = \bridge[r, r_{\max}]\bigl(\mathsf{raw\_flat}(X)\bigr),
+\]
+for $r = r_{\max} = 1344$. Here $\mathsf{raw\_flat}(X)$ is the native
+flattened input $\Flat(\cdot)$ of \Cref{app:wf-transcripts} applied to
+the duplex-call sequence of $X$, and $\bridge[r, r_{\max}]$ is the
+\cite{BDPV11} Theorem~3 preprocessing map. The induced map
+$X \mapsto \flatmap(X)$ is injective on well-formed typed \TW{} duplex
+transcript prefixes. The exact decoder $\KeyedTWOut$ of
+\Cref{def:keyed-twout} then maps any direct-query input to either $\bot$
+or a unique candidate key and counted output-point class.
+\end{lemma}
+
+\begin{proof}
+The bridge $\bridge[r, r_{\max}]$ is described by the proof of
+\cite[Theorem~3]{BDPV11} in three steps: (1)~pad the input with
+$\padtenone[r]$; (2)~for each $r$-bit block, append $r_{\max} - r$
+zero bits; (3)~strip the trailing $\padten$ from the result. The
+$\padtenone$ padding in step~(1) appends a~$1$, then
+$q = (-|\mathsf{raw\_flat}(X)| - 2) \bmod r$ zero bits, then a closing
+$1$; the $\padten$-unpadding in step~(3) strips the $r_{\max} - r$
+trailing zero bits introduced by step~(2) together with the closing
+$1$ of step~(1). For \TW{} with $r = r_{\max}$, step~(2) appends an
+empty string and step~(3) strips zero trailing zeros and the closing
+$1$, so the net effect of steps~(1) and~(3) is to map a native flattened
+input $U = \mathsf{raw\_flat}(X)$ to $U \concat 1 \concat 0^q$. Any
+string in this image has a unique inverse: $q$ is the number of trailing
+zero bits, the preceding bit is the inserted $1$, and deleting this
+suffix recovers $U$.
+
+Injectivity of $\flatmap$ on well-formed typed \TW{} prefixes then
+follows from \Cref{lem:transcript-inj}: distinct well-formed typed
+prefixes have distinct
+$\mathsf{raw\_flat}(\cdot)$ images, and the bridge is injective on
+that image. Direct adversary queries on inputs outside the bridged
+\TW{} well-formed transcript language still count in $\qRO(\mathcal{B})$
+(\Cref{sec:resources}) but cannot trigger
+$\badkey$.
+
+Counted transcript lookup points are the well-formed prefixes of
+\Cref{def:wf-transcripts} whose classes are listed in
+\Cref{tab:keyed-twout}: root or leaf initialization, root AD blocks,
+root and leaf message blocks, root aggregation blocks, and the final
+root tag point. An input accepted by $\KeyedTWOut$ therefore fixes a
+unique candidate key---by the injectivity just shown and the fixed-width
+key field of \Cref{lem:transcript-inj}---and a unique output-point class,
+by Output-Point Separation (\Cref{cor:output-sep}); inputs outside this
+well-formed transcript language decode to none.
+\end{proof}
+
+The bridge injectivity established here underlies Opening Triple
+Separation (\Cref{cor:triple-sep}, \Cref{sec:cmtds3}): distinct
 $(K, N, A)$ triples yield distinct bridged final root transcripts.
 
 \begin{corollary}[Output-Point Separation]
@@ -385,8 +438,8 @@ hence in their flattened inputs.
 \end{corollary}
 
 \begin{proof}
-Bridge injectivity recovers equality of native flattened inputs from
-equality of bridged inputs, after which \Cref{lem:transcript-inj}
+\Cref{lem:bridge-decode} recovers equality of native flattened inputs
+from equality of bridged inputs, after which \Cref{lem:transcript-inj}
 recovers the duplex-call sequence and its per-call
 $(\sigma, \sigph)$ pairs. The first call's $\sigma$ is
 $\prfxroot \concat K \concat N$ for root instances and
@@ -400,69 +453,8 @@ class on the same instance differ in some recovered call's $\sigma$ or in
 the sequence length, hence in their flattened inputs.
 \end{proof}
 
-\subsection{Bridge and Typed Decoding}
-\label{app:lem-bridge-decode}
-
-\begin{lemma}[Bridge and Typed Decoding]
-\label{lem:bridge-decode}
-The random-oracle games used in
-\Cref{sec:privacy,sec:authenticity,sec:cmtds3,app:committing-transfer}
-are ordinary random-oracle games on a single random oracle
-$\ROflat : \bits^* \to \bits^\infty$ over the unpadded
-\cite{BDPV08} $H$-input domain (\Cref{sec:ro-model}), with \TW{} root and
-leaf duplex outputs answered by the typed restriction
-\[
-  \RF(X) = \ROflat(\flatmap(X)),
-  \qquad \flatmap(X) = \bridge[r, r_{\max}]\bigl(\mathsf{raw\_flat}(X)\bigr),
-\]
-for $r = r_{\max} = 1344$. Here $\mathsf{raw\_flat}(X)$ is the native
-flattened input $\Flat(\cdot)$ of \Cref{app:wf-transcripts} applied to
-the duplex-call sequence of $X$. The bridge $\bridge[r, r_{\max}]$ is the
-\cite{BDPV11} Theorem~3 preprocessing map, and the induced map
-$X \mapsto \flatmap(X)$ is injective on well-formed typed \TW{} duplex
-transcript prefixes. The exact decoder
-$\KeyedTWOut$ defined below maps any direct-query input to either
-$\bot$ or a unique candidate key and counted output-point class.
-\end{lemma}
-
-\begin{proof}
-The bridge $\bridge[r, r_{\max}]$ is described by the proof of
-\cite[Theorem~3]{BDPV11} in three steps: (1)~pad the input with
-$\padtenone[r]$; (2)~for each $r$-bit block, append $r_{\max} - r$
-zero bits; (3)~strip the trailing $\padten$ from the result. The
-$\padtenone$ padding in step~(1) appends a~$1$, then
-$q = (-|\mathsf{raw\_flat}(X)| - 2) \bmod r$ zero bits, then a closing
-$1$; the $\padten$-unpadding in step~(3) strips the $r_{\max} - r$
-trailing zero bits introduced by step~(2) together with the closing
-$1$ of step~(1). For \TW{} with $r = r_{\max}$, step~(2) appends an
-empty string and step~(3) strips zero trailing zeros and the closing
-$1$, so the net effect of steps~(1) and~(3) is to append $1 \concat
-0^q$. The bridge-injectivity paragraph above gives the direct inverse
-on this image: count the trailing zeros, delete them and the preceding
-inserted $1$, and recover the native flattened input.
-
-Injectivity of $\flatmap$ on well-formed typed \TW{} prefixes then
-follows from \Cref{lem:transcript-inj}: distinct well-formed typed
-prefixes have distinct
-$\mathsf{raw\_flat}(\cdot)$ images, and the bridge is injective on
-that image. Direct adversary queries on inputs outside the bridged
-\TW{} well-formed transcript language still count in $\qRO(\mathcal{B})$
-(\Cref{sec:resources}) but cannot trigger
-$\badkey$.
-
-Counted transcript lookup points are the well-formed prefixes of
-\Cref{def:wf-transcripts} whose classes are listed in
-\Cref{tab:keyed-twout}: root or leaf initialization, root AD blocks,
-root and leaf message blocks, root aggregation blocks, and the final
-root tag point. \Cref{cor:output-sep} separates these output points, so
-an input accepted by $\KeyedTWOut$ fixes at most one candidate key and
-one output-point class, and inputs outside this well-formed transcript
-language decode to none.
-\end{proof}
-
-\medskip
-\noindent\textbf{Exact keyed decoder.}
-
+\begin{definition}[Exact Keyed Decoder]
+\label{def:keyed-twout}
 For a direct query to $\ROflat$ with input $Y$ and finite length
 $\ell$, define $\KeyedTWOut(Y)$ as a partial map from $\bits^*$ to
 $\bits^k \times \mathcal{C}_{\mathsf{out}}$. The map ignores
@@ -485,6 +477,7 @@ read off the recovered associated-data blocks. We use the key projection
 $(K, \mathcal{C})$ throughout; when a game hides a single context
 component $Z \in \{K, N, A\}$, the same decoding returns that component's
 candidate value, which we denote $\KeyedTWOut_Z(Y)$.
+\end{definition}
 
 \begin{table}[ht]
   \centering
