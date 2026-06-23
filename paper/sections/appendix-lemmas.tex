@@ -234,7 +234,7 @@ suffix.
 Name the tag-emitting transcript families:
 \begin{align*}
   \Rtag   &= \text{root transcript prefix whose sponge output gives the final root tag}, \\
-  \Ltag[j]   &= \text{leaf-$j$ transcript prefix whose sponge output gives the leaf tag}.
+  \Ltag(j)   &= \text{leaf-$j$ transcript prefix whose sponge output gives the leaf tag}.
 \end{align*}
 The final root tag is emitted by the $\sigagglast$ aggregation call (the
 $\Rtag$ family) when $n \geq 1$, and by the closing $\sigmsglast$
@@ -436,7 +436,7 @@ instance and the $4$-bit suffix of its final call:
 \item $\Rad^-$ / $\Rad^+$ (root duplex, suffix \sigadmore or \sigadlast),
 \item $\Rmsg^-$ / $\Rmsg^+$ (root duplex, suffix \sigmsgmore or \sigmsglast),
 \item $\Lmsg^-(j)$ (leaf-$j$ duplex, suffix \sigmsgmore),
-\item $\Ltag[j]$ (leaf-$j$ duplex, suffix \sigmsglast),
+\item $\Ltag(j)$ (leaf-$j$ duplex, suffix \sigmsglast),
 \item \Ragg (suffix \sigaggmore),
 \item $\Rtag$ (root duplex, suffix \sigagglast).
 \end{itemize}
@@ -506,7 +506,7 @@ candidate value, which we denote $\KeyedTWOut_Z(Y)$.
     $\Rtag$      & root     & \sigagglast, final aggregation / root tag \\
     \Linit($j$)  & leaf $j$ & \siginit, leaf initialization \\
     $\Lmsg^-(j)$ & leaf $j$ & \sigmsgmore, non-final leaf message block \\
-    $\Ltag[j]$   & leaf $j$ & \sigmsglast, final leaf message block / leaf tag \\
+    $\Ltag(j)$   & leaf $j$ & \sigmsglast, final leaf message block / leaf tag \\
     \bottomrule
   \end{tabular}
   \caption{Counted keyed transcript classes for $\KeyedTWOut$.}
@@ -529,7 +529,7 @@ likewise has no $\Rad^-$ or $\Rad^+$ class (\Cref{sec:enc}); the
 \Linit($j$) supplies the first leaf keystream block, and the decoder
 still ignores $\ell$. Symmetrically, when $n = 0$ the root transcript
 has no \Ragg or $\Rtag$ class (\Cref{sec:enc}); the final root message
-call $\Rmsg^+$ then supplies the root tag, exactly as $\Ltag[j]$
+call $\Rmsg^+$ then supplies the root tag, exactly as $\Ltag(j)$
 supplies a leaf tag, and the decoder again ignores $\ell$. An $n \geq 1$
 computation also reaches an $\Rmsg^+$ point when closing chunk $0$, but
 there the construction requests zero output and continues into the
@@ -540,7 +540,7 @@ uses never coincide on a single ciphertext.
 \subsection{Adaptive Candidate Bounds}
 \label{app:lem-candidate-collisions}
 
-\begin{lemma}[Adaptive Candidate Collision and Preimage]
+\begin{lemma}[Adaptive Candidate Collision, Preimage, and Second-Preimage]
 \label{lem:adaptive-candidate}
 Consider any interaction with a lazy random oracle $\ROflat : \bits^* \to
 \bits^\infty$ that builds a sequence of distinct \emph{candidate} inputs
@@ -580,7 +580,7 @@ at $Y_j$ are permitted. Fix a projection length $\tau$ and a cap $Q$.
 \end{lemma}
 
 \begin{proof}
-Both parts expose the interaction in chronological order and sample each
+All three parts expose the interaction in chronological order and sample each
 candidate's $\ROflat$ value lazily at its append step, which the premises
 license: when $Y_j$ is appended its string is fixed by the prior
 transcript (predictability) and no bit of $\ROflat(Y_j)$ has yet been
@@ -725,7 +725,7 @@ most $\binom{Q}{2} \cdot 2^{-\tauleaf}$, giving two instances.
 
 \begin{proof}
 Build a chronological leaf-tag candidate sequence: a candidate is the
-bridged input of a leaf tag output point ($\Ltag[j]$), appended the first
+bridged input of a leaf tag output point ($\Ltag(j)$), appended the first
 time it is reached---by a direct query in $\mathcal{B}$'s oracle phase or
 by a construction computation generating a final leaf transcript---and
 not appended again. By \Cref{lem:bridge-decode}, \Cref{cor:output-sep},
@@ -741,14 +741,14 @@ length-$Q$ sequence gives the displayed bound, and every $\badleaf$ pair
 is a pair of construction-generated candidates.
 
 \emph{(1) Adversary-supplied keys.} Direct queries may decode to a leaf
-tag class $\Ltag[j]$ and are appended as candidates; together with the
+tag class $\Ltag(j)$ and are appended as candidates; together with the
 $\nleaf(\mathcal{B})$ construction-generated transcripts the sequence has
 length at most $\qRO(\mathcal{B}) + \nleaf(\mathcal{B})$.
 
 \emph{(2) Hidden key.} Before $\mathsf{hit}_{\mathsf{leaf}}$ no direct
 query has hit the bridged input of a hidden-key final leaf transcript: by
 \Cref{lem:bridge-decode} such a query would decode under $\KeyedTWOut$ to
-the hidden key and its $\Ltag[j]$ class. The candidates are therefore
+the hidden key and its $\Ltag(j)$ class. The candidates are therefore
 exactly the construction-generated final leaf transcripts, the sequence
 has length at most $\nleaf(\mathcal{B})$, and each leaf tag is fresh when
 its transcript is first created. By Leaf-Transcript Recovery
