@@ -73,7 +73,7 @@ collision, the $+s$ candidate-sequence slack collapses to the $+1$ of
 the single discoverability challenger decryption check, and the
 exponent drops from $\tau(s-1)$ to $\tau$. As in the root-collision
 term, the flat-sponge lift gives $Q = \Nprim$. The term bounds the
-query-independent target of context discoverability (\Cref{thm:pre}).
+query-independent target of context discoverability (\Cref{thm:cdy-full}).
 
 \paragraph{Leaf-collision term.}
 The known-key leaf tag collision term is
@@ -81,7 +81,8 @@ The known-key leaf tag collision term is
   \LeafColl_\tau(Q) = \binom{Q}{2} \big/ 2^\tau.
 \]
 It is the pairwise birthday bound on $\tau$-bit leaf tag projections
-used by the collision-resistance theorem (\Cref{thm:coll}). Unlike the hidden-key
+used by the collision-resistance and always-second-preimage theorems
+(\Cref{thm:coll}, \Cref{thm:asec}). Unlike the hidden-key
 leaf collision term in the INT-CTXT bound, the compact committing game
 has adversary-supplied keys, so direct primitive queries can pre-read
 candidate leaf tag points. The random-oracle proof therefore counts
@@ -92,7 +93,7 @@ $Q=\Nprim+\Nleaf$.
 \subsection{Supporting Bounds}
 \label{sec:thms-pp}
 
-The headline theorems of \Cref{sec:headline} feed on five
+The headline theorems of \Cref{sec:headline} feed on six
 random-oracle-model bounds---the privacy and INT-CTXT envelopes, the
 CMTDs-4 bound, the collision bound, the second-preimage bound, and the preimage bound---whose proofs occupy
 \Cref{sec:privacy,sec:authenticity,sec:cmtds3}; the remaining
@@ -169,6 +170,18 @@ CMTDs-4. The additional known-key leaf-collision term is needed because
 colliding inputs may use different ciphertext bodies; absent such
 a leaf tag collision, pairwise distinct inputs force pairwise
 distinct final root transcripts before the common tag is compared.
+
+\paragraph{Second-preimage bound.}
+The flat-RO always-second-preimage theorem of \Cref{sec:cmtds3} is
+\[
+  \AdvaSec_{\RO}(\mathcal{B})
+  \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))
+  + \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B})).
+\]
+The challenge tag is a fixed second-preimage target, so the
+candidate-collision argument becomes a candidate-preimage argument
+against the designated challenge candidate; the leaf-collision term is
+the same adversary-supplied-key accounting as the collision bound.
 
 \paragraph{Preimage bound.}
 The flat-RO preimage theorem of \Cref{sec:cmtds3} is the direct
@@ -543,7 +556,7 @@ The implemented parameters of \Cref{sec:params} fix
   k = c = \tauroot = \tauleaf = 256.
 \]
 Substituting into
-\Cref{thm:ae,thm:mu-ind,thm:coll,cor:cmtds4,thm:pre}
+\Cref{thm:ae,thm:mu-ind,thm:coll,thm:asec,cor:cmtds4,thm:pre,thm:cdy-full}
 and using the random-oracle envelopes of \Cref{sec:thms-pp} gives the
 following closed-form bounds.
 
