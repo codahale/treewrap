@@ -468,7 +468,14 @@ $\prfxleaf \concat K \concat N \concat \langle j \rangle_8$. If no
 such prefix exists, $\KeyedTWOut(Y) = \bot$. In particular, inputs with
 the right final suffix but a malformed phase order, noncanonical block
 partition, malformed aggregation string, or out-of-range leaf index are
-outside the well-formed language and decode to $\bot$.
+outside the well-formed language and decode to $\bot$. A non-$\bot$
+decoding fixes not only the candidate key $K$ but the candidate context
+components present in the decoded prefix: the nonce $N$ occupies the
+remaining fixed-width init-field slot, and the associated data $A$ is
+read off the recovered associated-data blocks. We use the key projection
+$(K, \mathcal{C})$ throughout; when a game hides a single context
+component $Z \in \{K, N, A\}$, the same decoding returns that component's
+candidate value, which we denote $\KeyedTWOut_Z(Y)$.
 
 \begin{table}[ht]
   \centering
@@ -549,6 +556,13 @@ at $Y_j$ are permitted. Fix a projection length $\tau$ and a cap $Q$.
   equals $t$, i.e.\ $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$ for
   some $1 \leq j \leq m$, satisfies
   $\Pr[\mathsf{pre}_{\tau,t}] \leq (Q+1) \cdot 2^{-\tau}$.
+\item \emph{Second-preimage.} Fix a designated candidate position $j_0$. If
+  $m \leq Q+2$, then the probability $\Pr[\mathsf{sec}_{\tau,j_0}]$ that some
+  candidate $j \neq j_0$ has
+  $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau =
+   \bigl\lfloor \ROflat(Y_{j_0}) \bigr\rfloor_\tau$, i.e.\ collides with the
+  designated candidate on its $\tau$-bit projection, satisfies
+  $\Pr[\mathsf{sec}_{\tau,j_0}] \leq (Q+1) \cdot 2^{-\tau}$.
 \end{enumerate}
 \end{lemma}
 
@@ -581,6 +595,17 @@ target $t$ is a constant. By the above, $\ROflat(Y_j)$ is uniform and
 independent of the conditioning, so its $\tau$-bit projection equals $t$
 with probability $2^{-\tau}$. If position $j$ is never appended, $E_j$ is
 false. A union bound over the $Q+1$ positions gives the claim.
+
+\emph{Second-preimage.} Expose $\ROflat(Y_{j_0})$ at the append step of the
+designated candidate $Y_{j_0}$, which predictability and unrevealed value
+license; this fixes the target $t = \bigl\lfloor \ROflat(Y_{j_0})
+\bigr\rfloor_\tau$ as a constant for the rest of the interaction. Each of the
+at most $Q+1$ candidates $Y_j$ with $j \neq j_0$ is still unrevealed when
+appended, so the preimage argument applied with this $t$ gives that its
+projection equals $t$ with probability $2^{-\tau}$; a union bound over those
+positions gives $\Pr[\mathsf{sec}_{\tau,j_0}] \leq (Q+1) \cdot 2^{-\tau}$. The
+designated candidate $Y_{j_0}$ is excluded, so its trivially-equal projection
+does not enter the count.
 \end{proof}
 
 \subsection{Adaptive Key Tests}
@@ -588,18 +613,21 @@ false. A union bound over the $Q+1$ positions gives the claim.
 
 \begin{lemma}[Adaptive Key-Test Bound]
 \label{lem:key-tests}
-Consider a \TW{} random-oracle-model game with hidden
-$K \sample \bits^k$, direct adversary access to $\ROflat$, and an
-immediate abort event $\badkey$ that fires on a
-direct query $(Y,\ell)$ exactly when
-$\KeyedTWOut(Y) = (K,\mathcal{C})$ for some counted output-point class
-$\mathcal{C}$ of \Cref{tab:keyed-twout}. Suppose that, before the
+Consider a \TW{} random-oracle-model game with a single hidden context
+component $Z$ sampled uniformly from $\bits^w$ for some $w \geq k$---the
+standard case being the hidden key, $Z = K$ and $w = k$, used in
+\Cref{sec:privacy,sec:authenticity}---direct adversary access to
+$\ROflat$, and an immediate abort event $\badkey$ that fires on a
+direct query $(Y,\ell)$ exactly when $\KeyedTWOut_Z(Y) = (Z,\mathcal{C})$
+for some counted output-point class $\mathcal{C}$ of
+\Cref{tab:keyed-twout}. Suppose that, before the
 abort, the following invariant holds for every direct query position
 $i$: after conditioning on the full visible execution prefix and on
-the set $S_i$ of distinct decoded candidate keys from earlier direct
-queries, the hidden key is uniform on $\bits^k \setminus S_i$. Then
+the set $S_i$ of distinct decoded candidate $Z$-values from earlier direct
+queries, the hidden $Z$ is uniform on $\bits^w \setminus S_i$. Then
 \[
   \Pr[\badkey]
+  \leq \qRO / 2^w
   \leq \KeyGuess_k(\qRO)
   = \qRO / 2^k,
 \]
@@ -607,41 +635,41 @@ where $\qRO$ is the execution-uniform count of direct $\ROflat$ queries.
 \end{lemma}
 
 \begin{proof}
-If $\qRO \geq 2^k$ the right-hand side is at least one, so the claim is
-trivial. Assume $\qRO < 2^k$.
+If $\qRO \geq 2^w$ the right-hand side $\qRO/2^w$ is at least one, so the
+claim is trivial. Assume $\qRO < 2^w$.
 
 Order the direct $\ROflat$ queries. By the definition of
-$\KeyedTWOut$ and \Cref{lem:bridge-decode}, each query input either
-decodes to $\bot$ or decodes to a unique candidate key and counted
+$\KeyedTWOut_Z$ and \Cref{lem:bridge-decode}, each query input either
+decodes to $\bot$ or decodes to a unique candidate $Z$-value and counted
 output-point class. Queries that decode to $\bot$, and repeated
-queries whose decoded key already lies in the current set $S_i$, do
-not change the set of possible first successful key tests. Removing
+queries whose decoded $Z$-value already lies in the current set $S_i$, do
+not change the set of possible first successful tests. Removing
 them can only shorten the sequence, so it suffices to analyze the
-subsequence of distinct fresh decoded candidate keys
-$K'_1, \dots, K'_m$, where $m \leq \qRO$.
+subsequence of distinct fresh decoded candidate $Z$-values
+$Z'_1, \dots, Z'_m$, where $m \leq \qRO$.
 
-Let $F_i$ be the event that the first $i$ fresh decoded candidate keys
-all miss the hidden key. The invariant says that, conditioned on the
+Let $F_i$ be the event that the first $i$ fresh decoded candidate values
+all miss the hidden $Z$. The invariant says that, conditioned on the
 visible prefix before the $(i+1)$-st fresh test and on $F_i$, the
-hidden key is uniform over the $2^k - i$ keys not yet tested. The next
-fresh candidate key $K'_{i+1}$ is one of those remaining keys and is
+hidden $Z$ is uniform over the $2^w - i$ values not yet tested. The next
+fresh candidate value $Z'_{i+1}$ is one of those remaining values and is
 determined by the adversary's next direct query, so
 \[
-  \Pr[K = K'_{i+1} \mid F_i] = \frac{1}{2^k - i},
+  \Pr[Z = Z'_{i+1} \mid F_i] = \frac{1}{2^w - i},
   \qquad
-  \Pr[F_{i+1} \mid F_i] = 1 - \frac{1}{2^k - i}.
+  \Pr[F_{i+1} \mid F_i] = 1 - \frac{1}{2^w - i}.
 \]
 Multiplying the miss probabilities gives
 \[
   \Pr[F_m]
-  = \prod_{i=0}^{m-1} \left(1 - \frac{1}{2^k - i}\right)
-  = \prod_{i=0}^{m-1} \frac{2^k - i - 1}{2^k - i}
-  = \frac{2^k - m}{2^k}.
+  = \prod_{i=0}^{m-1} \left(1 - \frac{1}{2^w - i}\right)
+  = \prod_{i=0}^{m-1} \frac{2^w - i - 1}{2^w - i}
+  = \frac{2^w - m}{2^w}.
 \]
-Thus the probability that some fresh decoded candidate key equals the
-hidden key is $m / 2^k \leq \qRO / 2^k$. This event is exactly the
-first $\badkey$ abort, because $\KeyedTWOut$
-returns either $\bot$ or a unique candidate key.
+Thus the probability that some fresh decoded candidate value equals the
+hidden $Z$ is $m / 2^w \leq \qRO / 2^w \leq \qRO/2^k$, the last step by
+$w \geq k$. This event is exactly the first $\badkey$ abort, because
+$\KeyedTWOut_Z$ returns either $\bot$ or a unique candidate $Z$-value.
 \end{proof}
 
 \subsection{Leaf Tag Collision Bound}
