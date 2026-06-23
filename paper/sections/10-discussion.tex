@@ -178,7 +178,9 @@ setting of \cite{ABLMMY14}, which our bounds do not cover; plaintext-awareness a
 \textsf{INT-RUP} security for \TW{} are unstudied.
 
 \paragraph{Bound tightness.}
-Two terms are knowingly conservative. The flat-sponge differentiating loss
+Per-term tightness is itemized in \Cref{sec:bound-discussion}; one term is
+conservative in a way that points to an open problem. The flat-sponge
+differentiating loss
 $\Lift_c(\Ntot) = \Ntot(\Ntot+1)/2^{c+1}$ bounds the indifferentiability
 loss of \cite{BDPV08}, used here as a generic lift from the
 random-oracle model. A direct analysis of the keyed duplex is tighter: the
@@ -196,13 +198,7 @@ output and recomputes the tag from a divergent state \cite[Alg.~8]{Men23}. \TW{}
 sidesteps this by absorbing the ciphertext in both directions (\Cref{sec:tw128}),
 so recasting it on the keyed duplex would first require repairing the mode. We
 retain the indifferentiability lift for its modularity, as the resulting
-$\Lift_c$ already meets the $128$-bit target (\Cref{sec:bound-discussion}). The
-leaf tag collision term $\Nleaf(\Nleaf-1)/2^{\tauleaf+1}$ is tight for INT-CTXT,
-the notion it is proved against---a nonce-reusing adversary forges at that rate
-by colliding two leaf tags---but the headline AE and multi-user bounds carry it
-only through the INT-CTXT envelope, and the attack needs the nonce reuse their
-nonce-respecting games forbid; for those bounds the term is inherited slack
-rather than a matched one.
+$\Lift_c$ already meets the $128$-bit target (\Cref{sec:bound-discussion}).
 
 \paragraph{Beyond-birthday and leakage.}
 All bounds are birthday-type on the $256$-bit capacity, delivering the

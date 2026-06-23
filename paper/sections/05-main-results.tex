@@ -436,28 +436,6 @@ $(K_i,N_i,A_i)$ pairwise distinct---by Opening Triple Separation
 openings and no $\LeafColl$ term arises.
 \end{proof}
 
-\begin{remark}[Looseness of the Root-Collision Cap]
-\label{rem:rtag-cap}
-The $\Nprim$ in \Cref{cor:cmtds4}'s root-collision term counts every
-primitive query, not only those whose induced simulator $\ROflat$ call
-lands at the root tag output point---$\Rtag$, or the elided-aggregation
-$\Rmsg^+$ for single-chunk ciphertexts (\Cref{tab:keyed-twout}). By
-\Cref{cor:output-sep}, calls
-landing at any other output-point class cannot contribute to the
-candidate sequence, and hence cannot contribute to the
-candidate-collision event of \Cref{thm:cmtds4-ro}'s proof. A sharper
-candidate-sequence analysis could replace $\Nprim$ in the root-collision
-term by a class-filtered effective query count, no larger than $\Nprim$
-and potentially smaller. The direct
-CMTs-$\ell$ bounds of \Cref{app:committing-transfer} use the
-same accounting boundary: their challenger encryption checks are
-construction-internal work counted in $N$, so they do not enlarge the
-direct-query cap $\Nprim$. The headline
-CMTDs-4 statement nevertheless keeps the $\Nprim$ form for simplicity and
-uniformity with \Cref{thm:ae,thm:mu-ind}; the birthday threshold at
-$\tauroot = 256$ is unaffected.
-\end{remark}
-
 \begin{theorem}[Preimage Resistance of $\HTW$]
 \label{thm:pre}
 For every target tag $T^* \in \bits^{\tauroot}$ fixed in advance and every
@@ -759,7 +737,14 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
   multi-collision bound on a $\tau$-bit projection of $\ROflat$, and
   a generic birthday-style adversary against the random oracle
   matches the leading-order term. It is the root term of the collision
-  bound ($\HTW$ Coll, \Cref{thm:coll}).
+  bound ($\HTW$ Coll, \Cref{thm:coll}). Its $\Nprim$ counts every
+  primitive query, though by Output-Point Separation
+  (\Cref{cor:output-sep}) only those whose induced $\ROflat$ call lands at
+  a root tag output point ($\Rtag$, or $\Rmsg^+$ for single-chunk
+  ciphertexts) can enter the candidate sequence; a class-filtered count
+  would be no larger, and potentially smaller, but the headline keeps the
+  $\Nprim$ form for uniformity with \Cref{thm:ae,thm:mu-ind}, the birthday
+  threshold at $\tauroot = 256$ being unaffected.
 \item \emph{$\RootPre_\tau(Q) = (Q + 1) / 2^\tau$.} Tight at constants: a
   generic preimage search against a fixed $\tau$-bit target matches the
   per-query $2^{-\tau}$ rate. It is the root term of the preimage (Pre),
