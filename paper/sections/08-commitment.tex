@@ -339,7 +339,8 @@ challenge transcript $R_X$. Encrypting $X'$ reaches a final root
 transcript $R'$ with $\HTW(X') = \lfloor \RF(R') \rfloor_{\tauroot}$. If
 $R' = R_X$, then by transcript injectivity (\Cref{lem:transcript-inj})
 $X'$ shares the context, leaf count, and aggregated leaf tags of $X$, and
-under $\neg\badleaf^\star$ equal leaf tags force equal leaf transcripts,
+under $\neg\badleaf^\star$ equal leaf tags force equal leaf transcripts
+by Leaf-Transcript Recovery (\Cref{lem:leaf-recovery}),
 hence equal leaf bodies; so $X' = X$ by determinism, contradicting
 $X' \neq X$. Thus $R' \neq R_X$, and the win event $\HTW(X') = T$ is the
 event that $R'$ collides with $R_X$ on its $\tauroot$-bit projection. The

@@ -247,11 +247,7 @@ injectively encoded and separated by duplex instance (root vs leaf),
 leaf index $j$, phase suffix, and duplex-call order. For final-root
 prefixes, equality of flattened inputs recovers the same root
 initialization, AD blocks, root ciphertext blocks, aggregation input,
-and leaf tag sequence. When the compared final-root prefixes are
-construction-generated, if no two distinct construction-generated final
-leaf transcripts produce the same leaf tag, equality also recovers the
-same leaf transcript sequence and therefore the same full absorbed
-ciphertext.
+and leaf tag sequence.
 \end{lemma}
 
 \begin{proof}
@@ -312,10 +308,7 @@ Applied phase by phase to a well-formed final-root transcript:
   give $\langle n \rangle_8$, and each leaf tag has fixed byte length
   $\tauleaf / 8$, so the byte string has a unique parse as a leaf tag
   sequence. Two root aggregation encodings are therefore equal exactly
-  when their leaf tag sequences are equal. Under the structural
-  condition that distinct construction-generated final leaf transcripts
-  receive distinct leaf tag values, equality of leaf tag sequences
-  implies equality of the corresponding final leaf transcripts. When
+  when their leaf tag sequences are equal. When
   $n = 0$ the aggregation phase is absent and the final-root transcript
   ends at the recovered $\sigmsglast$ root message call; the MSG bullet
   recovers the root ciphertext byte string, and the absence of any
@@ -325,12 +318,33 @@ Applied phase by phase to a well-formed final-root transcript:
 
 Therefore the recovered final-root transcript determines the root
 initialization, AD blocks, root ciphertext blocks, and, when
-$n \geq 1$, the aggregation byte string and leaf tag sequence. For
-construction-generated final-root prefixes with $n \geq 1$, under the
-stated leaf tag structural condition, the leaf tag sequence determines
-the corresponding final leaf transcripts as well, so the same full
-absorbed ciphertext is recovered; for $n = 0$ the root ciphertext blocks
-already constitute the full absorbed ciphertext.
+$n \geq 1$, the aggregation byte string and leaf tag sequence.
+\end{proof}
+
+\begin{lemma}[Leaf-Transcript Recovery]
+\label{lem:leaf-recovery}
+Let two construction-generated final-root prefixes have equal flattened
+inputs, and suppose that no two distinct construction-generated final
+leaf transcripts produce the same leaf tag. Then equality of flattened
+inputs recovers the same leaf transcript sequence, and therefore the
+same full absorbed ciphertext.
+\end{lemma}
+
+\begin{proof}
+By Transcript Injectivity (\Cref{lem:transcript-inj}), the two equal
+flattened final-root inputs recover the same root initialization, AD
+blocks, root ciphertext blocks, and, when $n \geq 1$, the same
+aggregation byte string and leaf tag sequence; the trailing
+$\langle n \rangle_8$ field fixes the common leaf count $n$. When
+$n = 0$ no leaf is present and the recovered root ciphertext blocks
+already constitute the full absorbed ciphertext. When $n \geq 1$, the
+aggregation byte string parses uniquely as the leaf tag sequence
+$T_1 \concat \cdots \concat T_n$; under the hypothesis that distinct
+construction-generated final leaf transcripts receive distinct leaf
+tags, equality of the two leaf tag sequences forces, position by
+position, equality of the corresponding final leaf transcripts, hence of
+their absorbed leaf ciphertext bodies. Together with the common root
+ciphertext blocks this recovers the same full absorbed ciphertext.
 \end{proof}
 
 \paragraph{Bridge injectivity on transcript prefixes.}
@@ -730,9 +744,9 @@ For any fixed unordered pair of distinct final leaf transcripts
 created before this stop, the probability that their leaf tags are
 equal is $2^{-\tauleaf}$. There are at most
 $\binom{\nleaf(\mathcal{B})}{2}$ such pairs, and a union bound gives
-the claim. By \Cref{lem:transcript-inj}, conditioned on no leaf tag
-collision, equal root aggregation inputs identify the same leaf
-transcript sequence.
+the claim. By Leaf-Transcript Recovery (\Cref{lem:leaf-recovery}),
+conditioned on no leaf tag collision, equal root aggregation inputs
+identify the same leaf transcript sequence.
 \end{proof}
 
 \subsection{Transcript Freshness}
@@ -1194,8 +1208,9 @@ after $G_{\mathcal{C}}$ is fixed and is uniform independently of $G_{\mathcal{C}
 After the cutoff, if it exists, class $\mathcal{C}$ contributes no accepting
 non-replay submission. Let the cutoff encryption query return
 $(N_e,A_e,C_e,T_e)$. Any later verification submission in the same
-final root transcript class has, by the final-root determinacy part of
-\Cref{lem:transcript-inj} and the absence of
+final root transcript class has, by the final-root determinacy of
+\Cref{lem:transcript-inj} and Leaf-Transcript Recovery
+(\Cref{lem:leaf-recovery}) under the absence of
 $\badleaf$, the same $(N,A,C)$ as that encryption
 computation. If the submitted tag is $T_e$, the tuple is a recorded
 encryption tuple and the verification is a replay; if the submitted tag
