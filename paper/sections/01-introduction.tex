@@ -194,24 +194,17 @@ AEGIS \cite{WP14} that refutes the prior belief that AEGIS was committing
 \cite{IR23}. \cite{MLGR23} also introduce context discoverability, the
 preimage facet of commitment, and show that their discovery attacks exploit
 schemes whose authenticity is delegated to a non-preimage-resistant MAC such as
-GHASH or CMAC. \TW{} instead targets both facets directly: its committing and
-discoverability security follow from the indistinguishability of the sponge,
-which makes the root tag collision- and preimage-resistant, rather than from a
-generic transform applied to a non-committing base scheme. Because that tag is
-a sponge output and not an invertible MAC, the discovery attacks of \cite{MLGR23}
-have no analogue against \TW{}.
+GHASH or CMAC. \TW{} instead makes the root tag itself collision- and
+preimage-resistant as a sponge output, rather than delegating to a transform or
+an invertible MAC, so the \cite{MLGR23} discovery attacks have no analogue
+against it.
 
-Closest to \TW{} is the recent work of \cite{DHMVV24}, which also builds
-nonce-based AE natively on the SHA-3 functions \textsf{SHAKE} and
-\textsf{TurboSHAKE}---the latter over the same round-reduced \Keccak{}
-permutation as \TW{}---obtaining \textsf{CMT-4} from the collision resistance of
-the underlying function rather than from a transform. Its schemes target
-session-based communication and process each message through a sequential duplex
-chain, whereas \TW{}, on the same native-committing single-permutation
-foundation, is structured as a two-level tree whose independent leaves are
-evaluated in parallel across SIMD lanes. The resulting throughput advantage on
-large messages, and the session support \TW{} forgoes, are detailed in
-\Cref{sec:compare-commit,sec:performance}.
+Closest to \TW{} is the recent work of \cite{DHMVV24}, which likewise builds
+nonce-based AE natively on the SHA-3 functions and obtains \textsf{CMT-4} from
+the collision resistance of the underlying function rather than from a transform;
+it targets session-based communication through a sequential duplex chain, where
+\TW{} is a parallel two-level tree. \Cref{sec:compare-commit,sec:performance}
+detail the structural and throughput differences.
 
 \subsection{Paper Organization}
 \label{sec:organization}
