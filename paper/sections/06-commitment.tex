@@ -264,12 +264,14 @@ $T$; pairwise $\WiC_\ell$-distinctness forces pairwise distinct
 triples---for $\ell = 4$ via determinism, since equal triples with equal
 ciphertexts would decrypt to equal messages---so \Cref{cor:triple-sep}
 makes the $s$ final-root candidates distinct while their $\tauroot$-bit
-projections all equal $T$. The Root Tag Hash Bound
-(\Cref{lem:root-tag-hash}, part~1) then gives
+projections all equal $T$. By the Lift Application corollary (\Cref{cor:lift-application}) for the
+$X$ game, the derived random oracle adversary $\mathcal{B}$ has
+$\qRO(\mathcal{B}) \leq \Nprim$; the Root Tag Hash Bound
+(\Cref{lem:root-tag-hash}, part~1) then bounds its win by
 $\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$ in the random oracle model,
-and the flat sponge lift (\Cref{cor:lift-application}) transfers it to the
-public permutation setting at $\Nprim$; the encryption checks are
-construction-internal work counted in $N$, not in $\Nprim$.
+which the lift transfers to the public permutation setting at $\Nprim$;
+the encryption checks are construction-internal work counted in $N$, not
+in $\Nprim$.
 \end{proof}
 
 \begin{theorem}[Random Oracle Collision Resistance of $\HTW$]
