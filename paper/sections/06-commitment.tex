@@ -9,7 +9,7 @@ collision, preimage, or second-preimage among those candidates into the
 matching adaptive bound of \Cref{app:lemmas}, controlling the chance that
 distinct inputs land on the same $\tauroot$-bit root tag projection. The
 four random oracle theorems---CMTDs-4 (\Cref{thm:cmtds4-ro}), collision
-(\Cref{thm:coll-ro}), preimage (\Cref{thm:pre-ro}), and
+(\Cref{thm:coll-ro}), preimage (\Cref{thm:epre-ro}), and
 always second-preimage (\Cref{thm:asec-ro})---are then short
 instantiations, differing only in which facet they invoke and in whether
 a leaf tag collision term is needed when colliding inputs may use
@@ -307,13 +307,13 @@ $\RootColl_{\tauroot}(\qRO(\mathcal{B}),s)$; adding $\Pr[\badleaf^\star]$
 gives the theorem.
 \end{proof}
 
-\begin{theorem}[Random Oracle Preimage Resistance of $\HTW$]
-\label{thm:pre-ro}
+\begin{theorem}[Random Oracle Everywhere Preimage Resistance of $\HTW$]
+\label{thm:epre-ro}
 For every query-independent target tag $T^* \in \bits^{\tauroot}$ and
 every preimage adversary $\mathcal{B}$ in the \TW{}
 random oracle model (\Cref{sec:ro-model}),
 \[
-  \AdvPre_\RO(\mathcal{B})
+  \AdvePre_\RO(\mathcal{B})
   \;\leq\; \RootPre_{\tauroot}(\qRO(\mathcal{B}))
   = \frac{\qRO(\mathcal{B}) + 1}{2^{\tauroot}}.
 \]
@@ -328,7 +328,7 @@ transcript $R$. A win means $\HTW(X) = T^*$, i.e.\ the root tag
 $\lfloor \ROflat(\flatmap(R)) \rfloor_{\tauroot}$ at $R$ equals the fixed
 target $T^*$. The Root Tag Hash Bound (\Cref{lem:root-tag-hash}, part~2,
 with target $T^*$) gives
-$\AdvPre_\RO(\mathcal{B}) \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))$.
+$\AdvePre_\RO(\mathcal{B}) \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))$.
 \end{proof}
 
 \begin{theorem}[Random Oracle aSec]

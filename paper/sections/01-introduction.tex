@@ -100,7 +100,7 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
 \item \textbf{Commitment via a secure hash.} We show that the wrapper
   $\HTW$ returning the root tag is a secure hash of the full $(K, N, A, M)$
   input in the sense of \cite{RS04}---collision-, second-preimage-, and
-  preimage-resistant (\Cref{thm:coll,thm:asec,thm:pre})---so the single
+  preimage-resistant (\Cref{thm:coll,thm:asec,thm:epre})---so the single
   $256$-bit root tag is a binding, preimage-resistant compact commitment to
   the input, matching the compactly committing AEAD goal of \cite{GLR17}
   natively, with no generic transform. The \cite{BH22} full-input committing

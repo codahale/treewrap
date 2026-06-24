@@ -317,10 +317,10 @@ of \cite{RS04}, over the \TW{} input domain:
   \item[Always second-preimage resistance (aSec).] For the fixed deployed
     permutation, given a challenge input $X$, no adversary finds
     $X' \neq X$ with $\HTW(X') = \HTW(X)$.
-  \item[Preimage resistance (Pre).] For a target tag $T^*$ fixed in
+  \item[Everywhere preimage resistance (ePre).] For a target tag $T^*$ fixed in
     advance, no adversary finds $X$ with $\HTW(X) = T^*$.
 \end{description}
-Their advantages $\AdvColl_\TW$, $\AdvaSec_\TW$, $\AdvPre_\TW$ are the
+Their advantages $\AdvColl_\TW$, $\AdvaSec_\TW$, $\AdvePre_\TW$ are the
 respective success probabilities, instantiated for \TW{} in
 \Cref{sec:games-pp}. Coll is the binding facet and Pre the preimage facet
 of the tag taken as a compact commitment to $(K, N, A, M)$---the two
@@ -372,7 +372,7 @@ non-preimage-resistant MAC, including \textsf{CCM}, \textsf{EAX},
 discoverability attacks; the preimage character of the notion is what
 makes \TW{}'s root tag, a sponge output, resist them.
 
-The preimage resistance of \HTW{} (Pre, above) is the tag-level preimage
+The preimage resistance of \HTW{} (ePre, above) is the tag-level preimage
 guarantee that the \cite{MLGR23} context discoverability notion is the
 ciphertext-level counterpart of; the two are distinct, and \TW{} is shown
-to satisfy both (\Cref{thm:pre,thm:cdy-full}).
+to satisfy both (\Cref{thm:epre,thm:cdy-full}).
