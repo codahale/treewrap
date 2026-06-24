@@ -106,7 +106,7 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   natively, with no generic transform. The \cite{BH22} full-input committing
   notions follow as corollaries: $s$-way \textsf{CMTDs-4} from collision
   resistance (\Cref{cor:cmtds4}), and the remaining \textsf{CMT}/\textsf{CMTD}
-  for $\ell \in \{1, 3, 4\}$ in \Cref{app:committing-transfer}.
+  for $\ell \in \{1, 3, 4\}$ in \Cref{cor:committing-combined}.
 
 \item \textbf{Context discoverability.} We additionally prove that \TW{}
   satisfies the published \cite{MLGR23} context discoverability notion
@@ -229,6 +229,5 @@ committing constructions and discusses limitations.
 lemmas that form the proof core;
 \Cref{app:flat-sponge-lift} carries out the \cite{BDPV08} flat sponge lift
 that converts each random oracle bound to its public permutation
-form; \Cref{app:committing-transfer} gives the remaining
-\cite{BH22} committing security bounds; and
+form; and
 \Cref{app:test-vectors} lists \TW{} test vectors.

@@ -113,7 +113,7 @@ encryptions $\Enc_{K_i}[\pi](N_i,A_i,M_i)$ are all equal; its advantage is
 $\Advcmts{\ell}_\TW(\mathcal{A})$. A CMTDs-4 or CMTs-4 winner's tuples
 share a common tag, hence are a collision of $\HTW$, so \Cref{cor:cmtds4}
 bounds CMTDs-4 through \Cref{thm:cmtds4-ro} and
-\Cref{app:committing-transfer} forwards the remaining \cite{BH22} notions
+\Cref{cor:committing-combined} forwards the remaining \cite{BH22} notions
 to the same root-collision bound.
 
 \paragraph{Context discoverability.}
@@ -149,7 +149,7 @@ game of $\HTW$ does not.
 \subsection{The TW128 Random Oracle Model}
 \label{sec:ro-model}
 
-The proofs of \Cref{sec:cmtds3} and \Cref{app:committing-transfer},
+The proofs of \Cref{sec:cmtds3} and \Cref{cor:committing-combined},
 together with the headline reductions of \Cref{sec:headline}, are
 carried out through an intermediate
 random oracle model whose construction interfaces use the \cite{BDPV11}
@@ -253,7 +253,7 @@ unless they affect the final bound.
   encryption producing $C^*$ together with the single deterministic
   decryption check the challenger performs on $C^*$; while for the
   CMTs-$\ell$ source games of
-  \Cref{app:committing-transfer}, $N$ counts only the deterministic
+  \Cref{cor:committing-combined}, $N$ counts only the deterministic
   encryption checks actually used by the challenger to compare the $s$
   ciphertexts.
 \item[$\Nprim$:] the number of direct adversary queries to the

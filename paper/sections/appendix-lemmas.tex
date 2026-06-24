@@ -108,8 +108,9 @@ event premise before applying the corresponding accounting argument.
     (\Cref{lem:leaf-collision}) and, through the Root Tag Hash Bound
     (\Cref{lem:root-tag-hash}) of \Cref{sec:cmtds3}, the CMTDs-4,
     collision, preimage, and second-preimage proofs. The edge from
-    \Cref{lem:transcript-inj} into the committing proofs of
-    \Cref{sec:cmtds3,app:committing-transfer} is mediated by Opening
+    \Cref{lem:transcript-inj} into the committing proofs in
+    \Cref{sec:cmtds3} and the proof of \Cref{cor:committing-combined} is
+    mediated by Opening
     Triple Separation (\Cref{cor:triple-sep}) for distinct contexts and
     Final-Root Input Separation (\Cref{prop:final-root-sep})---which adds
     the full-ciphertext recovery of \Cref{lem:leaf-recovery} for distinct
@@ -379,8 +380,8 @@ ciphertext blocks this recovers the same full absorbed ciphertext.
 \begin{lemma}[Bridge and Typed Decoding]
 \label{lem:bridge-decode}
 The random oracle games used in
-\Cref{sec:main-results,sec:cmtds3,app:committing-transfer} are ordinary
-random oracle games on a single random oracle
+\Cref{sec:main-results,sec:cmtds3} and \Cref{cor:committing-combined} are
+ordinary random oracle games on a single random oracle
 $\ROflat : \bits^* \to \bits^\infty$ over the unpadded
 \cite{BDPV08} $H$-input domain (\Cref{sec:ro-model}), with \TW{} root and
 leaf duplex outputs answered by the typed restriction
