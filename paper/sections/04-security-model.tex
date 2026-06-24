@@ -2,28 +2,28 @@
 \label{sec:security-model}
 
 This section fixes the security model used throughout the paper. The scheme
-syntax and the authenticated-encryption and committing-security definitions of
+syntax and the authenticated encryption and committing security definitions of
 \Cref{sec:prelims} are instantiated here for \TW{} in the lifted
-public-permutation model (\Cref{sec:games-pp}), and we define the intermediate
-random-oracle world through which every bound is first proved
+public permutation model (\Cref{sec:games-pp}), and we define the intermediate
+random oracle world through which every bound is first proved
 (\Cref{sec:ro-model}). \Cref{sec:resources} fixes the resource accounting that
 all later bounds reference, and \Cref{sec:mu-setting} instantiates the
 multi-user indistinguishability game for \TW{}.
 
-\subsection{Public-Permutation Games}
+\subsection{Public Permutation Games}
 \label{sec:games-pp}
 
-The lifted AE-style public-permutation advantages below compare a real
+The lifted AE-style public permutation advantages below compare a real
 execution, with sampled $\pi \sample \Perm(\bits^{1600})$ and direct
 primitive interface $(\pi,\pi^{-1})$, to a simulator-ideal execution. In
 the simulator-ideal execution, the construction interface is the ideal
 interface specified by the game and the public primitive interface is
 $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$. The simulator
 $\Sim^{\ROflat}$ together with its inverse $\Sim^{-1,\ROflat}$ is the
-public-primitive simulator fixed in \Cref{app:flat-sponge-lift}; both
+public primitive simulator fixed in \Cref{app:flat-sponge-lift}; both
 directions share an internal lazy table for the random oracle
-$\ROflat$ of \Cref{sec:ro-model}. The committing-security games remain
-one-world real public-permutation success probabilities; the simulator
+$\ROflat$ of \Cref{sec:ro-model}. The committing security games remain
+one-world real public permutation success probabilities; the simulator
 appears for them only inside the reductions of \Cref{app:flat-sponge-lift}.
 
 In the real all-in-one AE game, the challenger additionally samples a key
@@ -31,10 +31,10 @@ $K \sample \bits^k$ and exposes the construction oracles $\Enc_K[\pi]$
 (the \TW{} encryption algorithm of \Cref{alg:enc} with the sampled
 $\pi$) and $\Ver_K[\pi]$, defined by $\Ver_K[\pi](N, A, C, T) = 1$ if
 $\Dec_K[\pi](N, A, C \concat T) \neq \bot$ and $0$ otherwise. The
-committing-security games have no challenger-sampled key.
+committing security games have no challenger-sampled key.
 
 \paragraph{Validity convention.}
-All construction-interface inputs are checked against \TW{}'s public
+All construction interface inputs are checked against \TW{}'s public
 syntax and domain before any construction computation or
 construction-internal primitive lookup is performed. An encryption input
 is valid when $N \in \bits^\nu$, $A$ is a byte string with
@@ -53,7 +53,7 @@ transcripts. Throughout, an \emph{accepted} encryption query is one that
 passes this validity check and any game-specific nonce or user check.
 
 \paragraph{All-in-one AE.}
-The all-in-one authenticated-encryption game~\cite{RS06} replaces the
+The all-in-one authenticated encryption game~\cite{RS06} replaces the
 construction interface by the ideal pair $(\Rand, \Replay)$. On each
 accepted encryption query $(N,A,M)$, $\Rand$ samples a uniformly
 random byte string of length $\|M\| + \tauroot/8$, parses it as
@@ -86,12 +86,12 @@ in the \TW{} domain, and share a root tag:
      \HTW[\pi](K_s,N_s,A_s,M_s)\bigr],
 \end{align*}
 with advantage $\AdvColl_\TW(\mathcal{A}) = \Pr[\text{the game returns }
-1]$; no nonce uniqueness is imposed. The always-second-preimage (aSec)
+1]$; no nonce uniqueness is imposed. The always second-preimage (aSec)
 game samples a challenge input $X$ uniformly from the \TW{} domain, gives
 it to $\mathcal{A}$, and returns $1$ iff $\mathcal{A}$ outputs $X' \neq X$
 in the domain with $\HTW(X') = \HTW(X)$, with advantage $\AdvaSec_\TW$;
 following \cite{RS04} the always-notion concerns the fixed permutation,
-here the deployed instance the public-permutation model represents by a
+here the deployed instance the public permutation model represents by a
 random $\pi$. The preimage game fixes a target tag
 $T^* \in \bits^{\tauroot}$ before the primitive sampling and returns $1$
 iff $\mathcal{A}(T^*)$ outputs an input $X$ in the domain with
@@ -117,7 +117,7 @@ bounds CMTDs-4 through \Cref{thm:cmtds4-ro} and
 to the same root-collision bound.
 
 \paragraph{Context discoverability.}
-The \cite[Fig.~5]{MLGR23} context-discoverability game
+The \cite[Fig.~5]{MLGR23} context discoverability game
 (\Cref{sec:commit-defs}) is a ciphertext-level preimage notion, distinct
 from the preimage resistance of $\HTW$ above. It is parameterized by a
 target specifier $\mathsf{ts}$ and a query-independent context selector
@@ -143,19 +143,19 @@ the selector holds a hidden context, the \TW{} bound
 (\Cref{thm:cdy-full}) carries a key-test term that the keyless preimage
 game of $\HTW$ does not.
 \Cref{app:flat-sponge-lift} lifts the hash and committing bounds of
-\Cref{sec:cmtds3} to the public-permutation statements of
+\Cref{sec:cmtds3} to the public permutation statements of
 \Cref{sec:headline}.
 
-\subsection{The TW128 Random-Oracle Model}
+\subsection{The TW128 Random Oracle Model}
 \label{sec:ro-model}
 
 The proofs of \Cref{sec:cmtds3} and \Cref{app:committing-transfer},
 together with the headline reductions of \Cref{sec:headline}, are
 carried out through an intermediate
-random-oracle model whose construction interfaces use the \cite{BDPV11}
+random oracle model whose construction interfaces use the \cite{BDPV11}
 bridge of \Cref{sec:sponge} to address a single random oracle. The
-flat-sponge lift of \Cref{app:flat-sponge-lift} then converts the
-resulting bounds to the public-permutation form.
+flat sponge lift of \Cref{app:flat-sponge-lift} then converts the
+resulting bounds to the public permutation form.
 
 The model has a single random oracle $\ROflat : \bits^* \to
 \bits^\infty$ over the unpadded $H$-input domain of the \cite{BDPV08}
@@ -184,7 +184,7 @@ typed-restriction convention are formalized in
 the adversary's requested output length and is formalized as
 $\KeyedTWOut$ in \Cref{lem:bridge-decode}.
 
-The random-oracle-model games are the construction-interface variants
+The random oracle model games are the construction interface variants
 of \Cref{sec:games-pp,sec:mu-setting}: the primitive interface is
 replaced by direct adversary access to $\ROflat$, and each construction
 oracle uses the corresponding ${}^\RO$ algorithm, the ideal oracles
@@ -195,7 +195,7 @@ $\AdvColl_{\RO}(\mathcal{B})$, $\AdvaSec_{\RO}(\mathcal{B})$,
 $\AdvPre_{\RO}(\mathcal{B})$ of $\HTW$, the committing
 $\Advcmtds{4}_{\RO}(\mathcal{B})$, and, for $\ell \in \{1,3,4\}$,
 $\Advcmts{\ell}_{\RO}(\mathcal{B})$ are the probabilities that the
-corresponding random-oracle hash and committing games return $1$, the CMTs
+corresponding random oracle hash and committing games return $1$, the CMTs
 challenger computing its deterministic encryption checks with
 $\Enc^\RO$. For mu-ind, $\Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})$
 denotes the \Cref{sec:mu-setting} game with the same $\mathsf{New}$
@@ -231,15 +231,15 @@ fixed query bounds, but they are not listed as headline resource parameters
 unless they affect the final bound.
 
 \begin{description}
-\item[$N$:] the construction-interface cost, measured as the number of
-  \Keccakp{} calls that the adversary's construction-interface
+\item[$N$:] the construction interface cost, measured as the number of
+  \Keccakp{} calls that the adversary's construction interface
   queries induce in the real \TW{} computation after the validity
   convention above has been applied. In ideal games, the same accounting
   applies to the corresponding real \TW{} computation on the valid
   query, even when an ideal oracle answers by table lookup or without
   running the construction. $N$ counts at
   per-block granularity, summing each root initialization,
-  associated-data block, root message block, leaf initialization, leaf
+  associated data block, root message block, leaf initialization, leaf
   message block, and aggregation block across the entire query
   sequence. Valid AE-style verification computations are counted whether
   they accept or reject. In the hash, committing, and discoverability
@@ -249,7 +249,7 @@ unless they affect the final bound.
   encryptions of the second-preimage and preimage games); for
   CMTDs-$\ell$, $N$ counts only the deterministic decryption checks
   performed by the challenger on the common ciphertext; for the
-  context-discoverability game, $N$ counts the worst-case selector's
+  context discoverability game, $N$ counts the worst-case selector's
   encryption producing $C^*$ together with the single deterministic
   decryption check the challenger performs on $C^*$; while for the
   CMTs-$\ell$ source games of
@@ -258,14 +258,14 @@ unless they affect the final bound.
   ciphertexts.
 \item[$\Nprim$:] the number of direct adversary queries to the
   primitive interface (the pair $(\pi, \pi^{-1})$ in
-  public-permutation games; the simulator's $\ROflat$ table is internal
+  public permutation games; the simulator's $\ROflat$ table is internal
   and is not exposed to the application adversary in those games).
 \item[$\Ntot = N + \Nprim$:] the total query-sequence cost. The
-  flat-sponge lift of \Cref{app:flat-sponge-lift} is applied at
+  flat sponge lift of \Cref{app:flat-sponge-lift} is applied at
   $\Ntot$ because the indifferentiability replacement sees both the
   construction-internal sponge calls counted by $N$ and the adversary's
   direct primitive-interface queries counted by $\Nprim$ in one
-  chronological public-primitive transcript.
+  chronological public primitive transcript.
 \item[$\qv(\mathcal{A})$, $\Qv$:] the number of verification queries
   with valid inputs, and a cap on it. Used in the verification terms of
   the direct mu-ind and AE bounds of
@@ -273,13 +273,13 @@ unless they affect the final bound.
   one verification/decryption
   construction call in the $N$ accounting, so $\qv(\mathcal{A}) \leq N$.
 \item[$\qRO(\mathcal{B})$, $\QRO$:] the number of direct
-  finite-output queries to $\ROflat$ by a random-oracle-model adversary
+  finite-output queries to $\ROflat$ by a random oracle model adversary
   $\mathcal{B}$, and a cap on it. Repeated direct queries on the same
   $Y$ are counted again. Construction-internal $\RF(\cdot)$ lookups are
   not counted. After the derived-adversary construction, $\qRO$ counts only
   simulator-induced $\ROflat$ calls from the adversary's direct
   primitive-interface queries, not the construction calls already
-  counted in $N$ for the flat-sponge lift.
+  counted in $N$ for the flat sponge lift.
 \item[$\nleaf(\mathcal{B})$, $\Nleaf$:] the number of distinct
   construction-generated final leaf transcripts in the execution of
   $\mathcal{B}$, and a cap on it. Distinct final leaf transcripts are
@@ -313,7 +313,7 @@ hold at the stated bounds.
 \label{sec:mu-setting}
 
 This subsection instantiates the mu-ind game of \cite{BT16}
-(\Cref{sec:mu-ind}) for \TW{} in the lifted public-permutation model,
+(\Cref{sec:mu-ind}) for \TW{} in the lifted public permutation model,
 using the same ideal-side simulator convention as the single-user
 AE-style games of \Cref{sec:games-pp}. The challenger samples a
 challenge bit $b \sample \bits$. If $b = 1$, it samples a permutation
@@ -358,7 +358,7 @@ the leaf-collision and verification-tag terms. $\Nprim$
 remains a single shared count over the primitive interface.
 
 The mu-ind treatment applies only to indistinguishability. The
-committing-security games already give the adversary control of all
+committing security games already give the adversary control of all
 $s$ keys, so the $s$-way CMTDs-$\ell$ statements of
 \Cref{sec:games-pp} are themselves the multi-key committing statement
 and need no separate $\mathsf{mu\text{-}cmt}$ notion.

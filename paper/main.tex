@@ -3,7 +3,7 @@
 \input{preamble}
 \input{macros}
 
-\title[TW128]{TW128: A Tree-Structured Duplex Authenticated-Encryption Mode}
+\title[TW128]{TW128: A Tree-Structured Duplex Authenticated Encryption Mode}
 \author{Coda Hale}
 \institute{Hale Institute for Bicycle Appreciation}
 
@@ -14,7 +14,7 @@
 \keywords{authenticated encryption \and committing security \and sponge constructions \and duplex constructions \and Keccak}
 
 \begin{abstract}
-  We present \TW{}, a nonce-based authenticated-encryption mode with
+  We present \TW{}, a nonce-based authenticated encryption mode with
   associated data built as a two-level tree of keyed duplexes over the
   \Keccakp{} permutation. A serial root duplex binds
   the key, nonce, and associated data, encrypts the first message chunk, and
@@ -23,9 +23,9 @@
   state once the key and nonce are fixed and can therefore be evaluated in
   parallel across SIMD lanes.
 
-  We analyze \TW{} in the public-permutation model, proving each
+  We analyze \TW{} in the public permutation model, proving each
   bound first against an intermediate random oracle and then transferring it
-  to the real permutation by the flat-sponge lift. We prove a concrete
+  to the real permutation by the flat sponge lift. We prove a concrete
   multi-user indistinguishability bound and derive all-in-one authenticated
   encryption as its single-user corollary, alongside concrete bounds for the
   commitment security of the root tag. The last we obtain by proving that
@@ -37,7 +37,7 @@
   the implemented parameters these notions meet a $128$-bit security target.
   Vectorized \texttt{amd64} and \texttt{arm64}
   implementations realize the tree's leaf parallelism, reaching
-  multi-gigabyte-per-second throughput, a factor of $1.3$ to $2$ below
+  multi-gigabyte per second throughput, a factor of $1.3$ to $2$ below
   hardware-accelerated AES-128-GCM.
 \end{abstract}
 

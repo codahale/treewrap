@@ -172,7 +172,7 @@ independently to every \TW{} duplex object.
 
 The root duplex is initialized by absorbing $\prfxroot
 \concat K \concat N$ under \siginit (\Cref{alg:enc}), then
-absorbs the associated-data blocks under \sigadmore /
+absorbs the associated data blocks under \sigadmore /
 \sigadlast, the root ciphertext blocks in the message phase under
 \sigmsgmore / \sigmsglast, and the leaf tag aggregation
 blocks under \sigaggmore / \sigagglast. By the
@@ -183,7 +183,7 @@ initialized by $\prfxleaf \concat K \concat N \concat
 \langle j \rangle_8$ and absorbing only its own ciphertext blocks in the
 message phase. In decryption and verification, \Cref{alg:dec} absorbs the
 submitted ciphertext blocks before the root tag comparison, so the same
-flattened message-phase transcript is defined whether the comparison
+flattened message phase transcript is defined whether the comparison
 accepts or rejects.
 \end{proof}
 
@@ -212,7 +212,7 @@ two call languages.
 \item A root transcript starts with
   $(\prfxroot \concat K \concat N,\siginit)$, with fixed-width fields
   $K \in \bits^k$ and $N \in \bits^\nu$. It then absorbs the
-  associated-data byte string (only when the associated data is
+  associated data byte string (only when the associated data is
   nonempty; the phase is otherwise elided, \Cref{sec:enc}), the root
   ciphertext byte string, and the aggregation byte string (only when
   $n \geq 1$; when $n = 0$ the aggregation phase is elided,
@@ -315,11 +315,11 @@ reconstructs $s_P$ exactly. The map from $s_P$ to the phase's $(\sigma,
 
 Applied phase by phase to a well-formed final-root transcript:
 \begin{itemize}
-\item AD. The associated-data phase contributes a $\sigadlast$-tagged
+\item AD. The associated data phase contributes a $\sigadlast$-tagged
   block exactly when the associated data is nonempty; an empty
   associated data elides the phase and contributes no block. When the
   phase is present the sub-claim recovers the AD byte string. Thus
-  distinct associated-data strings $A_i \neq A_j$ are separated either
+  distinct associated data strings $A_i \neq A_j$ are separated either
   by the presence versus absence of the AD phase (when exactly one is
   empty) or, when both are nonempty, by their distinct AD
   $\sigma$-block sequences.
@@ -378,9 +378,9 @@ ciphertext blocks this recovers the same full absorbed ciphertext.
 
 \begin{lemma}[Bridge and Typed Decoding]
 \label{lem:bridge-decode}
-The random-oracle games used in
+The random oracle games used in
 \Cref{sec:main-results,sec:cmtds3,app:committing-transfer} are ordinary
-random-oracle games on a single random oracle
+random oracle games on a single random oracle
 $\ROflat : \bits^* \to \bits^\infty$ over the unpadded
 \cite{BDPV08} $H$-input domain (\Cref{sec:ro-model}), with \TW{} root and
 leaf duplex outputs answered by the typed restriction
@@ -499,7 +499,7 @@ outside the well-formed language and decode to $\bot$. A non-$\bot$
 decoding fixes not only the candidate key $K$ but the candidate context
 components present in the decoded prefix: the nonce $N$ occupies the
 remaining fixed-width init-field slot, and the associated data $A$ is
-read off the recovered associated-data blocks. We use the key projection
+read off the recovered associated data blocks. We use the key projection
 $(K, \mathcal{C})$ throughout; when a game hides a single context
 component $Z \in \{K, N, A\}$, the same decoding returns that component's
 candidate value, which we denote $\KeyedTWOut_Z(Y)$.
@@ -689,7 +689,7 @@ the count.
 
 \begin{lemma}[Adaptive Key-Test Bound]
 \label{lem:key-tests}
-Consider a \TW{} random-oracle-model game with a single hidden context
+Consider a \TW{} random oracle model game with a single hidden context
 component $Z$ sampled uniformly from $\bits^w$ for some $w \geq k$---the
 standard case being the hidden key, $Z = K$ and $w = k$, used in the
 AE-style proofs---direct adversary access to
@@ -753,7 +753,7 @@ $\KeyedTWOut_Z$ returns either $\bot$ or a unique candidate $Z$-value.
 
 \begin{lemma}[Leaf Tag Collision Bound]
 \label{lem:leaf-collision}
-Consider any \TW{} random-oracle-model game with an adversary
+Consider any \TW{} random oracle model game with an adversary
 $\mathcal{B}$ that has direct access to $\ROflat$ and construction
 computations that may generate final leaf transcripts---by encryption or
 by verification computations, whether they accept or reject. Let
@@ -763,7 +763,7 @@ receive the same $\tauleaf$-bit projection from $\RF(\cdot)$, and let
 $\nleaf(\mathcal{B})$ be the execution-uniform count of distinct
 construction-generated final leaf transcripts (\Cref{sec:resources}).
 Both bounds below apply the collision facet ($s = 2$, $\tau = \tauleaf$)
-of \Cref{lem:adaptive-candidate} to a chronological leaf-tag candidate
+of \Cref{lem:adaptive-candidate} to a chronological leaf tag candidate
 sequence, in two regimes.
 \begin{enumerate}
 \item \emph{Adversary-supplied keys.} When the game's keys are
@@ -787,7 +787,7 @@ sequence, in two regimes.
 \end{lemma}
 
 \begin{proof}
-Build a chronological leaf-tag candidate sequence: a candidate is the
+Build a chronological leaf tag candidate sequence: a candidate is the
 bridged input of a leaf tag output point ($\Ltag(j)$), appended the first
 time it is reached---by a direct query in $\mathcal{B}$'s oracle phase or
 by a construction computation generating a final leaf transcript---and
@@ -838,7 +838,7 @@ flattened final-root inputs identify the same leaf transcript sequence.
 \begin{lemma}[Transcript Freshness]
 \label{lem:freshness}
 For any fixed nonce-respecting encryption query in the \TW{}
-random-oracle experiment, let $\mathsf{hit}_{\mathsf{fresh}}$ be the
+random oracle experiment, let $\mathsf{hit}_{\mathsf{fresh}}$ be the
 event that, before this query reaches some counted transcript point,
 a prior direct adversary query to $\ROflat$ has already hit the
 bridged input of that hidden-key point. On
@@ -852,7 +852,7 @@ $\ROflat$ value is sampled.
 Work on an execution outside $\mathsf{hit}_{\mathsf{fresh}}$ for the
 fixed query. This rules out prior adversary reads of the hidden-key
 construction inputs considered below. It remains to rule out repeats
-from previous construction-interface outputs and from the current
+from previous construction interface outputs and from the current
 encryption query.
 
 \paragraph{First root keystream block.}
@@ -889,7 +889,7 @@ prior view,
   C_i = M_i \oplus Z_i
 \]
 is uniform conditioned on the prior view. \TW{} then absorbs $C_i$
-with the appropriate message-phase suffix ($\sigmsgmore$ or
+with the appropriate message phase suffix ($\sigmsgmore$ or
 $\sigmsglast$) before requesting the next keystream block. Once $C_i$ is sampled, the next transcript is
 fixed; \Cref{lem:transcript-inj}'s injectivity and domain separation
 imply it has not appeared earlier unless the same duplex-call prefix
@@ -927,7 +927,7 @@ ciphertext and the adversary-visible prior view alone. By
 \Cref{cor:output-sep}, the selected root tag output-point class is
 separated from every other output-point class in the same query ---
 including root initialization (suffix \siginit), AD-phase outputs,
-the remaining message-phase outputs, leaf-side output points (separated
+the remaining message phase outputs, leaf-side output points (separated
 by $\prfxleaf$), and, in the $n \geq 1$ case, earlier \Ragg-prefix
 output points (separated by the \sigaggmore vs
 \sigagglast suffix). Even if two encryption queries realize
@@ -961,7 +961,7 @@ query.
 
 \begin{lemma}[Verification Visible-Prefix Key Uniformity]
 \label{lem:ver-key-uniformity}
-In the stopped single-key \TW{} random-oracle encryption/verification
+In the stopped single-key \TW{} random oracle encryption/verification
 interaction with hidden key $K$, direct access to $\ROflat$, and
 immediate abort on $\badkey$, order the direct $\ROflat$ queries. For a
 direct query position $i$, let $S_i$
@@ -1028,7 +1028,7 @@ $S_i$, all keys in $\bits^k \setminus S_i$ remain equally likely.
 
 \begin{lemma}[Verification-First Root Guessing]
 \label{lem:ver-first-root-guess}
-In the stopped single-key \TW{} random-oracle encryption/verification
+In the stopped single-key \TW{} random oracle encryption/verification
 interaction before $\badkey \cup \badleaf$, let
 $\mathsf{win}_{\mathsf{vf}}$ be the event that some accepting
 non-replay verification submission belongs to a verification-first
@@ -1116,9 +1116,9 @@ verification-first classes gives the claim.
 The multi-user indistinguishability theorem (\Cref{thm:mu-ind}) telescopes a
 hybrid over the $D$ users, replacing one real user by its ideal
 $(\Rand,\Replay)$ interface at each step. The following lemma bounds one such
-step directly inside the shared random-oracle environment. It couples the
+step directly inside the shared random oracle environment. It couples the
 real and ideal user-$d$ interfaces until one of three local events occurs:
-a direct hidden-key transcript hit, a hidden leaf-tag collision, or an
+a direct hidden-key transcript hit, a hidden leaf tag collision, or an
 accepting non-replay verification query.
 
 \begin{lemma}[Mu-Ind Adjacent-Hybrid Bound]

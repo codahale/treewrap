@@ -7,9 +7,9 @@ permutation offer an attractive route to it. The duplex of \cite{BDPV11} turns
 one permutation---here \Keccakp, the round-reduced permutation
 underlying the \cite{FIPS202} standard---into a single-pass authenticated cipher
 with a small, constant memory footprint and no separate block cipher or
-universal-hash key schedule. Its security rests on the indifferentiability of
+universal hash key schedule. Its security rests on the indifferentiability of
 the sponge from a random oracle \cite{BDPV08}, which reduces analysis of the full
-construction to a random-oracle argument plus one capacity-birthday loss.
+construction to a random oracle argument plus one capacity birthday loss.
 
 This compactness comes at a structural cost. A duplex is inherently
 \emph{sequential}: each call absorbs its input into a state produced by the
@@ -20,17 +20,17 @@ Widely deployed AEADs such as AES-GCM and ChaCha20-Poly1305 are not
 key-committing: an adversary can craft a single ciphertext that decrypts to
 valid plaintexts under two or more keys \cite{DGRW18, ADGKLS22}. Far from a
 curiosity, this enables concrete abuses---the ``invisible salamander'' that
-defeats Facebook's attachment-franking scheme \cite{DGRW18}, ciphertexts that
+defeats Facebook's attachment franking scheme \cite{DGRW18}, ciphertexts that
 open to different well-formed files under different keys \cite{ADGKLS22}, and
-partitioning-oracle attacks that recover passwords from systems built on
-non-committing AEAD \cite{LGR21}. The committing-AE line that addresses these
+partitioning oracle attacks that recover passwords from systems built on
+non-committing AEAD \cite{LGR21}. The committing AE line that addresses these
 threats was initiated by \cite{GLR17} and developed into formal committing
 notions with efficient generic transforms by \cite{BH22}. Commitment has two
 facets: committing security is a collision requirement---no two contexts open
 one ciphertext---while its preimage counterpart, \emph{context discoverability}
 \cite{MLGR23}, forbids an adversary from \emph{finding} even one decrypting
 context for a target ciphertext. The latter's absence underlies the recent
-context-discovery attacks that break \textsf{GCM}, \textsf{CCM}, \textsf{EAX},
+context discovery attacks that break \textsf{GCM}, \textsf{CCM}, \textsf{EAX},
 \textsf{SIV}, and \textsf{OCB3} \cite{MLGR23}, all of which delegate
 authenticity to an algebraically invertible MAC. A mode that targets these
 notions natively, rather than through an add-on transform, avoids the
@@ -49,7 +49,7 @@ recovering the throughput a flat duplex forgoes; and because the root binds the
 associated data, the first chunk, and every leaf tag into the single output tag,
 that tag is the output of the sponge on the entire $(K, N, A, M)$ input. The structure
 ensures only that distinct $(K, N, A)$ triples reach distinct root transcripts;
-the committing and context-discoverability security rests on the
+the committing and context discoverability security rests on the
 indifferentiability of the sponge, which makes the root tag both collision- and
 preimage-resistant. Because both hold for the tag projection alone, the single
 $256$-bit root tag is itself a secure, compact cryptographic commitment to the
@@ -58,16 +58,16 @@ still operates on a bounded $1600$-bit state, and the leaf tags are absorbed
 into the root as the leaves complete rather than buffered together, so the
 memory footprint remains constant in the message length.
 
-We analyze \TW{} in the public-permutation model and obtain a concrete
+We analyze \TW{} in the public permutation model and obtain a concrete
 multi-user indistinguishability bound in the sense of \cite{BT16}, with
 all-in-one authenticated encryption in the sense of \cite{RS06} as its
 single-user corollary. We also prove commitment security of the root tag,
 stated as the \cite{RS04} hash security of the tag wrapper---collision,
 second-preimage, and preimage resistance---from which the \cite{BH22}
 full-input committing notion (\textsf{CMTDs-4}) follows as a corollary,
-alongside the \cite{MLGR23} context-discoverability notion. Each bound is
+alongside the \cite{MLGR23} context discoverability notion. Each bound is
 proved first against an intermediate random oracle and then transferred to the
-real permutation by the flat-sponge lift of \cite{BDPV08}. At the implemented parameters
+real permutation by the flat sponge lift of \cite{BDPV08}. At the implemented parameters
 ($k = c = \tauroot = \tauleaf = 256$), these guarantees meet a $128$-bit
 security target for adversaries running up to $\Ntot \leq 2^{63}$ \Keccakp{}
 calls---on the order of $2^{71}$ bytes of processed data, beyond any realistic
@@ -90,10 +90,10 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
 \item \textbf{Multi-user security.} We give a concrete multi-user
   indistinguishability bound \cite{BT16} for $D$ users
   (\Cref{thm:mu-ind}), obtained by a key-collision-stopped hybrid over the
-  users and a direct adjacent-user coupling in the random-oracle model.
+  users and a direct adjacent-user coupling in the random oracle model.
 
 \item \textbf{All-in-one AE security.} We derive a concrete bound on the
-  all-in-one AE advantage \cite{RS06} in the public-permutation model
+  all-in-one AE advantage \cite{RS06} in the public permutation model
   (\Cref{thm:ae}) as the $D=1$ case of the multi-user
   indistinguishability theorem.
 
@@ -109,28 +109,28 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   for $\ell \in \{1, 3, 4\}$ in \Cref{app:committing-transfer}.
 
 \item \textbf{Context discoverability.} We additionally prove that \TW{}
-  satisfies the published \cite{MLGR23} context-discoverability notion
+  satisfies the published \cite{MLGR23} context discoverability notion
   $\mathsf{CDY}^\ast$ and its per-component variants---a ciphertext-level
   guarantee, distinct from preimage resistance of the tag, established with a
   concrete bound (\Cref{thm:cdy-full})---so no adversary, given a target
   ciphertext fixed in advance, can find a decrypting context. This is the
   facet whose absence underlies the discovery attacks of \cite{MLGR23};
   \Cref{sec:related} contrasts \TW{}'s sponge-based resistance with the
-  algebraic-MAC inversion those attacks exploit.
+  algebraic MAC inversion those attacks exploit.
 
 \item \textbf{Proof methodology.} We carry out the analysis in a dedicated \TW{}
-  random-oracle model and transfer every bound to the public-permutation setting
-  through the \cite{BDPV08} flat-sponge lift (\Cref{app:flat-sponge-lift}). A
+  random oracle model and transfer every bound to the public permutation setting
+  through the \cite{BDPV08} flat sponge lift (\Cref{app:flat-sponge-lift}). A
   derived-adversary argument shows that each direct primitive query induces at
-  most one random-oracle query, so the random-oracle bounds are instantiated
+  most one random oracle query, so the random oracle bounds are instantiated
   at the direct-query count $\Nprim$ rather than the total work $\Ntot$,
-  separating the single capacity-birthday loss $\Lift_c(\Ntot)$ from the
+  separating the single capacity birthday loss $\Lift_c(\Ntot)$ from the
   scheme-specific terms.
 
 \item \textbf{Optimized implementations.} We describe and evaluate vectorized
   \texttt{amd64} (AVX-512 and AVX2) and \texttt{arm64} (NEON with the SHA-3
   extension) implementations whose batched leaf cores realize the tree's
-  parallelism in practice, reaching multi-gigabyte-per-second throughput on
+  parallelism in practice, reaching multi-gigabyte per second throughput on
   contemporary hardware (\Cref{sec:performance}).
 \end{itemize}
 
@@ -185,9 +185,9 @@ who introduced compactly committing AEAD for message franking, and by
 and \textsf{CMTD} hierarchy and gave efficient generic transforms
 (\textsf{UtC}, \textsf{RtC}, \textsf{HtE}) that add commitment to a base scheme.
 A complementary line shows that widely used and dedicated AEADs fail these
-notions: the invisible-salamander \cite{DGRW18} and partitioning-oracle
+notions: the invisible salamander \cite{DGRW18} and partitioning oracle
 \cite{LGR21} attacks, multi-format ciphertexts \cite{ADGKLS22}, the
-context-discovery and commitment attacks that break CCM, EAX, SIV, GCM, and
+context discovery and commitment attacks that break CCM, EAX, SIV, GCM, and
 OCB3 \cite{MLGR23}, and an $O(1)$ key-committing attack against all variants of
 AEGIS \cite{WP14} that refutes the prior belief that AEGIS was committing
 \cite{IR23}. \cite{MLGR23} also introduce context discoverability, the
@@ -209,26 +209,26 @@ detail the structural and throughput differences.
 \label{sec:organization}
 
 \Cref{sec:prelims} recalls the notation, sponge and duplex
-constructions over \Keccak{}, the authenticated-encryption,
-committing-security \cite{BH22}, and context-discoverability
+constructions over \Keccak{}, the authenticated encryption,
+committing security \cite{BH22}, and context discoverability
 \cite{MLGR23} notions used throughout, and the
 multi-user indistinguishability notion of \cite{BT16}.
 \Cref{sec:tw128} specifies the \TW{} construction and its parameters.
-\Cref{sec:security-model} fixes the public-permutation games, the
-intermediate random-oracle model, and the resource accounting that
+\Cref{sec:security-model} fixes the public permutation games, the
+intermediate random oracle model, and the resource accounting that
 all later bounds reference. \Cref{sec:main-results} states the
 headline mu-ind, AE, hash (collision, second-preimage, preimage), CMTDs-4,
-and context-discoverability theorems and their
+and context discoverability theorems and their
 concrete \TW{}-parameter forms; \Cref{sec:cmtds3} proves the
-random-oracle hash and CMTDs-4 bounds. \Cref{sec:performance} reports the
+random oracle hash and CMTDs-4 bounds. \Cref{sec:performance} reports the
 performance of the reference and optimized implementations.
 \Cref{sec:discussion} compares \TW{} to prior sponge AEADs and
 committing constructions and discusses limitations.
 \Cref{sec:conclusion} concludes.
 \Cref{app:lemmas} collects the structural decoding and accounting
 lemmas that form the proof core;
-\Cref{app:flat-sponge-lift} carries out the \cite{BDPV08} flat-sponge lift
-that converts each random-oracle bound to its public-permutation
+\Cref{app:flat-sponge-lift} carries out the \cite{BDPV08} flat sponge lift
+that converts each random oracle bound to its public permutation
 form; \Cref{app:committing-transfer} gives the remaining
-\cite{BH22} committing-security bounds; and
+\cite{BH22} committing security bounds; and
 \Cref{app:test-vectors} lists \TW{} test vectors.

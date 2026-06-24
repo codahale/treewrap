@@ -67,15 +67,15 @@ loss terms in \Cref{sec:loss-terms}.
     \toprule
     Symbol & Meaning & Defined \\
     \midrule
-    $N$        & Construction-interface cost (\Keccakp{} calls)       & \cref{sec:resources} \\
+    $N$        & Construction interface cost (\Keccakp{} calls)       & \cref{sec:resources} \\
     $\Nprim$   & Direct primitive-interface queries                   & \cref{sec:resources} \\
     $\Ntot$    & $N + \Nprim$ (total query-sequence cost)             & \cref{sec:resources} \\
     $\qv$, $\Qv$ & Valid verification queries / cap                   & \cref{sec:resources} \\
-    $\qRO$, $\QRO$ & Direct random-oracle queries / cap (RO-model)    & \cref{sec:resources} \\
+    $\qRO$, $\QRO$ & Direct random oracle queries / cap (RO-model)    & \cref{sec:resources} \\
     $\nleaf$, $\Nleaf$ & Distinct construction-generated final leaf transcripts / cap & \cref{sec:resources} \\
     \midrule
-    $\Lift_c(\Ntot)$        & \cite{BDPV08} flat-sponge loss   & \cref{sec:loss-terms} \\
-    $\KeyGuess_k(Q)$        & Ideal-system key guess           & \cref{sec:loss-terms} \\
+    $\Lift_c(\Ntot)$        & \cite{BDPV08} flat sponge loss   & \cref{sec:loss-terms} \\
+    $\KeyGuess_k(Q)$        & Ideal system key guess           & \cref{sec:loss-terms} \\
     $\RootColl_\tau(Q, s)$  & $s$-way root-collision           & \cref{sec:loss-terms} \\
     $\RootPre_\tau(Q)$      & Root-preimage                    & \cref{sec:loss-terms} \\
     $\LeafColl_\tau(Q)$     & Known-key leaf-collision         & \cref{sec:loss-terms} \\
@@ -95,8 +95,8 @@ by a state width $b$ and a round count $n_r$; we write $\Keccak[b, n_r]
 \in \Perm(\bits^b)$ for the corresponding permutation. \TW{} uses
 \Keccakp{}, the same primitive as
 KangarooTwelve~\cite{BDPVVV16}, fixed throughout. In the
-public-permutation security model of \Cref{sec:games-pp} and the
-flat-sponge lift of \Cref{app:flat-sponge-lift}, this permutation is
+public permutation security model of \Cref{sec:games-pp} and the
+flat sponge lift of \Cref{app:flat-sponge-lift}, this permutation is
 modeled as a uniformly random element of $\Perm(\bits^{1600})$.
 
 \paragraph{The sponge construction.}
@@ -164,16 +164,16 @@ appending $1 \concat 0^q$ with $q$ determined by the input length modulo
 $r_{\max}$; on the bridge image, $q$ is recovered as the trailing-zero
 count. \Cref{sec:ro-model} instantiates this bridge on typed \TW{} duplex
 transcript prefixes as the map $\flatmap(\cdot)$ used by the
-random-oracle proofs throughout the paper.
+random oracle proofs throughout the paper.
 
 \subsection{Authenticated Encryption with Associated Data}
 \label{sec:ae-defs}
 
 \paragraph{Syntax.}
-A \emph{nonce-based authenticated-encryption scheme with associated
+A \emph{nonce-based authenticated encryption scheme with associated
 data} (AEAD scheme) is a pair $\SE = (\Enc, \Dec)$ of deterministic
 algorithms with associated key space $\mathcal{K} \subseteq (\bits^8)^*$,
-nonce space $\mathcal{N} \subseteq (\bits^8)^*$, associated-data space
+nonce space $\mathcal{N} \subseteq (\bits^8)^*$, associated data space
 $\mathcal{A} \subseteq (\bits^8)^*$, message space $\mathcal{M} \subseteq
 (\bits^8)^*$, and ciphertext space $\mathcal{C} \subseteq (\bits^8)^*$. The
 encryption algorithm $\Enc : \mathcal{K} \times \mathcal{N} \times
@@ -192,7 +192,7 @@ For every $(K, N, A, M) \in \mathcal{K} \times \mathcal{N} \times
 \mathcal{A} \times \mathcal{M}$, $\Dec_K(N, A, \Enc_K(N, A, M)) = M$.
 
 \paragraph{All-in-one AE.}
-We use the all-in-one authenticated-encryption notion of \cite{RS06},
+We use the all-in-one authenticated encryption notion of \cite{RS06},
 instantiated for nonce-based AE following \cite{BT16}. The experiment
 grants either the real pair $(\Enc_K,\Ver_K)$ or the ideal pair
 $(\Rand,\Replay)$, where $\Rand$ returns a fresh uniform byte string of
@@ -228,7 +228,7 @@ $\mathsf{Enc}$, and $\mathsf{Vf}$ oracles, together with the public
 primitive interface---the real permutation when $b = 1$ and the
 simulator when $b = 0$---are instantiated for \TW{} in
 \Cref{sec:mu-setting}. We write the user index as $d$ and the
-associated-data input as $A$, where \cite{BT16} writes $i$ and $H$, and
+associated data input as $A$, where \cite{BT16} writes $i$ and $H$, and
 take the absolute value of their signed advantage so that
 \[
   \Advmuind_\SE(\mathcal{A})
@@ -253,15 +253,15 @@ may appear under distinct users but not twice under the same user.
 This is strictly weaker than the global nonce-uniqueness requirement
 that would force every $(d, N)$ pair across all users to be unique.
 
-\subsection{Committing and Context-Discoverability Notions}
+\subsection{Committing and Context Discoverability Notions}
 \label{sec:commit-defs}
 
-\cite{BH22} formalize a family of committing-security notions for
+\cite{BH22} formalize a family of committing security notions for
 nonce-based AEAD schemes, parameterized by how much of the
 encryption input is committed and by whether commitment is
 established through decryption (the D-notions) or through encryption
 agreement (the E-notions). We recall their definitions and the
-$s$-way generalization, the complementary \emph{context-discoverability}
+$s$-way generalization, the complementary \emph{context discoverability}
 notion of \cite{MLGR23}, and then frame the root tag itself as a hash
 function whose \cite{RS04} security---collision, second-preimage, and
 preimage resistance---captures the binding and preimage facets of the tag
@@ -296,7 +296,7 @@ adversary wins the respective game; the parameter $s$ is suppressed
 from the notation when clear from context. The two-tuple case $s = 2$
 is the original CMTD-$\ell$/CMT-$\ell$ pair of \cite[Fig.~4]{BH22}.
 These definitions are instantiated for \TW{} in \Cref{sec:games-pp},
-with the public-permutation lift deferred to that section.
+with the public permutation lift deferred to that section.
 
 \paragraph{The root tag as a hash.}
 Many uses of commitment store, transmit, or compare a short tag rather
@@ -314,7 +314,7 @@ of \cite{RS04}, over the \TW{} input domain:
   \item[Collision resistance (Coll).] No adversary finds distinct inputs
     $X_1, \dots, X_s$ (any $s \geq 2$) with
     $\HTW(X_1) = \cdots = \HTW(X_s)$.
-  \item[Always-second-preimage resistance (aSec).] For the fixed deployed
+  \item[Always second-preimage resistance (aSec).] For the fixed deployed
     permutation, given a challenge input $X$, no adversary finds
     $X' \neq X$ with $\HTW(X') = \HTW(X)$.
   \item[Preimage resistance (Pre).] For a target tag $T^*$ fixed in
@@ -373,6 +373,6 @@ discoverability attacks; the preimage character of the notion is what
 makes \TW{}'s root tag, a sponge output, resist them.
 
 The preimage resistance of \HTW{} (Pre, above) is the tag-level preimage
-guarantee that the \cite{MLGR23} context-discoverability notion is the
+guarantee that the \cite{MLGR23} context discoverability notion is the
 ciphertext-level counterpart of; the two are distinct, and \TW{} is shown
 to satisfy both (\Cref{thm:pre,thm:cdy-full}).

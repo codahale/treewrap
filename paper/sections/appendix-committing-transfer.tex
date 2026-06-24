@@ -2,7 +2,7 @@
 \label{app:committing-transfer}
 
 The headline results bound full-input CMTDs-4 (\Cref{cor:cmtds4}) as a
-corollary of the collision resistance of the root-tag wrapper
+corollary of the collision resistance of the root tag wrapper
 (\Cref{thm:coll}). The remaining \cite{BH22} committing
 notions---CMTDs-$1$, CMTDs-$3$, and the CMTs-$\ell$ source games for
 $\ell \in \{1,3,4\}$---all reduce to the same root-collision bound, so we
@@ -14,7 +14,7 @@ notion separately.
 Fix $s \geq 2$ and $X \in \{\mathsf{CMTDs\text{-}1},
 \mathsf{CMTDs\text{-}3}\}$. The identity reduction
 $\mathcal{A}^\ast = \mathcal{A}$---preceded, for
-$X = \mathsf{CMTDs\text{-}1}$, by the source-game syntax, length, and
+$X = \mathsf{CMTDs\text{-}1}$, by the source game syntax, length, and
 pairwise-$\WiC_1$ prechecks---turns every $s$-way $X$-adversary against
 \TW{} into an $s$-way CMTDs-4 adversary with
 \[
@@ -31,11 +31,11 @@ A CMTDs-3 winner has pairwise distinct $(K_i,N_i,A_i)$ triples, which are
 \emph{a fortiori} pairwise distinct full tuples $(K_i,N_i,A_i,M_i)$, so
 the winner is a CMTDs-4 winner on the same output. For CMTDs-1, pairwise
 $\WiC_1$-distinctness makes the keys $K_i$---hence the triples, hence the
-full tuples---pairwise distinct; the prechecks are source-game
+full tuples---pairwise distinct; the prechecks are source game
 rejections, and the eager length precheck is success preserving because
 \TW{} decryption returns $\bot$ or a message of length $\|C\|$, so no
 winning transcript is discarded. Either reduction makes no
-primitive-interface query and performs at most the source-game
+primitive-interface query and performs at most the source game
 decryption checks, so neither cost increases.
 \end{proof}
 
@@ -60,7 +60,7 @@ and every $s$-way $X$-adversary $\mathcal{A}$ against \TW{},
 \begin{proof}
 CMTDs-4 is bounded directly by \Cref{cor:cmtds4}. CMTDs-1 and
 CMTDs-3 reduce to CMTDs-4 by \Cref{lem:cmtds-identity-reductions}, whose
-public-permutation bound is again \Cref{cor:cmtds4}; monotonicity of
+public permutation bound is again \Cref{cor:cmtds4}; monotonicity of
 $\Lift_c$ absorbs $\Ntot(\mathcal{A}^\ast) \leq \Ntot(\mathcal{A})$.
 
 The E-notions are bounded by the Root Tag Hash Bound, with the
@@ -75,8 +75,8 @@ ciphertexts would decrypt to equal messages---so \Cref{cor:triple-sep}
 makes the $s$ final-root candidates distinct while their $\tauroot$-bit
 projections all equal $T$. The Root Tag Hash Bound
 (\Cref{lem:root-tag-hash}, part~1) then gives
-$\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$ in the random-oracle model,
-and the flat-sponge lift (\Cref{cor:lift-application}) transfers it to the
-public-permutation setting at $\Nprim$; the encryption checks are
+$\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$ in the random oracle model,
+and the flat sponge lift (\Cref{cor:lift-application}) transfers it to the
+public permutation setting at $\Nprim$; the encryption checks are
 construction-internal work counted in $N$, not in $\Nprim$.
 \end{proof}

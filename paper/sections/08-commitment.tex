@@ -8,13 +8,13 @@ sequence, and the Root Tag Hash Bound (\Cref{lem:root-tag-hash}) turns a
 collision, preimage, or second-preimage among those candidates into the
 matching adaptive bound of \Cref{app:lemmas}, controlling the chance that
 distinct inputs land on the same $\tauroot$-bit root tag projection. The
-four random-oracle theorems---CMTDs-4 (\Cref{thm:cmtds4-ro}), collision
+four random oracle theorems---CMTDs-4 (\Cref{thm:cmtds4-ro}), collision
 (\Cref{thm:coll-ro}), preimage (\Cref{thm:pre-ro}), and
-always-second-preimage (\Cref{thm:asec-ro})---are then short
+always second-preimage (\Cref{thm:asec-ro})---are then short
 instantiations, differing only in which facet they invoke and in whether
 a leaf tag collision term is needed when colliding inputs may use
 different ciphertext bodies. \Cref{app:flat-sponge-lift} transfers each
-instance to the public-permutation setting, \Cref{sec:headline} records
+instance to the public permutation setting, \Cref{sec:headline} records
 the concrete bounds, and \Cref{app:committing-transfer} forwards the
 remaining \cite{BH22} committing notions to the same root-collision
 bound.
@@ -54,7 +54,7 @@ Equality of the recovered sequences forces equality of the \siginit
 call, whose $\sigma$ is $\prfxroot \concat K \concat N$ with
 fixed-width $K$ and $N$, hence $K_i = K_j$ and $N_i = N_j$. It also
 forces equality of the recovered AD subsequences. By the AD bullet of
-\Cref{lem:transcript-inj} the associated-data phase contributes a
+\Cref{lem:transcript-inj} the associated data phase contributes a
 $\sigadlast$-tagged block exactly when the associated data is nonempty,
 so the recovered sequences agree on the presence of the AD phase. If
 exactly one of $A_i, A_j$ were empty the recovered sequences would
@@ -87,7 +87,7 @@ By bridge injectivity (\Cref{lem:bridge-decode}),
 $\flatmap(R) = \flatmap(R')$ gives equal native flattened final-root
 inputs. \Cref{lem:transcript-inj} then recovers the same root
 initialization $\prfxroot \concat K \concat N$---hence the same $K$ and
-$N$---the same associated-data blocks---hence the same $A$---the same root
+$N$---the same associated data blocks---hence the same $A$---the same root
 ciphertext chunk, and the same leaf count and ordered leaf tag sequence.
 Under $\neg\badleaf^\star$, Leaf-Transcript Recovery
 (\Cref{lem:leaf-recovery}) identifies the equal leaf tag sequences with
@@ -97,7 +97,7 @@ with the common root ciphertext chunk this gives the same full $C$.
 
 \begin{lemma}[Root tag Candidate Sequence]
 \label{lem:root-candidate-seq}
-Consider a random-oracle game of \Cref{sec:ro-model} in which the
+Consider a random oracle game of \Cref{sec:ro-model} in which the
 adversary $\mathcal{B}$ first makes direct $\ROflat$ queries and then
 outputs values on which the challenger runs $m \geq 1$ deterministic
 encryption or decryption checks, the $i$-th reaching a final root transcript $R_i$
@@ -154,7 +154,7 @@ candidates and $m$ challenger candidates are appended, giving~(4).
 
 \begin{lemma}[Root Tag Hash Bound]
 \label{lem:root-tag-hash}
-Consider a keyless \TW{} random-oracle game (\Cref{sec:ro-model}) in
+Consider a keyless \TW{} random oracle game (\Cref{sec:ro-model}) in
 which, after $\mathcal{B}$'s direct $\ROflat$ queries, the challenger runs
 deterministic encryption or decryption checks reaching final root
 transcripts, with win event $\mathsf{W}$. By the Root tag Candidate
@@ -193,10 +193,10 @@ corollary with $L = \qRO + 2$ gives
 $(\qRO + 1) \cdot 2^{-\tauroot} = \RootPre_{\tauroot}(\qRO)$.
 \end{proof}
 
-\begin{theorem}[Random-Oracle CMTDs-4]
+\begin{theorem}[Random Oracle CMTDs-4]
 \label{thm:cmtds4-ro}
 For every $s \geq 2$ and every $s$-way CMTDs-4
-adversary $\mathcal{B}$ in the \TW{} random-oracle model
+adversary $\mathcal{B}$ in the \TW{} random oracle model
 (\Cref{sec:ro-model}),
 \[
   \Advcmtds{4}_\RO(\mathcal{B})
@@ -206,7 +206,7 @@ adversary $\mathcal{B}$ in the \TW{} random-oracle model
 \end{theorem}
 
 \begin{proof}
-Run the random-oracle CMTDs-4 game. After rejecting on any failed syntax,
+Run the random oracle CMTDs-4 game. After rejecting on any failed syntax,
 message-length, or pairwise-full-input check, the challenger performs $s$
 deterministic decryption checks $\Dec_{K_i}^\RO(N_i,A_i,C \concat T)$ on
 the one common body $C \concat T$, reaching $R_1,\dots,R_s$. On a winning
@@ -221,10 +221,10 @@ accepting check carries the common root tag $T$. The Root Tag Hash Bound
 $\Advcmtds{4}_\RO(\mathcal{B}) \leq \RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$.
 \end{proof}
 
-\begin{theorem}[Random-Oracle Collision Resistance of $\HTW$]
+\begin{theorem}[Random Oracle Collision Resistance of $\HTW$]
 \label{thm:coll-ro}
 For every $s \geq 2$ and every $s$-way collision
-adversary $\mathcal{B}$ in the \TW{} random-oracle model,
+adversary $\mathcal{B}$ in the \TW{} random oracle model,
 \[
   \AdvColl_{\RO}(\mathcal{B})
   \;\leq\;
@@ -234,7 +234,7 @@ adversary $\mathcal{B}$ in the \TW{} random-oracle model,
 \end{theorem}
 
 \begin{proof}
-Run the random-oracle collision game. Let $\badleaf^\star$ be the event
+Run the random oracle collision game. Let $\badleaf^\star$ be the event
 that two distinct construction-generated final leaf transcripts receive
 the same $\tauleaf$-bit $\RF$ projection; by the adversary-supplied-key
 bound of \Cref{lem:leaf-collision},
@@ -256,11 +256,11 @@ $\RootColl_{\tauroot}(\qRO(\mathcal{B}),s)$; adding $\Pr[\badleaf^\star]$
 gives the theorem.
 \end{proof}
 
-\begin{theorem}[Random-Oracle Preimage Resistance of $\HTW$]
+\begin{theorem}[Random Oracle Preimage Resistance of $\HTW$]
 \label{thm:pre-ro}
 For every query-independent target tag $T^* \in \bits^{\tauroot}$ and
 every preimage adversary $\mathcal{B}$ in the \TW{}
-random-oracle model (\Cref{sec:ro-model}),
+random oracle model (\Cref{sec:ro-model}),
 \[
   \AdvPre_\RO(\mathcal{B})
   \;\leq\; \RootPre_{\tauroot}(\qRO(\mathcal{B}))
@@ -269,7 +269,7 @@ random-oracle model (\Cref{sec:ro-model}),
 \end{theorem}
 
 \begin{proof}
-Run the random-oracle preimage game for the query-independent target
+Run the random oracle preimage game for the query-independent target
 $T^*$, which is independent of $\ROflat$. After rejecting unless the
 output input $X = (K,N,A,M)$ is in the \TW{} domain, the challenger
 performs one encryption $\Enc_{K}^\RO(N,A,M)$, reaching a final root
@@ -280,9 +280,9 @@ with target $T^*$) gives
 $\AdvPre_\RO(\mathcal{B}) \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))$.
 \end{proof}
 
-\begin{theorem}[Random-Oracle aSec]
+\begin{theorem}[Random Oracle aSec]
 \label{thm:asec-ro}
-For every aSec adversary $\mathcal{B}$ in the \TW{} random-oracle model
+For every aSec adversary $\mathcal{B}$ in the \TW{} random oracle model
 (\Cref{sec:ro-model}),
 \[
   \AdvaSec_\RO(\mathcal{B})
@@ -293,7 +293,7 @@ For every aSec adversary $\mathcal{B}$ in the \TW{} random-oracle model
 \end{theorem}
 
 \begin{proof}
-Run the random-oracle aSec game: the challenger draws the challenge input
+Run the random oracle aSec game: the challenger draws the challenge input
 $X$, encrypts it to obtain $T = \HTW(X)$ at a final root transcript $R_X$,
 and gives $X$ to $\mathcal{B}$, which outputs $X' \neq X$, winning if
 $\HTW(X') = T$. Let $\badleaf^\star$ be the event that two distinct

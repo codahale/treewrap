@@ -4,14 +4,14 @@
 \subsection{Design Overview}
 \label{sec:design}
 
-\TW{} is a nonce-based authenticated-encryption scheme with associated
+\TW{} is a nonce-based authenticated encryption scheme with associated
 data, built as a two-level tree of duplex objects over the
 \Keccakp{} permutation. A single \emph{root} duplex, initialized
 with the key $K$ and nonce $N$, absorbs the associated data $A$ when it
 is nonempty, emits
 keystream for the first plaintext chunk $M_0$ of at most $\beta$ bytes,
 and absorbs the resulting ciphertext chunk $C_0$;
-when $A$ is empty the associated-data phase is elided and the
+when $A$ is empty the associated data phase is elided and the
 initialization call itself emits the initial $M_0$ keystream;
 the remaining plaintext is partitioned into \emph{leaf} chunks
 $M_1, \dots, M_n$, each handled by an independent leaf duplex
@@ -21,7 +21,7 @@ $\tauleaf$-bit leaf tag $T_j$. When $n \geq 1$ the leaf tags, together
 with the eight-byte little-endian leaf count $\langle n \rangle_8$, are
 absorbed into the root duplex, which emits a single $\tauroot$-bit root
 tag $T$; when $n = 0$ the aggregation phase is elided and the closing
-message-phase call of the root chunk emits $T$ directly, mirroring the
+message phase call of the root chunk emits $T$ directly, mirroring the
 way a leaf duplex emits its leaf tag. The construction is depicted in
 \Cref{fig:tw128-tree}.
 
@@ -41,7 +41,7 @@ Triple Separation (\Cref{cor:triple-sep,sec:cmtds3}), distinct
 $(K, N, A)$ triples force distinct final root transcripts before
 aggregation values matter, the structural fact behind
 the CMTDs-4 headline of \Cref{sec:headline}. Collision resistance of the
-root-tag wrapper (\Cref{thm:coll}) treats the emitted root tag as the
+root tag wrapper (\Cref{thm:coll}) treats the emitted root tag as the
 commitment string, distinct bodies merging only through its leaf tag
 collision term, and the same root tag, preimage-resistant as a sponge
 output, gives the preimage headline (\Cref{thm:pre}).
@@ -101,10 +101,10 @@ output, gives the preimage headline (\Cref{thm:pre}).
     keystream emitted by the corresponding duplex with the plaintext
     chunks $M_0, M_1, \dots, M_n$. When $n = 0$ the diagram
     reduces to the bottom row without any $T_j$ boxes or aggregation
-    block: the aggregation phase is elided and the closing message-phase
+    block: the aggregation phase is elided and the closing message phase
     call on $C_0$ emits the root tag $T$ directly. When the
     associated data is empty the $A$ block is absent: the
-    associated-data phase is elided and the initialization call emits the
+    associated data phase is elided and the initialization call emits the
     initial $M_0$ keystream directly.}
   \label{fig:tw128-tree}
 \end{figure}
@@ -130,7 +130,7 @@ $\tauroot$ and $\tauleaf$ as separate symbols.
     $\tauleaf$ & $256$          & Leaf tag length (bits) \\
     $\beta$              & $8183$         & Plaintext chunk size (bytes) \\
     $M_{\max}$           & $8183 \cdot 2^{64}$ bytes & Maximum plaintext length \\
-    $A_{\max}$           & $8183 \cdot 2^{64}$ bytes & Maximum associated-data length \\
+    $A_{\max}$           & $8183 \cdot 2^{64}$ bytes & Maximum associated data length \\
     \midrule
     $b$           & $1600$  & Permutation state width (bits) \\
     $n_r$         & $12$    & Permutation rounds \\
@@ -147,7 +147,7 @@ The bound $M_{\max} = 8183 \cdot 2^{64}$ bytes is the largest plaintext whose le
 index fits in $\langle \cdot \rangle_8$: writing $\leaves(M) =
 \max(0, \lceil \|M\| / \beta \rceil - 1)$, every
 supported plaintext satisfies $0 \leq \leaves(M) \leq 2^{64} - 1$, so
-leaf indices lie in $\{1, \dots, 2^{64} - 1\}$. The associated-data
+leaf indices lie in $\{1, \dots, 2^{64} - 1\}$. The associated data
 bound $A_{\max}$ is a fixed scheme parameter taken equal to $M_{\max}$
 unless stated otherwise. Inputs exceeding these bounds are outside the
 scheme domain; every game in \Cref{sec:security-model} rejects
@@ -173,7 +173,7 @@ affords. Specifically:
 
 \begin{itemize}
 \item $c = 256$. The dominant single-key term is the \cite{BDPV08}
-flat-sponge loss
+flat sponge loss
 \[
   \Lift_c(\Ntot) = \Ntot(\Ntot+1)/2^{c+1},
 \]
@@ -224,14 +224,14 @@ initialization absorbs $\prfxroot \concat K \concat N$, $560$ bits in
 all, in a single duplex call, comfortably within the $1336$-bit
 ($\rho = 167$-byte) data field (\Cref{sec:params}), so widening the
 nonce to $256$ bits adds neither a permutation call nor any per-message
-cost. The width also removes any practical concern over random-nonce
+cost. The width also removes any practical concern over random nonce
 collisions: a uniformly random $256$-bit nonce repeats over $q$
 messages with probability at most $\binom{q}{2}/2^{256}$, negligible at
 the work cap of \Cref{sec:concrete-claim}. Deployments that do not
 require a full-width random nonce lose nothing by the choice: a
 narrower nonce---a $96$-bit packet counter, say---is carried in the
 fixed $\nu$-bit field by zero-padding, so a single mode serves both
-random-nonce and counter-based settings with no change of parameters.
+random nonce and counter-based settings with no change of parameters.
 \end{itemize}
 
 \subsection{Domain Separation}
@@ -255,12 +255,12 @@ chunk indices.
 
 Second, every byte-aligned absorption carries a four-bit phase suffix.
 We identify each suffix with the four-bit string given by its
-\Cref{tab:suffixes} value written least-significant-bit first, so that a
+\Cref{tab:suffixes} value written least significant bit first, so that a
 duplex call absorbing a byte-aligned block $\sigma$ under a phase
 suffix \sigph{} feeds the duplex interface of \Cref{sec:sponge} the input
 $\sigma \concat \sigph$ before $\padtenone$ padding.
 The seven phase suffixes are summarized in \Cref{tab:suffixes}; they
-correspond to initialization, non-final and final associated-data
+correspond to initialization, non-final and final associated data
 blocks, non-final and final message blocks, and non-final and final
 aggregation blocks. The seven values are pairwise distinct, so any two
 transcripts that differ in the phase of any block also differ in the
@@ -274,8 +274,8 @@ flattened sponge input.
     Name & Hex & Use \\
     \midrule
     \siginit & \texttt{0xC} & End of initialization (the sole init call) \\
-    \sigadmore   & \texttt{0x9} & Non-final associated-data block \\
-    \sigadlast   & \texttt{0xD} & Final associated-data block \\
+    \sigadmore   & \texttt{0x9} & Non-final associated data block \\
+    \sigadlast   & \texttt{0xD} & Final associated data block \\
     \sigmsgmore  & \texttt{0xA} & Non-final message block \\
     \sigmsglast  & \texttt{0xE} & Final message block \\
     \sigaggmore  & \texttt{0xB} & Non-final aggregation block \\
@@ -306,8 +306,8 @@ $\sigma^+$ suffix tags, returning the output of the final call;
 the empty-input case yields a single empty block carrying the
 $\sigma^+$ tag. The streaming helpers use the same empty-input
 convention, so a zero-length chunk still performs one final
-message-phase duplex call and returns a zero-length body.
-\Cref{alg:enc} invokes \Call{Absorb}{} for the associated-data phase
+message phase duplex call and returns a zero-length body.
+\Cref{alg:enc} invokes \Call{Absorb}{} for the associated data phase
 only when $A \neq \varepsilon$; when $A = \varepsilon$ the phase is
 elided and the root \siginit call emits the initial $M_0$ keystream
 directly.
@@ -335,7 +335,7 @@ length on non-final calls. Each call is the duplex interface of
 The encryption procedure (\Cref{alg:enc}) instantiates the root duplex
 and obtains the initial keystream for the root chunk $M_0$: when $A \neq
 \varepsilon$ it absorbs the associated data $A$, and when $A =
-\varepsilon$ it elides the associated-data phase and takes the keystream
+\varepsilon$ it elides the associated data phase and takes the keystream
 from the \siginit call itself. It then encrypts $M_0$ while absorbing
 the resulting ciphertext chunk $C_0$. When $n = 0$ the closing
 \sigmsglast call of this root chunk requests $\tauroot$ output bits,
@@ -408,12 +408,12 @@ The keystream bit length requested for the first message block of $M_0$
 is $8\min(\|M_0\|, \rho)$, eight times the size of the next message block.
 It is emitted by the closing \sigadlast call when $A \neq \varepsilon$,
 and by the root \siginit call itself when $A = \varepsilon$ and the
-associated-data phase is elided. Each leaf's \siginit call likewise
+associated data phase is elided. Each leaf's \siginit call likewise
 emits $8\min(\|M_j\|, \rho)$ keystream bits for $M_j$, so the
-empty-associated-data root \siginit call plays exactly the role a leaf
+empty associated data root \siginit call plays exactly the role a leaf
 \siginit call already plays. When the corresponding
 chunk is empty, the requested keystream length is zero and the next
-message-phase duplex call absorbs the empty ciphertext block carrying
+message phase duplex call absorbs the empty ciphertext block carrying
 \sigmsglast. The final \sigmsglast call in the root chunk requests
 $\tauroot$ output bits when $n = 0$, namely the root tag $T$ emitted by
 the elided-aggregation path, and zero output bits when $n \geq 1$

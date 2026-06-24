@@ -52,7 +52,7 @@ $49$ $\rho$-blocks with the same closing flags---and differs from a leaf only
 in its initial state, to which the kernels are indifferent; chunk~$0$ is also
 contiguous in the message with the first leaf chunks. The implementation
 therefore seeds lane~$0$ of the first batched call with the root state (after
-initialization and associated-data processing) and runs the chunk-$0$ phase
+initialization and associated data processing) and runs the chunk-$0$ phase
 alongside up to seven leaves: in the $\times 8$ core when the message has at
 least seven complete leaf chunks, and in the \texttt{amd64} remainder kernel or
 the \texttt{arm64} $2$-wide kernel below that. Lane~$0$'s output state is
@@ -333,5 +333,5 @@ sub-bulk regime AES-128-GCM is several times faster at one chunk ($0.38$ versus
 $1.89$ cycles per byte at $8$\,KiB on \texttt{amd64}), but the gap narrows
 quickly once the fused kernels engage: about $2.4\times$ at $32$\,KiB, and the
 bulk ratio from $64$\,KiB on. \TW{}'s intended value relative to AES-128-GCM
-lies in the tree structure and committing-security properties analyzed in
+lies in the tree structure and committing security properties analyzed in
 \Cref{sec:main-results,sec:cmtds3} rather than in raw speed.

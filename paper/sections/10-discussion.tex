@@ -6,7 +6,7 @@
 
 \Cref{tab:scheme-compare} situates \TW{} against representative authenticated
 encryption schemes along the axes that distinguish it: the underlying primitive,
-whether the mode is parallelizable, the key, nonce, and tag sizes, associated-data
+whether the mode is parallelizable, the key, nonce, and tag sizes, associated data
 support, nonce-misuse resistance, full-input key commitment (\textsf{CMT-4}), and
 context discoverability (CDY).
 The comparison is structural; \TW{}'s own concrete bounds and the regimes in
@@ -15,7 +15,7 @@ measured throughput against hardware-accelerated AES-128-GCM in
 \Cref{sec:compare-perf}. The \textsf{CMT-4} column records full-input
 commitment: \TW{} provides it within the mode, as does Ascon \cite{KSW23}, a
 committing transform supplies it for an arbitrary base scheme, and the remaining
-listed schemes do not provide it. The CDY column records context-discovery
+listed schemes do not provide it. The CDY column records context discovery
 resistance in the \cite{MLGR23} sense: \TW{} provides it within the mode
 (\Cref{thm:cdy-full}), and the
 remaining entries are marked ``?'' because, to our knowledge, no
@@ -90,7 +90,7 @@ index into each leaf is in fact a finer separation than ordering leaves within a
 aggregation alone. More to the point, the committing and discoverability
 guarantees of \Cref{sec:cmtds3} do not rest on soundness of a tree coding at all:
 distinct $(K, N, A)$ triples already diverge in the root initialization and
-associated-data calls, before any leaf tag is aggregated (\Cref{cor:triple-sep}),
+associated data calls, before any leaf tag is aggregated (\Cref{cor:triple-sep}),
 so agreement among leaf tags cannot merge distinct contexts. The leaf encoding
 enters only the collision bound of \Cref{thm:coll}, and there only
 through its explicit leaf tag collision term. A Sakura coding would re-establish
@@ -179,17 +179,17 @@ setting of \cite{ABLMMY14}, which our bounds do not cover; plaintext-awareness a
 
 \paragraph{Bound tightness.}
 Per-term tightness is itemized in \Cref{sec:bound-discussion}; one term is
-conservative in a way that points to an open problem. The flat-sponge
+conservative in a way that points to an open problem. The flat sponge
 differentiating loss
 $\Lift_c(\Ntot) = \Ntot(\Ntot+1)/2^{c+1}$ bounds the indifferentiability
 loss of \cite{BDPV08}, used here as a generic lift from the
-random-oracle model. A direct analysis of the keyed duplex is tighter: the
+random oracle model. A direct analysis of the keyed duplex is tighter: the
 modern keyed-duplex bounds synthesized by \cite{Men23}, building on the
 full-state keyed-duplex line, bound a keyed duplex against an ideal permutation
 without passing through indifferentiability, and recasting \TW{}'s leaf and root
 duplexes in that framework is a promising route to a sharper capacity term. This
 route is not turnkey, however: the keyed duplex bundles squeezing and absorption
-into a single call, so its authenticated-encryption mode \textsf{MonkeySpongeWrap}
+into a single call, so its authenticated encryption mode \textsf{MonkeySpongeWrap}
 has the decryptor \emph{overwrite} the rate with each ciphertext block rather than
 feed back the ciphertext it has just produced. On the final, padded block this
 overwrite no longer matches the encryptor's XOR-absorbed padded plaintext outside
