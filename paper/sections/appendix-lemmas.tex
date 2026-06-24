@@ -537,6 +537,53 @@ aggregation phase, so the $\Rmsg^+$ value is exposed as a tag only on
 the $n = 0$ path; since $n = \leaves(C)$ is fixed by $\|C\|$, the two
 uses never coincide on a single ciphertext.
 
+The privacy and INT-CTXT accounting both reindex hidden-key transcript
+addresses by the key field. We record that reindexing once.
+
+\begin{lemma}[Key-Indexed Transcript Renaming]
+\label{lem:key-renaming}
+For a key $K \in \bits^k$, let $\mathcal{Y}_K$ be the set of bridged
+inputs $\flatmap(X)$ of well-formed \TW{} transcript prefixes $X$ whose
+first-call key field is $K$---the counted hidden-key transcript addresses
+of \Cref{tab:keyed-twout} for key $K$. Then:
+\begin{enumerate}
+\item \emph{Disjointness.} For distinct keys $K_0 \neq K_1$, the sets
+  $\mathcal{Y}_{K_0}$ and $\mathcal{Y}_{K_1}$ are disjoint.
+\item \emph{Renaming.} The map $\Phi_{K_0 \to K_1}$ that replaces the
+  first-call key field $K_0$ by $K_1$ and leaves every other recovered
+  field unchanged---nonce, leaf index, phase sequence, AD blocks,
+  ciphertext blocks, aggregated leaf tag bytes, and root/leaf
+  instance---induces through $\flatmap$ a bijection
+  $\flatmap \circ \Phi_{K_0 \to K_1} \circ \flatmap^{-1} :
+  \mathcal{Y}_{K_0} \to \mathcal{Y}_{K_1}$ preserving output-point
+  classes and equality relations among addresses.
+\item \emph{Direct-query avoidance.} A direct query input
+  $Y \in \mathcal{Y}_K$ has $\KeyedTWOut(Y) = (K,\mathcal{C})$ for a
+  counted class $\mathcal{C}$; hence if no prior direct query decodes to
+  $K$ then $\mathcal{Y}_K$ is disjoint from all prior direct-query
+  inputs.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+By bridge injectivity (\Cref{lem:bridge-decode}) and Transcript
+Injectivity (\Cref{lem:transcript-inj}), a bridged input $\flatmap(X)$
+determines the native flattened prefix and hence the first duplex call
+$\prfxroot \concat K \concat N$ or
+$\prfxleaf \concat K \concat N \concat \langle j \rangle_8$, in
+particular its fixed-width key field $K$. \emph{(1)} If
+$\flatmap(X) = \flatmap(X')$ with key fields $K_0$ and $K_1$ then
+$K_0 = K_1$, so distinct keys give disjoint address sets. \emph{(2)}
+$\Phi_{K_0 \to K_1}$ rewrites only the key field, leaving the recovered
+duplex-call sequence otherwise intact, so it is a bijection on
+well-formed prefixes preserving the output-point class
+(\Cref{cor:output-sep}) and the equality pattern among prefixes;
+$\flatmap$ transports it to the stated bijection on addresses. \emph{(3)}
+By \Cref{lem:bridge-decode} a $Y = \flatmap(X) \in \mathcal{Y}_K$ decodes
+under $\KeyedTWOut$ to $(K,\mathcal{C})$; the contrapositive gives the
+avoidance claim.
+\end{proof}
+
 \subsection{Adaptive Candidate Bounds}
 \label{app:lem-candidate-collisions}
 
@@ -926,16 +973,13 @@ construction-interface queries were answered by $\Rand$, so the visible
 encryption answers and the lazy direct-query answers are independent of
 the hidden key except through the immediate-abort rule, which removes
 exactly the keys in $S$; hence the hidden key is uniform on
-$\mathcal{V}$ under this conditioning. For every $K' \in \mathcal{V}$,
-running the online execution of $\Enc_{K'}^\RO$ on the pending query
-reaches no counted transcript point whose bridged input was previously
-queried directly:
-such a point $Y$ would give $\KeyedTWOut(Y) = (K',\mathcal{C})$ by
-\Cref{lem:bridge-decode}, placing $K'$ in $S$. The bridged transcript
-inputs reached for two distinct keys in $\mathcal{V}$ are disjoint,
-since equal inputs would, by bridge injectivity and
-\Cref{lem:transcript-inj}, recover the same first duplex call and hence
-the same fixed-width key field.
+$\mathcal{V}$ under this conditioning. For every $K' \in \mathcal{V}$, no
+prior direct query lies in the hidden-key address set $\mathcal{Y}_{K'}$
+of \Cref{lem:key-renaming} (direct-query avoidance, since $K' \notin S$),
+so running $\Enc_{K'}^\RO$ on the pending query reaches no counted
+transcript point queried directly before; and the address sets
+$\mathcal{Y}_{K'}$ for distinct $K' \in \mathcal{V}$ are pairwise
+disjoint (renaming-lemma disjointness).
 
 For the actual key in $H_i$, the no-hit condition is precisely the
 event $\neg\mathsf{hit}_{\mathsf{fresh}}$ of \Cref{lem:freshness} for
@@ -1121,17 +1165,12 @@ direct $\ROflat$ outputs, encryption outputs and the resulting replay
 table, verification bits, and the adversary state determined by these
 values. Fix such a prefix and two keys $K_0, K_1 \notin S_i$.
 
-Define a transcript-renaming map $\Phi_{0 \to 1}$ on typed
-construction prefixes by replacing the first-call key field $K_0$ by
-$K_1$ and leaving every other recovered field unchanged: the nonce,
-leaf index, phase sequence, AD blocks, ciphertext blocks, leaf tag
-bytes appearing in root aggregation, and the root/leaf instance
-identifier are preserved. Let $\Phi_{1 \to 0}$ be the inverse map. By
-\Cref{lem:bridge-decode,cor:output-sep}, $\flatmap \circ \Phi_{0 \to
-1} \circ \flatmap^{-1}$ is a bijection between the bridged
-construction-addresses whose decoded key is $K_0$ and those whose
-decoded key is $K_1$; it preserves output-point classes and equality
-relations among addresses.
+Let $\Phi_{0 \to 1} = \Phi_{K_0 \to K_1}$ be the key-renaming map of
+\Cref{lem:key-renaming} and $\Phi_{1 \to 0}$ its inverse. By that lemma,
+$\flatmap \circ \Phi_{0 \to 1} \circ \flatmap^{-1}$ is a bijection
+$\mathcal{Y}_{K_0} \to \mathcal{Y}_{K_1}$ between the bridged hidden-key
+construction addresses for $K_0$ and for $K_1$, preserving output-point
+classes and equality relations among addresses.
 
 This bijection is applied online, not to a pre-existing fixed address
 set. Whenever a construction computation under $K_0$ would first query
@@ -1146,11 +1185,11 @@ aggregation transcripts are renamed step by step with the same visible
 ciphertext, leaf tag, and root tag bytes.
 
 Prior direct-query inputs are not renamed: they are adversary-chosen
-visible strings. None lies in either hidden-key construction-address
-set for $K_0$ or $K_1$, because any prior direct query to such an
-address would be decoded by $\KeyedTWOut$ to $K_0$ or $K_1$ and would
-put that key in $S_i$. Direct-query lazy-table values are therefore
-coupled identically and remain disjoint from the renamed hidden
+visible strings. Since $K_0, K_1 \notin S_i$, neither
+$\mathcal{Y}_{K_0}$ nor $\mathcal{Y}_{K_1}$ contains a prior direct-query
+input (\Cref{lem:key-renaming}, direct-query avoidance). Direct-query
+lazy-table values are therefore coupled identically and remain disjoint
+from the renamed hidden
 construction addresses.
 
 Use the same adversary coins, the same direct-query lazy-table values,
