@@ -328,15 +328,16 @@ experiment and let the $d$-th $\mathsf{New}$ call activate $K_d$; inactive
 indices are never valid users.
 
 The mu-ind construction oracles inherit the validity convention of
-\Cref{sec:games-pp}. The encryption oracle on input $(d, N, M, A)$
+\Cref{sec:games-pp}. The encryption oracle on input $(d, N, A, M)$
 rejects, without recording, if $(N,A,M)$ is outside the \TW{} encryption
 domain, if $d \notin \{1, \dots, v\}$, or if $(d, N) \in V$; otherwise
-it sets $C = \Enc_{K_d}[\pi](N, A, M)$ when $b = 1$, and samples
-$C \sample \bits^{8\|M\|+\tauroot}$ when $b = 0$. The game records
-$(d, N)$ in $V$ and $(d, N, C, A)$ in $W$, and returns $C$. The
-verification oracle on input $(d, N, C, A)$ rejects if $d \notin
+it sets $C = \Enc_{K_d}[\pi](N, A, M)$ when $b = 1$, and samples a
+uniformly random byte string $C$ of length $\|M\| + \tauroot/8$ when
+$b = 0$. The game records
+$(d, N)$ in $V$ and $(d, N, A, C)$ in $W$, and returns $C$. The
+verification oracle on input $(d, N, A, C)$ rejects if $d \notin
 \{1, \dots, v\}$ or if $(N,A,C)$ is not a valid \TW{}
-verification/decryption input; if $(d, N, C, A) \in W$ it returns
+verification/decryption input; if $(d, N, A, C) \in W$ it returns
 $\mathsf{true}$; if $b = 0$ it returns $\mathsf{false}$; otherwise it
 returns $[\Dec_{K_d}[\pi](N, A, C) \neq \bot]$. Nonce uniqueness is
 enforced per user by the set $V$.
