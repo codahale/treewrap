@@ -63,20 +63,20 @@ CMTDs-3 reduce to CMTDs-4 by \Cref{lem:cmtds-identity-reductions}, whose
 public-permutation bound is again \Cref{cor:cmtds4}; monotonicity of
 $\Lift_c$ absorbs $\Ntot(\mathcal{A}^\ast) \leq \Ntot(\mathcal{A})$.
 
-The E-notions are bounded directly by the final-root
-candidate-collision argument of \Cref{thm:cmtds4-ro}, with the
+The E-notions are bounded by the Root Tag Hash Bound, with the
 challenger's $s$ deterministic \emph{encryption} checks supplying the
-candidate final-root transcripts: \Cref{lem:root-candidate-seq} builds
-the candidate sequence for encryption or decryption checks alike. On a
-winning execution all $s$ encryptions are equal, hence of equal length
-and with one common root tag $T$; pairwise $\WiC_\ell$-distinctness
-forces pairwise distinct triples---for $\ell = 4$ via determinism, since
-equal triples with equal ciphertexts would decrypt to equal
-messages---so \Cref{cor:triple-sep} makes the $s$ final-root candidates
-distinct while their $\tauroot$-bit projections all equal $T$. The win
-is contained in the $s$-way candidate-collision event of
-\Cref{lem:adaptive-candidate}, and the flat-sponge lift
-(\Cref{cor:lift-application}) transfers the bound to the
+candidate final-root transcripts
+(\Cref{lem:root-candidate-seq} builds the candidate sequence for
+encryption or decryption checks alike). On a winning execution all $s$
+encryptions are equal, hence of equal length and with one common root tag
+$T$; pairwise $\WiC_\ell$-distinctness forces pairwise distinct
+triples---for $\ell = 4$ via determinism, since equal triples with equal
+ciphertexts would decrypt to equal messages---so \Cref{cor:triple-sep}
+makes the $s$ final-root candidates distinct while their $\tauroot$-bit
+projections all equal $T$. The Root Tag Hash Bound
+(\Cref{lem:root-tag-hash}, part~1) then gives
+$\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$ in the random-oracle model,
+and the flat-sponge lift (\Cref{cor:lift-application}) transfers it to the
 public-permutation setting at $\Nprim$; the encryption checks are
 construction-internal work counted in $N$, not in $\Nprim$.
 \end{proof}
