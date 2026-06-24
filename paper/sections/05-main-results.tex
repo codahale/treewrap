@@ -692,10 +692,10 @@ Term by term at the cap, with $\Nprim, \Qv, \Nleaf \leq \Ntot$: the
 flat sponge loss $\Lift_c(\Ntot)$ and any leaf tag birthday term
 $\Nleaf(\Nleaf-1)/2^{257}$ are each at most one $2^{-131}$-sized term;
 the AE linear key-guess and verification contributions
-$(\Nprim+\Qv)/2^{256}$ are at most $2 \cdot 2^{-193}$; the two-key
-root-collision term $\RootColl_{256}(\Nprim,2)$ likewise matches
-$\Lift_c$ as a $2^{-131}$-sized term and is $\binom{\Nprim+s}{s}/2^{256(s-1)}$,
-hence still well below $\Lift_c$ for $s \geq 3$ under the cap; the known-key $\LeafColl_{256}(\Nprim+\Nleaf)$, which the
+$(\Nprim+\Qv)/2^{256}$ are at most $2 \cdot 2^{-193}$; the
+root-collision term $\RootColl_{256}(\Nprim,s) = \binom{\Nprim+s}{s}/2^{256(s-1)}$
+likewise matches $\Lift_c$ as a $2^{-131}$-sized term in its two-key
+($s=2$) specialization and is smaller still for $s \geq 3$ under the cap; the known-key $\LeafColl_{256}(\Nprim+\Nleaf)$, which the
 joint cap $\Nprim+\Nleaf \leq \Ntot$ bounds by $\binom{\Ntot}{2}/2^{256}$,
 is likewise $\leq 2^{-131}$; and the root-preimage term
 $(\Nprim+1)/2^{256}$ is at most
