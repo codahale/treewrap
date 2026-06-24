@@ -333,8 +333,9 @@ Applying the same lift gives the remaining headline bounds.
 
 \begin{theorem}[Collision Resistance of $\HTW$]
 \label{thm:coll}
-For every $s \geq 2$ and every $s$-way collision adversary $\mathcal{A}$
-against $\HTW$ with the resources of \Cref{sec:resources},
+For every $s \geq 2$ and every adversary $\mathcal{A}$ against the $s$-way
+multi-collision resistance of $\HTW$ in the sense of \cite{BH22}, with the
+resources of \Cref{sec:resources},
 \[
   \AdvColl_\TW(\mathcal{A})
   \;\leq\;
@@ -357,6 +358,27 @@ context $(K, N, A)$ can reach the same final root transcript---a collision
 among the leaf tags it absorbs---while distinct contexts already reach
 distinct final root transcripts by Opening Triple Separation
 (\Cref{cor:triple-sep}).
+\end{proof}
+
+\begin{corollary}[Two-Way Collision Resistance of $\HTW$]
+\label{cor:coll-rs04}
+Specializing \Cref{thm:coll} to $s = 2$ gives the classical two-way
+collision resistance of \cite{RS04}: for every collision adversary
+$\mathcal{A}$ against $\HTW$ with the resources of \Cref{sec:resources},
+\[
+  \AdvColl_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf)
+  + \RootColl_{\tauroot}(\Nprim, 2),
+\]
+with $\RootColl_{\tauroot}(\Nprim, 2) = \binom{\Nprim + 2}{2} / 2^{\tauroot}$.
+\end{corollary}
+
+\begin{proof}
+The $s = 2$ case of \Cref{thm:coll}; \cite{BH22} note that $s$-way
+multi-collision resistance at $s = 2$ is the classical collision resistance
+of \cite{RS04}.
 \end{proof}
 
 \begin{theorem}[Always Second-Preimage Resistance of $\HTW$]
