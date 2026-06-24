@@ -104,7 +104,7 @@ the \cite{MLGR23} context discoverability notion. For the AE-style
 notions the ideal side exposes the BDPV simulator; the committing, hash,
 and discoverability bounds remain real public permutation success
 probabilities.
-\Cref{thm:mu-ind-ro,thm:mu-ind,thm:ae,thm:coll,thm:asec,thm:pre,cor:cmtds4,cor:committing-combined,thm:cdy-full}
+\Cref{thm:mu-ind-ro,thm:mu-ind,cor:ae,thm:coll,thm:asec,thm:pre,cor:cmtds4,cor:committing-combined,thm:cdy-full}
 state these bounds in terms of the loss terms $\Lift_c$, $\KeyGuess_k$,
 $\RootColl_\tau$, $\LeafColl_\tau$, and $\RootPre_\tau$ of
 \Cref{sec:loss-terms}.
@@ -226,7 +226,7 @@ $\qv(\mathcal{B}) \leq \Qv$ gives the stated bound.
 \end{proof}
 
 \begin{corollary}[All-in-One AE Security]
-\label{thm:ae}
+\label{cor:ae}
 For every nonce-respecting AE adversary $\mathcal{A}$ against \TW{}
 with the resources of \Cref{sec:resources},
 \[
@@ -569,7 +569,7 @@ The implemented parameters of \Cref{sec:params} fix
   k = c = \tauroot = \tauleaf = 256.
 \]
 Substituting into
-\Cref{thm:ae,thm:mu-ind,thm:coll,thm:asec,cor:cmtds4,thm:pre,thm:cdy-full}
+\Cref{cor:ae,thm:mu-ind,thm:coll,thm:asec,cor:cmtds4,thm:pre,thm:cdy-full}
 and using the random oracle bounds of \Cref{sec:thms-pp} gives the
 following closed-form bounds.
 
@@ -631,10 +631,10 @@ tag term:
   + \frac{\binom{\Nprim + s}{s}}{2^{256 (s - 1)}}.
 \]
 
-\begin{remark}[Two-Key CMTD-4 Specialization]
+\begin{remark}[Two-Key CMTDs-4 Specialization]
 \label{rem:cmtd4-s2}
 Setting $s = 2$ recovers the ordinary two-key
-CMTD-4 statement of \cite{BH22}:
+CMTDs-4 statement of \cite{BH22}:
 \[
   \Advcmtds{4}_\TW(\mathcal{A})
   \;\leq\;
@@ -670,7 +670,7 @@ Under the implemented parameters $k = c = \tauroot = \tauleaf = 256$, every
 adversary with work cap $\Ntot \leq 2^{63}$---and, in the multi-user case,
 user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
 \TW{}'s notions: multi-user indistinguishability (\Cref{thm:mu-ind}),
-all-in-one AE (\Cref{thm:ae}), the \cite{RS04} hash security of
+all-in-one AE (\Cref{cor:ae}), the \cite{RS04} hash security of
 $\HTW$---$s$-way collision resistance for every $s \geq 2$, always second-preimage
 resistance, and preimage resistance
 (\Cref{thm:coll,thm:asec,thm:pre})---the \cite{BH22}
@@ -773,7 +773,7 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
   a root tag output point ($\Rtag$, or $\Rmsg^+$ for single-chunk
   ciphertexts) can enter the candidate sequence; a class-filtered count
   would be no larger, and potentially smaller, but the headline keeps the
-  $\Nprim$ form for uniformity with \Cref{thm:ae,thm:mu-ind}, the birthday
+  $\Nprim$ form for uniformity with \Cref{cor:ae,thm:mu-ind}, the birthday
   threshold at $\tauroot = 256$ being unaffected.
 \item \emph{$\RootPre_\tau(Q) = (Q + 1) / 2^\tau$.} Tight at constants: a
   generic preimage search against a fixed $\tau$-bit target matches the
