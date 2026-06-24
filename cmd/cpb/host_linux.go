@@ -8,7 +8,7 @@ import (
 )
 
 // hostSections collects the Linux host details recorded for the amd64
-// benchmarking machine in 09-performance.tex: the lscpu summary, the per-core
+// benchmarking machine in 07-performance.tex: the lscpu summary, the per-core
 // microcode and model from /proc/cpuinfo, the frequency governor and scaling
 // driver, the turbo and SMT state, and the kernel release. Any probe whose tool
 // or sysfs path is missing is skipped.

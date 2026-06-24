@@ -12,7 +12,7 @@ import (
 // hostInfo records the benchmarking environment so that a cpb run is a
 // self-contained record of the machine it was measured on. The free-form
 // Sections carry the per-platform host details collected in
-// paper/sections/09-performance.tex (lscpu, microcode, governor, and SMT on
+// paper/sections/07-performance.tex (lscpu, microcode, governor, and SMT on
 // Linux; chip, topology, caches, and ISA features on macOS).
 type hostInfo struct {
 	OS        string        `json:"os"`
@@ -47,7 +47,7 @@ func collectHostInfo() hostInfo {
 }
 
 // writeHostReport renders the host information as the same "=== Title ===" block
-// layout used for the recorded environments in 09-performance.tex, so a cpb run
+// layout used for the recorded environments in 07-performance.tex, so a cpb run
 // can be pasted into the paper alongside its numbers.
 func writeHostReport(w io.Writer, h hostInfo) {
 	summary := fmt.Sprintf("%s/%s, %s, %d CPU", h.OS, h.Arch, h.GoVersion, h.NumCPU)

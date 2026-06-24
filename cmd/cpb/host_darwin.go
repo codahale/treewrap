@@ -3,7 +3,7 @@
 package main
 
 // hostSections collects the macOS host details recorded for the arm64
-// benchmarking machine in 09-performance.tex: the chip and model identifiers,
+// benchmarking machine in 07-performance.tex: the chip and model identifiers,
 // the OS and kernel versions, the performance/efficiency core topology, the
 // cache hierarchy, and the optional ISA features (including FEAT_SHA3). The
 // sysctl groups print one "name: value" line per key, matching the recorded
