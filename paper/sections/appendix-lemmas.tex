@@ -1248,9 +1248,15 @@ user-$d$ non-replay verification submission, which are counted by
 $\nleaf^{(d)}$ and $\qv^{(d)}$. The three accounting events are thus
 local to user $d$'s keyed transcript language.
 
-\paragraph{Bounding the three terms.} For $\Pr[\badkey^{(d)}]$, the
-visible-prefix key uniformity of \Cref{lem:ver-key-uniformity} holds for
-$K_d$ in the environment $\mathcal{E}_d$. The key-test contribution is
+\paragraph{Bounding the three terms.} For $\Pr[\badkey^{(d)}]$, adapt the
+single-key visible-prefix renaming coupling of
+\Cref{lem:ver-key-uniformity} to the environment $\mathcal{E}_d$. Its
+conclusion does not transfer verbatim: the foreign users $e > d$ share the
+lazy $\ROflat$ table, so renaming $K_d$ onto a foreign key would alter
+their visible transcripts, and the renaming orbit must exclude the foreign
+keys rather than range over all of $\bits^k \setminus S_i$. What the
+coupling still delivers in $\mathcal{E}_d$ is the marginal per-candidate
+bound, which is all the key test needs. The key-test contribution is
 taken in the original pre-sampled-key experiment, not in one
 renormalized to the non-collision branch: fix the foreign keys and run
 the visible-prefix coupling with foreign-key transcript addresses left
@@ -1260,7 +1266,8 @@ equal to a fixed foreign key. For each fresh candidate key tested by one
 of $\mathcal{B}$'s direct $\ROflat$ queries, the contributing event is
 contained in $\{K_d \text{ equals that candidate}\}$, costing at most
 $2^{-k}$, and a foreign candidate contributes nothing; with at most
-$\qRO(\mathcal{B})$ such tests, \Cref{lem:key-tests} gives
+$\qRO(\mathcal{B})$ such tests, the union bound of \Cref{lem:key-tests}
+packages these into
 $\Pr[\badkey^{(d)}] \leq \KeyGuess_k(\qRO(\mathcal{B}))$.
 For the leaf term, before $\badkey^{(d)}$ no direct query has pre-read
 the bridged input of a user-$d$ hidden-key final leaf transcript---such
