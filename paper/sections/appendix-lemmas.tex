@@ -34,14 +34,15 @@ corresponding accounting argument.
     \node[lemma] (df) at (0,  3.0) {Duplex\\ Flattening};
     \node[lemma] (ba) at (0, -3.0) {Bridge \&\\ Decode};
 
-    % Column 2: structural lemma.
+    % Column 2: structural lemmas.
     \node[lemma] (ti) at (3.8, 3.0) {Transcript\\ Injectivity};
+    \node[lemma] (kr) at (3.8, 0.5) {Key-Indexed\\ Renaming};
     \node[lemma] (kt) at (3.8, -2.0) {Adaptive\\ Key Tests};
 
     % Column 3: derived lemmas.
     \node[lemma] (tf) at (7.6,  2.0) {Transcript\\ Freshness};
     \node[lemma] (lc) at (7.6, -0.5) {Leaf Tag\\ Collision};
-    \node[lemma] (cc) at (7.6, -1.75) {Candidate\\ Collision};
+    \node[lemma] (cc) at (7.6, -1.75) {Adaptive\\ Candidate};
 
     % Column 4: consumers.
     \node[consumer] (c6) at (11.4,  2.4) {\S\ref{sec:privacy} Privacy};
@@ -69,6 +70,16 @@ corresponding accounting argument.
       % Candidate collision accounting -> committing proofs.
       \draw[arr] (cc.east) to[out=0,  in=180] (c8.west);
 
+      % Adaptive Candidate engine also bounds the Leaf Tag Collision lemma.
+      \draw[arr] (cc) -- (lc);
+
+      % Key-Indexed Renaming: fed by the structural lemmas, feeds
+      % privacy and INT-CTXT accounting.
+      \draw[arr] (ti) -- (kr);
+      \draw[arr] (ba.east) to[out=50, in=215] (kr.west);
+      \draw[arr] (kr.east) to[out=35, in=205] (c6.west);
+      \draw[arr] (kr.east) to[out=5,  in=195] (c7.west);
+
       % Bridge decoding is consumed directly at the proof sites.
       \draw[arr] (ba.east) to[out=10,  in=200] (kt.west);
       \draw[arr] (kt.east) to[out=35,  in=220] (c6.west);
@@ -89,20 +100,25 @@ corresponding accounting argument.
     appendix and their consumers. Solid boxes are lemmas; dashed
     boxes are the proof sections that consume them. The Bridge \&
     Decode box is \Cref{lem:bridge-decode} together with the exact
-    keyed decoder it specifies (\Cref{def:keyed-twout}). The edge from
+    keyed decoder it specifies (\Cref{def:keyed-twout}); the Key-Indexed
+    Renaming box (\Cref{lem:key-renaming}) draws on it and on
+    \Cref{lem:transcript-inj} to supply the key-field disjointness and
+    renaming used by the privacy and INT-CTXT accounting. The Adaptive
+    Candidate box (\Cref{lem:adaptive-candidate}) is the single
+    probabilistic engine: it bounds the Leaf Tag Collision lemma
+    (\Cref{lem:leaf-collision}) and, through the Root Tag Hash Bound
+    (\Cref{lem:root-tag-hash}) of \Cref{sec:cmtds3}, the CMTDs-4,
+    collision, preimage, and second-preimage proofs. The edge from
     \Cref{lem:transcript-inj} into the committing proofs of
-    \Cref{sec:cmtds3,app:committing-transfer} is mediated by
-    \Cref{cor:triple-sep} for final-root distinctness and
-    \Cref{cor:output-sep} for candidate-sequence filtering, while the
-    recovery of a full ciphertext from a final-root transcript---used by
-    both the INT-CTXT and committing proofs---is the refinement
-    \Cref{lem:leaf-recovery}; the edge
-    from \Cref{lem:adaptive-candidate} records the collision
-    accounting used by the CMTDs-4 and CMTs proofs. The Leaf Tag
-    Collision box (\Cref{lem:leaf-collision}) feeds INT-CTXT through its
-    hidden-key bound and the committing collision and second-preimage
-    proofs through its adversary-supplied-key bound. The edge from
-    \Cref{lem:transcript-inj} into \Cref{lem:freshness} uses
+    \Cref{sec:cmtds3,app:committing-transfer} is mediated by Opening
+    Triple Separation (\Cref{cor:triple-sep}) for distinct contexts and
+    Final-Root Input Separation (\Cref{prop:final-root-sep})---which adds
+    the full-ciphertext recovery of \Cref{lem:leaf-recovery} for distinct
+    full inputs absent a leaf tag collision---together with
+    \Cref{cor:output-sep} for candidate-sequence filtering. The Leaf Tag Collision box feeds
+    INT-CTXT through its hidden-key bound and the committing collision and
+    second-preimage proofs through its adversary-supplied-key bound. The
+    edge from \Cref{lem:transcript-inj} into \Cref{lem:freshness} uses
     \Cref{cor:output-sep}; the verification-first root tag guessing
     accounting reached through the same separation is carried out in
     \Cref{app:intctxt-accounting}
