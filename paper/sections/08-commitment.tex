@@ -221,6 +221,57 @@ accepting check carries the common root tag $T$. The Root Tag Hash Bound
 $\Advcmtds{4}_\RO(\mathcal{B}) \leq \RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$.
 \end{proof}
 
+\paragraph{Remaining committing notions.}
+The hierarchy and $s$-way extension of the \cite{BH22} committing notions
+are given in \cite[\S3, Figs.~4--5, and App.~A]{BH22}. We use those
+relations for the D-notions and a direct source-game argument for the
+CMTs-$\ell$ notions to preserve the resource split of
+\Cref{sec:resources}.
+
+\begin{corollary}[Committing-Notion Root-Collision Bound]
+\label{cor:committing-combined}
+For every $s \geq 2$, every
+\[
+  X \in \bigl\{\mathsf{CMTDs\text{-}1},\, \mathsf{CMTDs\text{-}3},\,
+              \mathsf{CMTDs\text{-}4},\, \mathsf{CMTs\text{-}1},\,
+              \mathsf{CMTs\text{-}3},\, \mathsf{CMTs\text{-}4}\bigr\},
+\]
+and every $s$-way $X$-adversary $\mathcal{A}$ against \TW{},
+\[
+  \Adv^X_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \RootColl_{\tauroot}(\Nprim, s)
+  \;=\;
+  \Lift_c(\Ntot) + \frac{\binom{\Nprim + s}{s}}{2^{\tauroot(s-1)}}.
+\]
+\end{corollary}
+
+\begin{proof}
+CMTDs-4 is bounded directly by \Cref{cor:cmtds4}. For
+$\ell \in \{1,3\}$, the $s$-way hierarchy of \cite[\S3, Fig.~5 and
+App.~A]{BH22} gives
+$\Advcmtds{\ell}_\TW(\mathcal{A}) \leq
+\Advcmtds{4}_\TW(\mathcal{A})$ for the same output distribution, so the
+resource counts are unchanged.
+
+The E-notions are bounded by the Root Tag Hash Bound, with the
+challenger's $s$ deterministic \emph{encryption} checks supplying the
+candidate final-root transcripts
+(\Cref{lem:root-candidate-seq} builds the candidate sequence for
+encryption or decryption checks alike). On a winning execution all $s$
+encryptions are equal, hence of equal length and with one common root tag
+$T$; pairwise $\WiC_\ell$-distinctness forces pairwise distinct
+triples---for $\ell = 4$ via determinism, since equal triples with equal
+ciphertexts would decrypt to equal messages---so \Cref{cor:triple-sep}
+makes the $s$ final-root candidates distinct while their $\tauroot$-bit
+projections all equal $T$. The Root Tag Hash Bound
+(\Cref{lem:root-tag-hash}, part~1) then gives
+$\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$ in the random oracle model,
+and the flat sponge lift (\Cref{cor:lift-application}) transfers it to the
+public permutation setting at $\Nprim$; the encryption checks are
+construction-internal work counted in $N$, not in $\Nprim$.
+\end{proof}
+
 \begin{theorem}[Random Oracle Collision Resistance of $\HTW$]
 \label{thm:coll-ro}
 For every $s \geq 2$ and every $s$-way collision
