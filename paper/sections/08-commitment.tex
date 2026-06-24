@@ -166,7 +166,7 @@ tag collisions cannot merge them. Since every decryption check accepts,
 the $\tauroot$-bit projections at these $s$ distinct candidates all equal
 the supplied tag $T$, so the win event is contained in the $s$-way
 candidate-collision event. \Cref{lem:adaptive-candidate} with
-$Q=\qRO(\mathcal{B})$ and $\tau=\tauroot$ gives
+$L=\qRO(\mathcal{B})+s$ and $\tau=\tauroot$ gives
 \[
   \Advcmtds{4}_\RO(\mathcal{B})
   \leq
@@ -261,7 +261,7 @@ random-oracle model
 $T' = \bigl\lfloor \ROflat(\flatmap(R)) \bigr\rfloor_{\tauroot}$. Hence
 the win event is contained in the event that some candidate's
 $\tauroot$-bit projection equals the fixed target $T^*$. Applying
-\Cref{lem:adaptive-candidate} with $Q = \qRO(\mathcal{B})$,
+\Cref{lem:adaptive-candidate} with $L = \qRO(\mathcal{B}) + 1$,
 $\tau = \tauroot$, and $t = T^*$ gives
 \[
   \AdvPre_\RO(\mathcal{B})

@@ -551,9 +551,10 @@ transcript. Whenever a new candidate $Y_j$ is appended, two premises hold:
 are determined by the transcript preceding the append step---and
 \emph{unrevealed value}---no oracle lookup before the append step has
 requested a positive number of bits of $\ROflat(Y_j)$; zero-length lookups
-at $Y_j$ are permitted. Fix a projection length $\tau$ and a cap $Q$.
+at $Y_j$ are permitted. Fix a projection length $\tau$, and suppose the
+sequence has at most $L$ candidates ($m \leq L$).
 \begin{enumerate}
-\item \emph{Collision.} For every $s \geq 2$, if $m \leq Q + s$ then the
+\item \emph{Collision.} For every $s \geq 2$, the
   probability $\Pr[\mathsf{coll}_{s,\tau}]$ that some $s$ distinct
   candidates have equal $\tau$-bit projections,
   \[
@@ -562,20 +563,20 @@ at $Y_j$ are permitted. Fix a projection length $\tau$ and a cap $Q$.
     \quad \text{for some } 1 \leq i_1 < \cdots < i_s \leq m,
   \]
   satisfies
-  $\Pr[\mathsf{coll}_{s,\tau}] \leq \binom{Q+s}{s} \cdot 2^{-\tau(s-1)}$.
+  $\Pr[\mathsf{coll}_{s,\tau}] \leq \binom{L}{s} \cdot 2^{-\tau(s-1)}$.
 \item \emph{Preimage.} For every target $t \in \bits^\tau$ chosen
-  independently of $\ROflat$, if $m \leq Q+1$ then the probability
+  independently of $\ROflat$, the probability
   $\Pr[\mathsf{pre}_{\tau,t}]$ that some candidate's $\tau$-bit projection
   equals $t$, i.e.\ $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$ for
   some $1 \leq j \leq m$, satisfies
-  $\Pr[\mathsf{pre}_{\tau,t}] \leq (Q+1) \cdot 2^{-\tau}$.
-\item \emph{Second-preimage.} Fix a designated candidate position $j_0$. If
-  $m \leq Q+2$, then the probability $\Pr[\mathsf{sec}_{\tau,j_0}]$ that some
+  $\Pr[\mathsf{pre}_{\tau,t}] \leq L \cdot 2^{-\tau}$.
+\item \emph{Second-preimage.} Fix a designated candidate position $j_0$.
+  The probability $\Pr[\mathsf{sec}_{\tau,j_0}]$ that some
   candidate $j \neq j_0$ has
   $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau =
    \bigl\lfloor \ROflat(Y_{j_0}) \bigr\rfloor_\tau$, i.e.\ collides with the
   designated candidate on its $\tau$-bit projection, satisfies
-  $\Pr[\mathsf{sec}_{\tau,j_0}] \leq (Q+1) \cdot 2^{-\tau}$.
+  $\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$.
 \end{enumerate}
 \end{lemma}
 
@@ -588,7 +589,7 @@ revealed (unrevealed value), so $\ROflat(Y_j)$ may be drawn then, uniform
 and independent of everything so far.
 
 \emph{Collision.} For a fixed position set $I = \{i_1 < \cdots < i_s\}
-\subseteq \{1,\dots,Q+s\}$, let $E_I$ be the event that these candidate
+\subseteq \{1,\dots,L\}$, let $E_I$ be the event that these candidate
 positions exist and their $\tau$-bit projections are all equal. Condition
 on any positive-probability prefix immediately before position $i_r$ is
 appended, for $r \geq 2$, and on the values sampled at the earlier
@@ -597,26 +598,26 @@ independent of the conditioning, so its $\tau$-bit projection equals the
 already fixed projection of $Y_{i_1}$ with probability $2^{-\tau}$.
 Multiplying over $r = 2,\dots,s$ gives $\Pr[E_I] \leq 2^{-\tau(s-1)}$; if
 some position in $I$ is never appended then $E_I$ is false and the bound
-still holds. A union bound over the $\binom{Q+s}{s}$ position sets gives
+still holds. A union bound over the $\binom{L}{s}$ position sets gives
 the claim.
 
-\emph{Preimage.} For a fixed position $j \in \{1,\dots,Q+1\}$, let $E_j$
+\emph{Preimage.} For a fixed position $j \in \{1,\dots,L\}$, let $E_j$
 be the event that position $j$ exists and
 $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$. Condition on any
 positive-probability prefix immediately before $Y_j$ is appended; the
 target $t$ is a constant. By the above, $\ROflat(Y_j)$ is uniform and
 independent of the conditioning, so its $\tau$-bit projection equals $t$
 with probability $2^{-\tau}$. If position $j$ is never appended, $E_j$ is
-false. A union bound over the $Q+1$ positions gives the claim.
+false. A union bound over the $L$ positions gives the claim.
 
 \emph{Second-preimage.} Expose $\ROflat(Y_{j_0})$ at the append step of the
 designated candidate $Y_{j_0}$, which predictability and unrevealed value
 license; this fixes the target $t = \bigl\lfloor \ROflat(Y_{j_0})
 \bigr\rfloor_\tau$ as a constant for the rest of the interaction. Each of the
-at most $Q+1$ candidates $Y_j$ with $j \neq j_0$ is still unrevealed when
+at most $L-1$ candidates $Y_j$ with $j \neq j_0$ is still unrevealed when
 appended, so the preimage argument applied with this $t$ gives that its
 projection equals $t$ with probability $2^{-\tau}$; a union bound over those
-positions gives $\Pr[\mathsf{sec}_{\tau,j_0}] \leq (Q+1) \cdot 2^{-\tau}$. The
+positions gives $\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$. The
 designated candidate $Y_{j_0}$ is excluded, so its trivially-equal projection
 does not enter the count.
 \end{proof}
@@ -698,10 +699,10 @@ $\badleaf$ be the event that two distinct construction-generated final
 leaf transcript prefixes $X \neq X'$ in leaf tag output-point classes
 receive the same $\tauleaf$-bit projection from $\RF(\cdot)$, and let
 $\nleaf(\mathcal{B})$ be the execution-uniform count of distinct
-construction-generated final leaf transcripts (\Cref{sec:resources}). The
-leaf tags carried by a chronological leaf-tag candidate sequence of
-length $Q$ collide on their $\tauleaf$-bit projection with probability at
-most $\binom{Q}{2} \cdot 2^{-\tauleaf}$, giving two instances.
+construction-generated final leaf transcripts (\Cref{sec:resources}).
+Both bounds below apply the collision facet ($s = 2$, $\tau = \tauleaf$)
+of \Cref{lem:adaptive-candidate} to a chronological leaf-tag candidate
+sequence, in two regimes.
 \begin{enumerate}
 \item \emph{Adversary-supplied keys.} When the game's keys are
   adversary-supplied---so direct queries may themselves land on leaf tag
@@ -733,17 +734,21 @@ and \Cref{lem:transcript-inj}, two reaches of the same bridged input come
 from the same final leaf transcript, so repeated evaluations add no
 candidate---the lazy $\ROflat$ value is reused---and distinct final leaf
 transcripts give distinct candidates. No candidate's $\ROflat$ value is
-read before its append step, so for any fixed unordered pair the later
-candidate's $\tauleaf$-bit projection is, when appended, uniform and
-independent of the earlier one's, and the pair collides with probability
-$2^{-\tauleaf}$. A union bound over the $\binom{Q}{2}$ pairs of a
-length-$Q$ sequence gives the displayed bound, and every $\badleaf$ pair
-is a pair of construction-generated candidates.
+read before its append step, so the sequence meets the predictability and
+unrevealed-value premises of \Cref{lem:adaptive-candidate}, whose
+collision facet with $s = 2$ and $\tau = \tauleaf$ bounds the probability
+that two candidates share a $\tauleaf$-bit projection by
+$\binom{L}{2} \cdot 2^{-\tauleaf}$ for a length-$L$ sequence. Every
+$\badleaf$ pair is a pair of construction-generated candidates.
 
 \emph{(1) Adversary-supplied keys.} Direct queries may decode to a leaf
 tag class $\Ltag(j)$ and are appended as candidates; together with the
 $\nleaf(\mathcal{B})$ construction-generated transcripts the sequence has
-length at most $\qRO(\mathcal{B}) + \nleaf(\mathcal{B})$.
+length at most $\qRO(\mathcal{B}) + \nleaf(\mathcal{B})$, so the facet
+with $L = \qRO(\mathcal{B}) + \nleaf(\mathcal{B})$ gives
+$\Pr[\badleaf] \leq
+\binom{\qRO(\mathcal{B})+\nleaf(\mathcal{B})}{2} \cdot 2^{-\tauleaf}
+= \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))$.
 
 \emph{(2) Hidden key.} A direct query may still decode under
 $\KeyedTWOut$ to a $\Ltag(j)$ class for an adversary-chosen key other than
@@ -756,9 +761,11 @@ $\mathsf{hit}_{\mathsf{leaf}}$ no direct query has hit the bridged input
 of any such transcript: by \Cref{lem:bridge-decode} such a query would
 decode under $\KeyedTWOut$ to the hidden key and its $\Ltag(j)$ class,
 which is exactly $\mathsf{hit}_{\mathsf{leaf}}$. Each leaf tag in the
-subsequence is therefore fresh when its transcript is first created, and
-the union bound over its $\binom{\nleaf(\mathcal{B})}{2}$ pairs gives the
-displayed bound. By Leaf-Transcript Recovery
+subsequence is therefore fresh when its transcript is first created, so
+the facet applied to this length-$\nleaf(\mathcal{B})$ subsequence gives
+$\Pr[\badleaf \text{ before } \mathsf{hit}_{\mathsf{leaf}}] \leq
+\binom{\nleaf(\mathcal{B})}{2} \cdot 2^{-\tauleaf}$. By Leaf-Transcript
+Recovery
 (\Cref{lem:leaf-recovery}), conditioned on no leaf tag collision, equal
 flattened final-root inputs identify the same leaf transcript sequence.
 \end{proof}
