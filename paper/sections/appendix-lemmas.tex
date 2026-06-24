@@ -540,7 +540,7 @@ uses never coincide on a single ciphertext.
 \subsection{Adaptive Candidate Bounds}
 \label{app:lem-candidate-collisions}
 
-\begin{lemma}[Adaptive Candidate Collision, Preimage, and Second-Preimage]
+\begin{lemma}[Adaptive Candidate Collision and Preimage]
 \label{lem:adaptive-candidate}
 Consider any interaction with a lazy random oracle $\ROflat : \bits^* \to
 \bits^\infty$ that builds a sequence of distinct \emph{candidate} inputs
@@ -570,18 +570,18 @@ sequence has at most $L$ candidates ($m \leq L$).
   equals $t$, i.e.\ $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$ for
   some $1 \leq j \leq m$, satisfies
   $\Pr[\mathsf{pre}_{\tau,t}] \leq L \cdot 2^{-\tau}$.
-\item \emph{Second-preimage.} Fix a designated candidate position $j_0$.
-  The probability $\Pr[\mathsf{sec}_{\tau,j_0}]$ that some
-  candidate $j \neq j_0$ has
-  $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau =
-   \bigl\lfloor \ROflat(Y_{j_0}) \bigr\rfloor_\tau$, i.e.\ collides with the
-  designated candidate on its $\tau$-bit projection, satisfies
-  $\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$.
 \end{enumerate}
+The preimage facet has a \emph{second-preimage} corollary: for a
+designated candidate position $j_0$, the probability
+$\Pr[\mathsf{sec}_{\tau,j_0}]$ that some candidate $j \neq j_0$ has
+$\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau =
+ \bigl\lfloor \ROflat(Y_{j_0}) \bigr\rfloor_\tau$, i.e.\ collides with the
+designated candidate on its $\tau$-bit projection, satisfies
+$\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$.
 \end{lemma}
 
 \begin{proof}
-All three parts expose the interaction in chronological order and sample each
+Both parts expose the interaction in chronological order and sample each
 candidate's $\ROflat$ value lazily at its append step, which the premises
 license: when $Y_j$ is appended its string is fixed by the prior
 transcript (predictability) and no bit of $\ROflat(Y_j)$ has yet been
@@ -610,16 +610,15 @@ independent of the conditioning, so its $\tau$-bit projection equals $t$
 with probability $2^{-\tau}$. If position $j$ is never appended, $E_j$ is
 false. A union bound over the $L$ positions gives the claim.
 
-\emph{Second-preimage.} Expose $\ROflat(Y_{j_0})$ at the append step of the
-designated candidate $Y_{j_0}$, which predictability and unrevealed value
-license; this fixes the target $t = \bigl\lfloor \ROflat(Y_{j_0})
-\bigr\rfloor_\tau$ as a constant for the rest of the interaction. Each of the
-at most $L-1$ candidates $Y_j$ with $j \neq j_0$ is still unrevealed when
-appended, so the preimage argument applied with this $t$ gives that its
-projection equals $t$ with probability $2^{-\tau}$; a union bound over those
-positions gives $\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$. The
-designated candidate $Y_{j_0}$ is excluded, so its trivially-equal projection
-does not enter the count.
+\emph{Second-preimage corollary.} Expose $\ROflat(Y_{j_0})$ at the
+designated candidate's append step, which predictability and unrevealed
+value license; this fixes $t = \bigl\lfloor \ROflat(Y_{j_0})
+\bigr\rfloor_\tau$ as a target independent of the remaining candidates.
+Applying the preimage part to the $L-1$ candidates $j \neq j_0$, each
+still unrevealed when appended, gives
+$\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$; the designated
+candidate is excluded, so its trivially-equal projection does not enter
+the count.
 \end{proof}
 
 \subsection{Adaptive Key Tests}
