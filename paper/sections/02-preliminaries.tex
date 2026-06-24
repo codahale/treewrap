@@ -70,7 +70,7 @@ loss terms in \Cref{sec:loss-terms}.
     $N$        & Construction-interface cost (\Keccakp{} calls)       & \cref{sec:resources} \\
     $\Nprim$   & Direct primitive-interface queries                   & \cref{sec:resources} \\
     $\Ntot$    & $N + \Nprim$ (total query-sequence cost)             & \cref{sec:resources} \\
-    $\qv$, $\Qv$ & Valid verification queries / cap (INT-CTXT)        & \cref{sec:resources} \\
+    $\qv$, $\Qv$ & Valid verification queries / cap                   & \cref{sec:resources} \\
     $\qRO$, $\QRO$ & Direct random-oracle queries / cap (RO-model)    & \cref{sec:resources} \\
     $\nleaf$, $\Nleaf$ & Distinct construction-generated final leaf transcripts / cap & \cref{sec:resources} \\
     \midrule
@@ -164,8 +164,7 @@ appending $1 \concat 0^q$ with $q$ determined by the input length modulo
 $r_{\max}$; on the bridge image, $q$ is recovered as the trailing-zero
 count. \Cref{sec:ro-model} instantiates this bridge on typed \TW{} duplex
 transcript prefixes as the map $\flatmap(\cdot)$ used by the
-random-oracle proofs of
-\Cref{sec:privacy,sec:authenticity,sec:cmtds3,app:committing-transfer}.
+random-oracle proofs throughout the paper.
 
 \subsection{Authenticated Encryption with Associated Data}
 \label{sec:ae-defs}
@@ -192,58 +191,26 @@ $C \concat T$, with $C$ the ciphertext body and $T$ the root tag.
 For every $(K, N, A, M) \in \mathcal{K} \times \mathcal{N} \times
 \mathcal{A} \times \mathcal{M}$, $\Dec_K(N, A, \Enc_K(N, A, M)) = M$.
 
-\paragraph{Privacy, integrity, and all-in-one AE.}
-We use the standard nonce-based security notions, stated concretely for
-\TW{} in \Cref{sec:games-pp}. \emph{Privacy}
-($\mathsf{IND}\text{-}\$\text{-}\mathsf{CPA}$) is the distinguishing
-advantage $\Advpriv_\SE(\mathcal{A})$ between the real encryption oracle
-$\Enc_K$ and a random-output oracle $\Rand$ that returns a fresh uniform
-byte string of the ciphertext length on each query, over
-nonce-respecting adversaries. \emph{Ciphertext integrity} (INT-CTXT) is
-the winning probability $\Advintctxt_\SE(\mathcal{A})$ in the game that
-grants $\mathcal{A}$ the oracles $\Enc_K$ and a verification oracle
-$\Ver_K$ and declares a win when some verification query accepts a tuple
-$(N, A, C)$ not produced by $\Enc_K$; no nonce uniqueness is imposed.
-\emph{All-in-one AE} \cite{RS06}, instantiated for nonce-based AE
-following \cite{BT16}, combines the two into a single experiment that
-grants either $(\Enc_K, \Ver_K)$ or the ideal pair $(\Rand, \Replay)$,
-where $\Replay$ accepts exactly the tuples $\Rand$ produced, and defines
-$\Advae_\SE(\mathcal{A})$ as the distinguishing advantage between them
-over nonce-respecting adversaries.
-
-\begin{lemma}[Bellare--Namprempre Composition]
-\label{lem:bn-composition}
-For every adversary $\mathcal{A}$ against the all-in-one AE security
-of $\SE$, there exist adversaries $\mathcal{A}_{\text{priv}}$ and
-$\mathcal{A}_{\text{int-ctxt}}$ with the same resources as
-$\mathcal{A}$ such that
-\[
-  \Advae_\SE(\mathcal{A})
-  \leq \Advpriv_\SE(\mathcal{A}_{\text{priv}})
-   + \Advintctxt_\SE(\mathcal{A}_{\text{int-ctxt}}).
-\]
-\end{lemma}
-\Cref{lem:bn-composition} is the all-in-one form of the
-privacy-plus-integrity composition theorem of \cite{BN00}. The
-standard proof inserts the hybrid $(\Enc_K, \Replay)$, where
-$\Replay$ accepts exactly the tuples recorded by the real encryption
-oracle. The hop from $(\Enc_K, \Ver_K)$ to $(\Enc_K, \Replay)$ is
-bounded by INT-CTXT: the two interfaces differ only if verification
-accepts a tuple not previously recorded by encryption. The hop from
-$(\Enc_K, \Replay)$ to $(\Rand, \Replay)$ is bounded by privacy:
-$\mathcal{A}_{\text{priv}}$ runs $\mathcal{A}$, forwards encryption
-queries to its own oracle, records the returned tuples, and answers
-verification queries by replay-table lookup. The lemma is applied in
-the random-oracle model in the proof of \Cref{thm:ae}.
+\paragraph{All-in-one AE.}
+We use the all-in-one authenticated-encryption notion of \cite{RS06},
+instantiated for nonce-based AE following \cite{BT16}. The experiment
+grants either the real pair $(\Enc_K,\Ver_K)$ or the ideal pair
+$(\Rand,\Replay)$, where $\Rand$ returns a fresh uniform byte string of
+the ciphertext length on each encryption query and $\Replay$ accepts
+exactly the tuples $\Rand$ produced. The advantage
+$\Advae_\SE(\mathcal{A})$ is the distinguishing advantage between these
+two worlds over nonce-respecting adversaries. This all-in-one notion is
+instantiated for \TW{} in \Cref{sec:games-pp}.
 
 \subsection{Multi-User Indistinguishability}
 \label{sec:mu-ind}
 
-The multi-user indistinguishability notion of \cite[Fig.~3]{BT16} is
-the multi-user lift of the single-user all-in-one notion of
-\Cref{sec:ae-defs}. The number of users $u$ is adversary-determined:
-it is the number of $\mathsf{New}$ queries the adversary makes, i.e.,
-the final value of the user counter $v$ in the game below. A challenge bit $b \sample \bits$ selects between the
+The multi-user indistinguishability notion of \cite[Fig.~3]{BT16}
+extends the same real-vs-ideal oracle pair to an adversary-selected set
+of users. The number of users $u$ is adversary-determined: it is the
+number of $\mathsf{New}$ queries the adversary makes, i.e., the final
+value of the user counter $v$ in the game below. A challenge bit $b
+\sample \bits$ selects between the
 real construction interface (real ciphertexts, real verification) and
 an ideal interface (uniform strings of matching length, verification
 that accepts only previously-issued encryption tuples). The adversary

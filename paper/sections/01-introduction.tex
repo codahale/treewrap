@@ -58,16 +58,16 @@ still operates on a bounded $1600$-bit state, and the leaf tags are absorbed
 into the root as the leaves complete rather than buffered together, so the
 memory footprint remains constant in the message length.
 
-We analyze \TW{} in the public-permutation model and obtain concrete bounds for
-all-in-one authenticated encryption in the sense of
-\cite{RS06}, its multi-user indistinguishability lift in the sense of
-\cite{BT16}, and the commitment security of the root tag, stated as the
-\cite{RS04} hash security of the tag wrapper---collision, second-preimage, and
-preimage resistance---from which the \cite{BH22} full-input committing notion
-(\textsf{CMTDs-4}) follows as a corollary, alongside the \cite{MLGR23}
-context-discoverability notion. Each bound is proved first against an
-intermediate random oracle and then transferred to the real permutation by the
-flat-sponge lift of \cite{BDPV08}. At the implemented parameters
+We analyze \TW{} in the public-permutation model and obtain a concrete
+multi-user indistinguishability bound in the sense of \cite{BT16}, with
+all-in-one authenticated encryption in the sense of \cite{RS06} as its
+single-user corollary. We also prove commitment security of the root tag,
+stated as the \cite{RS04} hash security of the tag wrapper---collision,
+second-preimage, and preimage resistance---from which the \cite{BH22}
+full-input committing notion (\textsf{CMTDs-4}) follows as a corollary,
+alongside the \cite{MLGR23} context-discoverability notion. Each bound is
+proved first against an intermediate random oracle and then transferred to the
+real permutation by the flat-sponge lift of \cite{BDPV08}. At the implemented parameters
 ($k = c = \tauroot = \tauleaf = 256$), these guarantees meet a $128$-bit
 security target for adversaries running up to $\Ntot \leq 2^{63}$ \Keccakp{}
 calls---on the order of $2^{71}$ bytes of processed data, beyond any realistic
@@ -87,16 +87,15 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   domain-separated within one permutation, and the state is constant-size
   regardless of message length.
 
-\item \textbf{All-in-one AE security.} We prove a concrete bound on the
-  all-in-one AE advantage \cite{RS06} in the public-permutation model
-  (\Cref{thm:ae}), obtained by composing random-oracle privacy and
-  \textsf{INT-CTXT} bounds through the generic-composition argument of
-  \cite{BN00} and lifting the result to the real permutation.
-
 \item \textbf{Multi-user security.} We give a concrete multi-user
   indistinguishability bound \cite{BT16} for $D$ users
   (\Cref{thm:mu-ind}), obtained by a key-collision-stopped hybrid over the
-  users that reuses the single-user privacy and \textsf{INT-CTXT} envelopes.
+  users and a direct adjacent-user coupling in the random-oracle model.
+
+\item \textbf{All-in-one AE security.} We derive a concrete bound on the
+  all-in-one AE advantage \cite{RS06} in the public-permutation model
+  (\Cref{thm:ae}) as the $D=1$ case of the multi-user
+  indistinguishability theorem.
 
 \item \textbf{Commitment via a secure hash.} We show that the wrapper
   $\HTW$ returning the root tag is a secure hash of the full $(K, N, A, M)$
@@ -123,7 +122,7 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
   random-oracle model and transfer every bound to the public-permutation setting
   through the \cite{BDPV08} flat-sponge lift (\Cref{app:flat-sponge-lift}). A
   derived-adversary argument shows that each direct primitive query induces at
-  most one random-oracle query, so the random-oracle envelopes are instantiated
+  most one random-oracle query, so the random-oracle bounds are instantiated
   at the direct-query count $\Nprim$ rather than the total work $\Ntot$,
   separating the single capacity-birthday loss $\Lift_c(\Ntot)$ from the
   scheme-specific terms.
@@ -218,12 +217,10 @@ multi-user indistinguishability notion of \cite{BT16}.
 \Cref{sec:security-model} fixes the public-permutation games, the
 intermediate random-oracle model, and the resource accounting that
 all later bounds reference. \Cref{sec:main-results} states the
-headline AE, mu-ind, hash (collision, second-preimage, preimage), CMTDs-4,
+headline mu-ind, AE, hash (collision, second-preimage, preimage), CMTDs-4,
 and context-discoverability theorems and their
-concrete \TW{}-parameter forms; \Cref{sec:privacy,sec:authenticity}
-prove the random-oracle privacy and INT-CTXT bounds that feed those
-theorems, and \Cref{sec:cmtds3} proves the random-oracle
-hash and CMTDs-4 bounds. \Cref{sec:performance} reports the
+concrete \TW{}-parameter forms; \Cref{sec:cmtds3} proves the
+random-oracle hash and CMTDs-4 bounds. \Cref{sec:performance} reports the
 performance of the reference and optimized implementations.
 \Cref{sec:discussion} compares \TW{} to prior sponge AEADs and
 committing constructions and discusses limitations.

@@ -163,7 +163,7 @@ well-scrutinized \Keccak{} permutation.
 \label{sec:limitations}
 
 \paragraph{Nonce misuse.}
-\TW{}'s privacy analysis requires a nonce-respecting adversary, and the mode is
+\TW{}'s AE and mu-ind bounds require nonce-respecting encryption queries, and the mode is
 not misuse-resistant: a repeated nonce reuses leaf keystream and breaks
 confidentiality, as for any online duplex stream cipher. Schemes such as
 AES-GCM-SIV \cite{GLL17}, in the deterministic/misuse-resistant lineage of

@@ -9,14 +9,12 @@ construction prefixes.
 how such a query is flattened, parsed as a typed transcript, assigned an
 output point, and decoded to a candidate key, when any.
 \Cref{lem:key-tests} turns those decoded keys into an adaptive key-test
-bound. The remaining proof interfaces expose the
-events and stopped-game equalities their consumers must control:
-privacy freshness and hybrid replacement, INT-CTXT hidden-key exposure
+bound. The remaining proof interfaces expose the events their consumers
+must control: encryption-side freshness, verification hidden-key exposure
 and root tag guessing, leaf tag collisions, and the committing
-candidate-sequence collision event. Thus the privacy, INT-CTXT, and
-committing proofs only
-have to derive the relevant local event premise before applying the
-corresponding accounting argument.
+candidate-sequence collision event. Thus
+the mu-ind and committing proofs only have to derive the relevant local
+event premise before applying the corresponding accounting argument.
 
 \begin{figure}[t]
   \centering
@@ -45,8 +43,8 @@ corresponding accounting argument.
     \node[lemma] (cc) at (7.6, -1.75) {Adaptive\\ Candidate};
 
     % Column 4: consumers.
-    \node[consumer] (c6) at (11.4,  2.4) {\S\ref{sec:privacy} Privacy};
-    \node[consumer] (c7) at (11.4,  0.8) {\S\ref{sec:authenticity} INT-CTXT};
+    \node[consumer] (c6) at (11.4,  2.4) {Mu-ind\\encryption side};
+    \node[consumer] (c7) at (11.4,  0.8) {Mu-ind\\verification side};
     \node[consumer] (c8) at (11.4, -1.5) {Committing\\proofs};
     \node[consumer] (cb) at (11.4, -3.0) {App.~\ref{app:flat-sponge-lift}};
 
@@ -58,10 +56,10 @@ corresponding accounting argument.
       \draw[arr] (ti.east) -- (tf.west);
       \draw[arr] (ti.east) to[out=-20, in=160] (lc.west);
 
-      % Derived lemmas -> Privacy.
+      % Derived lemmas -> mu-ind encryption side.
       \draw[arr] (tf.east) to[out=30,  in=200] (c6.west);
 
-      % Derived lemmas -> INT-CTXT.
+      % Derived lemmas -> mu-ind verification side.
       \draw[arr] (lc.east) to[out=30,  in=200] (c7.west);
 
       % Leaf Tag Collision also feeds the committing collision/aSec proofs.
@@ -74,7 +72,7 @@ corresponding accounting argument.
       \draw[arr] (cc) -- (lc);
 
       % Key-Indexed Renaming: fed by the structural lemmas, feeds
-      % privacy and INT-CTXT accounting.
+      % hidden-key encryption and verification accounting.
       \draw[arr] (ti) -- (kr);
       \draw[arr] (ba.east) to[out=50, in=215] (kr.west);
       \draw[arr] (kr.east) to[out=35, in=205] (c6.west);
@@ -98,12 +96,13 @@ corresponding accounting argument.
   }
   \caption{Dependency graph of the supporting lemmas in this
     appendix and their consumers. Solid boxes are lemmas; dashed
-    boxes are the proof sections that consume them. The Bridge \&
+    boxes are the proof components that consume them. The Bridge \&
     Decode box is \Cref{lem:bridge-decode} together with the exact
     keyed decoder it specifies (\Cref{def:keyed-twout}); the Key-Indexed
     Renaming box (\Cref{lem:key-renaming}) draws on it and on
     \Cref{lem:transcript-inj} to supply the key-field disjointness and
-    renaming used by the privacy and INT-CTXT accounting. The Adaptive
+    renaming used by the hidden-key encryption and verification
+    accounting. The Adaptive
     Candidate box (\Cref{lem:adaptive-candidate}) is the single
     probabilistic engine: it bounds the Leaf Tag Collision lemma
     (\Cref{lem:leaf-collision}) and, through the Root Tag Hash Bound
@@ -116,17 +115,17 @@ corresponding accounting argument.
     the full-ciphertext recovery of \Cref{lem:leaf-recovery} for distinct
     full inputs absent a leaf tag collision---together with
     \Cref{cor:output-sep} for candidate-sequence filtering. The Leaf Tag Collision box feeds
-    INT-CTXT through its hidden-key bound and the committing collision and
-    second-preimage proofs through its adversary-supplied-key bound. The
+    the verification side of mu-ind through its hidden-key bound and the
+    committing collision and second-preimage proofs through its
+    adversary-supplied-key bound. The
     edge from \Cref{lem:transcript-inj} into \Cref{lem:freshness} uses
     \Cref{cor:output-sep}; the verification-first root tag guessing
     accounting reached through the same separation is carried out in
-    \Cref{app:intctxt-accounting}
-    (\Cref{lem:int-verification-first-root-guess}) and consumed by
-    \Cref{sec:authenticity}. The
-    \Cref{lem:key-tests} edge records the shared
-    $\badkey$ accounting used by privacy and
-    INT-CTXT.}
+    \Cref{app:mu-verification-coupling}
+    (\Cref{lem:ver-first-root-guess}) and consumed by
+    \Cref{lem:mu-adjacent-hybrid}. The \Cref{lem:key-tests} edge
+    records the shared hidden-key $\badkey$ accounting used by the mu-ind
+    proof.}
   \label{fig:lemma-dag}
 \end{figure}
 
@@ -380,8 +379,8 @@ ciphertext blocks this recovers the same full absorbed ciphertext.
 \begin{lemma}[Bridge and Typed Decoding]
 \label{lem:bridge-decode}
 The random-oracle games used in
-\Cref{sec:privacy,sec:authenticity,sec:cmtds3,app:committing-transfer}
-are ordinary random-oracle games on a single random oracle
+\Cref{sec:main-results,sec:cmtds3,app:committing-transfer} are ordinary
+random-oracle games on a single random oracle
 $\ROflat : \bits^* \to \bits^\infty$ over the unpadded
 \cite{BDPV08} $H$-input domain (\Cref{sec:ro-model}), with \TW{} root and
 leaf duplex outputs answered by the typed restriction
@@ -553,8 +552,9 @@ aggregation phase, so the $\Rmsg^+$ value is exposed as a tag only on
 the $n = 0$ path; since $n = \leaves(C)$ is fixed by $\|C\|$, the two
 uses never coincide on a single ciphertext.
 
-The privacy and INT-CTXT accounting both reindex hidden-key transcript
-addresses by the key field. We record that reindexing once.
+The hidden-key encryption, verification, and mu-ind accounting all
+reindex transcript addresses by the key field. We record that reindexing
+once.
 
 \begin{lemma}[Key-Indexed Transcript Renaming]
 \label{lem:key-renaming}
@@ -691,8 +691,8 @@ the count.
 \label{lem:key-tests}
 Consider a \TW{} random-oracle-model game with a single hidden context
 component $Z$ sampled uniformly from $\bits^w$ for some $w \geq k$---the
-standard case being the hidden key, $Z = K$ and $w = k$, used in
-\Cref{sec:privacy,sec:authenticity}---direct adversary access to
+standard case being the hidden key, $Z = K$ and $w = k$, used in the
+AE-style proofs---direct adversary access to
 $\ROflat$, and an immediate abort event $\badkey$ that fires on a
 direct query $(Y,\ell)$ exactly when $Y$ decodes to some counted
 output-point class $\mathcal{C}$ of \Cref{tab:keyed-twout} with
@@ -860,7 +860,7 @@ The first root keystream block, when present, is produced by the root
 duplex after the initialization call $\prfxroot \concat K
 \concat N$ and any AD absorption (elided when $A = \varepsilon$, in
 which case the \siginit call itself emits the first root keystream
-block). Since the privacy adversary never repeats
+block). Since the nonce-respecting adversary never repeats
 a nonce, no previous encryption query can have used the same root
 initialization transcript. Within the current query,
 \Cref{lem:transcript-inj} separates initialization, AD, message, and
@@ -940,213 +940,11 @@ therefore fresh, and its $\tauroot$-bit $\ROflat$ output is uniform
 independently of the conditioned information.
 \end{proof}
 
-\subsection{Privacy Accounting Lemmas}
-\label{app:priv-accounting}
+\subsection{Mu-Ind Verification Coupling}
+\label{app:mu-verification-coupling}
 
-The random-oracle privacy proof of \Cref{thm:priv-ro} uses
-Transcript Freshness and the Adaptive Key-Test Bound through the
-privacy-specific interfaces below. These interfaces track the hidden
-key through the set of key values still viable after the visible
-stopped-game prefix. The stopped privacy games use the event
-$\badkey$ from \Cref{thm:priv-ro}: a direct query
-$(Y,\ell)$ aborts when
-$\KeyedTWOut(Y) = (K,\mathcal{C})$ for the hidden or auxiliary key
-$K$ and a counted output-point class $\mathcal{C}$. The stopped games
-inspect this predicate before returning the direct-oracle answer for
-the offending query; if it holds, no answer for that query is included
-in the adversary's view.
-
-\begin{lemma}[Privacy One-Query Replacement]
-\label{lem:priv-one-query-replacement}
-Fix a nonce-respecting privacy adversary and an index $i \geq 0$. Let
-$H_i$ be the stopped privacy hybrid that samples
-$K \sample \bits^k$, answers the first $i$ accepted encryption queries
-by $\Rand$, answers all later accepted encryption queries by
-$\Enc_K^\RO$, answers direct $\ROflat$ queries by the lazy table, and
-aborts on $\badkey$. On executions with fewer than
-$i+1$ accepted encryption queries, the two hybrids coincide. Then
-$H_i$ and $H_{i+1}$ can be coupled so that the adversary's visible
-transcript and the abort indicator are identical. In particular, they
-have identical joint distributions of the adversary's view and the
-abort indicator.
-\end{lemma}
-
-\begin{proof}
-Use the same adversary coins, the same key $K$, and the same answers to
-all direct queries and encryption queries before the $(i+1)$-st
-accepted encryption query. If the adversary never makes that query, the
-coupling is immediate. Otherwise condition on any common
-positive-probability visible prefix that includes the submitted query
-but not its oracle answer, and on no earlier abort. Let the query be
-$(N,A,M)$.
-
-\emph{Viable-key prefix.} Let $S$ be the set of distinct keys $K'$ for
-which some prior direct query input $Y$ satisfies
-$\KeyedTWOut(Y) = (K',\mathcal{C})$ for a counted output-point class
-$\mathcal{C}$, and let $\mathcal{V} = \bits^k \setminus S$. Before the
-$(i+1)$-st accepted encryption query in $H_i$, the accepted
-construction-interface queries were answered by $\Rand$, so the visible
-encryption answers and the lazy direct-query answers are independent of
-the hidden key except through the immediate-abort rule, which removes
-exactly the keys in $S$; hence the hidden key is uniform on
-$\mathcal{V}$ under this conditioning. For every $K' \in \mathcal{V}$, no
-prior direct query lies in the hidden-key address set $\mathcal{Y}_{K'}$
-of \Cref{lem:key-renaming} (direct-query avoidance, since $K' \notin S$),
-so running $\Enc_{K'}^\RO$ on the pending query reaches no counted
-transcript point queried directly before; and the address sets
-$\mathcal{Y}_{K'}$ for distinct $K' \in \mathcal{V}$ are pairwise
-disjoint (renaming-lemma disjointness).
-
-For the actual key in $H_i$, the no-hit condition is precisely the
-event $\neg\mathsf{hit}_{\mathsf{fresh}}$ of \Cref{lem:freshness} for
-the pending computation: any prior direct query that hit a counted
-transcript point reached by the computation would, by
-\Cref{lem:bridge-decode}, be decoded by $\KeyedTWOut$ to the hidden key
-$K$ and would already have triggered $\badkey$.
-Applying \Cref{lem:freshness} gives freshness for every construction
-output of the query that contributes to the returned ciphertext, to an
-internal leaf tag, or to the final root tag. Applying the same transcript
-freshness argument to each $K' \in \mathcal{V}$, and using the
-disjointness of key-indexed transcript inputs established above,
-enumerate all such outputs in the order taken by the encryption
-computation.
-
-Thus, to describe the conditional law, introduce an auxiliary online
-family of uniform coins indexed by a viable key and by the output
-position reached in that key's encryption computation. These auxiliary
-coins are sampled independently of the hidden key. If the hidden key is
-$K'$, the $H_i$ computation reads the $K'$-row and installs only those
-row entries in the lazy table, at the transcript addresses actually
-reached by $\Enc_{K'}^\RO$. The coins for other viable keys are not
-lazy-table entries; they only witness that every possible hidden-key
-row induces the same distribution on the returned string. A later
-direct query to a nonactual viable-key address is therefore answered by
-the ordinary shared lazy table in both hybrids, not by a coin sampled
-during this replacement coupling.
-
-Each plaintext block is fixed before the corresponding keystream coin
-is drawn, so XOR with that coin makes the ciphertext block uniform.
-Once a ciphertext block is fixed, the next message transcript is fixed
-and fresh at its sampling time. When $n \geq 1$, leaf tags are sampled
-from fresh coins as well; after these tags and the ciphertext are fixed,
-the aggregation transcript is fixed and the final root tag is sampled
-from another fresh coin at the $\Rtag$ point. When $n = 0$ the
-aggregation phase is elided and the final root tag is instead the fresh
-coin at the closing $\Rmsg^+$ root message point. Hence the returned string $(C,T)$ is jointly uniform of
-length $\|M\|+\tauroot/8$ and independent of $K$ conditioned on the
-prefix. In the coupling, the $\Rand$ answer in $H_{i+1}$ is sampled as
-this same independent string.
-
-It remains to compare the lazy-table state exposed after this query.
-The entries that may be written in $H_i$ but not in $H_{i+1}$ are
-construction-internal entries at hidden-key counted transcript inputs
-for nonce $N$. A later direct adversary query to any such input would
-be decoded by $\KeyedTWOut$ to $K$ and would trigger
-$\badkey$ before returning an oracle answer, so the
-possibly different table entry is never exposed. Later real encryption
-queries use nonces different from $N$ by nonce-respectingness, and
-their typed construction inputs are therefore disjoint from this
-query's inputs by \Cref{cor:output-sep}. Thus the extra lazy-table
-entries are unobservable before the abort. Continuing the coupling with
-shared answers on all exposed direct-oracle inputs and all later real
-construction inputs gives identical visible transcripts and identical
-abort indicators.
-\end{proof}
-
-\begin{lemma}[Privacy Stopped-Game Advantage Bound]
-\label{lem:priv-stopped-bound}
-Let $\mathsf{P}_0$ and $\mathsf{P}_1$ be the unstopped real and ideal
-privacy games of \Cref{thm:priv-ro}, with $\mathsf{P}_1$ carrying the
-auxiliary key used only for the abort predicate, and let
-$\mathsf{P}_0^{\mathrm{stop}}$ and $\mathsf{P}_1^{\mathrm{stop}}$ be
-their immediate-abort variants. Assume the adversary $\mathcal{B}$ has
-an execution-uniform cap $q_e$ on accepted encryption queries. Then for
-any event $E$ determined by the adversary's final output in the
-unstopped games,
-\[
-  \left|
-    \Pr[E \text{ in } \mathsf{P}_0]
-    - \Pr[E \text{ in } \mathsf{P}_1]
-  \right|
-  \leq
-  \KeyGuess_k(\qRO(\mathcal{B})).
-\]
-\end{lemma}
-
-\begin{proof}
-\emph{Stopped-game equality.}
-Define hybrids $H_0,\dots,H_{q_e}$ as in
-\Cref{lem:priv-one-query-replacement}. Then
-$H_0 = \mathsf{P}_0^{\mathrm{stop}}$. Since every accepted encryption
-query is among the first $q_e$ such queries, $H_{q_e}$ is
-$\mathsf{P}_1^{\mathrm{stop}}$. Applying
-\Cref{lem:priv-one-query-replacement} for $i = 0,\dots,q_e-1$ gives the
-same joint distribution of the adversary's view and the abort indicator
-in adjacent hybrids, and telescoping gives the same joint distribution
-in the two stopped games. Write
-\[
-  p =
-  \Pr[\badkey \text{ in }
-      \mathsf{P}_1^{\mathrm{stop}}];
-\]
-by the stopped-game equality the abort probability is also $p$ in
-$\mathsf{P}_0^{\mathrm{stop}}$. For each side $b \in \{0,1\}$, the
-unstopped game $\mathsf{P}_b$ and its stopped variant
-$\mathsf{P}_b^{\mathrm{stop}}$ agree exactly until the first
-$\badkey$ direct query and have the same occurrence
-probability for that event. Hence, for the final-output event $E$,
-\[
-  \Pr[E \text{ in } \mathsf{P}_b]
-  =
-  \Pr[E \wedge \neg \badkey
-      \text{ in } \mathsf{P}_b^{\mathrm{stop}}]
-  + x_b
-\]
-for some $0 \leq x_b \leq p$. The first terms are equal for $b=0$ and
-$b=1$ by stopped-game equality, while $x_0, x_1 \in [0,p]$, so
-\[
-  \left|
-    \Pr[E \text{ in } \mathsf{P}_0]
-    - \Pr[E \text{ in } \mathsf{P}_1]
-  \right|
-  \leq p .
-\]
-
-\emph{Abort bound.}
-It remains to show $p \leq \KeyGuess_k(\qRO(\mathcal{B}))$. Let
-$\mathsf{P}_1^{\mathrm{aux}}$ be the non-aborting version of the ideal
-privacy game: it samples the auxiliary key $K \sample \bits^k$,
-answers construction queries by fresh random strings exactly as $\Rand$
-does, answers direct $\ROflat$ queries by the ordinary lazy table, and
-never aborts. For each direct query input $Y_i$, \Cref{lem:bridge-decode}
-either rejects $Y_i$ as outside the bridged well-formed \TW{} transcript
-language or recovers a unique candidate key from the decoded keyed
-transcript prefix.
-
-The visible-prefix uniformity invariant required by \Cref{lem:key-tests}
-holds in $\mathsf{P}_1^{\mathrm{aux}}$. Condition on any
-positive-probability visible execution prefix immediately before a
-direct query, on no earlier $\badkey$, and on the set
-$S_i$ of distinct candidate keys decoded from prior direct-query inputs.
-Construction responses are fresh random strings, direct $\ROflat$
-answers are lazy random-oracle values, and both are independent of the
-auxiliary key $K$; the no-earlier-abort condition removes exactly the
-keys in $S_i$. Thus $K$ remains uniform on $\bits^k \setminus S_i$.
-
-The first $\badkey$ event in
-$\mathsf{P}_1^{\mathrm{stop}}$ has the same probability as the first
-successful adaptive key test in $\mathsf{P}_1^{\mathrm{aux}}$, because
-the two games are identical up to that query. Applying
-\Cref{lem:key-tests} with $\qRO = \qRO(\mathcal{B})$ gives
-$p \leq \KeyGuess_k(\qRO(\mathcal{B}))$. Combining with the
-stopped-game bound proves the claim.
-\end{proof}
-
-\subsection{INT-CTXT Accounting Lemmas}
-\label{app:intctxt-accounting}
-
-The INT-CTXT proof of \Cref{thm:intctxt-ro} uses the generic key-test
-and leaf-collision accounting lemmas together with the INT-specific
+The direct mu-ind adjacent-hybrid proof uses the generic key-test and
+leaf-collision accounting lemmas together with the verification-specific
 facts below. The \emph{root tag output point} of a computation is the
 output point that emits its root tag: $\Rtag$ (suffix \sigagglast) when
 $n \geq 1$, and the closing root message point $\Rmsg^+$ (suffix
@@ -1161,18 +959,19 @@ generation is by an encryption query, and \emph{verification-first} if
 its first construction generation is by a non-replay verification
 query.
 
-\begin{lemma}[INT Visible-Prefix Key Uniformity]
-\label{lem:int-key-uniformity}
-In the random-oracle INT-CTXT game stopped at
-$\badkey$ as in \Cref{thm:intctxt-ro}, order the
-direct $\ROflat$ queries. For a direct query position $i$, let $S_i$
+\begin{lemma}[Verification Visible-Prefix Key Uniformity]
+\label{lem:ver-key-uniformity}
+In the stopped single-key \TW{} random-oracle encryption/verification
+interaction with hidden key $K$, direct access to $\ROflat$, and
+immediate abort on $\badkey$, order the direct $\ROflat$ queries. For a
+direct query position $i$, let $S_i$
 be the set of distinct candidate keys decoded by $\KeyedTWOut$ from
 earlier direct-query inputs. Condition on any positive-probability
 visible execution prefix immediately before query $i$, on no earlier
 $\badkey$, and on $S_i$. Then the hidden key $K$
 is uniform on $\bits^k \setminus S_i$. Consequently the uniformity
 invariant required by \Cref{lem:key-tests} holds in the stopped
-INT-CTXT game.
+interaction.
 \end{lemma}
 
 \begin{proof}
@@ -1227,10 +1026,10 @@ key $K_1 \notin S_i$. Since $K$ is initially uniform and the condition
 $S_i$, all keys in $\bits^k \setminus S_i$ remain equally likely.
 \end{proof}
 
-\begin{lemma}[INT Verification-First Root Guessing]
-\label{lem:int-verification-first-root-guess}
-In the random-oracle INT-CTXT game stopped before
-$\badkey \cup \badleaf$, let
+\begin{lemma}[Verification-First Root Guessing]
+\label{lem:ver-first-root-guess}
+In the stopped single-key \TW{} random-oracle encryption/verification
+interaction before $\badkey \cup \badleaf$, let
 $\mathsf{win}_{\mathsf{vf}}$ be the event that some accepting
 non-replay verification submission belongs to a verification-first
 final root transcript class. Then
@@ -1312,17 +1111,18 @@ $\sum_{\mathcal{C}} |G_{\mathcal{C}}| \leq \qv(\mathcal{B})$, and a union bound 
 verification-first classes gives the claim.
 \end{proof}
 
-\subsection{Multi-User Hybrid Lemma}
+\subsection{Mu-Ind Adjacent-Hybrid Lemma}
 
 The multi-user indistinguishability theorem (\Cref{thm:mu-ind}) telescopes a
 hybrid over the $D$ users, replacing one real user by its ideal
 $(\Rand,\Replay)$ interface at each step. The following lemma bounds one such
-step, reusing the privacy accounting of
-\Cref{lem:priv-one-query-replacement} and the INT-CTXT accounting of
-\Cref{thm:intctxt-ro} within a shared random-oracle environment.
+step directly inside the shared random-oracle environment. It couples the
+real and ideal user-$d$ interfaces until one of three local events occurs:
+a direct hidden-key transcript hit, a hidden leaf-tag collision, or an
+accepting non-replay verification query.
 
 \begin{lemma}[Mu-Ind Adjacent-Hybrid Bound]
-\label{lem:mu-single-user-envelope}
+\label{lem:mu-adjacent-hybrid}
 Let $\mathcal{B}$ be a flat-RO mu-ind adversary in the pre-sampled-key
 formulation of \Cref{sec:mu-setting}, with keys
 $K_1,\dots,K_D$ sampled at the start of the experiment. Fix
@@ -1359,18 +1159,14 @@ $\mathcal{B}$, answers users $e < d$ by their $(\Rand,\Replay)$
 interfaces, answers users $e > d$ by
 $\Enc_{K_e}^\RO,\Ver_{K_e}^\RO$, forwards $\mathcal{B}$'s direct
 $\ROflat$ queries unchanged, and shares one lazy $\ROflat$ table with
-user $d$. The modular Bellare--Namprempre argument would insert the
-intermediate interface that keeps user $d$'s encryption real but
-replaces its verification by the replay table, and bound the two hops
-separately; this charges the user-$d$ key-test event once in the
-INT-CTXT hop and once again in the privacy hop. We instead couple
-$H_{d-1}^\star$ and $H_d^\star$ directly, so that this event is charged
-only once.
+user $d$. The coupling treats user $d$'s encryption and verification
+interfaces together. Direct $\ROflat$ queries that decode to $K_d$ can
+affect both interfaces, so the local key-test event is charged once in
+the adjacent-hybrid bound.
 
 \paragraph{Coupling until divergence.} Run the two hybrids on shared
 adversary coins and one shared lazy $\ROflat$ table. Introduce the
-user-$d$ instances of the abort events of
-\Cref{sec:privacy,sec:authenticity}: $\badkey^{(d)}$, that a direct
+user-$d$ local events $\badkey^{(d)}$, that a direct
 $\ROflat$ query decodes under $\KeyedTWOut$ to $K_d$ and a counted
 output-point class; $\badleaf^{(d)}$, that two distinct user-$d$
 construction-generated final leaf transcripts receive the same
@@ -1388,10 +1184,10 @@ transcript points of its computation---distinct within a computation and,
 by encryption nonce-uniqueness and Transcript Injectivity
 (\Cref{lem:transcript-inj}), across distinct encryptions---so until a
 direct query reads such a point the outputs are jointly uniform of the
-prescribed lengths, the freshness of
-\Cref{lem:priv-one-query-replacement,lem:priv-stopped-bound}. The present
-environment adds a real user-$d$ verification oracle, absent from the
-privacy game. Because only encryption queries are nonce-unique, a
+prescribed lengths; this is the freshness guarantee of
+\Cref{lem:freshness}. The present
+environment adds a real user-$d$ verification oracle, absent from a pure
+encryption-replacement game. Because only encryption queries are nonce-unique, a
 non-replay verification may reuse an encryption nonce and lazily read a
 keystream or root tag point the same-nonce encryption later reaches; but
 lazy sampling draws each point uniformly when first read, so its value is
@@ -1428,12 +1224,15 @@ agree until $\badkey^{(d)} \cup \forge^{(d)}$, and a union bound ordered
 by first occurrence (inserting the leaf abort to split
 $\Pr[\forge^{(d)} \text{ before } \badkey^{(d)}]$) gives
 \[
-  \bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
-       - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr|
-  \leq
+\begin{aligned}
+  &\bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
+       - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr| \\
+  &\leq
   \Pr[\badkey^{(d)}]
-  + \Pr[\badleaf^{(d)} \text{ before } \badkey^{(d)}]
+  + \Pr[\badleaf^{(d)} \text{ before } \badkey^{(d)}] \\
+  &\qquad
   + \Pr[\forge^{(d)} \text{ before } \badkey^{(d)} \cup \badleaf^{(d)}].
+\end{aligned}
 \]
 
 \paragraph{The environment does not enlarge the user-$d$ events.} The
@@ -1450,7 +1249,7 @@ $\nleaf^{(d)}$ and $\qv^{(d)}$. The three accounting events are thus
 local to user $d$'s keyed transcript language.
 
 \paragraph{Bounding the three terms.} For $\Pr[\badkey^{(d)}]$, the
-visible-prefix key uniformity of \Cref{lem:int-key-uniformity} holds for
+visible-prefix key uniformity of \Cref{lem:ver-key-uniformity} holds for
 $K_d$ in the environment $\mathcal{E}_d$. The key-test contribution is
 taken in the original pre-sampled-key experiment, not in one
 renormalized to the non-collision branch: fix the foreign keys and run
@@ -1477,7 +1276,7 @@ non-replay submission---by the final-root determinacy of
 (\Cref{lem:leaf-recovery}), a non-replay submission in such a class
 reaches the already-returned root tag and fails the tag comparison---so
 every accepting non-replay submission is verification-first, and
-\Cref{lem:int-verification-first-root-guess} gives
+\Cref{lem:ver-first-root-guess} gives
 $\Pr[\forge^{(d)} \text{ before } \badkey^{(d)} \cup \badleaf^{(d)}]
 \leq \qv^{(d)}/2^{\tauroot}$.
 
@@ -1491,5 +1290,5 @@ Summing the three bounds gives
   + \frac{\qv^{(d)}}{2^{\tauroot}},
 \]
 with the user-$d$ key-test event $\badkey^{(d)}$ charged a single time
-rather than once per Bellare--Namprempre hop.
+for the adjacent hybrid.
 \end{proof}

@@ -2,12 +2,11 @@
 \label{sec:main-results}
 
 This section states and instantiates \TW{}'s concrete security bounds. We
-first collect the recurring loss terms (\Cref{sec:loss-terms}) and the
-random-oracle envelopes and supporting bounds (\Cref{sec:thms-pp}) they
-rest on, then state the headline theorems (\Cref{sec:headline}) and their
-concrete \TW{}-parameter forms (\Cref{sec:concrete,sec:concrete-claim}),
-closing with a discussion of the bounds' tightness
-(\Cref{sec:bound-discussion}).
+first collect the recurring loss terms (\Cref{sec:loss-terms}). We then
+present the headline theorem sequence, including the random-oracle bounds
+used by the lift (\Cref{sec:headline}), give the concrete
+\TW{}-parameter forms (\Cref{sec:concrete,sec:concrete-claim}), and close
+with a discussion of the bounds' tightness (\Cref{sec:bound-discussion}).
 
 \subsection{Loss Terms}
 \label{sec:loss-terms}
@@ -83,64 +82,178 @@ The known-key leaf tag collision term is
 It is the pairwise birthday bound on $\tau$-bit leaf tag projections
 used by the collision-resistance and always-second-preimage theorems
 (\Cref{thm:coll}, \Cref{thm:asec}). Unlike the hidden-key
-leaf collision term in the INT-CTXT bound, the compact committing game
-has adversary-supplied keys, so direct primitive queries can pre-read
-candidate leaf tag points. The random-oracle proof therefore counts
-both direct leaf tag candidates and challenger-generated final leaf
-transcripts; after the flat-sponge lift this gives
-$Q=\Nprim+\Nleaf$.
+leaf collision term in the direct mu-ind and AE bounds, the compact
+committing game has adversary-supplied keys, so direct primitive queries
+can pre-read candidate leaf tag points. The random-oracle proof
+therefore counts both direct leaf tag candidates and
+challenger-generated final leaf transcripts; after the flat-sponge lift
+this gives $Q=\Nprim+\Nleaf$.
 
-\subsection{Supporting Bounds}
+\subsection{Headline Theorems}
 \label{sec:thms-pp}
+\label{sec:headline}
 
-The headline theorems of \Cref{sec:headline} feed on six
-random-oracle-model bounds---the privacy and INT-CTXT envelopes, the
-CMTDs-4 bound, the collision bound, the second-preimage bound, and the preimage bound---whose proofs occupy
-\Cref{sec:privacy,sec:authenticity,sec:cmtds3}; the remaining
-committing-notion bounds live in \Cref{app:committing-transfer}. The
-multi-user lift of the privacy envelope additionally invokes the
-adjacent-hybrid bound of \Cref{lem:mu-single-user-envelope}
-(\Cref{app:lemmas}).
-Resource-indexed
-suprema range over flat-RO adversaries (\Cref{sec:ro-model}) with the
-displayed resources, and the flat-sponge lift of
-\Cref{app:flat-sponge-lift} instantiates each envelope at $\qRO =
+\TW{} delivers its headline guarantees in the lifted
+public-permutation model of \Cref{sec:games-pp}: multi-user
+indistinguishability \cite{BT16}, all-in-one AE security \cite{RS06} as
+its single-user corollary, and the commitment security of the root tag
+(\Cref{sec:commit-defs}). The last is stated as the \cite{RS04} hash
+security of the wrapper $\HTW$---collision, second-preimage, and preimage
+resistance---together with the \cite{BH22} CMTDs-4 committing notion and
+the \cite{MLGR23} context-discoverability notion. For the AE-style
+notions the ideal side exposes the BDPV simulator; the committing, hash,
+and discoverability bounds remain real public-permutation success
+probabilities.
+\Cref{thm:mu-ind-ro,thm:mu-ind,thm:ae,thm:coll,thm:asec,thm:pre,cor:cmtds4,thm:cdy-full}
+state these bounds in terms of the loss terms $\Lift_c$, $\KeyGuess_k$,
+$\RootColl_\tau$, $\LeafColl_\tau$, and $\RootPre_\tau$ of
+\Cref{sec:loss-terms}.
+
+The real-vs-ideal results come first: a random-oracle mu-ind theorem, its
+public-permutation lift, and the all-in-one AE corollary obtained by
+setting the mu-ind user cap to $D=1$. The independent hash, committing,
+and discoverability results follow afterward. The CMTDs-4, collision,
+second-preimage, and preimage random-oracle bounds are proved in
+\Cref{sec:cmtds3}; the remaining committing-notion bounds live in
+\Cref{app:committing-transfer}.
+All random-oracle adversaries in this subsection are flat-RO adversaries
+(\Cref{sec:ro-model}) with the displayed resources, and the
+flat-sponge lift of
+\Cref{app:flat-sponge-lift} instantiates each random-oracle bound at $\qRO =
 \Nprim$ when transferring to the public-permutation setting.
 
-\paragraph{Privacy envelope.}
-Define
+\begin{theorem}[Random-Oracle Multi-User Indistinguishability]
+\label{thm:mu-ind-ro}
+For every flat-RO mu-ind adversary $\mathcal{B}$ with
+execution-uniform user cap $D$ and resource counts of
+\Cref{sec:mu-setting},
 \[
-  \Epspriv(\QRO) = \sup\bigl\{
-    \Adv^{\mathsf{priv}}_{\RO}(\mathcal{B}) :
-    \qRO(\mathcal{B}) \leq \QRO
-  \bigr\},
+  \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})
+  \;\leq\;
+  \frac{D(D - 1)}{2^{k + 1}}
+  + D \cdot \KeyGuess_k(\qRO(\mathcal{B}))
+  + \frac{\nleaf(\mathcal{B})\bigl(\nleaf(\mathcal{B}) - 1\bigr)}
+         {2^{\tauleaf + 1}}
+  + \frac{\qv(\mathcal{B})}{2^{\tauroot}}.
 \]
-the supremum taken over nonce-respecting privacy adversaries against
-$\Enc_K^\RO$. The flat-RO privacy theorem of \Cref{sec:privacy} gives
+\end{theorem}
+
+\begin{proof}
+Use the pre-sampled-key formulation of \Cref{sec:mu-setting}: sample
+keys $K_1,\dots,K_D$ at the start of the experiment, and let the $d$-th
+$\mathsf{New}$ call activate $K_d$, unused keys being ignored.
+Let $\mathsf{coll}$ denote the event that two of the pre-sampled keys
+$K_1,\dots,K_D$ collide;
+$\Pr[\mathsf{coll}] \leq \binom{D}{2}/2^k = D(D-1)/2^{k+1}$ by union
+bound. In the random-oracle model, use a standard hybrid over the $D$
+users: $H_d$ answers users $1,\dots,d$ with $(\Rand,\Replay)$ and
+users $d+1,\dots,D$ with the real construction interface, so $H_0$ is
+the real mu-ind game and $H_D$ is the ideal one. Let $H_d^\star$ be
+$H_d$ with a fixed output bit on $\mathsf{coll}$. Since
+$\mathsf{coll}$ has the same probability in all hybrids,
 \[
-  \Epspriv(\QRO) \leq \KeyGuess_k(\QRO).
+  \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})
+  \leq
+  \Pr[\mathsf{coll}]
+  +
+  \bigl|\Pr[\mathcal{B}^{H_0^\star} \Rightarrow 1]
+       - \Pr[\mathcal{B}^{H_D^\star} \Rightarrow 1]\bigr|.
+\]
+By the triangle inequality, it remains to bound each adjacent stopped
+hybrid. For each $d$, \Cref{lem:mu-adjacent-hybrid} gives
+\[
+  \bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
+       - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr|
+  \leq
+  \KeyGuess_k(\qRO(\mathcal{B}))
+  + \frac{\nleaf^{(d)}(\nleaf^{(d)}-1)}{2^{\tauleaf+1}}
+  + \frac{\qv^{(d)}}{2^{\tauroot}}.
 \]
 
-\paragraph{INT-CTXT envelope.}
-Define
+Summing across $d = 1,\dots,D$ gives
+$D \KeyGuess_k(\qRO(\mathcal{B}))$ for the key-test contribution. The
+leaf-collision contribution satisfies
 \[
-\begin{aligned}
-  \Epsintctxt(\QRO, \Nleaf, \Qv)
-  = \sup\bigl\{&
-    \Adv^{\mathsf{int\text{-}ctxt}}_{\RO}(\mathcal{B}) : \\
-  & \qRO(\mathcal{B}) \leq \QRO,\,
-    \nleaf(\mathcal{B}) \leq \Nleaf,\,
-    \qv(\mathcal{B}) \leq \Qv
-  \bigr\}.
-\end{aligned}
+  \sum_d \frac{\nleaf^{(d)}(\nleaf^{(d)} - 1)}{2^{\tauleaf + 1}}
+  = \frac{1}{2^{\tauleaf}} \sum_d \binom{\nleaf^{(d)}}{2}
+  \leq \frac{1}{2^{\tauleaf}} \binom{\sum_d \nleaf^{(d)}}{2}
+  = \frac{\nleaf(\mathcal{B})\bigl(\nleaf(\mathcal{B}) - 1\bigr)}
+          {2^{\tauleaf + 1}},
 \]
-The flat-RO INT-CTXT theorem of \Cref{sec:authenticity} gives
+because the unordered pairs drawn within the per-user blocks are a
+subset of all unordered pairs among $\sum_d \nleaf^{(d)} =
+\nleaf(\mathcal{B})$ items. The verification-tag contribution satisfies
 \[
-  \Epsintctxt(\QRO, \Nleaf, \Qv)
-  \leq \KeyGuess_k(\QRO)
-   + \frac{\Nleaf(\Nleaf - 1)}{2^{\tauleaf + 1}}
-   + \frac{\Qv}{2^{\tauroot}}.
+  \sum_d \qv^{(d)} / 2^{\tauroot}
+  = \qv(\mathcal{B}) / 2^{\tauroot}.
 \]
+Combining these estimates with the $\mathsf{coll}$ penalty gives the
+stated RO bound.
+\end{proof}
+
+\begin{theorem}[Multi-User Indistinguishability]
+\label{thm:mu-ind}
+For every mu-ind adversary $\mathcal{A}$ against \TW{} with
+execution-uniform user cap $D$ and the global resources of
+\Cref{sec:mu-setting},
+\[
+  \Advmuind_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \frac{D(D - 1)}{2^{k + 1}}
+  + D \cdot \KeyGuess_k(\Nprim)
+  + \frac{\Nleaf(\Nleaf - 1)}{2^{\tauleaf + 1}}
+  + \frac{\Qv}{2^{\tauroot}}.
+\]
+\end{theorem}
+
+\begin{proof}
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+mu-ind game, there is a random-oracle mu-ind adversary
+$\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ with
+$\qRO(\mathcal{B}) \leq \Nprim$, $\nleaf(\mathcal{B}) \leq \Nleaf$,
+$\qv(\mathcal{B}) \leq \Qv$, and the per-user construction-side caps of
+\Cref{sec:mu-setting} such that
+\[
+  \Advmuind_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B}).
+\]
+\Cref{thm:mu-ind-ro} bounds the random-oracle term. Substituting
+$\qRO(\mathcal{B}) \leq \Nprim$,
+$\nleaf(\mathcal{B}) \leq \Nleaf$, and
+$\qv(\mathcal{B}) \leq \Qv$ gives the stated bound.
+\end{proof}
+
+\begin{corollary}[All-in-One AE Security]
+\label{thm:ae}
+For every nonce-respecting AE adversary $\mathcal{A}$ against \TW{}
+with the resources of \Cref{sec:resources},
+\[
+  \Advae_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \KeyGuess_k(\Nprim)
+  + \frac{\Nleaf(\Nleaf - 1)}{2^{\tauleaf + 1}}
+  + \frac{\Qv}{2^{\tauroot}}.
+\]
+\end{corollary}
+
+\begin{proof}
+Build a mu-ind adversary $\mathcal{A}^{\mu}$ that makes one
+$\mathsf{New}$ query, runs $\mathcal{A}$, and forwards each
+encryption and verification query of $\mathcal{A}$ to user $1$. The
+primitive interface is forwarded unchanged. The real and ideal views of
+$\mathcal{A}$ in the all-in-one AE experiment are exactly the real and
+ideal views of $\mathcal{A}^{\mu}$ in the mu-ind experiment with
+$D = 1$, and the resource counts are unchanged. Applying
+\Cref{thm:mu-ind} with $D = 1$ eliminates the key-collision term and
+gives the stated bound.
+\end{proof}
+
+\paragraph{Hash and committing random-oracle bounds.}
+The remaining public-permutation statements use the following
+random-oracle bounds for the root-tag wrapper and committing games.
 
 \paragraph{CMTDs-4 bound.}
 The flat-RO CMTDs-4 theorem of \Cref{sec:cmtds3} is the
@@ -196,8 +309,8 @@ root-preimage bound
 \]
 again with no key-guessing term, by the same adversary-supplied-key
 accounting, and no leaf-collision term, since a single submitted input
-admits no pairwise leaf-tag collision case. A single context replaces
-the $s$ tuples, so the candidate-collision argument becomes a
+admits no pairwise leaf-tag collision case. With a single context, the
+candidate-collision argument becomes a
 candidate-preimage argument against the query-independent target tag
 and no triple-separation is invoked.
 
@@ -210,165 +323,14 @@ derived flat-RO adversary
 $\mathcal{B} = \mathcal{B}_{\text{derived}}(\mathcal{A})$ whose simulator
 answers induce at most one $\ROflat$ call each
 (\Cref{lem:sim-ro-call-filter}), so $\qRO(\mathcal{B}) \leq \Nprim$. The
-random-oracle envelopes of \Cref{sec:thms-pp} are therefore instantiated
+random-oracle bounds of \Cref{sec:thms-pp} are therefore instantiated
 at $\Nprim$ rather than $\Ntot$; the committing, hash, and discoverability
 challengers' encryption and decryption checks are construction-internal
 and counted in $N$.
 
-\subsection{Headline Theorems}
-\label{sec:headline}
-
-\TW{} delivers its headline guarantees in the lifted
-public-permutation model of \Cref{sec:games-pp}: all-in-one AE
-security \cite{RS06}, its multi-user indistinguishability lift
-\cite{BT16}, and the commitment security of the root tag
-(\Cref{sec:commit-defs}). The last is stated as the \cite{RS04} hash
-security of the wrapper $\HTW$---collision, second-preimage, and preimage
-resistance. Collision resistance yields the \cite{BH22} full-input
-CMTDs-4 committing notion only as a weaker implication; the sharper
-no-$\LeafColl$ CMTDs-4 bound stated below comes instead from a dedicated
-root-collision derivation. The \cite{MLGR23} context-discoverability
-notion, a ciphertext-level guarantee distinct from preimage resistance,
-is established separately (\Cref{thm:cdy-full}). For
-the AE-style notions the ideal side
-exposes the BDPV simulator; the committing, hash, and discoverability bounds
-remain real public-permutation success probabilities.
-\Cref{thm:ae,thm:mu-ind,thm:coll,thm:asec,thm:pre,cor:cmtds4,thm:cdy-full}
-state these bounds in terms of the loss terms $\Lift_c$, $\KeyGuess_k$,
-$\RootColl_\tau$, $\LeafColl_\tau$, and $\RootPre_\tau$ of
-\Cref{sec:loss-terms} and the random-oracle envelopes $\Epspriv$,
-$\Epsintctxt$ of \Cref{sec:thms-pp}, both established above.
-
-\begin{theorem}[All-in-One AE Security]
-\label{thm:ae}
-For every nonce-respecting AE adversary $\mathcal{A}$ against \TW{}
-with the resources of \Cref{sec:resources},
-\[
-  \Advae_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot)
-  + \Epspriv(\Nprim)
-  + \Epsintctxt(\Nprim, \Nleaf, \Qv).
-\]
-\end{theorem}
-
-\begin{proof}
-By the Lift Application corollary (\Cref{cor:lift-application}) for the
-all-in-one AE game, there is a random-oracle AE adversary
-$\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ with
-$\qRO(\mathcal{B}) \leq \Nprim$, $\nleaf(\mathcal{B}) \leq \Nleaf$, and
-$\qv(\mathcal{B}) \leq \Qv$ such that
-\[
-  \Advae_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot) + \Adv^{\mathsf{ae}}_{\RO}(\mathcal{B}).
-\]
-The all-in-one composition lemma (\Cref{lem:bn-composition}), applied
-in the random-oracle model, gives
-\[
-  \Adv^{\mathsf{ae}}_{\RO}(\mathcal{B})
-  \;\leq\;
-  \Adv^{\mathsf{priv}}_{\RO}(\mathcal{B}_{\text{priv}})
-  + \Adv^{\mathsf{int\text{-}ctxt}}_{\RO}(\mathcal{B}_{\text{int-ctxt}}),
-\]
-for derived adversaries $\mathcal{B}_{\text{priv}}$ (which runs
-$\mathcal{B}$, records the outputs of its encryption-oracle queries,
-and answers each verification query by replay-table lookup) and
-$\mathcal{B}_{\text{int-ctxt}}$ (which runs $\mathcal{B}$, forwards
-encryption and verification queries to its own oracles, and halts on
-the first accepting non-replay verification response), both inheriting
-$\mathcal{B}$'s $(\qRO, \nleaf, \qv)$. Because $\mathcal{B}_{\text{priv}}$
-forwards $\mathcal{B}$'s encryption queries unchanged and $\mathcal{B}$
-inherits the nonce-respecting discipline of $\mathcal{A}$, the adversary
-$\mathcal{B}_{\text{priv}}$ is itself nonce-respecting, so the privacy
-envelope of \Cref{sec:thms-pp} applies.
-Substituting the random-oracle envelopes of \Cref{sec:thms-pp} gives
-the stated bound.
-\end{proof}
-
-\begin{theorem}[Multi-User Indistinguishability]
-\label{thm:mu-ind}
-For every mu-ind adversary $\mathcal{A}$ against \TW{} with
-execution-uniform user cap $D$ and the global resources of
-\Cref{sec:mu-setting},
-\[
-  \Advmuind_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot)
-  + \frac{D(D - 1)}{2^{k + 1}}
-  + D \cdot \KeyGuess_k(\Nprim)
-  + \frac{\Nleaf(\Nleaf - 1)}{2^{\tauleaf + 1}}
-  + \frac{\Qv}{2^{\tauroot}}.
-\]
-\end{theorem}
-
-\begin{proof}
-Use the pre-sampled-key formulation of \Cref{sec:mu-setting}: sample
-keys $K_1,\dots,K_D$ at the start of the experiment, and let the $d$-th
-$\mathsf{New}$ call activate $K_d$, unused keys being ignored. By the
-Lift Application corollary (\Cref{cor:lift-application}) for the mu-ind
-game, there is a random-oracle mu-ind adversary
-$\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ with
-$\qRO(\mathcal{B}) \leq \Nprim$ and the per-user construction-side caps
-of \Cref{sec:mu-setting} such that
-\[
-  \Advmuind_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot) + \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B}).
-\]
-Let $\mathsf{coll}$ denote the event that two of the pre-sampled keys
-$K_1,\dots,K_D$ collide;
-$\Pr[\mathsf{coll}] \leq \binom{D}{2}/2^k = D(D-1)/2^{k+1}$ by union
-bound. In the random-oracle model, use a standard hybrid over the $D$
-users: $H_d$ answers users $1,\dots,d$ with $(\Rand,\Replay)$ and
-users $d+1,\dots,D$ with the real construction interface, so $H_0$ is
-the real mu-ind game and $H_D$ is the ideal one. Let $H_d^\star$ be
-$H_d$ with a fixed output bit on $\mathsf{coll}$. Since
-$\mathsf{coll}$ has the same probability in all hybrids,
-\[
-  \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})
-  \leq
-  \Pr[\mathsf{coll}]
-  +
-  \bigl|\Pr[\mathcal{B}^{H_0^\star} \Rightarrow 1]
-       - \Pr[\mathcal{B}^{H_D^\star} \Rightarrow 1]\bigr|.
-\]
-By the triangle inequality, it remains to bound each adjacent stopped
-hybrid.
-For each $d$, \Cref{lem:mu-single-user-envelope} gives the adjacent
-hybrid bound
-\[
-  \bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
-       - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr|
-  \leq
-  \KeyGuess_k(\qRO(\mathcal{B}))
-  + \frac{\nleaf^{(d)}(\nleaf^{(d)}-1)}{2^{\tauleaf+1}}
-  + \frac{\qv^{(d)}}{2^{\tauroot}}.
-\]
-
-Using $\qRO(\mathcal{B}) \leq \Nprim$, each hybrid step costs
-$\KeyGuess_k(\Nprim)$ plus the per-user leaf-collision and
-verification-tag terms. Summing across $d = 1,\dots,D$ gives
-$D \KeyGuess_k(\Nprim)$ for the key-guess contribution. The
-leaf-collision contribution satisfies
-\[
-  \sum_d \frac{\nleaf^{(d)}(\nleaf^{(d)} - 1)}{2^{\tauleaf + 1}}
-  = \frac{1}{2^{\tauleaf}} \sum_d \binom{\nleaf^{(d)}}{2}
-  \leq \frac{1}{2^{\tauleaf}} \binom{\sum_d \nleaf^{(d)}}{2}
-  \leq \frac{\Nleaf(\Nleaf - 1)}{2^{\tauleaf + 1}},
-\]
-the first inequality because the unordered pairs drawn within the
-per-user blocks are a subset of all unordered pairs among
-$\sum_d \nleaf^{(d)}$ items, and the second by
-$\sum_d \nleaf^{(d)} = \nleaf \leq \Nleaf$ and monotonicity of
-$\binom{\cdot}{2}$. The verification-tag contribution satisfies
-\[
-  \sum_d \qv^{(d)} / 2^{\tauroot}
-  \leq \Qv / 2^{\tauroot}.
-\]
-Combining with the $\mathsf{coll}$ penalty $D(D-1)/2^{k+1}$ and
-$\Lift_c(\Ntot)$ yields the stated bound.
-\end{proof}
+\paragraph{Public-permutation hash, committing, and discoverability
+bounds.}
+Applying the same lift gives the remaining headline bounds.
 
 \begin{theorem}[Collision Resistance of $\HTW$]
 \label{thm:coll}
@@ -420,9 +382,9 @@ monotone form of \Cref{cor:lift-application} gives the stated bound.
 Collision resistance (\Cref{thm:coll}) already implies eSec and hence Sec
 in the sense of \cite{RS04}, both with the looser root-collision term; the
 always-notion is the one \cite{RS04} shows collision resistance does not
-imply, and the direct argument replaces that birthday term by the linear
-root-preimage term, the second preimage being sought against the single
-fixed tag $\HTW(X)$ of the challenge input $X$.
+imply. Here the second preimage is sought against the single fixed tag
+$\HTW(X)$ of the challenge input $X$, yielding the linear root-preimage
+term.
 \end{proof}
 
 \begin{corollary}[CMTDs-4 Committing Security]
@@ -443,15 +405,13 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
 A CMTDs-4 winner exhibits $s$ distinct inputs $(K_i,N_i,A_i,M_i)$ whose
 encryptions share one common ciphertext $C \concat T$; in particular they
 share the tag $T$, so they are an $s$-way collision of $\HTW$, and
-$\Advcmtds{4}_\TW \leq \AdvColl_\TW$. The sharper no-$\LeafColl$ bound is
-not obtained by specializing the displayed bound of \Cref{thm:coll}, whose
-nonnegative $\LeafColl$ summand survives any restriction of the adversary
-class. It comes instead from the dedicated root-collision derivation of
-\Cref{thm:cmtds4-ro} for this all-bodies-equal case, lifted by
-\Cref{cor:lift-application}: the single shared body $C$ forces the triples
-$(K_i,N_i,A_i)$ pairwise distinct---by Opening Triple Separation
-(\Cref{cor:triple-sep})---so a leaf tag collision cannot merge two
-openings and no $\LeafColl$ term arises.
+$\Advcmtds{4}_\TW \leq \AdvColl_\TW$. For the displayed no-$\LeafColl$
+bound, use the dedicated root-collision derivation of \Cref{thm:cmtds4-ro}
+for this all-bodies-equal case, lifted by \Cref{cor:lift-application}: the
+single shared body $C$ forces the triples $(K_i,N_i,A_i)$ pairwise
+distinct---by Opening Triple Separation (\Cref{cor:triple-sep})---so a
+leaf tag collision cannot merge two openings and no $\LeafColl$ term
+arises.
 \end{proof}
 
 \begin{theorem}[Preimage Resistance of $\HTW$]
@@ -474,12 +434,9 @@ preimage game---whose target $T^*$ is fixed before the primitive
 sampling---the derived random-oracle adversary $\mathcal{B}$ has
 $\qRO(\mathcal{B}) \leq \Nprim$, and the random-oracle bound of
 \Cref{thm:pre-ro} is nondecreasing in $\qRO(\mathcal{B})$, so the monotone
-form of \Cref{cor:lift-application} gives the stated bound. Where
-\Cref{thm:coll} bounds the probability that $s$ distinct inputs share a
-tag, this bounds the probability that a single input reaches a tag fixed
-in advance: the candidate-collision argument of \Cref{thm:coll-ro} is
-replaced by the candidate-preimage argument of \Cref{thm:pre-ro}, dropping
-the exponent from $\tauroot(s-1)$ to $\tauroot$.
+form of \Cref{cor:lift-application} gives the stated bound. With one fixed
+target tag, \Cref{thm:pre-ro} applies a candidate-preimage bound against
+that target and drops the exponent from $\tauroot(s-1)$ to $\tauroot$.
 \end{proof}
 
 \begin{theorem}[Context Discoverability \textnormal{of} \cite{MLGR23}]
@@ -562,7 +519,7 @@ The implemented parameters of \Cref{sec:params} fix
 \]
 Substituting into
 \Cref{thm:ae,thm:mu-ind,thm:coll,thm:asec,cor:cmtds4,thm:pre,thm:cdy-full}
-and using the random-oracle envelopes of \Cref{sec:thms-pp} gives the
+and using the random-oracle bounds of \Cref{sec:thms-pp} gives the
 following closed-form bounds.
 
 \paragraph{All-in-one AE.}
@@ -570,7 +527,7 @@ following closed-form bounds.
   \Advae_\TW(\mathcal{A})
   \;\leq\;
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
-  + \frac{2 \Nprim + \Qv}{2^{256}}
+  + \frac{\Nprim + \Qv}{2^{256}}
   + \frac{\Nleaf(\Nleaf - 1)}{2^{257}}.
 \]
 
@@ -604,8 +561,7 @@ For $s=2$, this is the ordinary two-input collision bound:
 \]
 
 \paragraph{Always-second-preimage resistance of $\HTW$.}
-The linear root-preimage term replaces the collision bound's birthday
-root term:
+The root-preimage contribution is linear in the primitive-query budget:
 \[
   \AdvaSec_\TW(\mathcal{A})
   \;\leq\;
@@ -662,8 +618,8 @@ CMTD-4 statement of \cite{BH22}:
 Under the implemented parameters $k = c = \tauroot = \tauleaf = 256$, every
 adversary with work cap $\Ntot \leq 2^{63}$---and, in the multi-user case,
 user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
-\TW{}'s notions: all-in-one AE (\Cref{thm:ae}), multi-user
-indistinguishability (\Cref{thm:mu-ind}), the \cite{RS04} hash security of
+\TW{}'s notions: multi-user indistinguishability (\Cref{thm:mu-ind}),
+all-in-one AE (\Cref{thm:ae}), the \cite{RS04} hash security of
 $\HTW$---$s$-way collision resistance for every $s \geq 2$, always-second-preimage
 resistance, and preimage resistance
 (\Cref{thm:coll,thm:asec,thm:pre})---the \cite{BH22}
@@ -675,7 +631,7 @@ context discoverability (\Cref{thm:cdy-full}).
 The claim instantiates the closed forms of \Cref{sec:concrete}
 under the resource consequences of \Cref{sec:resources}: $\Nprim \leq
 \Ntot$ by definition, and the pathwise bounds $\qv \leq N$ and
-$\nleaf \leq N$ let the envelope parameters $\Qv$ and $\Nleaf$ be taken at
+$\nleaf \leq N$ let the resource caps $\Qv$ and $\Nleaf$ be taken at
 most $\Ntot$, so no separate top-level cap on $\Qv$ or $\Nleaf$ is
 required; because $\Ntot = N + \Nprim$ counts construction-internal calls
 and direct queries disjointly, the same bound $\nleaf \leq N$ yields the
@@ -714,8 +670,8 @@ CDY \cite{MLGR23} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 Term by term at the cap, with $\Nprim, \Qv, \Nleaf \leq \Ntot$: the
 flat-sponge loss $\Lift_c(\Ntot)$ and any leaf tag birthday term
 $\Nleaf(\Nleaf-1)/2^{257}$ are each at most one $2^{-131}$-sized term;
-the linear key-guess and verification contributions
-$(2\Nprim+\Qv)/2^{256}$ are at most $3 \cdot 2^{-193}$; the two-key
+the AE linear key-guess and verification contributions
+$(\Nprim+\Qv)/2^{256}$ are at most $2 \cdot 2^{-193}$; the two-key
 root-collision term $\RootColl_{256}(\Nprim,2)$ likewise matches
 $\Lift_c$ as a $2^{-131}$-sized term and is $\binom{\Nprim+s}{s}/2^{256(s-1)}$,
 hence still well below $\Lift_c$ for $s \geq 3$ under the cap; the known-key $\LeafColl_{256}(\Nprim+\Nleaf)$, which the
@@ -772,16 +728,16 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
   generic preimage search against a fixed $\tau$-bit target matches the
   per-query $2^{-\tau}$ rate. It is the root term of the preimage (Pre),
   always-second-preimage (aSec), and discoverability bounds, where the
-  single fixed target replaces the birthday $\RootColl$ of the collision
-  bound by a linear term.
+  single fixed target yields a linear term.
 \item \emph{Leaf tag collision $\Nleaf (\Nleaf - 1) / 2^{\tauleaf +
-  1}$.} Tight for INT-CTXT, the notion it is proved against: by reusing
+  1}$.} Tight for verification security: by reusing
   a nonce, an adversary detects a leaf tag birthday collision through the
   matching root tags and splices the colliding leaf chunk into a fresh
   ciphertext that still verifies, forging at the leading
-  $\Nleaf^2 / 2^{\tauleaf + 1}$ rate. The AE and multi-user bounds carry
-  the term only through the INT-CTXT envelope; their nonce-respecting
-  encryption rules this attack out, so there it is inherited slack.
+  $\Nleaf^2 / 2^{\tauleaf + 1}$ rate. The mu-ind and all-in-one AE bounds
+  carry the term through the verification side of their real-vs-ideal
+  coupling; their nonce-respecting encryption rules this attack out, so
+  there it is inherited slack.
 \item \emph{Known-key leaf collision $\LeafColl_\tau(Q)$.} The same
   birthday attack applies when keys are adversary-supplied and direct
   queries can target leaf tag points; the collision and

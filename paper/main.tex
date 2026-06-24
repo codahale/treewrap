@@ -25,14 +25,15 @@
 
   We analyze \TW{} in the public-permutation model, proving each
   bound first against an intermediate random oracle and then transferring it
-  to the real permutation by the flat-sponge lift. We obtain concrete bounds for
-  all-in-one authenticated encryption, multi-user indistinguishability, and
-  the commitment security of the root tag. The last we obtain by proving that
+  to the real permutation by the flat-sponge lift. We prove a concrete
+  multi-user indistinguishability bound and derive all-in-one authenticated
+  encryption as its single-user corollary, alongside concrete bounds for the
+  commitment security of the root tag. The last we obtain by proving that
   the wrapper returning the tag is a secure hash of the $(K, N, A, M)$
   context---collision-, second-preimage-, and preimage-resistant in the
   standard hash-function sense---so the single root tag is a compact
   commitment; full-input committing security (\textsf{CMTDs-4}) follows as a
-  corollary, and we separately establish context discoverability. At
+  corollary, and we also establish context discoverability. At
   the implemented parameters these notions meet a $128$-bit security target.
   Vectorized \texttt{amd64} and \texttt{arm64}
   implementations realize the tree's leaf parallelism, reaching
@@ -45,8 +46,6 @@
 \input{sections/03-tw128}
 \input{sections/04-security-model}
 \input{sections/05-main-results}
-\input{sections/06-privacy}
-\input{sections/07-authenticity}
 \input{sections/08-commitment}
 \input{sections/09-performance}
 \input{sections/10-discussion}

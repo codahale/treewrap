@@ -11,9 +11,9 @@ games named once here.
 \begin{definition}[Single-Stage \TW{} Games]
 \label{def:single-stage-games}
 The \emph{single-stage \TW{} games} are the games of
-\Cref{sec:games-pp,sec:mu-setting}: privacy, INT-CTXT, all-in-one AE,
-mu-ind, CMTDs-4, the $\HTW$ collision, second-preimage, and preimage
-games, $\mathsf{CDY}^\ast[\mathsf{ts}]$, and CMTs-$\ell$ for
+\Cref{sec:games-pp,sec:mu-setting}: all-in-one AE, mu-ind, CMTDs-4,
+the $\HTW$ collision, second-preimage, and preimage games,
+$\mathsf{CDY}^\ast[\mathsf{ts}]$, and CMTs-$\ell$ for
 $\ell \in \{1,3,4\}$. In $\mathsf{CDY}^\ast[\mathsf{ts}]$ the selector
 encryption is construction-internal, counted in $N$ like a challenger
 check.
@@ -30,17 +30,16 @@ padded sponge over a random permutation --- after applying the
 $\padtenone$ transcript inputs. The superscript records that both
 simulator directions share the same internal lazy $\ROflat$ table.
 This is the simulator referenced by the \Cref{sec:games-pp,sec:mu-setting}
-definitions of $\Advpriv_\TW$, $\Advae_\TW$, and $\Advmuind_\TW$: the
-ideal side of each AE-style experiment exposes the construction
-interface specified by the game (either $\Rand$ or $(\Rand,\Replay)$,
-instantiated per user in mu-ind) together with
+definitions of $\Advae_\TW$ and $\Advmuind_\TW$: the ideal side of each
+AE-style experiment exposes the construction interface specified by the
+game ($(\Rand,\Replay)$, instantiated per user in mu-ind) together with
 $(\Sim^{\ROflat}, \Sim^{-1,\ROflat})$ as the public-primitive
 interface. The $\ROflat$ table in this notation is internal to the
 ideal system and is not an extra interface exposed to the application
-adversary; the INT-CTXT and committing-security advantages remain the
-real public-permutation success probabilities of \Cref{sec:games-pp},
-with the simulator appearing only inside the reduction to the
-corresponding random-oracle-model adversary.
+adversary; the committing-security advantages remain the real
+public-permutation success probabilities of \Cref{sec:games-pp}, with
+the simulator appearing only inside the reduction to the corresponding
+random-oracle-model adversary.
 
 \begin{lemma}[Simulator RO-Call Filter]
 \label{lem:sim-ro-call-filter}
@@ -176,7 +175,7 @@ Moreover, $\mathcal{B}_{\mathrm{derived}}$ inherits the construction-side
 caps of $\mathcal{A}$:
 \begin{align*}
   \qv(\mathcal{B}_{\mathrm{derived}}) &= \qv(\mathcal{A})
-    \quad\text{(INT-CTXT, AE, mu-ind)}, \\
+    \quad\text{(AE, mu-ind)}, \\
   \nleaf(\mathcal{B}_{\mathrm{derived}}) &\leq \nleaf(\mathcal{A})
     \quad\text{(all games above)}.
 \end{align*}
@@ -228,13 +227,13 @@ requested projection. Since \TW{} uses $r = r_{\max}$, the
 \cite[Theorem~3]{BDPV11} output post-processing does not alter \TW{}
 output bits. Thus simulator-induced direct queries and
 construction-internal lookups at the same bridged input are
-transcript-consistent. In the AE games, a simulator call whose input is
+transcript-consistent. In the AE-style games, a simulator call whose input is
 accepted by $\KeyedTWOut$ for the hidden key is still a direct
 $\ROflat$ query and is covered by the same
-$\badkey$ accounting used by the random-oracle
-privacy and INT-CTXT theorems. The derivation step itself does not
+$\badkey$ accounting used by the direct random-oracle mu-ind proof. The
+derivation step itself does not
 prove a key-guessing statement; it only supplies the derived
-adversary and the query bound at which the random-oracle envelopes of
+adversary and the query bound at which the random-oracle bounds of
 \Cref{sec:thms-pp} are instantiated.
 
 Finally, the execution-uniform caps of \Cref{sec:resources} hold
@@ -245,7 +244,7 @@ verification queries and forwards $\mathcal{A}$'s
 construction-interface queries unchanged along each trace.
 $\mathcal{B}_{\mathrm{derived}}$ therefore inherits the relevant
 construction resources: $\qv(\mathcal{B}_{\mathrm{derived}}) =
-\qv(\mathcal{A})$ in the INT-CTXT, AE, and mu-ind games, and
+\qv(\mathcal{A})$ in the AE and mu-ind games, and
 $\nleaf(\mathcal{B}_{\mathrm{derived}}) \leq \nleaf(\mathcal{A})$ for
 the distinct construction-generated final-leaf-transcript cap. In
 mu-ind, construction-interface forwarding preserves the
@@ -307,11 +306,3 @@ discoverability target $T^*$---the coupling holds for each fixed target
 and the target-independent bound holds for the maximum defining
 $\Adv^{\mathsf{G}}_\TW(\mathcal{A})$.
 \end{proof}
-
-The public-permutation privacy and INT-CTXT advantages are not stated as
-separate corollaries: the all-in-one AE theorem (\Cref{thm:ae}) applies
-the lift once to the all-in-one AE adversary and then splits the
-resulting random-oracle advantage into the privacy and INT-CTXT
-envelopes of \Cref{sec:thms-pp}, adding $\Lift_c(\Ntot)$ a single time
-rather than the two copies that lifting privacy and INT-CTXT separately
-would incur.

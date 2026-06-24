@@ -114,7 +114,7 @@ output, gives the preimage headline (\Cref{thm:pre}).
 
 \Cref{tab:params} lists the user-visible and derived scheme parameters.
 The implementation uses the same byte length for the root tag and each
-leaf tag, but the proofs of \Cref{sec:authenticity,sec:cmtds3} keep
+leaf tag, but the proofs of \Cref{sec:main-results,sec:cmtds3} keep
 $\tauroot$ and $\tauleaf$ as separate symbols.
 
 \begin{table}[ht]
@@ -184,7 +184,7 @@ this term at most $2^{-131}+2^{-194}$, and hence below $2^{-130}$.
 Setting $c = 256$ thereby delivers 128-bit single-key security on this term.
 Under the mu-ind
 bound of \Cref{sec:headline} the per-user security margin degrades by
-$\log D$ bits in $D$ users; the concrete $D$-indexed envelope appears in
+$\log D$ bits in $D$ users; the concrete $D$-indexed bound appears in
 \Cref{sec:concrete-claim}.
 
 \item $r = 1344$. With state width $b = 1600$ fixed by the
@@ -293,7 +293,7 @@ the phase, and the duplex-call position within that phase.
 \Cref{def:wf-transcripts} (Well-formed \TW{} transcript prefixes),
 \Cref{lem:transcript-inj} (Transcript Injectivity), and its structural
 corollaries formalize this parsing fact for the proofs of
-\Cref{sec:privacy,sec:authenticity,sec:cmtds3,app:committing-transfer}.
+\Cref{sec:main-results,sec:cmtds3,app:committing-transfer}.
 
 \subsection{Encryption}
 \label{sec:enc}
@@ -454,9 +454,9 @@ would have produced. The procedure
 absorbs ciphertext bytes before the final tag comparison, so the
 verification transcript is determined by $(K, N, A, C)$ for every
 in-domain ciphertext, accepting or not. This property is used by the
-authenticity proof of \Cref{sec:authenticity} to argue that
-encryption-first and verification-first transcript classes are well
-defined regardless of the tag-comparison outcome.
+direct mu-ind proof to argue that encryption-first and
+verification-first transcript classes are well defined regardless of the
+tag-comparison outcome.
 
 \begin{algorithm}[t]
   \caption{$\Dec_K(N, A, C \concat T)$.}
