@@ -308,7 +308,7 @@ treating the map from the encryption input to the tag as a hash function:
 write $\HTW(K, N, A, M)$ for the root tag $T$ of
 $\Enc_K(N, A, M) = C \concat T$, the \TW{} wrapper that discards the
 ciphertext body and returns only the tag. Keyed by the permutation, this
-is a hash family, and we ask that it satisfy the standard security notions
+is a hash family, and we ask that it satisfy the hash-function security notions
 of \cite{RS04}, over the \TW{} input domain:
 \begin{description}
   \item[Collision resistance (Coll).] No adversary finds distinct inputs

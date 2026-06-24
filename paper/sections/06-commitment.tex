@@ -98,8 +98,8 @@ with the common root ciphertext chunk this gives the same full $C$.
 \begin{lemma}[Root tag Candidate Sequence]
 \label{lem:root-candidate-seq}
 Consider a random oracle game of \Cref{sec:ro-model} in which the
-adversary $\mathcal{B}$ first makes direct $\ROflat$ queries and then
-outputs values on which the challenger runs $m \geq 1$ deterministic
+adversary $\mathcal{B}$ makes direct $\ROflat$ queries and the challenger
+runs $m \geq 1$ deterministic
 encryption or decryption checks, the $i$-th reaching a final root transcript $R_i$
 whose root tag is read by a single $\ROflat$ lookup at $\flatmap(R_i)$.
 Every execution then admits a chronological sequence of root tag inputs
@@ -129,9 +129,9 @@ The committing, discoverability, and hash (collision, second-preimage,
 and preimage) games are keyless: all keys are
 adversary-supplied, so a direct query to a keyed transcript is one of
 $\mathcal{B}$'s visible $\ROflat$ queries counted in $\qRO(\mathcal{B})$,
-and there is no $\badkey$ event. No construction oracle runs during the
-direct-query phase, so each direct-query candidate is first read no
-earlier than its append step. The append predicate depends on $Y$ alone
+and there is no $\badkey$ event. No construction oracle runs while
+$\mathcal{B}$ issues its direct queries, so each direct-query candidate is
+first read no earlier than its append step. The append predicate depends on $Y$ alone
 through the exact decoder of \Cref{lem:bridge-decode}, which ignores the
 requested output length, and by Output-Point Separation
 (\Cref{cor:output-sep}) each input decodes to at most one output-point
