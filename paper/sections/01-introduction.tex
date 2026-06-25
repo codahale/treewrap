@@ -3,7 +3,7 @@
 
 Authenticated encryption with associated data is the workhorse of applied
 cryptography, and the sponge and duplex constructions over a single public
-permutation offer an attractive route to it. The duplex of \cite{BDPV11} turns
+permutation offer an attractive way to realize it. The duplex of \cite{BDPV11} turns
 one permutation---here \Keccakp, the round-reduced permutation
 underlying the \cite{FIPS202} standard---into a single-pass authenticated cipher
 with a small, constant memory footprint and no separate block cipher or
@@ -15,7 +15,9 @@ This compactness comes at a structural cost. A duplex is inherently
 \emph{sequential}: each call absorbs its input into a state produced by the
 previous call, so a single duplex cannot exploit the wide SIMD and multicore
 parallelism of modern processors, on which competing designs built from AES
-reach many bytes per cycle. A second, orthogonal gap is \emph{commitment}.
+reach several bytes per cycle.
+
+A second, orthogonal gap is \emph{commitment}.
 Widely deployed AEADs such as AES-GCM and ChaCha20-Poly1305 are not
 key-committing: an adversary can craft a single ciphertext that decrypts to
 valid plaintexts under two or more keys \cite{DGRW18, ADGKLS22}. Far from a
@@ -40,18 +42,18 @@ uses for confidentiality and integrity.
 \TW{} (\emph{TreeWrap}) addresses both gaps with a two-level tree of keyed
 duplexes. A serial
 \emph{root} duplex, initialized with the key $K$ and nonce $N$, absorbs the
-associated data, encrypts the first message chunk, and absorbs a tag from every
-other chunk before emitting the final authentication tag. The remaining chunks
-are processed by independent \emph{leaf} duplexes, each keyed by $(K, N, j)$ and
+associated data, encrypts the first message chunk, and absorbs a tag from each
+of the remaining chunks before emitting the final authentication tag. Those
+chunks are processed by independent \emph{leaf} duplexes, each keyed by $(K, N, j)$ and
 operating on disjoint state and disjoint input. Because the leaves share nothing
 once $(K, N)$ is fixed, they can be evaluated in parallel across SIMD lanes,
-recovering the throughput a flat duplex forgoes; and because the root binds the
+recovering the throughput a flat duplex forgoes. Because the root binds the
 associated data, the first chunk, and every leaf tag into the single output tag,
 that tag is the output of the sponge on the entire $(K, N, A, M)$ input. The structure
-ensures only that distinct $(K, N, A)$ triples reach distinct root transcripts;
-the committing and context discoverability security rests on the
-indifferentiability of the sponge, which makes the root tag both collision- and
-preimage-resistant. Because both hold for the tag projection alone, the single
+guarantees only that distinct $(K, N, A)$ triples reach distinct root transcripts;
+committing and context discoverability security themselves rest on the sponge's
+indifferentiability, which makes the root tag both collision- and
+preimage-resistant. Because both properties hold for the tag projection alone, the single
 $256$-bit root tag is itself a secure, compact cryptographic commitment to the
 full $(K, N, A, M)$ context (\Cref{sec:cmtds3}). Every duplex
 still operates on a bounded $1600$-bit state, and the leaf tags are absorbed
