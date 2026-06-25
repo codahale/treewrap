@@ -50,7 +50,7 @@ once $(K, N)$ is fixed, they can be evaluated in parallel across SIMD lanes,
 recovering the throughput a flat duplex forgoes. Because the root binds the
 associated data, the first chunk, and every leaf tag into the single output tag,
 that tag is the output of the sponge on the entire $(K, N, A, M)$ input. The structure
-guarantees only that distinct $(K, N, A)$ triples reach distinct root transcripts;
+ensures only that distinct $(K, N, A)$ triples reach distinct root transcripts;
 committing and context discoverability security themselves rest on the sponge's
 indifferentiability, which makes the root tag both collision- and
 preimage-resistant. Because both properties hold for the tag projection alone, the single
@@ -70,7 +70,7 @@ full-input committing notion (\textsf{CMTDs-4}) follows as a corollary,
 alongside the \cite{MLGR23} context discoverability notion ($\mathsf{CDY}^\ast$). Each bound is
 proved first against an intermediate random oracle and then transferred to the
 real permutation by the flat sponge lift of \cite{BDPV08}. At the implemented parameters
-($k = c = \tauroot = \tauleaf = 256$), these guarantees meet a $128$-bit
+($k = c = \tauroot = \tauleaf = 256$), these bounds meet a $128$-bit
 security target for adversaries running up to $\Ntot \leq 2^{63}$ \Keccakp{}
 calls---on the order of $2^{71}$ bytes of processed data, beyond any realistic
 deployment lifetime. Optimized \texttt{amd64} and \texttt{arm64} implementations
@@ -113,7 +113,7 @@ of hardware-accelerated AES-128-GCM (\Cref{sec:performance}).
 \item \textbf{Context discoverability security.} We additionally prove that \TW{}
   satisfies the published \cite{MLGR23} context discoverability notion
   $\mathsf{CDY}^\ast$ and its per-component variants---a ciphertext-level
-  guarantee, distinct from preimage resistance of the tag, established with a
+  property, distinct from preimage resistance of the tag, established with a
   concrete bound (\Cref{thm:cdy-full})---so no adversary, given a target
   ciphertext fixed in advance, can find a decrypting context. This is the
   facet whose absence underlies the discovery attacks of \cite{MLGR23};
