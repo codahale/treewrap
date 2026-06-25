@@ -349,7 +349,7 @@ encryption reduction.
 
 \paragraph{Context discoverability.}
 Where committing security forbids two contexts from colliding on one
-ciphertext, \emph{context discoverability} \cite{MLGR23} forbids an
+ciphertext, \emph{context discoverability security} \cite{MLGR23} forbids an
 adversary from \emph{finding} a decrypting context for a target
 ciphertext: it is to committing security what preimage resistance is to
 collision resistance. \cite[Fig.~5]{MLGR23} formalize it as the game
@@ -369,7 +369,7 @@ variant the selector fixes the \emph{entire} target ciphertext.
 \cite{MLGR23} show that schemes which delegate authenticity to a
 non-preimage-resistant MAC, including \textsf{CCM}, \textsf{EAX},
 \textsf{SIV}, \textsf{GCM}, and \textsf{OCB3}, admit efficient
-discoverability attacks; the preimage character of the notion is what
+context discovery attacks; the preimage character of the notion is what
 makes \TW{}'s root tag, a sponge output, resist them.
 
 The preimage resistance of \HTW{} (ePre, above) is the tag-level preimage

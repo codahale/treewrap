@@ -8,21 +8,22 @@
 encryption schemes along the axes that distinguish it: the underlying primitive,
 whether the mode is parallelizable, the key, nonce, and tag sizes, associated data
 support, nonce-misuse resistance, full-input key commitment (\textsf{CMT-4}), and
-context discoverability (CDY).
+context discoverability security (CDY).
 The comparison is structural; \TW{}'s own concrete bounds and the regimes in
 which each term dominates are treated in \Cref{sec:bound-discussion}, and its
 measured throughput against hardware-accelerated AES-128-GCM in
 \Cref{sec:compare-perf}. The \textsf{CMT-4} column records full-input
 commitment: \TW{} provides it within the mode, as does Ascon \cite{KSW23}, a
 committing transform supplies it for an arbitrary base scheme, and the remaining
-listed schemes do not provide it. The CDY column records context discovery
-resistance in the \cite{MLGR23} sense: \TW{} provides it within the mode
+listed schemes do not provide it. The CDY column records context discoverability
+security in the \cite{MLGR23} sense: \TW{} provides it within the mode
 (\Cref{thm:cdy-full}), and the
-remaining entries are marked ``?'' because, to our knowledge, no
-discoverability result---attack or proof---has been published for them. Context
+remaining entries are marked ``?'' because, to our knowledge, neither a
+context discovery attack nor a context discoverability security proof has been
+published for them. Context
 discoverability is a recent notion \cite{MLGR23}, so its absence of entries
 reflects the state of the literature rather than a negative result; the schemes
-\cite{MLGR23} do break on discoverability (\textsf{GCM}, \textsf{CCM},
+\cite{MLGR23} break with context discovery attacks (\textsf{GCM}, \textsf{CCM},
 \textsf{EAX}, \textsf{SIV}, \textsf{OCB3}) are not among the rows above.
 The table does not separately track compact (tag-only) commitment, since
 that property has not been systematically analyzed for the comparison
@@ -111,7 +112,7 @@ second-preimage-, and preimage-resistant as a hash, which in particular yields
 the strongest full-input committing notion (\textsf{CMT-4})---as a proven,
 designed property of the mode, and additionally resists \cite{MLGR23} context
 discovery, established without leaving the single-permutation duplex
-setting; the discoverability guarantee in particular is not known to hold for
+setting; context discoverability security in particular is not known to hold for
 the other members of the family.
 
 \subsection{Comparison with Committing AEAD Constructions}
@@ -132,7 +133,7 @@ from a single root tag collision bound (\Cref{sec:cmtds3}). More strongly,
 \Cref{thm:coll} shows that the root tag alone is a compact commitment
 string even when the ciphertext bodies used as openings differ, up to the
 additional leaf tag birthday term. The same tag, being preimage-resistant,
-additionally yields context discoverability against that fixed tag, which the
+additionally yields context discoverability security against that fixed tag, which the
 context-committing transforms are not known to provide. This places \TW{}
 alongside the dedicated committing primitives---the compactly committing AEAD of
 \cite{GLR17} and the encryptment of \cite{DGRW18}---which likewise build
