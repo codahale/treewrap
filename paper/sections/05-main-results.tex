@@ -100,7 +100,7 @@ its single-user corollary, and the commitment security of the root tag
 (\Cref{sec:commit-defs}). The last is stated as the \cite{RS04} hash
 security of the wrapper $\HTW$---collision, second-preimage, and preimage
 resistance---together with the \cite{BH22} CMTDs-4 committing notion and
-the \cite{MLGR23} context discoverability notion. For the AE-style
+the \cite{MLGR23} $\mathsf{CDY}^\ast$ notion. For the AE-style
 notions the ideal side exposes the BDPV simulator; the committing, hash,
 and discoverability bounds remain real public permutation success
 probabilities.
@@ -460,7 +460,7 @@ target tag, \Cref{thm:epre-ro} applies a candidate-preimage bound against
 that target and drops the exponent from $\tauroot(s-1)$ to $\tauroot$.
 \end{proof}
 
-\begin{theorem}[Context Discoverability \textnormal{of} \cite{MLGR23}]
+\begin{theorem}[Context Discoverability ($\mathsf{CDY}^\ast$) \textnormal{of} \cite{MLGR23}]
 \label{thm:cdy-full}
 For every target specifier $\mathsf{ts} \subsetneq \{k, n, a\}$---so that
 at least one context component stays hidden---and every adversary
@@ -652,7 +652,7 @@ $\HTW$---$s$-way collision resistance for every $s \geq 2$, always second-preima
 resistance, and preimage resistance
 (\Cref{thm:coll,thm:asec,thm:epre})---the \cite{BH22}
 CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}), and \cite{MLGR23}
-context discoverability (\Cref{thm:cdy-full}).
+$\mathsf{CDY}^\ast$ (\Cref{thm:cdy-full}).
 \end{corollary}
 
 \begin{proof}
@@ -755,7 +755,7 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
 \item \emph{$\RootPre_\tau(Q) = (Q + 1) / 2^\tau$.} Tight at constants: a
   generic preimage search against a fixed $\tau$-bit target matches the
   per-query $2^{-\tau}$ rate. It is the root term of the preimage (ePre),
-  always second-preimage (aSec), and discoverability bounds, where the
+  always second-preimage (aSec), and discoverability ($\mathsf{CDY}^\ast$) bounds, where the
   single fixed target yields a linear term.
 \item \emph{Leaf tag collision $\Nleaf (\Nleaf - 1) / 2^{\tauleaf +
   1}$.} Tight for verification security: by reusing

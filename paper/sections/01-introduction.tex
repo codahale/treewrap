@@ -67,7 +67,7 @@ single-user corollary. We also prove commitment security of the root tag,
 stated as the \cite{RS04} hash security of the tag wrapper---collision,
 second-preimage, and preimage resistance---from which the \cite{BH22}
 full-input committing notion (\textsf{CMTDs-4}) follows as a corollary,
-alongside the \cite{MLGR23} context discoverability notion. Each bound is
+alongside the \cite{MLGR23} context discoverability notion ($\mathsf{CDY}^\ast$). Each bound is
 proved first against an intermediate random oracle and then transferred to the
 real permutation by the flat sponge lift of \cite{BDPV08}. At the implemented parameters
 ($k = c = \tauroot = \tauleaf = 256$), these guarantees meet a $128$-bit
@@ -220,7 +220,7 @@ multi-user indistinguishability notion of \cite{BT16}.
 intermediate random oracle model, and the resource accounting that
 all later bounds reference. \Cref{sec:main-results} states the
 headline mu-ind, AE, hash (collision, second-preimage, preimage), CMTDs-4,
-and context discoverability theorems and their
+and $\mathsf{CDY}^\ast$ theorems and their
 concrete \TW{}-parameter forms; \Cref{sec:cmtds3} proves the
 random oracle hash and CMTDs-4 bounds. \Cref{sec:performance} reports the
 performance of the reference and optimized implementations.
