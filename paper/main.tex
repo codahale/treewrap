@@ -16,28 +16,25 @@
 \begin{abstract}
   We present \TW{}, a nonce-based authenticated encryption mode with
   associated data built as a two-level tree of keyed duplexes over the
-  \Keccakp{} permutation. A serial root duplex binds
-  the key, nonce, and associated data, encrypts the first message chunk, and
-  aggregates a tag from every remaining chunk into a single authentication tag;
-  the remaining chunks are handled by independent leaf duplexes that share no
-  state once the key and nonce are fixed and can therefore be evaluated in
-  parallel across SIMD lanes.
-
-  We analyze \TW{} in the public permutation model, proving each
-  bound first against an intermediate random oracle and then transferring it
-  to the real permutation by the flat sponge lift. We prove a concrete
-  multi-user indistinguishability bound and derive all-in-one authenticated
-  encryption as its single-user corollary, alongside concrete bounds for the
-  commitment security of the root tag. The last we obtain by proving that
-  the wrapper returning the tag is a secure hash of the $(K, N, A, M)$
-  context---collision-, second-preimage-, and preimage-resistant in the
-  standard hash-function sense---so the single root tag is a compact
-  commitment; full-input committing security (\textsf{CMTDs-4}) follows as a
-  corollary, and we also establish context discoverability. At
-  the implemented parameters these notions meet a $128$-bit security target.
-  Vectorized \texttt{amd64} and \texttt{arm64}
-  implementations realize the tree's leaf parallelism, reaching
-  multi-gigabyte per second throughput, a factor of $1.3$ to $2$ below
+  \Keccakp{} permutation. A serial root duplex binds the key, nonce, and
+  associated data, encrypts the first message chunk, and aggregates a
+  contribution from every later chunk into one authentication tag; those chunks
+  are handled by independent leaf duplexes that, once the key and nonce are
+  fixed, share no state and can be evaluated in parallel across SIMD lanes. We
+  analyze \TW{} in the public permutation model, proving each bound first
+  against an intermediate random oracle and then transferring it to the real
+  permutation by the flat sponge lift. We prove a concrete multi-user
+  indistinguishability bound and derive all-in-one authenticated encryption as
+  its single-user corollary, together with bounds for the commitment security
+  of the root tag, which we obtain by proving that the wrapper returning the tag
+  is a secure hash of the $(K, N, A, M)$ context---collision-,
+  second-preimage-, and preimage-resistant in the standard hash-function
+  sense. The single root tag is thus a compact commitment; full-input
+  committing security (\textsf{CMTDs-4}) follows as a corollary, and we also
+  establish context discoverability. At the implemented parameters these
+  notions meet a $128$-bit security target. Vectorized \texttt{amd64} and
+  \texttt{arm64} implementations exploit the tree's leaf parallelism, exceeding
+  $10$\,Gbit/s and coming within a factor of $1.3$ to $2$ of
   hardware-accelerated AES-128-GCM.
 \end{abstract}
 
