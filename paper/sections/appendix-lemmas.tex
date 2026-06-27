@@ -6,8 +6,10 @@ accounting. The well-formed transcript language of
 \Cref{def:wf-transcripts} fixes which flattened queries are valid \TW{}
 construction prefixes.
 \Cref{lem:duplex-flat,lem:transcript-inj,lem:bridge-decode} then show
-how such a query is flattened, parsed as a typed transcript, assigned an
-output point, and decoded to a candidate key, when any.
+how such a query is flattened, parsed as a typed transcript, and
+assigned an output point; the exact keyed decoder of
+\Cref{def:keyed-twout} then decodes direct queries to candidate keys,
+when any.
 \Cref{lem:key-tests} turns those decoded keys into an adaptive key-test
 bound. The remaining proof interfaces expose the events their consumers
 must control: encryption-side freshness, verification hidden-key exposure
@@ -15,6 +17,24 @@ and root tag guessing, leaf tag collisions, and the committing
 candidate-sequence collision event. Thus
 the mu-ind and committing proofs only have to derive the relevant local
 event premise before applying the corresponding accounting argument.
+
+\paragraph{How to read this appendix.}
+\Cref{fig:lemma-dag} records the dependency graph. The Bridge \&
+Decode node is \Cref{lem:bridge-decode} together with the exact keyed
+decoder of \Cref{def:keyed-twout}; the Key-Indexed Renaming node
+(\Cref{lem:key-renaming}) supplies the key-field disjointness and
+renaming used by hidden-key encryption and verification accounting. The
+Adaptive Candidate node (\Cref{lem:adaptive-candidate}) is the generic
+probabilistic engine: it bounds the Leaf Tag Collision lemma
+(\Cref{lem:leaf-collision}) and, through the Root Tag Hash Bound
+(\Cref{lem:root-tag-hash}) of \Cref{sec:cmtds3}, the CMTDs-4,
+collision, preimage, and second-preimage proofs. The edge from
+\Cref{lem:transcript-inj} into the committing proofs is mediated by
+Opening Triple Separation (\Cref{cor:triple-sep}), Final-Root Input
+Separation (\Cref{prop:final-root-sep}), and \Cref{cor:output-sep}. The
+mu-ind proof reuses the same structural lemmas, adding freshness,
+key-test, leaf-collision, and verification-first root guessing
+accounting.
 
 \begin{figure}[t]
   \centering
@@ -94,39 +114,9 @@ event premise before applying the corresponding accounting argument.
     \end{scope}
   \end{tikzpicture}
   }
-  \caption{Dependency graph of the supporting lemmas in this
-    appendix and their consumers. Solid boxes are lemmas; dashed
-    boxes are the proof components that consume them. The Bridge \&
-    Decode box is \Cref{lem:bridge-decode} together with the exact
-    keyed decoder it specifies (\Cref{def:keyed-twout}); the Key-Indexed
-    Renaming box (\Cref{lem:key-renaming}) draws on it and on
-    \Cref{lem:transcript-inj} to supply the key-field disjointness and
-    renaming used by the hidden-key encryption and verification
-    accounting. The Adaptive
-    Candidate box (\Cref{lem:adaptive-candidate}) is the single
-    probabilistic engine: it bounds the Leaf Tag Collision lemma
-    (\Cref{lem:leaf-collision}) and, through the Root Tag Hash Bound
-    (\Cref{lem:root-tag-hash}) of \Cref{sec:cmtds3}, the CMTDs-4,
-    collision, preimage, and second-preimage proofs. The edge from
-    \Cref{lem:transcript-inj} into the committing proofs in
-    \Cref{sec:cmtds3} and the proof of \Cref{cor:committing-combined} is
-    mediated by Opening
-    Triple Separation (\Cref{cor:triple-sep}) for distinct contexts and
-    Final-Root Input Separation (\Cref{prop:final-root-sep})---which adds
-    the full-ciphertext recovery of \Cref{lem:leaf-recovery} for distinct
-    full inputs absent a leaf tag collision---together with
-    \Cref{cor:output-sep} for candidate-sequence filtering. The Leaf Tag Collision box feeds
-    the verification side of mu-ind through its hidden-key bound and the
-    committing collision and second-preimage proofs through its
-    adversary-supplied-key bound. The
-    edge from \Cref{lem:transcript-inj} into \Cref{lem:freshness} uses
-    \Cref{cor:output-sep}; the verification-first root tag guessing
-    accounting reached through the same separation is carried out in
-    \Cref{app:mu-verification-coupling}
-    (\Cref{lem:ver-first-root-guess}) and consumed by
-    \Cref{lem:mu-adjacent-hybrid}. The \Cref{lem:key-tests} edge
-    records the shared hidden-key $\badkey$ accounting used by the mu-ind
-    proof.}
+  \caption{Dependency graph of the supporting proof components in this
+    appendix and their consumers. Solid boxes are lemmas or local proof
+    interfaces; dashed boxes are proof components that consume them.}
   \label{fig:lemma-dag}
 \end{figure}
 
@@ -257,12 +247,25 @@ $\Rtag$ family) when $n \geq 1$, and by the closing $\sigmsglast$
 message call (an $\Rmsg^+$ prefix, in the notation of
 \Cref{cor:output-sep}) when $n = 0$ and the aggregation phase is elided.
 Since $n = \leaves(C)$ is fixed by $\|C\|$, every computation on a given
-ciphertext emits its tag at the one of these two output points selected
-by $\|C\|$.
+ciphertext emits its tag at the output point selected by $\|C\|$.
 Intermediate construction transcript lookup points (init, non-final
 AD, non-final message, and non-final aggregation) are also typed
 prefixes covered by \Cref{lem:bridge-decode}; the exact keyed
 direct-query decoder names them in \Cref{tab:keyed-twout}.
+
+\begin{definition}[Root Tag Output Point and Final Root Transcript Class]
+\label{def:root-tag-output-point}
+For any in-domain encryption or verification computation on ciphertext
+$C$, the \emph{root tag output point} is the construction lookup that
+emits the root tag: $\Rtag$ when $\leaves(C) \geq 1$, and the closing
+root message point $\Rmsg^+$ when $\leaves(C) = 0$ and aggregation is
+elided. The \emph{final root transcript class} of such a computation is
+the set of construction computations that realize the same bridged final
+root input at this root tag output point. A class is
+\emph{encryption-first} if its first construction generation is by an
+encryption query, and \emph{verification-first} if its first construction
+generation is by a non-replay verification query.
+\end{definition}
 
 \subsection{Transcript Injectivity}
 \label{app:lem-transcript-inj}
@@ -377,7 +380,7 @@ ciphertext blocks this recovers the same full absorbed ciphertext.
 \subsection{Bridge and Typed Decoding}
 \label{app:lem-bridge-decode}
 
-\begin{lemma}[Bridge and Typed Decoding]
+\begin{lemma}[Bridge Injectivity]
 \label{lem:bridge-decode}
 The random oracle games used in
 \Cref{sec:main-results,sec:cmtds3} and \Cref{cor:committing-combined} are
@@ -394,9 +397,7 @@ flattened input $\Flat(\cdot)$ of \Cref{app:wf-transcripts} applied to
 the duplex-call sequence of $X$, and $\bridge[r, r_{\max}]$ is the
 \cite{BDPV11} Theorem~3 preprocessing map. The induced map
 $X \mapsto \flatmap(X)$ is injective on well-formed typed \TW{} duplex
-transcript prefixes. The exact decoder $\KeyedTWOut$ of
-\Cref{def:keyed-twout} then maps any direct-query input to either $\bot$
-or a unique candidate key and counted output-point class.
+transcript prefixes.
 \end{lemma}
 
 \begin{proof}
@@ -424,16 +425,6 @@ that image. Direct adversary queries on inputs outside the bridged
 \TW{} well-formed transcript language still count in $\qRO(\mathcal{B})$
 (\Cref{sec:resources}) but cannot trigger
 $\badkey$.
-
-Counted transcript lookup points are the well-formed prefixes of
-\Cref{def:wf-transcripts} whose classes are listed in
-\Cref{tab:keyed-twout}: root or leaf initialization, root AD blocks,
-root and leaf message blocks, root aggregation blocks, and the final
-root tag point. An input accepted by $\KeyedTWOut$ therefore fixes a
-unique candidate key---by the injectivity just shown and the fixed-width
-key field of \Cref{lem:transcript-inj}---and a unique output-point class,
-by Output-Point Separation (\Cref{cor:output-sep}); inputs outside this
-well-formed transcript language decode to none.
 \end{proof}
 
 The bridge injectivity established here underlies Opening Triple
@@ -475,9 +466,10 @@ instances, with fixed-width fields, so it fixes the instance type (by
 $\prfxroot$ vs $\prfxleaf$), the $(K, N)$ pair, and the leaf index $j$;
 within each instance type the phase suffixes are pairwise distinct, so the
 recovered instance type together with the final-call suffix fixes the
-output-point class, and each prefix therefore lies in exactly one class. Conversely, two distinct well-formed prefixes in the same
-class on the same instance differ in some recovered call's $\sigma$ or in
-the sequence length, hence in their flattened inputs.
+output-point class, and each prefix therefore lies in exactly one class.
+Conversely, two distinct well-formed prefixes in the same class on the
+same instance differ in some recovered call's $\sigma$ or in the
+sequence length, hence in their flattened inputs.
 \end{proof}
 
 \begin{definition}[Exact Keyed Decoder]
@@ -497,14 +489,22 @@ such prefix exists, $\KeyedTWOut(Y) = \bot$. In particular, inputs with
 the right final suffix but a malformed phase order, noncanonical block
 partition, malformed aggregation string, or out-of-range leaf index are
 outside the well-formed language and decode to $\bot$. A non-$\bot$
-decoding fixes not only the candidate key $K$ but the candidate context
-components present in the decoded prefix: the nonce $N$ occupies the
-remaining fixed-width init-field slot, and the associated data $A$ is
-read off the recovered associated data blocks. We use the key projection
-$(K, \mathcal{C})$ throughout; when a game hides a single context
-component $Z \in \{K, N, A\}$, the same decoding returns that component's
-candidate value, which we denote $\KeyedTWOut_Z(Y)$.
+decoding always fixes the candidate key $K$ and nonce $N$ in the
+fixed-width initialization field. It fixes the associated data $A$ only
+for root prefixes whose recovered phase order determines the complete AD
+string: a final AD prefix, or any later root message or aggregation
+prefix, with absence of AD calls determining $A=\varepsilon$. We use the
+key projection $(K,\mathcal{C})$ throughout. When a game hides a single
+context component $Z \in \{K,N,A\}$, write $\KeyedTWOut_Z(Y)$ for the
+decoded value of that component when it is determined, and $\bot$
+otherwise.
 \end{definition}
+
+By \Cref{lem:bridge-decode,cor:output-sep}, $\KeyedTWOut$ is well
+defined: a bridged input cannot parse as two distinct counted
+well-formed prefixes, and an accepted input fixes a unique candidate key
+and output-point class. Inputs outside this well-formed transcript
+language decode to $\bot$.
 
 \begin{table}[ht]
   \centering
@@ -674,15 +674,24 @@ independent of the conditioning, so its $\tau$-bit projection equals $t$
 with probability $2^{-\tau}$. If position $j$ is never appended, $E_j$ is
 false. A union bound over the $L$ positions gives the claim.
 
-\emph{Second-preimage corollary.} Expose $\ROflat(Y_{j_0})$ at the
-designated candidate's append step, which predictability and unrevealed
-value license; this fixes $t = \bigl\lfloor \ROflat(Y_{j_0})
-\bigr\rfloor_\tau$ as a target independent of the remaining candidates.
-Applying the preimage part to the $L-1$ candidates $j \neq j_0$, each
-still unrevealed when appended, gives
-$\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$; the designated
-candidate is excluded, so its trivially-equal projection does not enter
-the count.
+\emph{Second-preimage corollary.} If the designated position $j_0$ is
+not appended, the event is false. Otherwise split the other candidates
+according to whether they occur before or after $j_0$. For earlier
+candidates, condition on any positive-probability prefix immediately
+before $Y_{j_0}$ is appended, including the already sampled projections
+of candidates $1,\dots,j_0-1$. The value $\ROflat(Y_{j_0})$ is then
+fresh and uniform, so its $\tau$-bit projection hits one of those at most
+$j_0-1$ earlier projections with probability at most
+$(j_0-1)2^{-\tau}$. For a later candidate $Y_j$, $j>j_0$, condition on
+the full prefix immediately before it is appended, including the fixed
+projection $t_0 = \lfloor\ROflat(Y_{j_0})\rfloor_\tau$. The value
+$\ROflat(Y_j)$ is fresh and uniform at its append step, so it hits
+$t_0$ with probability $2^{-\tau}$. A union bound over the at most
+$L-j_0$ later candidates gives an additional $(L-j_0)2^{-\tau}$.
+Adding the two sides gives
+$\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$; the
+designated candidate is excluded, so its trivially equal projection does
+not enter the count.
 \end{proof}
 
 \subsection{Adaptive Key Tests}
@@ -946,19 +955,10 @@ independently of the conditioned information.
 
 The direct mu-ind adjacent-hybrid proof uses the generic key-test and
 leaf-collision accounting lemmas together with the verification-specific
-facts below. The \emph{root tag output point} of a computation is the
-output point that emits its root tag: $\Rtag$ (suffix \sigagglast) when
-$n \geq 1$, and the closing root message point $\Rmsg^+$ (suffix
-\sigmsglast) when $n = 0$ and the aggregation phase is elided
-(\Cref{sec:enc}). Because $n = \leaves(C)$ is fixed by $\|C\|$, all
-computations on a common ciphertext share the same root tag output
-point. A \emph{final root transcript class} is the set of
-construction computations whose encryption or verification computation
-realizes the same bridged final root input at this root tag output point.
-Such a class is \emph{encryption-first} if its first construction
-generation is by an encryption query, and \emph{verification-first} if
-its first construction generation is by a non-replay verification
-query.
+facts below. We use the root tag output point and final root transcript
+classes of \Cref{def:root-tag-output-point}; in particular, computations
+on a common ciphertext share the same root tag output point because
+$\leaves(C)$ is fixed by $\|C\|$.
 
 \begin{lemma}[Verification Visible-Prefix Key Uniformity]
 \label{lem:ver-key-uniformity}
@@ -1027,6 +1027,30 @@ key $K_1 \notin S_i$. Since $K$ is initially uniform and the condition
 $S_i$, all keys in $\bits^k \setminus S_i$ remain equally likely.
 \end{proof}
 
+\paragraph{Foreign-key key-test claim.}
+In the pre-sampled-key mu-ind environment of
+\Cref{lem:mu-adjacent-hybrid}, fix user $d$ and work in the original
+experiment, where the key-collision branch outputs a fixed bit rather
+than conditioning on pairwise distinct keys. Let $\badkey^{(d)}$ be the
+event that a direct $\ROflat$ query decodes under $\KeyedTWOut$ to
+$K_d$ and a counted output-point class. Then
+\[
+  \Pr[\badkey^{(d)}] \leq \KeyGuess_k(\qRO(\mathcal{B})).
+\]
+Fix the foreign keys and leave their transcript addresses unchanged.
+Before the first user-$d$ key hit, the visible prefix is invariant under
+renaming $K_d$ among keys that have not already been tested and are not
+equal to a fixed foreign key, by the same online coupling as
+\Cref{lem:ver-key-uniformity} and the key-field disjointness of
+\Cref{lem:key-renaming}. For each fresh candidate key tested by one of
+$\mathcal{B}$'s direct $\ROflat$ queries, the contributing event is
+contained in $\{K_d \text{ equals that candidate}\}$ and costs at most
+$2^{-k}$ in the original pre-sampled-key experiment; a candidate equal
+to a fixed foreign key contributes only on the fixed-output
+key-collision branch and therefore contributes nothing to
+$\badkey^{(d)}$. A union bound over at most $\qRO(\mathcal{B})$ direct
+queries gives the claim.
+
 \begin{lemma}[Verification-First Root Guessing]
 \label{lem:ver-first-root-guess}
 In the stopped single-key \TW{} random oracle encryption/verification
@@ -1043,9 +1067,9 @@ final root transcript class. Then
 \begin{proof}
 Throughout, a \emph{non-replay verification submission} means a valid
 non-replay verification query; by the validity convention, an invalid
-verification query returns $0$ and performs no construction computation, so it
-realizes no bridged final root input, belongs to no final root transcript
-class, and contributes to no $G_{\mathcal{C}}$.
+verification query returns $0$ and performs no construction computation,
+so it realizes no bridged final root input, belongs to no final root
+transcript class, and contributes to no $G_{\mathcal{C}}$.
 
 Work in the game stopped at the first occurrence of
 $\badkey$ or $\badleaf$. For
@@ -1059,26 +1083,28 @@ the class remains verification-first it does not expose that root tag
 value to the adversary. The execution-uniform count $\qv(\mathcal{B})$
 applies to this continuation.
 
-Fix a verification-first final root transcript class $\mathcal{C}$ and follow the
-all-reject path until the first later encryption query generating the
-same class, if any. Let $G_{\mathcal{C}}$ be the set of distinct candidate tags
-submitted by non-replay verification queries in class $\mathcal{C}$ before that
-cutoff. Repeated tags only shrink this set. The class's correct root
-tag $U_{\mathcal{C}}$ is the $\tauroot$-bit projection of $\ROflat$ at the class's
-bridged root tag input. Before the stop, no direct query has hit this
-hidden-key input: such a query would be decoded by $\KeyedTWOut$ to
-the hidden key and would trigger $\badkey$. Before
-the cutoff, no encryption query has revealed $U_{\mathcal{C}}$ as an encryption
-tag. (When the class's root tag point is $\Rmsg^+$, i.e.\ $n = 0$, an
+Fix a verification-first final root transcript class $\mathcal{C}$ and
+follow the all-reject path until the first later encryption query
+generating the same class, if any. Let $G_{\mathcal{C}}$ be the set of
+distinct candidate tags submitted by non-replay verification queries in
+class $\mathcal{C}$ before that cutoff. Repeated tags only shrink this
+set. The class's correct root tag $U_{\mathcal{C}}$ is the
+$\tauroot$-bit projection of $\ROflat$ at the class's bridged root tag
+input. Before the stop, no direct query has hit this hidden-key input:
+such a query would be decoded by $\KeyedTWOut$ to the hidden key and
+would trigger $\badkey$. Before the cutoff, no encryption query has
+revealed $U_{\mathcal{C}}$ as an encryption tag. (When the class's root
+tag point is $\Rmsg^+$, i.e.\ $n = 0$, an
 encryption query on a longer message that shares chunk $0$ may touch
 this same address while closing its chunk-$0$ message phase, but it
 requests zero output there and continues into its aggregation phase, so
-it does not reveal $U_{\mathcal{C}}$; its own tag is emitted at a later $\Rtag$
-point.) The all-reject path and the set $G_{\mathcal{C}}$ are therefore functions
-only of the adversary's coins, visible oracle replies, and lazy-table
-values at inputs other than this class's root tag address. By lazy sampling,
-conditioned on those values and on the fixed path, $U_{\mathcal{C}}$ may be sampled
-after $G_{\mathcal{C}}$ is fixed and is uniform independently of $G_{\mathcal{C}}$.
+it does not reveal $U_{\mathcal{C}}$; its own tag is emitted at a later
+$\Rtag$ point.) The all-reject path and the set $G_{\mathcal{C}}$ are
+therefore functions only of the adversary's coins, visible oracle
+replies, and lazy-table values at inputs other than this class's root
+tag address. By lazy sampling, conditioned on those values and on the
+fixed path, $U_{\mathcal{C}}$ may be sampled after $G_{\mathcal{C}}$ is
+fixed and is uniform independently of $G_{\mathcal{C}}$.
 
 After the cutoff, if it exists, class $\mathcal{C}$ contributes no accepting
 non-replay submission. Let the cutoff encryption query return
@@ -1092,15 +1118,16 @@ encryption tuple and the verification is a replay; if the submitted tag
 is not $T_e$, the final tag comparison fails.
 
 Consider the event that the first accepting non-replay verification
-submission in the stopped game belongs to class $\mathcal{C}$. Up to that global
-first accept, the adversary's visible answers match the all-reject
+submission in the stopped game belongs to class $\mathcal{C}$. Up to
+that global first accept, the adversary's visible answers match the all-reject
 continuation: every earlier non-replay submission rejects, replay
 queries accept in both executions, and encryption answers are
 unchanged. The construction computations also agree at every address
 except that the all-reject continuation defers the final root tag value
-for class $\mathcal{C}$ until the comparison is needed. Therefore the first
-accepting non-replay submission can belong to class $\mathcal{C}$ only before the
-cutoff, and only if $U_{\mathcal{C}} \in G_{\mathcal{C}}$, which has probability at most
+for class $\mathcal{C}$ until the comparison is needed. Therefore the
+first accepting non-replay submission can belong to class $\mathcal{C}$
+only before the cutoff, and only if
+$U_{\mathcal{C}} \in G_{\mathcal{C}}$, which has probability at most
 $|G_{\mathcal{C}}|/2^{\tauroot}$.
 
 Each non-replay verification submission deterministically reconstructs
@@ -1108,8 +1135,8 @@ one final root transcript at the root tag output point. If the class is
 verification-first and the submission occurs before that class's
 encryption cutoff, the submitted tag contributes to at most one set
 $G_{\mathcal{C}}$; otherwise it contributes to none. Thus
-$\sum_{\mathcal{C}} |G_{\mathcal{C}}| \leq \qv(\mathcal{B})$, and a union bound over the
-verification-first classes gives the claim.
+$\sum_{\mathcal{C}} |G_{\mathcal{C}}| \leq \qv(\mathcal{B})$, and a
+union bound over the verification-first classes gives the claim.
 \end{proof}
 
 \subsection{Mu-Ind Adjacent-Hybrid Lemma}
@@ -1179,8 +1206,8 @@ $\ROflat$ table, with user $d$'s $\Rand$ answers in $H_d^\star$ set equal
 to user $d$'s real encryption answers in $H_{d-1}^\star$. We show the two
 hybrids' visible transcripts agree until $\badkey^{(d)} \cup \forge^{(d)}$.
 
-\emph{The coupled $H_d^\star$ has the true $H_d^\star$ law.} Each real
-user-$d$ encryption output is a projection of $\ROflat$ at the distinct
+\paragraph{Claim 1: the coupled ideal coordinate has the true law.}
+Each real user-$d$ encryption output is a projection of $\ROflat$ at the distinct
 transcript points of its computation---distinct within a computation and,
 by encryption nonce-uniqueness and Transcript Injectivity
 (\Cref{lem:transcript-inj}), across distinct encryptions---so until a
@@ -1188,11 +1215,12 @@ direct query reads such a point the outputs are jointly uniform of the
 prescribed lengths; this is the freshness property of
 \Cref{lem:freshness}. The present
 environment adds a real user-$d$ verification oracle, absent from a pure
-encryption-replacement game. Because only encryption queries are nonce-unique, a
-non-replay verification may reuse an encryption nonce and lazily read a
-keystream or root tag point the same-nonce encryption later reaches; but
-lazy sampling draws each point uniformly when first read, so its value is
-unchanged and stays marginally uniform. In $H_d^\star$ the user-$d$
+encryption-replacement game. Because only encryption queries are
+nonce-unique, a non-replay verification may reuse an encryption nonce
+and lazily read a keystream or root tag point the same-nonce encryption
+later reaches; but lazy sampling draws each point uniformly when first
+read, so its value is unchanged and stays marginally uniform. In
+$H_d^\star$ the user-$d$
 verification oracle is $\Replay$, which answers from the recorded
 ciphertexts without reading $\ROflat$. Hence the coupled $H_d^\star$
 transcript has the law of the true $H_d^\star$ until $\badkey^{(d)}$: its
@@ -1203,8 +1231,8 @@ outcome can constrain a coupled tag, but that is a property of the joint
 coupling; the coupled $H_d^\star$ marginal is what must match the true
 $H_d^\star$, and it does.)
 
-\emph{Agreement until $\badkey^{(d)} \cup \forge^{(d)}$.} Encryption
-answers are equal by construction. A verification query whose tuple is
+\paragraph{Claim 2: agreement until divergence.}
+Encryption answers are equal by construction. A verification query whose tuple is
 recorded returns accept in both hybrids through the shared replay-table
 membership check, which precedes the real-versus-ideal decryption branch
 (\Cref{sec:mu-setting}), so real decryption is never run on a recorded
@@ -1236,8 +1264,8 @@ $\Pr[\forge^{(d)} \text{ before } \badkey^{(d)}]$) gives
 \end{aligned}
 \]
 
-\paragraph{The environment does not enlarge the user-$d$ events.} The
-real users $e > d$ perform construction-internal $\ROflat$ lookups while
+\paragraph{Claim 3: the environment does not enlarge the user-$d$ events.}
+The real users $e > d$ perform construction-internal $\ROflat$ lookups while
 simulating $\Enc_{K_e}^\RO$ and $\Ver_{K_e}^\RO$. Whenever such a lookup
 lies in a counted keyed transcript class, \Cref{lem:bridge-decode}
 decodes its candidate key as $K_e$, which on the non-collision branch
@@ -1249,26 +1277,8 @@ user-$d$ non-replay verification submission, which are counted by
 $\nleaf^{(d)}$ and $\qv^{(d)}$. The three accounting events are thus
 local to user $d$'s keyed transcript language.
 
-\paragraph{Bounding the three terms.} For $\Pr[\badkey^{(d)}]$, adapt the
-single-key visible-prefix renaming coupling of
-\Cref{lem:ver-key-uniformity} to the environment $\mathcal{E}_d$. Its
-conclusion does not transfer verbatim: the foreign users $e > d$ share the
-lazy $\ROflat$ table, so renaming $K_d$ onto a foreign key would alter
-their visible transcripts, and the renaming orbit must exclude the foreign
-keys rather than range over all of $\bits^k \setminus S_i$. What the
-coupling still delivers in $\mathcal{E}_d$ is the marginal per-candidate
-bound, which is all the key test needs. The key-test contribution is
-taken in the original pre-sampled-key experiment, not in one
-renormalized to the non-collision branch: fix the foreign keys and run
-the visible-prefix coupling with foreign-key transcript addresses left
-unchanged; before the first user-$d$ key hit, the visible prefix is
-invariant under renaming $K_d$ among keys not already tested and not
-equal to a fixed foreign key. For each fresh candidate key tested by one
-of $\mathcal{B}$'s direct $\ROflat$ queries, the contributing event is
-contained in $\{K_d \text{ equals that candidate}\}$, costing at most
-$2^{-k}$, and a foreign candidate contributes nothing; with at most
-$\qRO(\mathcal{B})$ such tests, the union bound of \Cref{lem:key-tests}
-packages these into
+\paragraph{Claim 4: bounding the three terms.}
+For $\Pr[\badkey^{(d)}]$, the foreign-key key-test claim above gives
 $\Pr[\badkey^{(d)}] \leq \KeyGuess_k(\qRO(\mathcal{B}))$.
 For the leaf term, before $\badkey^{(d)}$ no direct query has pre-read
 the bridged input of a user-$d$ hidden-key final leaf transcript---such
