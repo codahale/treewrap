@@ -8,16 +8,42 @@ by the headline theorems of \Cref{sec:headline} and by
 \Cref{cor:committing-combined}. The machinery applies uniformly to the
 games named once here.
 
+The lift has two steps. First, the \cite{BDPV08} indifferentiability theorem
+replaces the public permutation and all construction-internal primitive calls by
+a simulator over a flat random oracle, at cost $\Lift_c(\Ntot)$, where
+$\Ntot = N + \Nprim$ counts both construction-internal calls and direct primitive
+queries. Second, the simulator-world adversary is converted into a flat-RO
+adversary whose direct random oracle query count is at most $\Nprim$. Thus the
+random oracle bounds are instantiated at $\qRO \leq \Nprim$, while the public
+permutation lift pays $\Lift_c(N+\Nprim)$.
+
 \begin{definition}[Single-Stage \TW{} Games]
 \label{def:single-stage-games}
 The \emph{single-stage \TW{} games} are the games of
-\Cref{sec:games-pp,sec:mu-setting}: all-in-one AE, mu-ind, CMTDs-4,
-the $\HTW$ collision, second-preimage, and preimage games,
+\Cref{sec:games-pp,sec:mu-setting} whose entire public-permutation transcript is
+handled by one \cite{BDPV08} replacement, including deterministic challenger
+checks after the adversary's final output. They are all-in-one AE, mu-ind,
+CMTDs-4, the $\HTW$ collision, second-preimage, and preimage games,
 $\mathsf{CDY}^\ast[\mathsf{ts}]$, and CMTs-$\ell$ for
 $\ell \in \{1,3,4\}$. In $\mathsf{CDY}^\ast[\mathsf{ts}]$ the selector
-encryption is construction-internal, counted in $N$ like a challenger
-check.
+encryption is construction-internal, counted in $N$ like a challenger check.
 \end{definition}
+
+The derived adversary forwards the following game data to the corresponding
+flat-RO experiment.
+\begin{center}
+\small
+\begin{tabular}{@{}l p{0.62\linewidth}@{}}
+  \toprule
+  Game family & Forwarded data \\
+  \midrule
+  AE / mu-ind & construction queries, including $\mathsf{New}$ and replay state \\
+  $\HTW$ hash games & final structured hash game output \\
+  CMTDs / CMTs & final openings and deterministic challenger checks \\
+  $\mathsf{CDY}^\ast[\mathsf{ts}]$ & fixed target/selector data and final output \\
+  \bottomrule
+\end{tabular}
+\end{center}
 
 \subsection{Simulator Convention}
 \label{app:simulator}
@@ -29,6 +55,7 @@ padded sponge over a random permutation --- after applying the
 \cite[Theorem~3]{BDPV11} bridge of \Cref{lem:bridge-decode} to \TW{}'s native
 $\padtenone$ transcript inputs. The superscript records that both
 simulator directions share the same internal lazy $\ROflat$ table.
+
 This is the simulator referenced by the \Cref{sec:games-pp,sec:mu-setting}
 definitions of $\Advae_\TW$ and $\Advmuind_\TW$: the ideal side of each
 AE-style experiment exposes the construction interface specified by the
@@ -41,14 +68,15 @@ public permutation success probabilities of \Cref{sec:games-pp}, with
 the simulator appearing only inside the reduction to the corresponding
 random oracle model adversary.
 
-\begin{lemma}[Simulator RO-Call Filter]
+\begin{lemma}[At Most One Simulator RO Call]
 \label{lem:sim-ro-call-filter}
-For the simulator $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$, every inverse
-primitive-interface query and every forward primitive-interface query
-violating one of the following conditions induces no simulator
-$\ROflat$ call. The symbols $s$, $p$, $\mathcal{R}$, $\mathcal{O}$,
-and $\mathcal{C}$ are the local internal notation of the BDPV
-simple-padded-sponge simulator, not \TW{} resource notation:
+For the simulator $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$, every
+primitive-interface query induces at most one simulator-side $\ROflat$ call.
+More precisely, every inverse primitive-interface query and every forward
+primitive-interface query violating one of the following conditions induces no
+simulator $\ROflat$ call. The symbols $s$, $p$, $\mathcal{R}$, $\mathcal{O}$,
+and $\mathcal{C}$ are the local internal notation of the BDPV simple-padded
+sponge simulator, not \TW{} resource notation:
 \begin{description}
   \item[(C1) New edge.] The simulator's internal graph has no
     outgoing edge from the input node $s$.
@@ -100,9 +128,9 @@ construction interface costs at most $\Lift_c(\Ntot)$.
 \end{lemma}
 
 \begin{proof}
-The \cite{BDPV08} replacement is applied before the derived-adversary construction, so
-its transcript contains two kinds of public primitive activity. First,
-each construction interface computation contributes the \TW{} duplex
+The \cite{BDPV08} replacement is applied before the derived-adversary
+construction, so its transcript contains two kinds of public primitive activity.
+First, each construction interface computation contributes the \TW{} duplex
 calls it performs. By \Cref{lem:duplex-flat,lem:bridge-decode}, each such
 root or leaf output point is a typed restriction of the bridged
 flat sponge construction, and by the definition of $N$ in
@@ -157,8 +185,8 @@ internally, answer each primitive-interface query by running the
 same simulator against direct finite-output queries to its own
 $\ROflat$ oracle, and forward construction interface queries (or, in
 the committing and discoverability games, the final structured output)
-unchanged to the corresponding random oracle experiment. Then the simulator-world
-execution of $\mathcal{A}$ and the random oracle execution of
+unchanged to the corresponding random oracle experiment. Then the
+simulator-world execution of $\mathcal{A}$ and the random oracle execution of
 $\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ have identical joint
 distributions, and
 \[
@@ -191,14 +219,14 @@ answers from the selected game interface and public primitive answers
 from $(\Sim^{\ROflat}, \Sim^{-1,\ROflat})$. In the derived
 random oracle execution, $\mathcal{B}_{\mathrm{derived}}$ runs the
 same $\mathcal{A}$, forwards construction interface queries (or the
-final committing- or discoverability-game output) unchanged, and answers primitive-interface
-queries by invoking the same simulator code with the same lazy
-$\ROflat$ table. The construction interface or committing challenger
-therefore receives the same forwarded inputs, the simulator receives the
-same primitive queries in the same order, and the lazy table supplies the
-same values. The full views of $\mathcal{A}$ in the simulator-world
-execution and of $\mathcal{B}_{\mathrm{derived}}$ in the random oracle
-execution are identically distributed.
+final committing- or discoverability-game output) unchanged, and answers
+primitive-interface queries by invoking the same simulator code with the same
+lazy $\ROflat$ table. The construction interface or committing challenger
+therefore receives the same forwarded inputs, the simulator receives the same
+primitive queries in the same order, and the lazy table supplies the same values.
+The full views of $\mathcal{A}$ in the simulator-world execution and of
+$\mathcal{B}_{\mathrm{derived}}$ in the random oracle execution are identically
+distributed.
 
 The simulator's random oracle calls may be on arbitrary
 \cite{BDPV08} $H$-input strings, not only bridged \TW{} transcript
@@ -206,8 +234,8 @@ inputs. These calls are the direct $\ROflat$ queries of
 $\mathcal{B}_{\mathrm{derived}}$ and are counted in
 $\qRO(\mathcal{B}_{\mathrm{derived}})$. Construction-internal
 $\RF(\cdot)$ lookups made by $\Enc_K^\RO$, $\Dec_K^\RO$,
-$\Ver_K^\RO$, or a committing or discoverability challenger are forwarded to the same
-$\ROflat$ table but are not counted in $\qRO$, exactly as in
+$\Ver_K^\RO$, or a committing or discoverability challenger are forwarded to the
+same $\ROflat$ table but are not counted in $\qRO$, exactly as in
 \Cref{sec:resources}.
 
 By \Cref{lem:sim-ro-call-filter}, each primitive-interface query
@@ -239,9 +267,9 @@ adversary and the query bound at which the random oracle bounds of
 Finally, the execution-uniform caps of \Cref{sec:resources} hold
 along every oracle-answer trace of $\mathcal{A}$, including traces
 generated by the simulator on the ideal public primitive interface.
-The derived-adversary construction does not add construction interface encryption or
-verification queries and forwards $\mathcal{A}$'s
-construction interface queries unchanged along each trace.
+The derived-adversary construction does not add construction interface
+encryption or verification queries and forwards $\mathcal{A}$'s construction
+interface queries unchanged along each trace.
 $\mathcal{B}_{\mathrm{derived}}$ therefore inherits the relevant
 construction resources: $\qv(\mathcal{B}_{\mathrm{derived}}) =
 \qv(\mathcal{A})$ in the AE and mu-ind games, and
@@ -259,6 +287,9 @@ construction of \Cref{lem:derived-adversary} combine into a single
 template, stated once and then instantiated by the headline theorems of
 \Cref{sec:headline} and the committing-notion bounds of
 \Cref{cor:committing-combined}.
+This is the only form used in \Cref{sec:headline}: every public-permutation
+bound is obtained by adding $\Lift_c(\Ntot)$ and substituting
+$\qRO \leq \Nprim$ in the corresponding random oracle theorem.
 
 \begin{corollary}[Lift Application]
 \label{cor:lift-application}
