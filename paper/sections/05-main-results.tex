@@ -87,9 +87,10 @@ public permutation model of \Cref{sec:games-pp}: multi-user
 indistinguishability \cite{BT16}, all-in-one AE security \cite{RS06} as
 its single-user corollary, and the commitment security of the root tag.
 The last is stated as the \cite{RS04} hash security of the wrapper
-$\HTW$ (\Cref{def:htw})---collision, second-preimage, and preimage
-resistance---together with the \cite{BH22} CMTDs-4 committing notion and
-the \cite{MLGR23} $\mathsf{CDY}^\ast$ notion. For the AE-style
+$\HTW$ (\Cref{def:htw})---collision, always second-preimage, and
+everywhere preimage resistance---together with the \cite{BH22} CMTDs-4
+committing notion and the \cite{MLGR23} $\mathsf{CDY}^\ast$ notion. For
+the AE-style
 notions the ideal side exposes the BDPV simulator; the committing, hash,
 and discoverability bounds remain real public permutation success
 probabilities.
@@ -103,9 +104,9 @@ public permutation lift, and the all-in-one AE corollary obtained by
 setting the mu-ind user cap to $D=1$. The independent hash, committing,
 and discoverability results follow afterward: first the hash security of
 the wrapper $\HTW$, then the AEAD commitment notions that use the same tag
-security. The CMTDs-4, collision, second-preimage, and preimage random
-oracle bounds, together with the proof of the context-discoverability
-theorem, are in \Cref{sec:cmtds3}.
+security. The collision, always second-preimage, everywhere preimage, and
+CMTDs-4 random oracle bounds, together with the proof of the
+context-discoverability theorem, are in \Cref{sec:cmtds3}.
 All random oracle adversaries in this subsection are flat-RO adversaries
 (\Cref{sec:ro-model}) with the displayed resources, and the
 flat sponge lift of
@@ -249,17 +250,6 @@ oracle bounds for the root tag wrapper and committing games, all proved in
 \Cref{sec:cmtds3}. We record only the forms needed by the lift and the
 reason each bound carries its particular loss terms.
 
-\paragraph{CMTDs-4.}
-\Cref{thm:cmtds4-ro} gives the direct root-collision bound
-\[
-  \Advcmtds{4}_{\RO}(\mathcal{B})
-  \leq \RootColl_{\tauroot}(\qRO(\mathcal{B}), s)
-  = \binom{\qRO(\mathcal{B}) + s}{s} \big/ 2^{\tauroot (s - 1)},
-\]
-with no key-guessing term and no leaf-collision term: the keys are
-adversary-supplied, and the all-bodies-equal game compares final root
-transcripts that are already separated by their opening triples.
-
 \paragraph{Collision.}
 \Cref{thm:coll-ro} gives
 \[
@@ -292,6 +282,17 @@ the collision bound.
 \]
 with no key-guessing term and no leaf-collision term. A single submitted
 input gives only a query-independent root-tag preimage target.
+
+\paragraph{CMTDs-4.}
+\Cref{thm:cmtds4-ro} gives the direct root-collision bound
+\[
+  \Advcmtds{4}_{\RO}(\mathcal{B})
+  \leq \RootColl_{\tauroot}(\qRO(\mathcal{B}), s)
+  = \binom{\qRO(\mathcal{B}) + s}{s} \big/ 2^{\tauroot (s - 1)},
+\]
+with no key-guessing term and no leaf-collision term: the keys are
+adversary-supplied, and the all-bodies-equal game compares final root
+transcripts that are already separated by their opening triples.
 
 \Cref{app:flat-sponge-lift} carries out the lift in two hops: Hop~1
 (\Cref{lem:lift-bound}) replaces the real permutation by the \cite{BDPV08}
@@ -391,7 +392,7 @@ term.
 \begin{theorem}[Everywhere Preimage Resistance of $\HTW$]
 \label{thm:epre}
 For every target tag $T^* \in \bits^{\tauroot}$ fixed in advance and every
-preimage adversary $\mathcal{A}$ against $\HTW$ with the resources of
+ePre adversary $\mathcal{A}$ against $\HTW$ with the resources of
 \Cref{sec:resources},
 \[
   \AdvePre_\TW(\mathcal{A})
@@ -417,22 +418,23 @@ that target and drops the exponent from $\tauroot(s-1)$ to $\tauroot$.
 \label{cor:tag-commitment}
 The wrapper $\HTW$ is a secure hash of the full encryption context
 $(K, N, A, M)$ in the sense of \cite{RS04}: collision-resistant
-(\Cref{thm:coll}), second-preimage-resistant (\Cref{thm:asec}), and
-preimage-resistant (\Cref{thm:epre}). At the implemented parameters all
+(\Cref{thm:coll}), always second-preimage-resistant (\Cref{thm:asec}), and
+everywhere preimage-resistant (\Cref{thm:epre}). At the implemented parameters all
 three advantages are at most $2^{-128}$ (\Cref{cor:concrete-security}), so
-the single $\tauroot$-bit root tag is a binding, preimage-resistant
-compact commitment to $(K, N, A, M)$, native to the mode.
+the single $\tauroot$-bit root tag is a binding compact commitment to
+$(K, N, A, M)$ with everywhere preimage resistance, native to the mode.
 \end{corollary}
 
 \begin{proof}
-Collision resistance is \Cref{thm:coll}, second-preimage resistance
-\Cref{thm:asec}, and preimage resistance \Cref{thm:epre}; all three quantify
+Collision resistance is \Cref{thm:coll}, always second-preimage
+resistance is \Cref{thm:asec}, and everywhere preimage resistance is
+\Cref{thm:epre}; all three quantify
 the adversary's success at the same $\tauroot$-bit projection of the final
 root transcript, and \Cref{cor:concrete-security} evaluates them at the
 implemented parameters. Binding (collision resistance) is the property a
-compact commitment must have, and preimage resistance certifies that the
-tag alone reveals no opening; together they are the properties of a
-hash-based commitment.
+compact commitment must have, and everywhere preimage resistance certifies
+that the tag alone reveals no opening; together they are the properties of
+a hash-based commitment.
 \end{proof}
 
 \begin{corollary}[CMTDs-4 Committing Security]
@@ -473,7 +475,7 @@ $\mathsf{CDY}^\ast_k$, $\mathsf{CDY}^\ast_n$, $\mathsf{CDY}^\ast_a$---satisfies
 \[
   \Advcdy_\TW(\mathcal{A})
   \;\leq\;
-  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim) + \KeyGuess_k(\Nprim).
+  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim) + \KeyGuess_k(\Nprim+1).
 \]
 \end{theorem}
 
@@ -576,7 +578,7 @@ CMTDs-4 statement of \cite{BH22}:
   \Advcdy_\TW(\mathcal{A})
   \;\leq\;
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
-  + \frac{2\Nprim + 1}{2^{256}}.
+  + \frac{2\Nprim + 2}{2^{256}}.
 \]
 
 \subsection{Concrete Security Claim}
@@ -590,7 +592,7 @@ user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
 \TW{}'s notions: multi-user indistinguishability (\Cref{thm:mu-ind}),
 all-in-one AE (\Cref{cor:ae}), the \cite{RS04} hash security of
 $\HTW$---$s$-way collision resistance for every $s \geq 2$, always second-preimage
-resistance, and preimage resistance
+resistance, and everywhere preimage resistance
 (\Cref{thm:coll,thm:asec,thm:epre})---the \cite{BH22}
 CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}), and \cite{MLGR23}
 $\mathsf{CDY}^\ast$ (\Cref{thm:cdy-full}).
@@ -636,7 +638,7 @@ All-in-one AE & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 Multi-user ind. & $D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
 $\HTW$ collision (Coll) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 $\HTW$ second-preimage (aSec) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
-$\HTW$ preimage (ePre) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+$\HTW$ everywhere preimage (ePre) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 CMTDs-4 \cite{BH22} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 $\mathsf{CDY}^\ast$ \cite{MLGR23} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 \bottomrule
@@ -687,8 +689,9 @@ duplex (\Cref{sec:params}).
   threshold at $\tauroot = 256$ being unaffected.
 \item \emph{$\RootPre_\tau(Q) = (Q + 1) / 2^\tau$.} Tight at constants: a
   generic preimage search against a fixed $\tau$-bit target matches the
-  per-query $2^{-\tau}$ rate. It is the root term of the preimage (ePre),
-  always second-preimage (aSec), and discoverability ($\mathsf{CDY}^\ast$) bounds, where the
+  per-query $2^{-\tau}$ rate. It is the root term of the everywhere
+  preimage (ePre), always second-preimage (aSec), and discoverability
+  ($\mathsf{CDY}^\ast$) bounds, where the
   single fixed target yields a linear term.
 \item \emph{Leaf tag collision $\Nleaf (\Nleaf - 1) / 2^{\tauleaf +
   1}$.} Tight for verification security: by reusing
