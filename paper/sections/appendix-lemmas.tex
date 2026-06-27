@@ -635,7 +635,7 @@ sequence has at most $L$ candidates ($m \leq L$).
   some $1 \leq j \leq m$, satisfies
   $\Pr[\mathsf{pre}_{\tau,t}] \leq L \cdot 2^{-\tau}$.
 \end{enumerate}
-The preimage facet has a \emph{second-preimage} corollary: for a
+The preimage case has a \emph{second-preimage} corollary: for a
 designated candidate position $j_0$, the probability
 $\Pr[\mathsf{sec}_{\tau,j_0}]$ that some candidate $j \neq j_0$ has
 $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau =
@@ -763,7 +763,7 @@ leaf transcript prefixes $X \neq X'$ in leaf tag output-point classes
 receive the same $\tauleaf$-bit projection from $\RF(\cdot)$, and let
 $\nleaf(\mathcal{B})$ be the execution-uniform count of distinct
 construction-generated final leaf transcripts (\Cref{sec:resources}).
-Both bounds below apply the collision facet ($s = 2$, $\tau = \tauleaf$)
+Both bounds below apply the collision case ($s = 2$, $\tau = \tauleaf$)
 of \Cref{lem:adaptive-candidate} to a chronological leaf tag candidate
 sequence, in two regimes.
 \begin{enumerate}
@@ -799,7 +799,7 @@ candidate---the lazy $\ROflat$ value is reused---and distinct final leaf
 transcripts give distinct candidates. No candidate's $\ROflat$ value is
 read before its append step, so the sequence meets the predictability and
 unrevealed-value premises of \Cref{lem:adaptive-candidate}, whose
-collision facet with $s = 2$ and $\tau = \tauleaf$ bounds the probability
+collision case with $s = 2$ and $\tau = \tauleaf$ bounds the probability
 that two candidates share a $\tauleaf$-bit projection by
 $\binom{L}{2} \cdot 2^{-\tauleaf}$ for a length-$L$ sequence. Every
 $\badleaf$ pair is a pair of construction-generated candidates.
@@ -807,7 +807,7 @@ $\badleaf$ pair is a pair of construction-generated candidates.
 \emph{(1) Adversary-supplied keys.} Direct queries may decode to a leaf
 tag class $\Ltag(j)$ and are appended as candidates; together with the
 $\nleaf(\mathcal{B})$ construction-generated transcripts the sequence has
-length at most $\qRO(\mathcal{B}) + \nleaf(\mathcal{B})$, so the facet
+length at most $\qRO(\mathcal{B}) + \nleaf(\mathcal{B})$, so the case
 with $L = \qRO(\mathcal{B}) + \nleaf(\mathcal{B})$ gives
 $\Pr[\badleaf] \leq
 \binom{\qRO(\mathcal{B})+\nleaf(\mathcal{B})}{2} \cdot 2^{-\tauleaf}
@@ -825,7 +825,7 @@ of any such transcript: by \Cref{lem:bridge-decode} such a query would
 decode under $\KeyedTWOut$ to the hidden key and its $\Ltag(j)$ class,
 which is exactly $\mathsf{hit}_{\mathsf{leaf}}$. Each leaf tag in the
 subsequence is therefore fresh when its transcript is first created, so
-the facet applied to this length-$\nleaf(\mathcal{B})$ subsequence gives
+the case applied to this length-$\nleaf(\mathcal{B})$ subsequence gives
 $\Pr[\badleaf \text{ before } \mathsf{hit}_{\mathsf{leaf}}] \leq
 \binom{\nleaf(\mathcal{B})}{2} \cdot 2^{-\tauleaf}$. By Leaf-Transcript
 Recovery

@@ -11,10 +11,10 @@ distinct inputs land on the same $\tauroot$-bit root tag projection. The
 four random oracle theorems---CMTDs-4 (\Cref{thm:cmtds4-ro}), collision
 (\Cref{thm:coll-ro}), preimage (\Cref{thm:epre-ro}), and
 always second-preimage (\Cref{thm:asec-ro})---are then short
-instantiations, differing only in which facet they invoke and in whether
-a leaf tag collision term is needed when colliding inputs may use
+instantiations, differing only in which case of the bound they invoke and in
+whether a leaf tag collision term is needed when colliding inputs may use
 different ciphertext bodies. The context-discoverability proof of
-\Cref{thm:cdy-full} uses the same fixed-target root-preimage facet,
+\Cref{thm:cdy-full} uses the same fixed-target root-preimage case,
 together with hidden-component key-test accounting.
 \Cref{app:flat-sponge-lift} transfers each instance to the public
 permutation setting, \Cref{sec:headline} records the concrete bounds, and
@@ -182,11 +182,12 @@ $\qRO = \qRO(\mathcal{B})$:
 In each case the candidate sequence has the stated length and meets the
 premises of \Cref{lem:adaptive-candidate}.
 \emph{(1)} The $s$ distinct candidates carrying a common
-$\tauroot$-projection are an $s$-way collision; the collision facet with
+$\tauroot$-projection are an $s$-way collision; the collision case with
 $L = \qRO + s$ gives
-$\binom{\qRO + s}{s} \cdot 2^{-\tauroot(s-1)} = \RootColl_{\tauroot}(\qRO, s)$.
+$\binom{\qRO + s}{s} \cdot 2^{-\tauroot(s-1)}
+= \RootColl_{\tauroot}(\qRO, s)$.
 \emph{(2)} The candidate hitting the fixed target is a preimage; the
-preimage facet with $L = \qRO + 1$ gives
+preimage case with $L = \qRO + 1$ gives
 $(\qRO + 1) \cdot 2^{-\tauroot} = \RootPre_{\tauroot}(\qRO)$.
 \emph{(3)} Prepend $\flatmap(R_X)$ as the designated candidate, its value
 the exposed root tag; the further candidate colliding with it on its

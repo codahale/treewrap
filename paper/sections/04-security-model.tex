@@ -134,11 +134,13 @@ there is no challenger-sampled key.
     $\mathsf{ts}$-components}, \\
   &\text{return } \bigl[\Dec_{K}[\pi](N, A, C^*) \neq \bot\bigr].
 \end{align*}
-The restricted advantage $\Advcdy_\TW(\mathcal{A})$ is the worst case over
-query-independent selectors $S$, matching
-$\mathsf{CDY}^\ast[\mathsf{ts}]$ and, at
-$\mathsf{ts} = \{n,a\}, \{k,a\}, \{k,n\}$, its per-component variants
-$\mathsf{CDY}^\ast_k, \mathsf{CDY}^\ast_n, \mathsf{CDY}^\ast_a$. Because
+The restricted advantage $\Advcdy_\TW(\mathcal{A})$ is measured against
+every query-independent selector $S$, matching
+$\mathsf{CDY}^\ast[\mathsf{ts}]$; in particular, it is no larger than the
+success probability against any fixed selector. At
+$\mathsf{ts} = \{n,a\}, \{k,a\}, \{k,n\}$, this gives the per-component
+variants $\mathsf{CDY}^\ast_k, \mathsf{CDY}^\ast_n,
+\mathsf{CDY}^\ast_a$. Because
 the selector holds a hidden context, the \TW{} bound
 (\Cref{thm:cdy-full}) carries a key-test term that the keyless preimage
 game of $\HTW$ does not.

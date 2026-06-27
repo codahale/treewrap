@@ -109,7 +109,7 @@ blocks; it is sponge-compliant
 \cite[Definition~1]{BDPV11} if $M \concat \mathsf{pad}[r](|M|)$ is never
 empty and, for all $M \neq M'$ and all $n \geq 0$, $M \concat
 \mathsf{pad}[r](|M|) \neq M' \concat \mathsf{pad}[r](|M'|) \concat
-0^{nr}$. The sponge function $\Sponge[\pi, \mathsf{pad}, r]
+0^{n r}$. The sponge function $\Sponge[\pi, \mathsf{pad}, r]
 : \bits^* \times \mathbb{N} \to \bits^*$ maps an input $M$ and an output
 length $\ell$ to an $\ell$-bit string by absorbing $M \concat
 \mathsf{pad}[r](|M|)$ into the all-zero $b$-bit state in $r$-bit blocks
@@ -231,13 +231,15 @@ simulator when $b = 0$---are instantiated for \TW{} in
 associated data input as $A$, where \cite{BT16} writes $i$ and $H$, and
 take the absolute value of their signed advantage so that
 \[
+  \begin{aligned}
   \Advmuind_\SE(\mathcal{A})
-  = \left|2 \Pr[\mathsf{G}^{\mathsf{mu\text{-}ind}}_\SE(\mathcal{A})
-          \text{ returns } 1] - 1\right|
-  = \bigl|
+  &= \left|2 \Pr[\mathsf{G}^{\mathsf{mu\text{-}ind}}_\SE(\mathcal{A})
+          \text{ returns } 1] - 1\right| \\
+  &= \bigl|
       \Pr[\mathcal{A}^{\mathsf{Enc}, \mathsf{Vf}, b=1} \Rightarrow 1]
       - \Pr[\mathcal{A}^{\mathsf{Enc}, \mathsf{Vf}, b=0} \Rightarrow 1]
-    \bigr|,
+    \bigr|
+  \end{aligned}
 \]
 the second equality holding because $b$ is uniform. Thus
 $\Advmuind_\SE$ is the two-game distinguishing advantage between the
@@ -251,7 +253,7 @@ simulator in the ideal world).
 Nonce uniqueness is enforced per user via the set $V$: the same nonce
 may appear under distinct users but not twice under the same user.
 This is strictly weaker than the global nonce-uniqueness requirement
-that would force every $(d, N)$ pair across all users to be unique.
+that would force each nonce value $N$ to appear under at most one user.
 
 \subsection{Committing and Context Discoverability Notions}
 \label{sec:commit-defs}
@@ -264,9 +266,9 @@ agreement (the E-notions). We recall their definitions and the
 $s$-way generalization, the complementary \emph{context discoverability}
 notion of \cite{MLGR23}, and then frame the root tag itself as a hash
 function whose \cite{RS04} security---collision, second-preimage, and
-preimage resistance---captures the binding and preimage facets of the tag
-as a compact commitment and yields the \cite{BH22} committing notions as a
-consequence.
+preimage resistance---captures the binding and preimage properties expected
+of a compact commitment. The AEAD committing and discoverability notions are
+then proved from the same tag analysis in \Cref{sec:main-results,sec:cmtds3}.
 
 \paragraph{What-is-committed functions.}
 For $\ell \in \{1, 3, 4\}$, the \emph{what-is-committed} function
@@ -308,8 +310,8 @@ treating the map from the encryption input to the tag as a hash function:
 write $\HTW(K, N, A, M)$ for the root tag $T$ of
 $\Enc_K(N, A, M) = C \concat T$, the \TW{} wrapper that discards the
 ciphertext body and returns only the tag. Keyed by the permutation, this
-is a hash family, and we ask that it satisfy the hash-function security notions
-of \cite{RS04}, over the \TW{} input domain:
+is a hash family, and we ask that it satisfy the hash-function security
+notions of \cite{RS04}, over the \TW{} input domain:
 \begin{description}
   \item[Collision resistance (Coll).] No adversary finds distinct inputs
     $X_1, \dots, X_s$ (any $s \geq 2$) with
@@ -322,16 +324,17 @@ of \cite{RS04}, over the \TW{} input domain:
 \end{description}
 Their advantages $\AdvColl_\TW$, $\AdvaSec_\TW$, $\AdvePre_\TW$ are the
 respective success probabilities, instantiated for \TW{} in
-\Cref{sec:games-pp}. Coll is the binding facet and Pre the preimage facet
-of the tag taken as a compact commitment to $(K, N, A, M)$---the two
-properties a cryptographic hash commitment provides. Of the \cite{RS04}
+\Cref{sec:games-pp}. Coll is the binding property and ePre the preimage
+property of the tag taken as a compact commitment to $(K, N, A, M)$---the
+two properties a cryptographic hash commitment provides. Of the \cite{RS04}
 second-preimage notions, collision resistance already implies the
 everywhere and average-case forms (eSec and Sec), so we prove the
 always-form aSec, the one it does not imply, and with a sharper bound.
-Collision resistance moreover gives the \cite{BH22} committing
-notions directly: a single ciphertext that two contexts both decrypt is a
-fortiori a pair of distinct inputs sharing a tag, so $\mathsf{Coll}$
-bounds CMTDs-$\ell$ and CMTs-$\ell$ (\Cref{sec:headline}).
+The \cite{BH22} committing notions are the collision-facing AEAD
+projection of the same tag analysis: a winning opening gives distinct
+inputs sharing a tag, while the dedicated CMTDs-4 proof uses the
+all-bodies-equal game structure to avoid the leaf-collision slack of the
+general hash collision theorem (\Cref{sec:headline,sec:cmtds3}).
 
 \paragraph{Relations.}
 \cite[Figs.~4 and~5]{BH22} record the implications among the notions.
@@ -360,17 +363,21 @@ specifier $\mathsf{ts} \subseteq \{k, n, a\}$, and the adversary, given
 the revealed components, supplies the remaining components of a
 decryption context $(K, N, A)$ and wins if the target ciphertext decrypts
 under it without error. The \emph{restricted} notion
-$\mathsf{CDY}^\ast[\mathsf{ts}]$ takes the worst case over selectors $S$;
-its three per-component variants $\mathsf{CDY}^\ast_k$,
+$\mathsf{CDY}^\ast[\mathsf{ts}]$ requires success against every
+query-independent selector $S$; equivalently, an adversary's restricted
+advantage is no larger than its success probability against any fixed
+selector. Its three per-component variants $\mathsf{CDY}^\ast_k$,
 $\mathsf{CDY}^\ast_n$, $\mathsf{CDY}^\ast_a$ pin two of the three context
 components and have the adversary supply the third
 ($\mathsf{ts} = \{n, a\}, \{k, a\}, \{k, n\}$ respectively). In every
-variant the selector fixes the \emph{entire} target ciphertext.
+nontrivial variant the selector fixes the \emph{entire} target ciphertext;
+the full-reveal case $\mathsf{ts} = \{k,n,a\}$ hides no context component
+and is excluded from \Cref{thm:cdy-full}.
 \cite{MLGR23} show that schemes which delegate authenticity to a
 non-preimage-resistant MAC, including \textsf{CCM}, \textsf{EAX},
 \textsf{SIV}, \textsf{GCM}, and \textsf{OCB3}, admit efficient
-context discovery attacks; the preimage character of the notion is what
-makes \TW{}'s root tag, a sponge output, resist them.
+context discovery attacks; the preimage character of the notion is what the
+root tag preimage analysis addresses.
 
 The preimage resistance of \HTW{} (ePre, above) is the tag-level preimage
 notion that the \cite{MLGR23} context discoverability notion is the
