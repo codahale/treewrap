@@ -17,14 +17,12 @@ commitment: \TW{} provides it within the mode, as does Ascon \cite{KSW23}, a
 committing transform supplies it for an arbitrary base scheme, and the remaining
 listed schemes do not provide it. The CDY column records context discoverability
 security in the \cite{MLGR23} sense: \TW{} provides it within the mode
-(\Cref{thm:cdy-full}), and the
-remaining entries are marked ``?'' because, to our knowledge, neither a
-context discovery attack nor a context discoverability security proof has been
-published for them. Context
-discoverability is a recent notion \cite{MLGR23}, so its absence of entries
-reflects the state of the literature rather than a negative result; the schemes
-\cite{MLGR23} break with context discovery attacks (\textsf{GCM}, \textsf{CCM},
-\textsf{EAX}, \textsf{SIV}, \textsf{OCB3}) are not among the rows above.
+(\Cref{thm:cdy-full}), AES-GCM is broken by the context discovery attacks of
+\cite{MLGR23}, and the remaining entries are marked ``?'' because, to our
+knowledge, neither a context discovery attack nor a context discoverability
+security proof has been published for them. Context discoverability is a recent
+notion \cite{MLGR23}, so its absence of entries reflects the state of the
+literature rather than a positive or negative result.
 The table does not separately track compact (tag-only) commitment, since
 that property has not been systematically analyzed for the comparison
 schemes.
@@ -50,6 +48,7 @@ Scheme & Primitive & Par. & K/N/T & AD & Misuse & \textsf{CMT-4} & CDY \\
 \TW{}                        & \Keccakp   & yes & $32/32/32$ & yes & no  & yes & yes \\
 Ascon-128a \cite{DEMS21}     & Ascon-$p$ ($320$ b) & no  & $16/16/16$ & yes & no  & yes & ?   \\
 Xoodyak \cite{DHPVV20}       & Xoodoo ($384$ b)   & no  & $16/16/16$ & yes & no  & no  & ?   \\
+AES-GCM \cite{Dwo07}         & AES                & yes & $16/12/16$ & yes & no  & no  & no  \\
 AES-GCM-SIV \cite{GLL17}     & AES                & yes & $16/12/16$ & yes & yes & no  & ?   \\
 nAE $+$ \textsf{CTX} \cite{CR22} & any nAE        & ---  & ---        & yes & --- & yes & ?   \\
 \bottomrule

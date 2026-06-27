@@ -4,96 +4,57 @@
 \subsection{Optimized Implementations}
 \label{sec:impl}
 
-We evaluate three implementations of \TW{} sharing a common structure: a
-portable reference written in Go, an \texttt{amd64} implementation, and an
-\texttt{arm64} implementation. The two architecture-specific implementations
-replace only the \Keccakp{} permutation and the inner absorb/squeeze
-loops with hand-written assembly; the framing, domain separation, padding, and
-tree bookkeeping remain in the shared Go code. The portable reference uses a
-scalar permutation and a scalar eight-instance loop, and serves both as a
-correctness oracle for the assembly cores and as the fallback on other
-architectures.
+We analyze a Go implementation of \TW{} with optimized assembly paths for the
+performance-critical permutation and absorb/squeeze loops. We
+compare three vectorized assembly paths: \texttt{amd64} AVX-512,
+\texttt{amd64} AVX2, and \texttt{arm64} NEON using the Armv8.2 SHA-3
+extension. The framing, domain separation, padding, tree bookkeeping, and
+dispatch remain in shared Go code. A pure Go path uses a scalar permutation
+and a scalar eight-instance loop, and serves both as a correctness oracle for
+the assembly cores and as a constant-time fallback on other architectures.
 
-The tree structure of \TW{} exposes two distinct permutation workloads, and
-both architectures provide a separate core for each. The root duplex---which
-absorbs the associated data, processes chunk~$0$, and absorbs the leaf tag
-aggregation transcript---is inherently sequential, since each of its calls
-consumes the previous call's output; it is driven by a \emph{single-duplex}
-($\times 1$) core that permutes one 1600-bit state at a time, except for its
-chunk-$0$ message phase, which is fused into the first batched leaf call as
-described below. The leaf duplexes,
-by contrast, operate on disjoint state and disjoint inputs (\Cref{sec:tw128}),
-so the implementation batches eight complete leaf chunks and runs them in
-lockstep through an \emph{eight-way} ($\times 8$) core. Because every leaf chunk
-is exactly $\beta = 49\rho$ bytes, the eight instances step through an identical
-sequence of $49$ full $\rho$-blocks (the first $48$ closed with
-\textsc{msg\_more}, the last with \textsc{msg\_last}), so a single shared block
-position drives all eight. The eight-way state is held lane-major---25 lanes
-each holding the corresponding 64-bit word of all eight instances---so that the
-batched cores can address the eight instances of a lane with a single
-vector load.
-
-Messages are decomposed into eight-chunk batches run on the $\times 8$ core,
-and a leftover run of two to seven complete chunks is drained by a
-narrower kernel: on \texttt{amd64} a register-resident kernel processes the
-remainder in a single call, reading the active chunks in place, and on
-\texttt{arm64} a $2$-wide kernel consumes it two chunks at a time. These
-remainder kernels read each chunk as a sequential stream, so they prefetch as
-well on the cold tail of a long message as on a cache-resident short one; on
-the \texttt{amd64} host they outperform both repeated single-duplex calls and
-padding the remainder to a full eight-chunk batch, at every remainder width.
-Only a single leftover complete chunk, a partial trailing chunk, and the
-count-aggregation tail fall back to the single-duplex ($\times 1$) core.
+The tree structure of \TW{} exposes two distinct permutation workloads. The
+root duplex---which absorbs the associated data, processes chunk~$0$, and
+absorbs the leaf tag aggregation transcript---is inherently sequential, since
+each call consumes the previous call's output. It is driven by a
+\emph{single-duplex} ($\times 1$) core, except for its chunk-$0$ message phase.
+The leaf duplexes operate on disjoint state and disjoint inputs
+(\Cref{sec:tw128}), so complete leaf chunks are batched and run through an
+\emph{eight-way} ($\times 8$) core. Leftover runs of two to seven complete
+chunks use narrower remainder kernels, while a single leftover complete chunk,
+a partial trailing chunk, and the count-aggregation tail fall back to the
+single-duplex core.
 
 Chunk~$0$ itself runs on the batched kernels rather than serially, a technique
-we refer to as \emph{lane-$0$ fusion}. The root duplex's chunk-$0$ message
-phase has the same kernel-visible block schedule as a leaf chunk---the same
-$49$ $\rho$-blocks with the same closing flags---and differs from a leaf only
-in its initial state, to which the kernels are indifferent; chunk~$0$ is also
-contiguous in the message with the first leaf chunks. The implementation
-therefore seeds lane~$0$ of the first batched call with the root state (after
-initialization and associated data processing) and runs the chunk-$0$ phase
-alongside up to seven leaves: in the $\times 8$ core when the message has at
-least seven complete leaf chunks, and in the \texttt{amd64} remainder kernel or
-the \texttt{arm64} $2$-wide kernel below that. Lane~$0$'s output state is
-written back to the root duplex, which then absorbs the leaf tags produced by
-the same call; no serial pass over chunk~$0$ precedes the leaf work. On
-\texttt{amd64} the assembly kernels handle only the
-$48$ full \textsc{msg\_more} blocks of each chunk; the final \textsc{msg\_last}
-block and the leaf tag extraction are performed in portable Go, shared with the
-reference path, which keeps the byte-granular tail logic out of assembly. The
-\texttt{arm64} kernels process the complete chunk, extracting the leaf tags and
-storing the permutation states back in assembly---the writeback that allows the
-root duplex to occupy lane~$0$.
+we refer to as \emph{chunk~$0$ fusion}. The root duplex's chunk-$0$ message phase
+has the same kernel-visible schedule as a leaf chunk and differs only in its
+initial state. The implementation therefore seeds lane~$0$ of the first batched
+call with the root state, runs chunk~$0$ alongside the first leaf chunks, then
+writes lane~$0$'s output state back to the root duplex before the root absorbs
+the leaf tags from that same call. This avoids a serial pass over chunk~$0$ and
+is the reason the throughput curve drops as soon as complete leaves are present
+(\Cref{sec:throughput}). \Cref{app:kernels} gives the lane-major layout,
+remainder-kernel strategies, lane~$0$ writeback details, and instruction-level
+kernel structure.
 
 \paragraph{Architecture-specific cores.}
-On \texttt{amd64} the cores are built from AVX-512 (selected once at startup
-from the \texttt{AVX512VL} CPUID feature bit) and AVX2, holding the lane-major
-state in ZMM or YMM registers and permuting it with no cross-lane shuffles. The
-steady-state $\times 8$ kernel transposes each rate block into the lane-major
-layout with contiguous, prefetcher-friendly loads and stores, while the
-register-resident kernel that drains a two-to-seven-chunk remainder reads its
-active chunks in place by masked gather and scatter. On \texttt{arm64} the cores
-use NEON with the Armv8.2 SHA-3 extension (\texttt{FEAT\_SHA3}, available on
-Apple Silicon and Neoverse V1/V2 and N2), one instance per $64$-bit lane in the
-single-duplex core and two instances per $128$-bit register in the $\times 8$
-and $2$-wide kernels. Both batched paths store the permutation state back after
-the closing block---the writeback that lets the root duplex occupy lane~$0$.
-\Cref{app:kernels} gives the per-instruction detail, including the fused
-permutation instructions and the remainder-kernel strategies on each
-architecture.
+On \texttt{amd64} the optimized implementation selects an AVX-512 or AVX2 core
+once at startup from the \texttt{AVX512VL} CPUID feature bit. On \texttt{arm64}
+the optimized implementation uses NEON with the Armv8.2 SHA-3 extension
+(\texttt{FEAT\_SHA3}, available on Apple Silicon and Neoverse V1/V2 and N2).
+Both architecture-specific paths provide a single-duplex core and batched leaf
+kernels; the assembly stays below the mode boundary, so framing, domain
+separation, padding, and tree bookkeeping remain shared with the reference path.
 
 \paragraph{Constant time.}
-All three implementations are constant time with respect to the key, nonce, and
-plaintext. The permutation and the XOR-based absorb/squeeze contain no
-secret-dependent branches and no secret-dependent memory or vector indices. The
-only indexed table is the round-constant array, addressed by the public round
-number; the AVX-512 chunk transpose uses contiguous loads and stores, and the
-gather and scatter that remain---for the partial rate lane and the
-register-resident remainder kernel---are addressed by the fixed public chunk
-strides under a mask set by the public chunk count, and the AVX2 remainder
-kernel's redirection of inactive instances to its dummy block is likewise
-selected by the public chunk count. None of these depend on secret data.
+The scalar reference and all three vectorized implementations are constant time
+with respect to all inputs. The permutation and the XOR-based absorb/squeeze
+contain no secret-dependent branches and no secret-dependent memory or vector
+indices. The only indexed table is the round-constant array, addressed by the
+public round number; batched loads, stores, gathers, scatters, and
+inactive-lane handling are all controlled by public chunk counts and fixed
+chunk strides. \Cref{app:kernels} records the architecture-specific addressing
+details.
 
 \subsection{Benchmark Methodology}
 \label{sec:bench-method}
@@ -161,7 +122,7 @@ tree-parallel leaf core: the per-byte cost falls as a message lengthens and its
 chunks occupy more SIMD lanes. A message of at most one chunk has no complete
 leaf chunk for chunk~$0$ to share a kernel with, so it runs entirely on the
 single-duplex core, and the $8$\,KiB column sits at that core's rate. Past one
-chunk, lane-$0$ fusion (\Cref{sec:impl}) keeps every complete chunk on the
+chunk, chunk~$0$ fusion (\Cref{sec:impl}) keeps every complete chunk on the
 batched kernels, and the descent tracks lane occupancy: at $32$\,KiB, chunk~$0$
 and three complete leaves run four-wide in the \texttt{amd64} remainder kernels
 and as two full pairs on \texttt{arm64}, and $64$\,KiB is the first length
@@ -289,7 +250,7 @@ $9.77 \times 64 \approx 625$), i.e.\ about $295$ and $310$ cycles per
 core entirely, leaf-level parallelism imposes no latency penalty on them.
 
 The latency/throughput trade-off appears instead in the intermediate regime,
-which lane-$0$ fusion has narrowed to roughly the one-to-eight-chunk band. The
+which chunk~$0$ fusion has narrowed to roughly the one-to-eight-chunk band. The
 worst per-byte cost in the sweep is the single-chunk regime at $8$\,KiB
 ($1.9$--$2.2$ cycles per byte across the three paths), where the message is the
 chunk-$0$ phase alone on the single-duplex core. Once the message has complete

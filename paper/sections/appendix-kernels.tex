@@ -1,9 +1,46 @@
 \section{Vectorized Kernel Details}
 \label{app:kernels}
 
-This appendix details the architecture-specific cores summarized in
-\Cref{sec:impl}: the instruction selection, register layout, and
-remainder handling of the \texttt{amd64} and \texttt{arm64} kernels.
+This appendix details the optimized cores summarized in \Cref{sec:impl}:
+their shared batching structure, chunk~$0$ fusion, instruction selection,
+register layout, remainder handling, and constant-time addressing.
+
+\paragraph{Shared batching structure.}
+The implementation separates the sequential root duplex from the independent
+leaf duplexes. The root duplex normally uses a single-duplex ($\times 1$)
+core, while complete leaf chunks are grouped into eight-instance batches.
+Every complete leaf chunk is exactly $\beta = 49\rho$ bytes, so all eight
+instances in a batch follow the same sequence of $49$ full $\rho$-blocks:
+the first $48$ close with \textsc{msg\_more}, and the last closes with
+\textsc{msg\_last}. A single public block index therefore drives the whole
+batch. The batched state is lane-major: for each of the $25$ Keccak lanes,
+the kernel stores the corresponding 64-bit word of each active instance
+together in vector registers, allowing one vector operation to update the
+same lane across several duplex states.
+
+\paragraph{Chunk~$0$ fusion and tail handling.}
+Chunk~$0$ is part of the root transcript, but its message phase has the
+same kernel-visible block schedule as a complete leaf chunk. The optimized
+paths exploit this by placing the post-AD root state into lane~$0$ of the
+first batched call and placing the first leaf chunks in the remaining lanes.
+When the message has at least seven complete leaf chunks, this fused call
+uses the $\times 8$ core; below that, it uses the same remainder machinery
+that drains incomplete batches. The output state from lane~$0$ is written
+back to the root duplex, which then absorbs the leaf tags produced by the
+same call.
+
+Messages are otherwise decomposed into full eight-chunk batches plus a
+remainder. On \texttt{amd64}, a register-resident remainder kernel handles
+two to seven complete chunks in one call, reading each active chunk in
+place; on \texttt{arm64}, a $2$-wide kernel drains the remainder two chunks
+at a time. A single leftover complete chunk, a partial trailing chunk, and
+the count-aggregation tail use the single-duplex core. The \texttt{amd64}
+assembly chunk kernels handle the $48$ full \textsc{msg\_more} blocks and
+leave the final \textsc{msg\_last} block plus leaf tag extraction to shared
+Go code, keeping byte-granular tail logic out of assembly. The
+\texttt{arm64} batched kernels process the complete chunk and store the
+closing states back in assembly, which is the writeback needed for chunk~$0$
+fusion.
 
 \paragraph{\texttt{amd64}.}
 The \texttt{amd64} implementation provides AVX-512 and AVX2 cores and selects
@@ -57,3 +94,16 @@ kernels store the permutation state back into the batch after the closing
 block---the $\times 8$ kernel for its first pair, the $2$-wide kernel for both
 instances---which is the writeback that permits the root duplex to occupy
 lane~$0$.
+
+\paragraph{Constant-time addressing.}
+The optimized kernels contain no secret-dependent branches and no
+secret-dependent memory or vector indices. The only indexed table is the
+round-constant array, addressed by the public round number. The AVX-512
+steady-state transpose uses contiguous loads and stores; the remaining
+gathers and scatters, for the partial rate lane and register-resident
+remainder kernel, use fixed public chunk strides under masks determined by
+the public chunk count. The AVX2 remainder kernel redirects inactive
+instances to a dummy block in its stack frame with a zero advance stride,
+again selected only by the public chunk count. The \texttt{arm64} pair
+kernels use fixed lane interleaving and extraction patterns. None of these
+addresses depends on the key, nonce, plaintext, or decrypted plaintext.
