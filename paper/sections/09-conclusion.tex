@@ -1,25 +1,32 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-\TW{} is a two-level tree of keyed duplexes over a single
-\Keccakp{} permutation that combines mode-level parallelism,
-constant memory, and commitment security in both its collision and
-preimage forms. Its concrete public permutation bounds---for multi-user
-indistinguishability, all-in-one AE as its single-user corollary, the
-secure-hash security of the root tag wrapper (collision, second-preimage,
-and preimage resistance) that makes the tag a compact commitment, the
-$s$-way full-input committing notion (\textsf{CMTDs-4}), and
-\cite{MLGR23} context discoverability ($\mathsf{CDY}^\ast$)---meet a
-$128$-bit target at the implemented parameters,
-and vectorized
-\texttt{amd64} and \texttt{arm64} implementations turn the tree's leaf
-parallelism into multi-gigabyte per second throughput within a small
-factor of hardware-accelerated AES-128-GCM.
+\TW{} is a nonce-based AEAD mode built as a two-level tree of keyed duplexes over
+a single \Keccakp{} permutation. Its chunk decomposition is canonical, while the
+number of leaf duplexes evaluated in parallel is an implementation choice rather
+than a mode parameter. This gives scalar, SIMD, and multicore implementations the
+same ciphertexts and tags, with constant working memory and scalable
+parallelism.
+
+The central security claim is that the authentication tag behaves like a
+digest-like commitment to the full $(K, N, A, M)$ context. In the public
+permutation model, via an intermediate random oracle and the flat sponge lift, we
+prove concrete multi-user indistinguishability and derive all-in-one AE as its
+single-user corollary. We also prove collision, second-preimage, and preimage
+security for the root tag wrapper. Those hash-style guarantees yield the
+AEAD-facing commitment results, including full-input \textsf{CMTDs-4} security
+and context discoverability ($\mathsf{CDY}^\ast$), at a $128$-bit target for the
+implemented parameters.
+
+The implementation results show that this commitment is not purchased by giving
+up the performance profile of modern duplex AEADs. Vectorized \texttt{amd64} and
+\texttt{arm64} implementations exploit the scalable leaf structure, exceed
+$10$\,Gbit/s, and reach $50$--$75\%$ of hardware-accelerated AES-128-GCM
+throughput.
 
 Several questions remain open (\Cref{sec:limitations}): a nonce-misuse-resistant
-variant, security under the release of unverified plaintext, and sharper
-bounds---whether by
-recasting the leaf and root duplexes on the modern keyed-duplex analysis or
-through a beyond-birthday argument. More broadly, \TW{} adds to the growing
-evidence that a single, well-scrutinized \Keccak{} permutation suffices to build
-authenticated encryption that is at once fast, parallel, and committing.
+variant, security under release of unverified plaintext, and sharper bounds,
+whether through a keyed duplex treatment of the BDPV11-style phasing used here or
+through a beyond-birthday argument. More broadly, \TW{} adds to the evidence that
+a single, well-scrutinized \Keccak{} permutation can support authenticated
+encryption that is fast, scalable, and committing.
