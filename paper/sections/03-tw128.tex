@@ -27,24 +27,23 @@ way a leaf duplex emits its leaf tag. The construction is depicted in
 
 Three design properties motivate the tree shape. First, the leaf
 duplexes operate on disjoint state and consume disjoint inputs once
-$(K, N)$ is fixed, so leaves $1, \dots, n$ can be evaluated in parallel
-across SIMD lanes; \Cref{sec:performance} quantifies the
-resulting throughput on AMD64 and ARM64 hardware. Second, every duplex
-operates on a bounded $1600$-bit state regardless of message length, and
-the leaf tags are aggregated as a stream rather than buffered in full
-(\Cref{sec:enc}), so the working memory is constant in $\|M\|$ at a fixed
-degree of parallelism, scaling only with the number of leaves evaluated
-simultaneously. Third, the explicit
-aggregation of leaf tags through a single deterministic root transcript
-gives the construction its commitment-security properties: by Opening
-Triple Separation (\Cref{cor:triple-sep,sec:cmtds3}), distinct
-$(K, N, A)$ triples force distinct final root transcripts before
-aggregation values matter, the structural fact behind
-the CMTDs-4 headline of \Cref{sec:headline}. Collision resistance of the
-root tag wrapper (\Cref{thm:coll}) treats the emitted root tag as the
-commitment string, distinct bodies merging only through its leaf tag
-collision term, and the same root tag, preimage-resistant as a sponge
-output, gives the preimage headline (\Cref{thm:epre}).
+$(K, N)$ is fixed, so leaves $1, \dots, n$ can be evaluated in parallel.
+The transcript fixes the leaf decomposition and order, but not the number
+of leaves an implementation evaluates at once; scalar, SIMD, and multicore
+implementations therefore produce the same ciphertexts and tags.
+\Cref{sec:performance} quantifies the resulting throughput on AMD64 and
+ARM64 hardware. Second, every duplex operates on a bounded $1600$-bit
+state regardless of message length, and the leaf tags are aggregated as a
+stream rather than buffered in full (\Cref{sec:enc}), so the working
+memory is constant in $\|M\|$ at a fixed degree of parallelism, scaling
+only with the number of leaves evaluated simultaneously. Third, the
+explicit aggregation of leaf tags through a single deterministic root
+transcript is the AEAD analogue of KangarooTwelve's final-node hashing of
+per-chunk chaining values. In \TW{}, the chaining values are the leaf tags
+and the final digest is the root tag. This makes the root tag the natural
+hash point for the full $(K, N, A, M)$ context; the formal hash,
+committing, and discoverability analyses appear in
+\Cref{sec:main-results,sec:cmtds3}.
 
 \begin{figure}[t]
   \centering
@@ -191,8 +190,8 @@ $\log D$ bits in $D$ users; the concrete $D$-indexed bound appears in
 \Keccakp{} choice, $r = b - c = 1344$ is the largest rate
 compatible with the chosen capacity. The 12-round
 \Keccakp{} permutation matches KangarooTwelve's
-choice~\cite{BDPVVV16}, with a substantial cryptanalytic safety margin
-relative to the 24-round version used in SHA-3~\cite{FIPS202}.
+choice~\cite{BDPVVV16}; \TW{} adopts that established tree-hashing
+parameter rather than introducing a new reduced-round setting.
 
 \item $\tauroot = \tauleaf = 256$. Matching the
 capacity ensures that the per-tag collision terms in the
@@ -300,36 +299,42 @@ corollaries formalize this parsing fact for the proofs of
 
 \Cref{alg:enc} specifies $\Enc_K(N, A, M)$ in terms of two
 helper procedures, \Call{Absorb}{} and \Call{StreamEnc}{}, defined in
-\Cref{alg:helpers}. \Call{Absorb}{} drives a duplex through a sequence
-of blocks of a byte string with non-final $\sigma^-$ and final
-$\sigma^+$ suffix tags, returning the output of the final call;
-the empty-input case yields a single empty block carrying the
+\Cref{alg:helpers}. These helpers sit below the tree layer: only
+\Cref{alg:enc,alg:dec} split messages or ciphertexts into $\beta$-byte
+root and leaf chunks, while the helpers split an already chosen byte
+string into $\rho$-byte duplex blocks. \Call{Absorb}{} drives a duplex
+through a sequence of such blocks with non-final $\sigma^-$ and final
+$\sigma^+$ suffix tags, returning the output of the final call; the
+empty-input case yields a single empty duplex block carrying the
 $\sigma^+$ tag. The streaming helpers use the same empty-input
-convention, so a zero-length chunk still performs one final
+convention, so a zero-length message string still performs one final
 message phase duplex call and returns a zero-length body.
 \Cref{alg:enc} invokes \Call{Absorb}{} for the associated data phase
 only when $A \neq \varepsilon$; when $A = \varepsilon$ the phase is
 elided and the root \siginit call emits the initial $M_0$ keystream
 directly.
-\Call{StreamEnc}{} encrypts a plaintext byte string block by block,
-XORing each plaintext block with the current keystream, absorbing the
-resulting ciphertext block back into the duplex with the appropriate
-phase tag, and using the duplex's output as the next keystream. This is
+\Call{StreamEnc}{} encrypts a plaintext byte string one duplex block at
+a time, XORing each block with the current keystream, absorbing
+the resulting ciphertext duplex block back into the duplex with the
+appropriate phase tag, and using the duplex's output as the next
+keystream. This is
 the duplex-level presentation of the
 overwrite mechanism of \cite[\S6.2 and Algorithm~5]{BDPV11}: when the
 current rate prefix emitted as keystream is $Z$, XOR-absorbing
 $m \oplus Z$ has the same update on the message bytes as overwriting
 that prefix with $m$, with the phase tag still carried as part of the
 duplex input. The decryption helper \Call{StreamDec}{} is identical to
-\Call{StreamEnc}{} with the roles of the plaintext and ciphertext blocks
-exchanged: it takes ciphertext blocks $c_i$ as input, recovers each
-plaintext block as $m_i = c_i \oplus Z$, absorbs the same $c_i$ under
-the same phase suffix, and returns $(m_1 \concat \cdots \concat m_t,
-Z')$; we omit its pseudocode. In both helpers, each duplex call absorbs a data block followed by its
-phase suffix---$\sigma^-$ for a non-final block and $\sigma^+$ for the
-final block---and requests the output bits the caller consumes next:
-$\ell$ (possibly zero) on the final call, and the next block's keystream
-length on non-final calls. Each call is the duplex interface of
+\Call{StreamEnc}{} with the roles of the plaintext and ciphertext duplex
+blocks exchanged: it takes ciphertext duplex blocks $c_i$ as input,
+recovers each plaintext duplex block as $m_i = c_i \oplus Z$, absorbs the
+same $c_i$ under the same phase suffix, and returns
+$(m_1 \concat \cdots \concat m_t, Z')$; we omit its pseudocode. In both
+helpers, each duplex call absorbs a
+duplex block followed by its phase suffix---$\sigma^-$ for a non-final
+block and $\sigma^+$ for the final block---and requests the output bits
+the caller consumes next: $\ell$ (possibly zero) on the final call, and
+the next duplex block's keystream length on non-final calls. Each call is
+the duplex interface of
 \Cref{sec:sponge} applied to the suffixed input of \Cref{sec:domain-sep}.
 
 The encryption procedure (\Cref{alg:enc}) instantiates the root duplex
@@ -353,7 +358,10 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
   \label{alg:helpers}
   \begin{algorithmic}[1]
     \Procedure{Absorb}{$D$, $s$, $\sigma^-$, $\sigma^+$, $\ell$}
-      \State Partition $s$ into byte blocks $s_1, \dots, s_t$ of exactly $\rho$ bytes each, except that the last block may be shorter, with $t \geq 1$ (the empty case yields the single empty block $s_1 = \varepsilon$).
+      \State Partition $s$ into duplex blocks $s_1, \dots, s_t$ of exactly
+        $\rho$ bytes each, except that the last block may be shorter.
+      \State Require $t \geq 1$; the empty case yields the single empty
+        duplex block $s_1 = \varepsilon$.
       \For{$i \gets 1$ \textbf{to} $t - 1$}
         \State $D.\duplexing(s_i \concat \sigma^-, 0)$
       \EndFor
@@ -361,7 +369,10 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
     \EndProcedure
     \Statex
     \Procedure{StreamEnc}{$D$, $m$, $Z$, $\sigma^-$, $\sigma^+$, $\ell$}
-      \State Partition $m$ into byte blocks $m_1, \dots, m_t$ of exactly $\rho$ bytes each, except that the last block may be shorter, with $t \geq 1$ (if $m = \varepsilon$, set $t = 1$ and $m_1 = \varepsilon$).
+      \State Partition $m$ into duplex blocks $m_1, \dots, m_t$ of exactly
+        $\rho$ bytes each, except that the last block may be shorter.
+      \State Require $t \geq 1$; if $m = \varepsilon$, set $t = 1$ and
+        $m_1 = \varepsilon$.
       \For{$i \gets 1$ \textbf{to} $t - 1$}
         \State $c_i \gets m_i \oplus Z$
         \State $Z \gets D.\duplexing(c_i \concat \sigma^-, 8\|m_{i+1}\|)$
@@ -404,17 +415,18 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(N,A,M)$.
   \end{algorithmic}
 \end{algorithm}
 
-The keystream bit length requested for the first message block of $M_0$
-is $8\min(\|M_0\|, \rho)$, eight times the size of the next message block.
-It is emitted by the closing \sigadlast call when $A \neq \varepsilon$,
-and by the root \siginit call itself when $A = \varepsilon$ and the
-associated data phase is elided. Each leaf's \siginit call likewise
-emits $8\min(\|M_j\|, \rho)$ keystream bits for $M_j$, so the
-empty associated data root \siginit call plays exactly the role a leaf
-\siginit call already plays. When the corresponding
-chunk is empty, the requested keystream length is zero and the next
-message phase duplex call absorbs the empty ciphertext block carrying
-\sigmsglast. The final \sigmsglast call in the root chunk requests
+The initial keystream request for a message string $X$ is
+$8\min(\|X\|, \rho)$, the bit length of its first duplex block. For the
+root chunk $M_0$, that value is emitted by the closing \sigadlast call
+when $A \neq \varepsilon$, and by the root \siginit call itself when
+$A = \varepsilon$ and the associated data phase is elided. Each leaf's
+\siginit call likewise emits $8\min(\|M_j\|, \rho)$ keystream bits for
+the first duplex block of $M_j$, so the empty associated data root
+\siginit call plays exactly the role a leaf \siginit call already plays.
+When the corresponding message string is empty, the requested keystream
+length is zero and the next message phase duplex call absorbs the empty
+ciphertext duplex block carrying \sigmsglast. The final \sigmsglast call
+in the root chunk requests
 $\tauroot$ output bits when $n = 0$, namely the root tag $T$ emitted by
 the elided-aggregation path, and zero output bits when $n \geq 1$
 because the next duplex operation on the root is then the first
@@ -424,16 +436,19 @@ requests $\tauroot$ bits, which is the root tag $T$.
 
 The leaf loop is annotated \textbf{in parallel} to make explicit that
 the $n$ leaf computations are mutually independent; \Cref{sec:impl}
-discusses the SIMD realizations.
+discusses the SIMD realizations. The annotation is an implementation
+freedom, not a mode parameter: evaluating leaves serially, in SIMD
+batches, or across cores leaves the transcript and wire format unchanged.
 
 \paragraph{Streaming aggregation.}
 The string $G = T_1 \concat \cdots \concat T_n$ in
 \Cref{alg:enc,alg:dec} names the leaf tags only for specification. The
 closing \Call{Absorb}{} consumes $G \concat \langle n \rangle_8$ as
-$\rho$-byte blocks in leaf order and advances the root state after each,
-so an implementation need not hold $G$ in full: it can absorb each leaf
-tag, or each SIMD batch of leaf tags, into the root as the corresponding
-leaves complete, buffering only a bounded number of tags at a time. With
+$\rho$-byte duplex blocks in leaf order and advances the root state
+after each, so an implementation need not hold $G$ in full. It can absorb
+leaf tags in order as they become available, or buffer completed
+out-of-order leaves until the next in-order tag or SIMD batch can be
+absorbed, keeping only a bounded number of tags at a time. With
 the bounded $1600$-bit state of every duplex, this keeps the working
 memory constant in $\|M\|$ for a fixed degree of parallelism, growing
 only with the number of leaves evaluated at once rather than with the
@@ -443,14 +458,14 @@ message length; \Cref{sec:impl} describes the batched realization.
 \label{sec:dec}
 
 \Cref{alg:dec} specifies $\Dec_K(N, A, C \concat T)$. The procedure
-mirrors $\Enc$ block for block: each ciphertext block $c_i$ is
-absorbed into the appropriate duplex (root or leaf) under the
-corresponding \sigmsgmore or \sigmsglast suffix, and the
-plaintext block is recovered as $m_i = c_i \oplus Z^{(i)}$, writing
-$Z^{(i)}$ for the value the running keystream variable $Z$ of
-\textsc{StreamDec} holds when block $i$ is processed ($i < t$ inside
-the loop, $i = t$ after it), the same value the encryption procedure
-would have produced. The procedure
+mirrors $\Enc$ at the duplex block level: each ciphertext duplex block
+$c_i$ is absorbed into the appropriate duplex (root or leaf) under the
+corresponding \sigmsgmore or \sigmsglast suffix, and the plaintext duplex
+block is recovered as $m_i = c_i \oplus Z^{(i)}$, writing $Z^{(i)}$ for
+the value the running keystream variable $Z$ of \textsc{StreamDec} holds
+when duplex block $i$ is processed ($i < t$ inside the loop, $i = t$ after
+it), the same value the encryption procedure would have produced.
+The procedure
 absorbs ciphertext bytes before the final tag comparison, so the
 verification transcript is determined by $(K, N, A, C)$ for every
 in-domain ciphertext, accepting or not. This property is used by the
@@ -504,7 +519,7 @@ For every $K \in \bits^k$, $N \in \bits^{\nu}$,
 $A$ with $\|A\| \leq A_{\max}$, and $M$ with $\|M\| \leq M_{\max}$,
 $\Dec_K(N, A, \Enc_K(N, A, M)) = M$. This follows by inspection: every
 duplex call in $\Dec_K$ receives the same input as the corresponding
-call in $\Enc_K$ (each ciphertext block is absorbed under the same
+call in $\Enc_K$ (each ciphertext duplex block is absorbed under the same
 phase tag in both directions), so the duplex states and the recomputed
 root tag $T'$ exactly match. The constant-time comparison $T' = T$
 succeeds, and the recovered $m_i = c_i \oplus Z^{(i)} = (m_i \oplus
