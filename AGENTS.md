@@ -1,4 +1,4 @@
-# Hi Claude
+# Agent Instructions
 
 - Do not create branches without being explicitly told to do so. Just commit to main.
 - When adding prose to the paper in this repo, please adhere to the following guidelines:
