@@ -4,8 +4,9 @@
 \subsection{Optimized Implementations}
 \label{sec:impl}
 
-We analyze a Go implementation of \TW{} with optimized assembly paths for the
-performance-critical permutation and absorb/squeeze loops. We
+We analyze a Go implementation of \TW{}\footnote{The implementation is available
+at \url{https://github.com/codahale/treewrap}.} with optimized assembly paths
+for the performance-critical permutation and absorb/squeeze loops. We
 compare three vectorized assembly paths: \texttt{amd64} AVX-512,
 \texttt{amd64} AVX2, and \texttt{arm64} NEON using the Armv8.2 SHA-3
 extension. The framing, domain separation, padding, tree bookkeeping, and
