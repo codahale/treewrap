@@ -5,6 +5,30 @@ This appendix details the optimized cores summarized in \Cref{sec:impl}:
 their shared batching structure, chunk~$0$ fusion, instruction selection,
 register layout, remainder handling, and constant-time addressing.
 
+The optimized paths share the same logical decomposition but differ in their
+batch widths, remainder strategy, and state writeback points:
+\begin{center}
+\small
+\begin{tabular}{@{}p{0.22\linewidth} p{0.72\linewidth}@{}}
+\toprule
+Path & Cores and writeback \\
+\midrule
+\texttt{amd64} AVX-512 &
+Wide: one eight-state ZMM group. Remainder: masked $2$--$7$ state AVX-512 core.
+Single duplex: AVX-512 permutation. Chunk~$0$: all active states are written
+back through \texttt{state8}. \\
+\texttt{amd64} AVX2 &
+Wide: two four-state YMM groups. Remainder: $2$--$7$ states with dummy inactive
+lanes. Single duplex: general purpose register permutation. Chunk~$0$: all
+active states are written back through \texttt{state8}. \\
+\texttt{arm64} NEON+SHA3 &
+Wide: four two-state NEON pairs. Remainder: two-state pair core. Single duplex:
+NEON/SHA-3 permutation. Chunk~$0$: pair $(0,1)$ is written back in the wide
+core, and both states are written back in the pair core. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
 \paragraph{Shared batching structure.}
 The implementation separates the sequential root duplex from the independent
 leaf duplexes. The root duplex normally uses a single-duplex ($\times 1$)
@@ -15,10 +39,11 @@ the first $48$ close with \textsc{msg\_more}, and the last closes with
 \textsc{msg\_last}. A single public block index therefore drives the whole
 batch. The batched state is lane-major: for each of the $25$ Keccak lanes,
 the kernel stores the corresponding 64-bit word of each active instance
-together in vector registers, allowing one vector operation to update the
-same lane across several duplex states.
+together in vector registers. Equivalently, for Keccak lane $i$ the vector
+register holds $(S_0[i],\ldots,S_7[i])$ across the active duplex states, so
+one vector operation updates the same lane in several states.
 
-\paragraph{Chunk~$0$ fusion and tail handling.}
+\paragraph{Chunk~$0$ fusion.}
 Chunk~$0$ is part of the root transcript, but its message phase has the
 same kernel-visible block schedule as a complete leaf chunk. The optimized
 paths exploit this by placing the post-AD root state into lane~$0$ of the
@@ -29,6 +54,7 @@ that drains incomplete batches. The output state from lane~$0$ is written
 back to the root duplex, which then absorbs the leaf tags produced by the
 same call.
 
+\paragraph{Remainder and tail handling.}
 Messages are otherwise decomposed into full eight-chunk batches plus a
 remainder. On \texttt{amd64}, a register-resident remainder kernel handles
 two to seven complete chunks in one call, reading each active chunk in
@@ -38,42 +64,48 @@ the count-aggregation tail use the single-duplex core. The \texttt{amd64}
 assembly chunk kernels handle the $48$ full \textsc{msg\_more} blocks and
 leave the final \textsc{msg\_last} block plus leaf tag extraction to shared
 Go code, keeping byte-granular tail logic out of assembly. The
-\texttt{arm64} batched kernels process the complete chunk and store the
-closing states back in assembly, which is the writeback needed for chunk~$0$
-fusion.
+\texttt{arm64} batched kernels process the complete chunk and store back the
+states needed for chunk~$0$ fusion: pair $(0,1)$ in the $\times 8$ kernel,
+and both active states in the $2$-wide kernel.
 
 \paragraph{\texttt{amd64}.}
 The \texttt{amd64} implementation provides AVX-512 and AVX2 cores and selects
-between them once at startup from the \texttt{AVX512VL} CPUID feature bit. The
-single-duplex permutation has two variants: a general-purpose-register core
-adapted from the standard library's \Keccak{} permutation (using the
-lane-complement trick so that $\chi$ requires no separate negation), and an
-AVX-512 variant; the root duplex uses whichever matches the selected core. The
-eight-way AVX-512 core packs the lane-major state into 25 ZMM registers, one per
-lane with all eight instances in the register's eight 64-bit slots, and performs
-the permutation with no cross-lane shuffles: rotations use \texttt{VPROLQ}, and
-\texttt{VPTERNLOGQ} fuses the $\theta$ $D$-term formation and the $\chi$
-\mbox{and-not} into single three-input logic instructions. The eight-way AVX2
-core, lacking 512-bit registers, runs the eight instances as two groups of four
-(four 64-bit lanes per YMM register), rotating by shift-or and computing $\chi$
-with \texttt{VPANDN}. The fused chunk kernels combine absorption with the
-permutation. The AVX-512 steady-state kernel reads the eight chunks with
-contiguous loads, transposes each rate block into the lane-major layout in
-registers (\texttt{VPUNPCKLQDQ}/\texttt{VPUNPCKHQDQ} and \texttt{VSHUFI64X2}),
-absorbs on the lane-major state, and transposes each output block back for a
-contiguous store, leaving only the $7$-byte partial rate lane to a masked gather;
-these sequential accesses are prefetcher-friendly, whereas per-lane gathers and
-scatters at the chunk stride $\beta$
+between them once at startup from an AVX-512 feature probe requiring OS support
+for YMM/ZMM state, \texttt{AVX512F}, and \texttt{AVX512VL}. The single-duplex
+permutation has two variants: a general-purpose-register core adapted from the
+standard library's \Keccak{} permutation (using the lane-complement trick so
+that $\chi$ requires no separate negation), and an AVX-512 variant; the root
+duplex uses whichever matches the selected core.
+
+The eight-way AVX-512 core packs the lane-major state into 25 ZMM registers,
+one per lane with all eight instances in the register's eight 64-bit slots, and
+performs the permutation with no cross-lane shuffles: rotations use
+\texttt{VPROLQ}, and \texttt{VPTERNLOGQ} fuses the $\theta$ $D$-term formation
+and the $\chi$ \mbox{and-not} into single three-input logic instructions. The
+fused chunk kernel reads the eight chunks with contiguous loads, transposes each
+rate block into the lane-major layout in registers
+(\texttt{VPUNPCKLQDQ}/\texttt{VPUNPCKHQDQ} and \texttt{VSHUFI64X2}), absorbs on
+the lane-major state, and transposes each output block back for a contiguous
+store. Since $\rho = 167 = 20 \cdot 8 + 7$, the first $20$ rate lanes use this
+transposed path and only the trailing $7$ bytes in lane~$20$ use a masked
+gather. These sequential accesses are prefetcher-friendly, whereas per-lane
+gathers and scatters at the chunk stride $\beta$
 (\texttt{VPGATHERQQ}/\texttt{VPSCATTERQQ}) would stall on cold memory and cap
-the long-message rate. The register-resident kernel that drains a
-two-to-seven-chunk remainder instead uses that per-lane gather/scatter form
-under a mask, reading the active chunks in place: the transpose's shuffle work
-is constant regardless of the chunk count and would be spent partly on inactive
-lanes, whereas the gathers scale with the active element count. The AVX2 path
-drains the same remainders with a variant of its grouped-by-four kernels that
-aims each inactive instance's loads and stores at a dummy block inside the
-kernel frame with a zero advance stride, so inactive instances touch no memory
-beyond the remainder and the hot loop stays branch-free.
+the long-message rate.
+
+The register-resident kernel that drains a two-to-seven-chunk AVX-512 remainder
+instead uses that per-lane gather/scatter form under a mask, reading the active
+chunks in place: the transpose's shuffle work is constant regardless of the
+chunk count and would be spent partly on inactive lanes, whereas the gathers
+scale with the active element count.
+
+The eight-way AVX2 core, lacking 512-bit registers, runs the eight instances as
+two groups of four (four 64-bit lanes per YMM register), rotating by shift-or
+and computing $\chi$ with \texttt{VPANDN}. The AVX2 path drains remainders with
+a variant of the grouped-by-four kernels that aims each inactive instance's
+loads and stores at a dummy block inside the kernel frame with a zero advance
+stride, so inactive instances touch no memory beyond the remainder and the hot
+loop stays branch-free.
 
 \paragraph{\texttt{arm64}.}
 The \texttt{arm64} path uses NEON plus the Armv8.2 SHA-3 extension
@@ -82,10 +114,10 @@ The permutation is expressed with the extension's fused instructions:
 \texttt{EOR3} (three-input XOR) for the $\theta$ column parities, \texttt{RAX1}
 (rotate-by-one and XOR) for the $\theta$ $D$-terms, \texttt{XAR} (XOR then
 rotate) to fuse the $\theta$ accumulation with the $\rho$ rotation, and
-\texttt{BCAX} (bit-clear and XOR) for $\chi$. The single-duplex core places one
-instance per 64-bit \texttt{D} lane across the 25 vector registers; the
-eight-way core packs two instances per 128-bit register and processes the batch
-of eight as four such pairs, using \texttt{ZIP1} and duplicating moves to
+\texttt{BCAX} (bit-clear and XOR) for $\chi$. The single-duplex core stores
+each Keccak lane in one 64-bit \texttt{D} lane across the 25 vector registers.
+The eight-way core packs two instances per 128-bit register and processes the
+batch of eight as four such pairs, using \texttt{ZIP1} and duplicating moves to
 interleave and extract the two instances of each lane in the fused chunk kernel.
 The same pair machinery backs a $2$-wide kernel that drains a leaf-chunk
 remainder two chunks at a time---one instance per $64$-bit half of a $128$-bit
