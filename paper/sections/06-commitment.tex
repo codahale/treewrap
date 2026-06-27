@@ -13,11 +13,13 @@ four random oracle theorems---CMTDs-4 (\Cref{thm:cmtds4-ro}), collision
 always second-preimage (\Cref{thm:asec-ro})---are then short
 instantiations, differing only in which facet they invoke and in whether
 a leaf tag collision term is needed when colliding inputs may use
-different ciphertext bodies. \Cref{app:flat-sponge-lift} transfers each
-instance to the public permutation setting, \Cref{sec:headline} records
-the concrete bounds, and \Cref{cor:committing-combined} forwards the
-remaining \cite{BH22} committing notions to the same root-collision
-bound.
+different ciphertext bodies. The context-discoverability proof of
+\Cref{thm:cdy-full} uses the same fixed-target root-preimage facet,
+together with hidden-component key-test accounting.
+\Cref{app:flat-sponge-lift} transfers each instance to the public
+permutation setting, \Cref{sec:headline} records the concrete bounds, and
+\Cref{cor:committing-combined} forwards the remaining \cite{BH22}
+committing notions to the same root-collision bound.
 
 The instantiations rest on two structural separation facts, recorded
 first: distinct contexts $(K, N, A)$ reach distinct final root
@@ -331,6 +333,49 @@ $\lfloor \ROflat(\flatmap(R)) \rfloor_{\tauroot}$ at $R$ equals the fixed
 target $T^*$. The Root Tag Hash Bound (\Cref{lem:root-tag-hash}, part~2,
 with target $T^*$) gives
 $\AdvePre_\RO(\mathcal{B}) \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))$.
+\end{proof}
+
+\paragraph{Context discoverability.}
+
+\begin{proof}[Proof of \Cref{thm:cdy-full}]
+Full reveal $\mathsf{ts} = \{k,n,a\}$ hides no component and is won
+trivially by any scheme, so the restriction to
+$\mathsf{ts} \subsetneq \{k,n,a\}$ excludes no meaningful case. The
+restricted advantage requires $\mathcal{A}$ to win against every
+query-independent selector, so it is at most the success probability
+against the selector $S^\star$ that samples a fresh context
+$(K_0, N_0, A_0)$---each of $K_0$, $N_0$, and $A_0$ uniform on a
+$256$-bit space---encrypts a message under it to obtain the target
+ciphertext $C^* = C \concat T^*$, and reveals only the
+$\mathsf{ts}$-components. By the Lift Application corollary
+(\Cref{cor:lift-application}), the derived random oracle adversary
+$\mathcal{B}$ has $\qRO(\mathcal{B}) \leq \Nprim$; it remains to bound the
+random oracle success against $S^\star$. Here
+$T^* = \lfloor \RF(R_0) \rfloor_{\tauroot}$ is the root tag of the
+selector's final root transcript $R_0$ under $(K_0, N_0, A_0)$, and a
+winning $\mathcal{A}$ outputs a context reaching a final root transcript
+$R$ with $\RF(R)$ projecting to $T^*$.
+
+Let $Z_0$ be any context component hidden by $\mathsf{ts}$---one exists
+because $\mathsf{ts} \subsetneq \{k,n,a\}$---which $\mathcal{A}$ must itself
+supply (for the named variants, the key for
+$\mathsf{ts} \in \{\varnothing, \{n,a\}\}$, the nonce for
+$\mathsf{ts} = \{k,a\}$, the associated data for $\mathsf{ts} = \{k,n\}$),
+and which $S^\star$ sampled uniformly on $\bits^w$
+with $w = 256 \geq k$ and which $\mathcal{A}$ never sees: the only values
+revealed to it, the body and tag of $C^*$, are $\RF$ projections
+independent of $Z_0$. If $R = R_0$, then $\mathcal{A}$ has reconstructed
+the selector's transcript, in particular its $Z_0$-component, which by
+\Cref{lem:bridge-decode} requires a candidate decoding under
+$\KeyedTWOut_{Z_0}$ to the hidden $Z_0$; since $Z_0$ stays uniform over
+the values no direct query has tested, \Cref{lem:key-tests} (hidden
+component $Z_0$, $w = 256$) bounds this by $\KeyGuess_k(\Nprim)$. If
+$R \neq R_0$, the win is that $R$ collides with $R_0$ on its
+$\tauroot$-bit projection, which the Root tag Candidate Sequence lemma
+(\Cref{lem:root-candidate-seq}) and the second-preimage corollary of
+\Cref{lem:adaptive-candidate}, with the designated candidate
+$\flatmap(R_0)$, bound by $\RootPre_{\tauroot}(\Nprim)$. Adding the lift
+gives the bound, uniformly over $\mathsf{ts}$.
 \end{proof}
 
 \begin{theorem}[Random Oracle aSec]

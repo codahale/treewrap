@@ -113,8 +113,8 @@ The real-vs-ideal results come first: a random oracle mu-ind theorem, its
 public permutation lift, and the all-in-one AE corollary obtained by
 setting the mu-ind user cap to $D=1$. The independent hash, committing,
 and discoverability results follow afterward. The CMTDs-4, collision,
-second-preimage, and preimage random oracle bounds are proved in
-\Cref{sec:cmtds3}.
+second-preimage, and preimage random oracle bounds, together with the proof
+of the context-discoverability theorem, are in \Cref{sec:cmtds3}.
 All random oracle adversaries in this subsection are flat-RO adversaries
 (\Cref{sec:ro-model}) with the displayed resources, and the
 flat sponge lift of
@@ -475,46 +475,7 @@ $\mathsf{CDY}^\ast_k$, $\mathsf{CDY}^\ast_n$, $\mathsf{CDY}^\ast_a$---satisfies
 \]
 \end{theorem}
 
-\begin{proof}
-Full reveal $\mathsf{ts} = \{k,n,a\}$ hides no component and is won
-trivially by any scheme, so the restriction to
-$\mathsf{ts} \subsetneq \{k,n,a\}$ excludes no meaningful case. The
-restricted advantage requires $\mathcal{A}$ to win against every
-query-independent selector, so it is at most the success probability
-against the selector $S^\star$ that samples a fresh context
-$(K_0, N_0, A_0)$---each of $K_0$, $N_0$, and $A_0$ uniform on a
-$256$-bit space---encrypts a message under it to obtain the target
-ciphertext $C^* = C \concat T^*$, and reveals only the
-$\mathsf{ts}$-components. By the Lift Application corollary
-(\Cref{cor:lift-application}), the derived random oracle adversary
-$\mathcal{B}$ has $\qRO(\mathcal{B}) \leq \Nprim$; it remains to bound the
-random oracle success against $S^\star$. Here
-$T^* = \lfloor \RF(R_0) \rfloor_{\tauroot}$ is the root tag of the
-selector's final root transcript $R_0$ under $(K_0, N_0, A_0)$, and a
-winning $\mathcal{A}$ outputs a context reaching a final root transcript
-$R$ with $\RF(R)$ projecting to $T^*$.
-
-Let $Z_0$ be any context component hidden by $\mathsf{ts}$---one exists
-because $\mathsf{ts} \subsetneq \{k,n,a\}$---which $\mathcal{A}$ must itself
-supply (for the named variants, the key for
-$\mathsf{ts} \in \{\varnothing, \{n,a\}\}$, the nonce for
-$\mathsf{ts} = \{k,a\}$, the associated data for $\mathsf{ts} = \{k,n\}$),
-and which $S^\star$ sampled uniformly on $\bits^w$
-with $w = 256 \geq k$ and which $\mathcal{A}$ never sees: the only values
-revealed to it, the body and tag of $C^*$, are $\RF$ projections
-independent of $Z_0$. If $R = R_0$, then $\mathcal{A}$ has reconstructed
-the selector's transcript, in particular its $Z_0$-component, which by
-\Cref{lem:bridge-decode} requires a candidate decoding under
-$\KeyedTWOut_{Z_0}$ to the hidden $Z_0$; since $Z_0$ stays uniform over
-the values no direct query has tested, \Cref{lem:key-tests} (hidden
-component $Z_0$, $w = 256$) bounds this by $\KeyGuess_k(\Nprim)$. If
-$R \neq R_0$, the win is that $R$ collides with $R_0$ on its
-$\tauroot$-bit projection, which the Root tag Candidate Sequence lemma
-(\Cref{lem:root-candidate-seq}) and the second-preimage corollary of
-\Cref{lem:adaptive-candidate}, with the designated candidate
-$\flatmap(R_0)$, bound by $\RootPre_{\tauroot}(\Nprim)$. Adding the lift
-gives the bound, uniformly over $\mathsf{ts}$.
-\end{proof}
+The proof is given in \Cref{sec:cmtds3}.
 
 \begin{corollary}[Root Tag as a Compact Commitment]
 \label{cor:tag-commitment}
