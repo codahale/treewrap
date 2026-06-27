@@ -149,8 +149,7 @@ supported plaintext satisfies $0 \leq \leaves(M) \leq 2^{64} - 1$, so
 leaf indices lie in $\{1, \dots, 2^{64} - 1\}$. The associated data
 bound $A_{\max}$ is a fixed scheme parameter taken equal to $M_{\max}$
 unless stated otherwise. Inputs exceeding these bounds are outside the
-scheme domain; every game in \Cref{sec:security-model} rejects
-domain-violating queries.
+scheme domain.
 
 The derived per-call absorption bound $\rho$ follows the \cite{BDPV11}
 analysis: with $r = 1344$ and $\padtenone$ padding, $\rho_{\max}(\padtenone, r) =

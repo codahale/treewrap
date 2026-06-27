@@ -300,18 +300,28 @@ is the original CMTD-$\ell$/CMT-$\ell$ pair of \cite[Fig.~4]{BH22}.
 These definitions are instantiated for \TW{} in \Cref{sec:games-pp},
 with the public permutation lift deferred to that section.
 
+\begin{definition}[Root tag wrapper]
+\label{def:htw}
+For every \TW{} encryption input $X = (K,N,A,M)$ in the scheme domain,
+define the root tag wrapper by
+\[
+  \HTW(K,N,A,M) = T
+  \quad\text{where}\quad
+  \Enc_K(N,A,M) = C \concat T.
+\]
+We also write $\HTW(X)$ for $\HTW(K,N,A,M)$. Equivalently, \HTW{} runs
+\TW{} encryption and discards the ciphertext body.
+\end{definition}
+
 \paragraph{The root tag as a hash.}
 Many uses of commitment store, transmit, or compare a short tag rather
 than the full ciphertext, and ask that the short string alone be
 binding---the compactly committing AEAD goal introduced by \cite{GLR17}
 for message franking. \TW{} ciphertexts are written $C \concat T$ with
-$T$ the $\tauroot$-bit root tag, and we capture this goal directly, by
-treating the map from the encryption input to the tag as a hash function:
-write $\HTW(K, N, A, M)$ for the root tag $T$ of
-$\Enc_K(N, A, M) = C \concat T$, the \TW{} wrapper that discards the
-ciphertext body and returns only the tag. Keyed by the permutation, this
-is a hash family, and we ask that it satisfy the hash-function security
-notions of \cite{RS04}, over the \TW{} input domain:
+$T$ the $\tauroot$-bit root tag, and we capture this goal directly by
+treating \Cref{def:htw} as a hash function. Keyed by the permutation,
+this is a hash family, and we ask that it satisfy the hash-function
+security notions of \cite{RS04}, over the \TW{} input domain:
 \begin{description}
   \item[Collision resistance (Coll).] No adversary finds distinct inputs
     $X_1, \dots, X_s$ (any $s \geq 2$) with
