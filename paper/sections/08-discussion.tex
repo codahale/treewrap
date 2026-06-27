@@ -7,22 +7,28 @@
 \Cref{tab:scheme-compare} situates \TW{} against representative authenticated
 encryption schemes along the axes that distinguish it: the underlying primitive,
 whether the mode is parallelizable, the key, nonce, and tag sizes, associated data
-support, nonce-misuse resistance, full-input key commitment (\textsf{CMT-4}), and
-context discoverability security (CDY).
+support, nonce-misuse resistance, committing security (CMT), and context
+discoverability security (CDY). The rows are representative rather than
+exhaustive: sponge/duplex relatives, AES baselines, a misuse-resistant AES
+baseline, and a generic committing transform.
 The comparison is structural; \TW{}'s own concrete bounds and the regimes in
 which each term dominates are treated in \Cref{sec:bound-discussion}, and its
 measured throughput against hardware-accelerated AES-128-GCM in
-\Cref{sec:compare-perf}. The \textsf{CMT-4} column records full-input
-commitment: \TW{} provides it within the mode, as does Ascon \cite{KSW23}, a
-committing transform supplies it for an arbitrary base scheme, and the remaining
-listed schemes do not provide it. The CDY column records context discoverability
-security in the \cite{MLGR23} sense: \TW{} provides it within the mode
+\Cref{sec:compare-perf}. The CMT column records the published committing
+security level most relevant to the comparison: \TW{}'s $128$-bit
+\textsf{CMTDs-4} bound, Ascon's roughly $64$-bit committing bound
+\cite{KSW23}, published low-cost attacks where known
+\cite{KSW23,CR22,ADGKLS22}, and the hash-collision level inherited by
+\textsf{CTX}. The CDY column records context discoverability security in the
+\cite{MLGR23} sense: \TW{} provides it within the mode
 (\Cref{thm:cdy-full}), AES-GCM is broken by the context discovery attacks of
 \cite{MLGR23}, and the remaining entries are marked ``?'' because, to our
 knowledge, neither a context discovery attack nor a context discoverability
 security proof has been published for them. Context discoverability is a recent
-notion \cite{MLGR23}, so its absence of entries reflects the state of the
-literature rather than a positive or negative result.
+notion \cite{MLGR23}, so a ``?'' records the state of the literature rather than
+a proof of security. In particular, schemes already lacking meaningful
+committing security should be viewed skeptically for CDY; the table records a
+negative entry only when a CDY attack has been published.
 The table does not separately track compact (tag-only) commitment, since
 that property has not been systematically analyzed for the comparison
 schemes.
@@ -31,26 +37,25 @@ schemes.
 \centering
 \footnotesize
 \caption{Structural comparison of \TW{} with representative AEADs. Sizes are in
-bytes; AES-GCM-SIV also admits a $32$-byte key. ``Misuse-res.'' is nonce-misuse
-resistance in the sense of \cite{RS06}; the \textsf{CMT-4} column records
-full-input commitment in the sense of \cite{BH22}, abstracting over its
-decryption (\textsf{CMTD}) and encryption (\textsf{CMT}) forms, of which \TW{}'s
-is the decryption form \textsf{CMTDs-4}; CDY is context discoverability in
-the sense of \cite{MLGR23}. A dash means the entry is inherited
-from the base scheme, and ``?'' that no result is established in the literature.
-\TW{}'s concrete bounds appear in
+bytes; AES-GCM-SIV also admits a $32$-byte key. ``Misuse'' is nonce-misuse
+resistance in the sense of \cite{RS06}; CMT records the relevant published
+committing level, with ``broken'' denoting a published low-cost attack and
+``hash CR'' denoting the collision-resistance level of the hash used by the
+transform; CDY is context discoverability in the sense of \cite{MLGR23}. A dash
+means the entry depends on the base scheme, and ``?'' means no result is
+established in the literature. \TW{}'s concrete bounds appear in
 \Cref{sec:bound-discussion}.}
 \label{tab:scheme-compare}
 \begin{tabular}{@{}llcccccc@{}}
 \toprule
-Scheme & Primitive & Par. & K/N/T & AD & Misuse & \textsf{CMT-4} & CDY \\
+Scheme & Primitive & Par. & K/N/T & AD & Misuse & CMT & CDY \\
 \midrule
-\TW{}                        & \Keccakp   & yes & $32/32/32$ & yes & no  & yes & yes \\
-Ascon-128a \cite{DEMS21}     & Ascon-$p$ ($320$ b) & no  & $16/16/16$ & yes & no  & yes & ?   \\
-Xoodyak \cite{DHPVV20}       & Xoodoo ($384$ b)   & no  & $16/16/16$ & yes & no  & no  & ?   \\
-AES-GCM \cite{Dwo07}         & AES                & yes & $16/12/16$ & yes & no  & no  & no  \\
-AES-GCM-SIV \cite{GLL17}     & AES                & yes & $16/12/16$ & yes & yes & no  & ?   \\
-nAE $+$ \textsf{CTX} \cite{CR22} & any nAE        & ---  & ---        & yes & --- & yes & ?   \\
+\TW{}                        & \Keccakp   & yes & $32/32/32$ & yes & no  & $128$ b & yes \\
+Ascon-128a \cite{DEMS21}     & Ascon-$p$ ($320$ b) & no  & $16/16/16$ & yes & no  & $\approx64$ b & ?   \\
+Xoodyak \cite{DHPVV20}       & Xoodoo ($384$ b)   & no  & $16/16/16$ & yes & no  & $2^{17}$ atk. & ?   \\
+AES-GCM \cite{Dwo07}         & AES                & yes & $16/12/16$ & yes & no  & broken & no  \\
+AES-GCM-SIV \cite{GLL17}     & AES                & yes & $16/12/16$ & yes & yes & broken & ?   \\
+nAE $+$ \textsf{CTX} \cite{CR22} & any nAE        & ---  & ---        & yes & --- & hash CR & ?   \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -71,30 +76,23 @@ visible in \Cref{sec:performance}: on short, single-leaf inputs \TW{} is slower
 per byte than a compact serial duplex would be, and its advantage appears only
 once a message spans enough leaves to fill the vector units.
 
-\TW{} reuses KangarooTwelve's final-node/leaf split but not its Sakura coding,
-which renders that scheme's tree hashing sound: the frame bits and coded child
-count of a Sakura coding make every node input unambiguously decodable, so that
-any collision in the hash output entails a collision in the inner function. \TW{}
-adopts no such coding and does not need one. Its tree has a single fixed
-two-level shape---one root and a leaf count fixed by $\|C\|$ through
-$\leaves(\cdot)$---so it never distinguishes among a family of admissible
-topologies, the generality a Sakura coding exists to serve; the leaf count is
-moreover pinned by absorbing $\langle n \rangle_8$ before the root tag. The
-unambiguous parsing such a coding would supply is instead furnished by the
-per-call domain separation of \Cref{sec:domain-sep}: the prefixes $\prfxroot$,
-$\prfxleaf$ and the leaf index $\langle j \rangle_8$ fix the duplex instance, and
-the seven pairwise-distinct phase suffixes of \Cref{tab:suffixes} fix the phase
-and the final/non-final role of every call, so distinct transcripts flatten to
-distinct sponge inputs (\Cref{lem:transcript-inj,cor:output-sep}); binding the
-index into each leaf is in fact a finer separation than ordering leaves within an
-aggregation alone. More to the point, the committing and discoverability
-bounds of \Cref{sec:cmtds3} do not rest on soundness of a tree coding at all:
-distinct $(K, N, A)$ triples already diverge in the root initialization and
-associated data calls, before any leaf tag is aggregated (\Cref{cor:triple-sep}),
-so agreement among leaf tags cannot merge distinct contexts. The leaf encoding
-enters only the collision bound of \Cref{thm:coll}, and there only
-through its explicit leaf tag collision term. A Sakura coding would re-establish
-parsing facts \TW{} already possesses, and would leave these bounds unchanged.
+\TW{} reuses KangarooTwelve's final-node/leaf split but not its Sakura coding
+\cite{BDPV14}. In KangarooTwelve, Sakura makes the final node parseable as a
+message hop followed by a chaining hop: the first chunk, the sequence of leaf
+chaining values, the coded number of chaining values, and the final-node frame
+bits all have explicit roles \cite{BDPVVV16}. In \TW{}, the analogous chaining
+values are the leaf tags, but they are not anonymous strings waiting to be
+interpreted by the root. Each leaf duplex is initialized with a chunk-specific
+state containing the leaf prefix and leaf index, while the root absorbs the leaf
+tags in index order and then absorbs the leaf count $\langle n \rangle_8$
+(\Cref{sec:tw128,sec:domain-sep}). Sakura's structural job is therefore handled
+by mode initialization and domain separation rather than by a tree coding. The
+transcript separation lemmas make this explicit
+(\Cref{lem:transcript-inj,cor:output-sep}). The committing and discoverability
+bounds do not depend on tree-coding soundness: distinct $(K,N,A)$ triples
+already diverge before leaf aggregation (\Cref{cor:triple-sep}), and the leaf
+encoding enters the hash collision bound only through the explicit leaf tag
+collision term of \Cref{thm:coll}.
 
 Keyak \cite{BDPVV16}, whose Motorist mode is already parallelizable, is the
 closest prior duplex AEAD in spirit; \Cref{sec:related} contrasts its
@@ -108,7 +106,7 @@ breaking others \cite{KSW23}, and some constructions, such as Strobe, have not
 been examined in that setting at all. What distinguishes \TW{} is that it makes
 the root tag a secure compact commitment to the full input---collision-,
 second-preimage-, and preimage-resistant as a hash, which in particular yields
-the strongest full-input committing notion (\textsf{CMT-4})---as a proven,
+the $128$-bit full-input \textsf{CMTDs-4} bound---as a proven,
 designed property of the mode, and additionally resists \cite{MLGR23} context
 discovery, established without leaving the single-permutation duplex
 setting; context discoverability security in particular is not known to hold for
@@ -123,17 +121,22 @@ non-committing base scheme. \cite{BH22} give the \textsf{UtC}, \textsf{RtC}, and
 AEAD, and \cite{CR22} give \textsf{CTX}, which makes any nonce-based AE scheme
 commit to its full context at the cost of a single hash over a short string and
 with no ciphertext expansion. These transforms are inexpensive and broadly
-applicable; \textsf{CTX} in particular is nearly free. \TW{} differs not by
-undercutting their cost but by integration: it is committing as the mode itself,
-with the same permutation and the same tag that already provide confidentiality
-and integrity, so no separate commitment primitive, key-derivation step, or
-auxiliary hash is invoked, and the strongest $s$-way full-input notion follows
-from a single root tag collision bound (\Cref{sec:cmtds3}). More strongly,
+applicable; \textsf{CTX} in particular is nearly free. It is nevertheless a
+committing-AE transform, not a compact-commitment transform: it binds the
+transformed ciphertext, but does not make the tag a standalone digest-like
+commitment to the full input. \TW{} differs not by undercutting their cost but by
+integration: it is committing as the mode itself, and its root tag is the compact
+committing object. The commitment uses the same permutation already used for
+confidentiality and integrity and the same tag already used for authentication,
+so no separate commitment primitive, key-derivation step, or auxiliary hash is
+invoked, and the multi-input full-commitment bound follows from a single root tag
+collision bound (\Cref{sec:cmtds3}). More strongly,
 \Cref{thm:coll} shows that the root tag alone is a compact commitment
 string even when the ciphertext bodies used as openings differ, up to the
 additional leaf tag birthday term. The same tag, being preimage-resistant,
-additionally yields context discoverability security against that fixed tag, which the
-context-committing transforms are not known to provide. This places \TW{}
+also yields context discoverability security for target ciphertexts; generic
+context-committing transforms are not known to provide this preimage-facing
+guarantee. This places \TW{}
 alongside the dedicated committing primitives---the compactly committing AEAD of
 \cite{GLR17} and the encryptment of \cite{DGRW18}---which likewise build
 commitment in rather than bolt it on, but which were designed for message
@@ -170,37 +173,50 @@ AES-GCM-SIV \cite{GLL17}, in the deterministic/misuse-resistant lineage of
 \cite{RS06}, tolerate nonce repetition at the price of a second pass. A
 misuse-resistant variant of \TW{} is left open.
 
-\paragraph{Release of unverified plaintext.}
+\paragraph{Unverified plaintext release.}
 The analysis assumes that plaintext is released only after the tag verifies. \TW{}
 is online and single-pass, so an implementation that streams decrypted leaf
 output before checking the root tag operates in the release-of-unverified-plaintext
 setting of \cite{ABLMMY14}, which our bounds do not cover; plaintext-awareness and
 \textsf{INT-RUP} security for \TW{} are unstudied.
 
-\paragraph{Bound tightness.}
+\paragraph{Conservative lift.}
 Per-term tightness is itemized in \Cref{sec:bound-discussion}; one term is
-conservative in a way that points to an open problem. The flat sponge
-differentiating loss
+conservative because our proof follows the unkeyed sponge/hash line. The flat
+sponge differentiating loss
 $\Lift_c(\Ntot) = \Ntot(\Ntot+1)/2^{c+1}$ bounds the indifferentiability
-loss of \cite{BDPV08}, used here as a generic lift from the
-random oracle model. A direct analysis of the keyed duplex is tighter: the
-modern keyed-duplex bounds synthesized by \cite{Men23}, building on the
-full-state keyed-duplex line, bound a keyed duplex against an ideal permutation
-without passing through indifferentiability, and recasting \TW{}'s leaf and root
-duplexes in that framework is a promising route to a sharper capacity term. This
-route is not turnkey, however: the keyed duplex bundles squeezing and absorption
-into a single call, so its authenticated encryption mode \textsf{MonkeySpongeWrap}
-has the decryptor \emph{overwrite} the rate with each ciphertext block rather than
-feed back the ciphertext it has just produced. On the final, padded block this
-overwrite no longer matches the encryptor's XOR-absorbed padded plaintext outside
-the message bits, so the decryptor cannot reconstruct the final block of duplex
-output and recomputes the tag from a divergent state \cite[Alg.~8]{Men23}. \TW{}
-sidesteps this by absorbing the ciphertext in both directions (\Cref{sec:tw128}),
-so recasting it on the keyed duplex would first require repairing the mode. We
-retain the indifferentiability lift for its modularity, as the resulting
-$\Lift_c$ already meets the $128$-bit target (\Cref{sec:bound-discussion}).
+loss of \cite{BDPV08}, used here to lift the random oracle analysis to the
+public permutation model. This proof route matches the role of the root tag:
+\TW{}'s commitment and discoverability claims are consequences of hash security,
+and sponge hash security is supported by a mature literature. Newer keyed duplex
+analyses are attractive for AE bounds, but they are not developed for the
+commitment setting where the adversary may choose the key or context as part of a
+competing opening.
 
-\paragraph{Beyond-birthday and leakage.}
+Even within ordinary AE, the available keyed duplex interface is not a direct
+substitute for \TW{}. The modern bounds synthesized by \cite{Men23} use a duplex
+call phased as permutation, squeeze, then absorb or overwrite
+(\cite[Sec.~3.4, Table~1]{Men23}). In the authenticated-encryption application,
+this interface is instantiated as \textsf{MonkeySpongeWrap} \cite[Alg.~8]{Men23}.
+As written, however, that algorithm is not correct for partial final message
+blocks. Encryption absorbs the padded final plaintext block after squeezing and
+then truncates the resulting ciphertext to the message length. Decryption
+receives only this truncated ciphertext, pads it independently, and uses the
+overwrite branch to set the rate. The missing ciphertext padding bits are
+therefore not reconstructed, so the decryption transcript can diverge before tag
+recomputation.
+
+\TW{} therefore stays with the BDPV11 duplex phasing: a call absorbs the actual
+input string, padded by the duplex rule, and then returns the requested output.
+At the stream layer this supports arbitrary length messages by splitting them
+into bounded duplex blocks, with the final short ciphertext block absorbed as it
+is rather than reconstructed through an overwrite branch (\Cref{sec:tw128}). A
+direct keyed duplex treatment would therefore need a theorem for this BDPV11
+phasing in adversarial key commitment games. We retain the indifferentiability
+lift because it is modular and already meets the $128$-bit target
+(\Cref{sec:bound-discussion}).
+
+\paragraph{Beyond-birthday security and leakage.}
 All bounds are birthday-type on the $256$-bit capacity, delivering the
 $128$-bit target but no more; a beyond-birthday analysis is open. The model is
 also single-stage and leakage-free: side-channel resistance is addressed only at
