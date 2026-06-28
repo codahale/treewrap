@@ -120,7 +120,7 @@ single $1$ bit followed by the minimum number of $0$ bits reaching a
 multiple of $r$, is indifferentiable from a random oracle when
 $\pi$ is uniformly random. We bound its distinguishing advantage by
 $\Lift_c(\Ntot) = \Ntot(\Ntot+1) / 2^{c+1}$, derived in
-\Cref{lem:lift-bound} from the exact differentiating probabilities of
+\Cref{lem:lift-bound} from the product upper bounds of
 \cite[Lemmas~4 and~5]{BDPV08}.
 
 \paragraph{The duplex construction.}
@@ -146,7 +146,7 @@ where $\mathsf{pad}_j = \mathsf{pad}[r](|\sigma_j|)$ is the padding
 the duplex appends in its $j$-th call; the flattened input carries
 these interior paddings explicitly, and the sponge appends only the
 final $\mathsf{pad}_i$. The flattening map is
-injective by \cite[Lemma~4]{BDPV11}: the duplex-call sequence is
+injective by \cite[Lemma~4]{BDPV11}: the duplex input-string sequence is
 recoverable from the flattened sponge input.
 
 \paragraph{\TW{} instantiation.}
