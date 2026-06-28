@@ -178,6 +178,9 @@ The mu-ind advantage of $\mathcal{A}$ against \TW{} is
   \Advmuind_\TW(\mathcal{A})
   = |2 \Pr[b' = b] - 1|.
 \]
+A valid verification query is \emph{non-replay} if its tuple is not in
+$W$ when the query is asked; replay hits are answered by the recorded
+transcript and are not counted in the verification-query resource below.
 
 Resource caps split per potential user $d \leq D$: $N^{(d)}$,
 $\qv^{(d)}$, $\nleaf^{(d)}$ are the per-user counts under
@@ -297,8 +300,10 @@ unless they affect the final bound.
   summing each root initialization, associated data duplex block, root
   message duplex block, leaf initialization, leaf message duplex block,
   and aggregation duplex block across the entire query
-  sequence. Valid AE-style verification computations are counted whether
-  they accept or reject. In the hash, committing, and discoverability
+  sequence. Valid AE-style non-replay verification computations are
+  counted whether they accept or reject; replay-table verification hits
+  are transcript-consistency checks and are not charged to $N$ or to the
+  verification-tag terms. In the hash, committing, and discoverability
   games there is no adversary
   construction oracle: for the $\HTW$ collision game, $N$ counts the $s$
   deterministic encryptions on the submitted inputs (and the one or two
@@ -323,9 +328,9 @@ unless they affect the final bound.
   direct primitive-interface queries counted by $\Nprim$ in one
   chronological public primitive transcript.
 \item[$\qv(\mathcal{A})$, $\Qv$:] the number of verification queries
-  with valid inputs, and a cap on it. Used in the verification terms of
-  the direct mu-ind and AE bounds of
-  \Cref{sec:headline}. Every valid verification query contributes at least
+  with valid inputs that are not replay-table hits, and a cap on it.
+  Used in the verification terms of the direct mu-ind and AE bounds of
+  \Cref{sec:headline}. Every counted verification query contributes at least
   one verification/decryption
   construction call in the $N$ accounting, so $\qv(\mathcal{A}) \leq N$.
 \item[$\qRO(\mathcal{B})$, $\QRO$:] the number of direct
