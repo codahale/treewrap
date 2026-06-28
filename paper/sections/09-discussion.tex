@@ -133,10 +133,9 @@ invoked, and the multi-input full-commitment bound follows from a single root ta
 collision bound (\Cref{sec:cmtds3}). More strongly,
 \Cref{thm:coll} shows that the root tag alone is a compact commitment
 string even when the ciphertext bodies used as openings differ, up to the
-additional leaf tag birthday term. The same tag, being preimage-resistant,
-also yields context discoverability security for target ciphertexts; generic
-context-committing transforms are not known to provide this preimage-facing
-notion of context discoverability. This places \TW{}
+additional leaf tag birthday term. The root-tag preimage bound also gives
+context discoverability for target ciphertexts. Generic context-committing
+transforms are not known to provide an analogous result. This places \TW{}
 alongside the dedicated committing primitives---the compactly committing AEAD of
 \cite{GLR17} and the encryptment of \cite{DGRW18}---which likewise build
 commitment in rather than bolt it on, but which were designed for message
