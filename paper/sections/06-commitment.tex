@@ -398,11 +398,11 @@ Full reveal $\mathsf{ts} = \{k,n,a\}$ hides no component and is won
 trivially by any scheme, so the restriction to
 $\mathsf{ts} \subsetneq \{k,n,a\}$ excludes no meaningful case. The
 restricted advantage requires $\mathcal{A}$ to win against every
-query-independent selector, so it is at most the success probability
-against the selector $S^\star$ that samples a fresh context
+valid query-independent selector, so it is at most the success probability
+against the valid selector $S^\star$ that samples a fresh context
 $(K_0, N_0, A_0)$---each of $K_0$, $N_0$, and $A_0$ uniform on a
-$256$-bit space---encrypts a message under it to obtain the target
-ciphertext $C^* = C \concat T^*$, and reveals only the
+$256$-bit space---encrypts a fixed valid message under it to obtain the
+valid target ciphertext $C^* = C \concat T^*$, and reveals only the
 $\mathsf{ts}$-components. By the Lift Application corollary
 (\Cref{cor:lift-application}), the derived random oracle adversary
 $\mathcal{B}$ has $\qRO(\mathcal{B}) \leq \Nprim$; it remains to bound the
@@ -418,7 +418,7 @@ supply (for the named variants, the key for
 $\mathsf{ts} \in \{\varnothing, \{n,a\}\}$, the nonce for
 $\mathsf{ts} = \{k,a\}$, the associated data for $\mathsf{ts} = \{k,n\}$),
 and which $S^\star$ sampled uniformly on $\bits^w$
-with $w = 256 \geq k$ and which $\mathcal{A}$ never sees: the only values
+with $w = 256$ and which $\mathcal{A}$ never sees: the only values
 revealed to it, the body and tag of $C^*$, are $\RF$ projections
 independent of $Z_0$. If $R = R_0$, then $\mathcal{A}$ has reconstructed
 the selector's transcript, in particular its $Z_0$-component. A direct
@@ -426,7 +426,7 @@ query whose decoded transcript contains a candidate value for $Z_0$ tests
 that value against the hidden component, and the final context output is
 one additional test. The same union bound as \Cref{lem:key-tests} (hidden
 component $Z_0$, $w = 256$) bounds this exact-reconstruction case by
-$\KeyGuess_k(\Nprim+1)$.
+$(\Nprim+1)/2^{256}$.
 
 If $R \neq R_0$, the win is that $R$ collides with $R_0$ on its
 $\tauroot$-bit projection, which the Root Tag Candidate Sequence lemma

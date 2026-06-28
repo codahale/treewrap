@@ -116,25 +116,24 @@ $\Advcmts{\ell}_\TW(\mathcal{A})$.
 The \cite[Fig.~5]{MLGR23} context discoverability game
 (\Cref{sec:commit-defs}) is a ciphertext-level preimage notion, distinct
 from the preimage resistance of $\HTW$ above. A query-independent selector
-chooses a target ciphertext and a hidden decryption context, then reveals
-the context components named by a target specifier $\mathsf{ts}$. The
-adversary sees the target ciphertext and the revealed components, and wins
-by finding the missing components of a context under which the ciphertext
-decrypts. Formally, for selector $S$:
+chooses a valid target ciphertext and a hidden decryption context, then
+reveals the context components named by a target specifier $\mathsf{ts}$.
+The adversary sees the target ciphertext and the revealed components, and
+wins by finding the missing components of a context under which the
+ciphertext decrypts. Formally, for valid selector $S$:
 \begin{align*}
   &\pi \sample \Perm(\bits^{1600}), \quad
    (C^*, \mathsf{rev}) \sample S[\pi], \\
   &(K, N, A) \sample \mathcal{A}^{\pi,\, \pi^{-1}}(C^*, \mathsf{rev}), \\
-  &\text{return $0$ if $C^*$ is not a valid \TW{} ciphertext, if
-    $(K,N,A)$ is outside the domain,} \\
+  &\text{return $0$ if $(K,N,A)$ is outside the domain,} \\
   &\qquad\text{or if $(K,N,A)$ disagrees with $\mathsf{rev}$ on its
     $\mathsf{ts}$-components}, \\
   &\text{return } \bigl[\Dec_{K}[\pi](N, A, C^*) \neq \bot\bigr].
 \end{align*}
 The restricted advantage $\Advcdy_\TW(\mathcal{A})$ is measured against
-every query-independent selector $S$, matching
+every valid query-independent selector $S$, matching
 $\mathsf{CDY}^\ast[\mathsf{ts}]$; in particular, it is no larger than the
-success probability against any fixed selector. At
+success probability against any fixed valid selector. At
 $\mathsf{ts} = \{n,a\}, \{k,a\}, \{k,n\}$, this gives the per-component
 variants $\mathsf{CDY}^\ast_k, \mathsf{CDY}^\ast_n,
 \mathsf{CDY}^\ast_a$.

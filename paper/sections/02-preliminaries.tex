@@ -368,15 +368,16 @@ ciphertext: it is to committing security what preimage resistance is to
 collision resistance. \cite[Fig.~5]{MLGR23} formalize it as the game
 $\mathsf{CDY}[\mathsf{ts}, S]$, in which a query-independent context
 selector $S$---a randomized algorithm taking no input---produces a
-target ciphertext together with the context components named by a target
-specifier $\mathsf{ts} \subseteq \{k, n, a\}$, and the adversary, given
-the revealed components, supplies the remaining components of a
+valid target ciphertext together with the context components named by a
+target specifier $\mathsf{ts} \subseteq \{k, n, a\}$, and the adversary,
+given the revealed components, supplies the remaining components of a
 decryption context $(K, N, A)$ and wins if the target ciphertext decrypts
 under it without error. The \emph{restricted} notion
 $\mathsf{CDY}^\ast[\mathsf{ts}]$ requires success against every
-query-independent selector $S$; equivalently, an adversary's restricted
-advantage is no larger than its success probability against any fixed
-selector. Its three per-component variants $\mathsf{CDY}^\ast_k$,
+query-independent selector $S$ whose output is supported on valid target
+ciphertexts; equivalently, an adversary's restricted advantage is no
+larger than its success probability against any fixed valid selector.
+Its three per-component variants $\mathsf{CDY}^\ast_k$,
 $\mathsf{CDY}^\ast_n$, $\mathsf{CDY}^\ast_a$ pin two of the three context
 components and have the adversary supply the third
 ($\mathsf{ts} = \{n, a\}, \{k, a\}, \{k, n\}$ respectively). In every

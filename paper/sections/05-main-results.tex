@@ -478,7 +478,7 @@ $\mathsf{CDY}^\ast_k$, $\mathsf{CDY}^\ast_n$, $\mathsf{CDY}^\ast_a$---satisfies
 \[
   \Advcdy_\TW(\mathcal{A})
   \;\leq\;
-  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim) + \KeyGuess_k(\Nprim+1).
+  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim) + \frac{\Nprim+1}{2^{256}}.
 \]
 \end{theorem}
 
@@ -609,9 +609,9 @@ created-but-idle users need not contribute to $N$.
 
 At $\Ntot \leq 2^{63}$, the flat-sponge term and each birthday-scale
 root or leaf term at $s=2$ is at most a $2^{-131}$-scale term, while each
-linear root-preimage, key-guessing, or verification term with no factor
-$D$ is at most a $2^{-193}$-scale term. Thus the largest non-multi-user
-bound is the $s=2$ collision bound, which is below
+linear root-preimage, hidden-component guessing, key-guessing, or
+verification term with no factor $D$ is at most a $2^{-193}$-scale term.
+Thus the largest non-multi-user bound is the $s=2$ collision bound, which is below
 $4 \cdot 2^{-131} = 2^{-129}$; larger $s$ only decreases the
 root-collision term. In the multi-user case,
 \[
