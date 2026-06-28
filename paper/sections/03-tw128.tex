@@ -42,8 +42,8 @@ transcript is the AEAD analog of KangarooTwelve's final-node hashing of
 per-chunk chaining values. In \TW{}, the chaining values are the leaf tags
 and the final digest is the root tag. This makes the root tag the natural
 hash point for the full $(K, N, A, M)$ context; the formal hash,
-committing, and discoverability analyses appear in
-\Cref{sec:main-results,sec:cmtds3}.
+committing, and context discoverability analyses appear in
+\Cref{sec:root-tag-hash-security}.
 
 \begin{figure}[t]
   \centering
@@ -113,7 +113,7 @@ committing, and discoverability analyses appear in
 
 \Cref{tab:params} lists the user-visible and derived scheme parameters.
 The implementation uses the same byte length for the root tag and each
-leaf tag, but the proofs of \Cref{sec:main-results,sec:cmtds3} keep
+leaf tag, but the proofs of \Cref{sec:aead-security,sec:root-tag-hash-security} keep
 $\tauroot$ and $\tauleaf$ as separate symbols.
 
 \begin{table}[ht]
@@ -177,11 +177,11 @@ flat sponge loss
 \]
 which reaches the $2^{-128}$ threshold at
 $\Ntot \approx 2^{(c-127)/2} \approx 2^{64.5}$ \Keccakp{} calls;
-the headline cap of $\Ntot \leq 2^{63}$ used in \Cref{sec:concrete-claim} keeps
+the work cap $\Ntot \leq 2^{63}$ used in \Cref{sec:concrete-claim} keeps
 this term at most $2^{-131}+2^{-194}$, and hence below $2^{-130}$.
 Setting $c = 256$ thereby delivers 128-bit single-key security on this term.
 Under the mu-ind
-bound of \Cref{sec:headline} the per-user security margin degrades by
+bound of \Cref{sec:aead-security} the per-user security margin degrades by
 $\log D$ bits in $D$ users; the concrete $D$-indexed bound appears in
 \Cref{sec:concrete-claim}.
 
@@ -291,7 +291,8 @@ the phase, and the duplex-call position within that phase.
 \Cref{def:wf-transcripts} (Well-formed \TW{} transcript prefixes),
 \Cref{lem:transcript-inj} (Transcript Injectivity), and its structural
 corollaries formalize this parsing fact for the proofs of
-\Cref{sec:main-results,sec:cmtds3} and \Cref{cor:committing-combined}.
+\Cref{sec:aead-security,sec:root-tag-hash-security} and
+\Cref{cor:committing-combined}.
 
 \subsection{Encryption}
 \label{sec:enc}

@@ -1,0 +1,146 @@
+\section{Authenticated Encryption Security}
+\label{sec:aead-security}
+
+This section proves the ordinary AEAD security of \TW{}. The first theorem is a
+random oracle multi-user indistinguishability bound. The public-permutation
+theorem then follows by the flat sponge lift of \Cref{app:flat-sponge-lift},
+and the all-in-one AE bound is the single-user corollary. The root-tag hash,
+committing, and context discoverability results are proved separately in
+\Cref{sec:root-tag-hash-security}; all concrete instantiations are summarized in
+\Cref{sec:concrete-security}.
+
+All random oracle adversaries in this section are flat-RO adversaries
+(\Cref{sec:ro-model}) with the displayed resources, and the flat sponge lift
+transfers each random oracle bound using the derived-adversary cap
+$\qRO(\mathcal{B}) \leq \Nprim$.
+
+\begin{theorem}[Random Oracle Multi-User Indistinguishability]
+\label{thm:mu-ind-ro}
+For every flat-RO mu-ind adversary $\mathcal{B}$ with
+execution-uniform user cap $D$ and resource counts of
+\Cref{sec:mu-setting},
+\[
+  \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})
+  \;\leq\;
+  \frac{D(D - 1)}{2^{k + 1}}
+  + D \cdot \KeyGuess_k(\qRO(\mathcal{B}))
+  + \frac{\nleaf(\mathcal{B})\bigl(\nleaf(\mathcal{B}) - 1\bigr)}
+         {2^{\tauleaf + 1}}
+  + \frac{\qv(\mathcal{B})}{2^{\tauroot}}.
+\]
+Here $\qv$ is the non-replay verification-query count of
+\Cref{sec:resources}.
+\end{theorem}
+
+\begin{proof}
+Use the pre-sampled-key formulation of \Cref{sec:mu-setting}: sample
+keys $K_1,\dots,K_D$ at the start of the experiment, and let the $d$-th
+$\mathsf{New}$ call activate $K_d$, unused keys being ignored.
+Let $\mathsf{coll}$ denote the event that two of the pre-sampled keys
+$K_1,\dots,K_D$ collide;
+$\Pr[\mathsf{coll}] \leq \binom{D}{2}/2^k = D(D-1)/2^{k+1}$ by union
+bound. In the random oracle model, use a standard hybrid over the $D$
+users: $H_d$ answers users $1,\dots,d$ with $(\Rand,\Replay)$ and
+users $d+1,\dots,D$ with the real construction interface, so $H_0$ is
+the real mu-ind game and $H_D$ is the ideal one. Let $H_d^\star$ be
+$H_d$ with a fixed output bit on $\mathsf{coll}$. Since
+$\mathsf{coll}$ has the same probability in all hybrids,
+\[
+  \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})
+  \leq
+  \Pr[\mathsf{coll}]
+  +
+  \bigl|\Pr[\mathcal{B}^{H_0^\star} \Rightarrow 1]
+       - \Pr[\mathcal{B}^{H_D^\star} \Rightarrow 1]\bigr|.
+\]
+By the triangle inequality, it remains to bound each adjacent stopped
+hybrid. For each $d$, \Cref{lem:mu-adjacent-hybrid} gives
+\[
+  \bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
+       - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr|
+  \leq
+  \KeyGuess_k(\qRO(\mathcal{B}))
+  + \frac{\nleaf^{(d)}(\nleaf^{(d)}-1)}{2^{\tauleaf+1}}
+  + \frac{\qv^{(d)}}{2^{\tauroot}}.
+\]
+
+Summing across $d = 1,\dots,D$ gives
+$D \KeyGuess_k(\qRO(\mathcal{B}))$ for the key-test contribution. The
+leaf-collision contribution satisfies
+\[
+  \sum_d \frac{\nleaf^{(d)}(\nleaf^{(d)} - 1)}{2^{\tauleaf + 1}}
+  = \frac{1}{2^{\tauleaf}} \sum_d \binom{\nleaf^{(d)}}{2}
+  \leq \frac{1}{2^{\tauleaf}} \binom{\sum_d \nleaf^{(d)}}{2}
+  = \frac{\nleaf(\mathcal{B})\bigl(\nleaf(\mathcal{B}) - 1\bigr)}
+          {2^{\tauleaf + 1}},
+\]
+because the unordered pairs drawn within the per-user blocks are a
+subset of all unordered pairs among $\sum_d \nleaf^{(d)} =
+\nleaf(\mathcal{B})$ items. The verification-tag contribution satisfies
+\[
+  \sum_d \qv^{(d)} / 2^{\tauroot}
+  = \qv(\mathcal{B}) / 2^{\tauroot}.
+\]
+Combining these estimates with the $\mathsf{coll}$ penalty gives the
+stated RO bound.
+\end{proof}
+
+\begin{theorem}[Multi-User Indistinguishability]
+\label{thm:mu-ind}
+For every mu-ind adversary $\mathcal{A}$ against \TW{} with
+execution-uniform user cap $D$ and the global resources of
+\Cref{sec:mu-setting},
+\[
+  \Advmuind_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \frac{D(D - 1)}{2^{k + 1}}
+  + D \cdot \KeyGuess_k(\Nprim)
+  + \frac{\Nleaf(\Nleaf - 1)}{2^{\tauleaf + 1}}
+  + \frac{\Qv}{2^{\tauroot}}.
+\]
+\end{theorem}
+
+\begin{proof}
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+mu-ind game, there is a random oracle mu-ind adversary
+$\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ with
+$\qRO(\mathcal{B}) \leq \Nprim$, $\nleaf(\mathcal{B}) \leq \Nleaf$,
+$\qv(\mathcal{B}) \leq \Qv$, and the per-user construction-side caps of
+\Cref{sec:mu-setting} such that
+\[
+  \Advmuind_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B}).
+\]
+\Cref{thm:mu-ind-ro} bounds the random oracle term. Substituting
+$\qRO(\mathcal{B}) \leq \Nprim$,
+$\nleaf(\mathcal{B}) \leq \Nleaf$, and
+$\qv(\mathcal{B}) \leq \Qv$ gives the stated bound.
+\end{proof}
+
+\begin{corollary}[All-in-One AE Security]
+\label{cor:ae}
+For every nonce-respecting AE adversary $\mathcal{A}$ against \TW{}
+with the resources of \Cref{sec:resources},
+\[
+  \Advae_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \KeyGuess_k(\Nprim)
+  + \frac{\Nleaf(\Nleaf - 1)}{2^{\tauleaf + 1}}
+  + \frac{\Qv}{2^{\tauroot}}.
+\]
+\end{corollary}
+
+\begin{proof}
+Build a mu-ind adversary $\mathcal{A}^{\mu}$ that makes one
+$\mathsf{New}$ query, runs $\mathcal{A}$, and forwards each
+encryption and verification query of $\mathcal{A}$ to user $1$. The
+primitive interface is forwarded unchanged. The real and ideal views of
+$\mathcal{A}$ in the all-in-one AE experiment are exactly the real and
+ideal views of $\mathcal{A}^{\mu}$ in the mu-ind experiment with
+$D = 1$, and the resource counts are unchanged. Applying
+\Cref{thm:mu-ind} with $D = 1$ eliminates the key-collision term and
+gives the stated bound.
+\end{proof}

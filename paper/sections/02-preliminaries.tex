@@ -267,8 +267,9 @@ $s$-way generalization, the complementary \emph{context discoverability}
 notion of \cite{MLGR23}, and then frame the root tag itself as a hash
 function whose \cite{RS04} security---collision, second-preimage, and
 preimage resistance---captures the binding and preimage properties expected
-of a compact commitment. The AEAD committing and discoverability notions are
-then proved from the same tag analysis in \Cref{sec:main-results,sec:cmtds3}.
+of a compact commitment. The AEAD committing and context discoverability
+notions are then proved from the same tag analysis in
+\Cref{sec:root-tag-hash-security}.
 
 \paragraph{What-is-committed functions.}
 For $\ell \in \{1, 3, 4\}$, the \emph{what-is-committed} function
@@ -344,7 +345,7 @@ The \cite{BH22} committing notions are the collision-facing AEAD
 projection of the same tag analysis: a winning opening gives distinct
 inputs sharing a tag, while the dedicated CMTDs-4 proof uses the
 all-bodies-equal game structure to avoid the leaf-collision slack of the
-general hash collision theorem (\Cref{sec:headline,sec:cmtds3}).
+general hash collision theorem (\Cref{sec:root-tag-hash-security}).
 
 \paragraph{Relations.}
 \cite[Figs.~4 and~5]{BH22} record the implications among the notions.

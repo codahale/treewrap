@@ -1,0 +1,245 @@
+\section{Concrete Security Summary}
+\label{sec:concrete-security}
+
+\Cref{sec:aead-security,sec:root-tag-hash-security} separate the security
+analysis into AEAD bounds and root-tag hash, committing, and context
+discoverability bounds. This section instantiates those bounds at the
+implemented \TW{} parameters and records the single concrete work cap used
+throughout the paper.
+
+\subsection{Concrete TW128 Bounds}
+\label{sec:concrete}
+
+The implemented parameters of \Cref{sec:params} fix
+\[
+  k = c = \tauroot = \tauleaf = 256.
+\]
+Substituting into
+\Cref{cor:ae,thm:mu-ind,thm:coll,thm:asec,cor:cmtds4,thm:epre,thm:cdy-full}
+gives the following closed-form bounds.
+
+\paragraph{All-in-one AE.}
+\[
+  \Advae_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\Nprim + \Qv}{2^{256}}
+  + \frac{\Nleaf(\Nleaf - 1)}{2^{257}}.
+\]
+
+\paragraph{Multi-user indistinguishability.}
+\[
+  \Advmuind_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{D \Nprim + \Qv}{2^{256}}
+  + \frac{D(D - 1) + \Nleaf(\Nleaf - 1)}{2^{257}}.
+\]
+
+\paragraph{$s$-way collision resistance of $\HTW$.}
+For every $s \geq 2$,
+\[
+  \AdvColl_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\binom{\Nprim+\Nleaf}{2}}{2^{256}}
+  + \frac{\binom{\Nprim + s}{s}}{2^{256 (s - 1)}}.
+\]
+For $s=2$, this is the ordinary two-input collision bound:
+\[
+\begin{aligned}
+  \AdvColl_\TW(\mathcal{A})
+\leq\;&
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{(\Nprim+\Nleaf)(\Nprim+\Nleaf-1)}{2^{257}} \\
+& + \frac{(\Nprim + 1)(\Nprim + 2)}{2^{257}} .
+\end{aligned}
+\]
+
+\paragraph{Always second-preimage resistance of $\HTW$.}
+The root-preimage contribution is linear in the primitive-query budget:
+\[
+  \AdvaSec_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\Nprim + 1}{2^{256}}
+  + \frac{\binom{\Nprim+\Nleaf}{2}}{2^{256}}.
+\]
+
+\paragraph{$s$-way CMTDs-4 committing security.}
+For every $s \geq 2$, the all-bodies-equal special case drops the leaf
+tag term:
+\[
+  \Advcmtds{4}_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\binom{\Nprim + s}{s}}{2^{256 (s - 1)}}.
+\]
+
+\begin{remark}[Two-Key CMTDs-4 Specialization]
+\label{rem:cmtd4-s2}
+Setting $s = 2$ recovers the ordinary two-key
+CMTDs-4 statement of \cite{BH22}:
+\[
+  \Advcmtds{4}_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\binom{\Nprim + 2}{2}}{2^{256}}
+  \;=\;
+  \frac{\Ntot(\Ntot + 1) + (\Nprim + 1)(\Nprim + 2)}{2^{257}}.
+\]
+\end{remark}
+
+\paragraph{Everywhere preimage resistance of $\HTW$.}
+\[
+  \AdvePre_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\Nprim + 1}{2^{256}}.
+\]
+
+\paragraph{Context discoverability \textnormal{(\cite{MLGR23})}.}
+\[
+  \Advcdy_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{2\Nprim + 2}{2^{256}}.
+\]
+
+\subsection{Concrete Security Claim}
+\label{sec:concrete-claim}
+
+\begin{corollary}[Concrete \TW{} Security]
+\label{cor:concrete-security}
+Under the implemented parameters $k = c = \tauroot = \tauleaf = 256$, every
+adversary with work cap $\Ntot \leq 2^{63}$---and, in the multi-user case,
+user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
+\TW{}'s notions: multi-user indistinguishability (\Cref{thm:mu-ind}),
+all-in-one AE (\Cref{cor:ae}), the \cite{RS04} hash security of
+$\HTW$---$s$-way collision resistance for every $s \geq 2$, always second-preimage
+resistance, and everywhere preimage resistance
+(\Cref{thm:coll,thm:asec,thm:epre})---the \cite{BH22}
+CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}), and \cite{MLGR23}
+$\mathsf{CDY}^\ast$ context discoverability (\Cref{thm:cdy-full}).
+\end{corollary}
+
+\begin{proof}
+The resource consequences of \Cref{sec:resources} give
+$\Nprim \leq \Ntot$, $\Qv \leq \Ntot$, $\Nleaf \leq \Ntot$, and
+$\Nprim+\Nleaf \leq \Ntot$. The user cap $D$ remains independent, since
+created-but-idle users need not contribute to $N$.
+
+At $\Ntot \leq 2^{63}$, the flat-sponge term and each birthday-scale
+root or leaf term at $s=2$ is at most a $2^{-131}$-scale term, while each
+linear root-preimage, hidden-component guessing, key-guessing, or
+verification term with no factor $D$ is at most a $2^{-193}$-scale term.
+Thus the largest non-multi-user bound is the $s=2$ collision bound, which is below
+$4 \cdot 2^{-131} = 2^{-129}$; larger $s$ only decreases the
+root-collision term. In the multi-user case,
+\[
+  \Advmuind_\TW(\mathcal{A})
+  < 2^{-130} + 2^{-130} + 2^{-193} + 2^{-130}
+  < 2^{-128},
+\]
+using $D \leq 2^{63}$. These estimates instantiate every closed form in
+\Cref{sec:concrete}.
+\end{proof}
+
+\begin{table}[t]
+\centering
+\caption{Concrete \TW{} security at the work cap $\Ntot \leq 2^{63}$
+(with $D \leq 2^{63}$ for mu-ind), under
+$k = c = \tauroot = \tauleaf = 256$ and the resource consequences
+$\Nprim, \Qv, \Nleaf \leq \Ntot$ and $\Nprim + \Nleaf \leq \Ntot$ of
+\Cref{sec:resources}. The committing
+rows hold for every $s \geq 2$; larger $s$ only shrinks the
+root-collision term.}
+\label{tab:concrete-security}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Notion & Dominant scale & At the cap \\
+\midrule
+All-in-one AE & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+Multi-user ind. & $D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
+$\HTW$ collision (Coll) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+$\HTW$ second-preimage (aSec) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+$\HTW$ everywhere preimage (ePre) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+CMTDs-4 \cite{BH22} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+$\mathsf{CDY}^\ast$ \cite{MLGR23} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Discussion of the Bounds}
+\label{sec:bound-discussion}
+
+The bounds of \Cref{sec:concrete} aggregate the loss terms of
+\Cref{sec:loss-terms}, whose sizes at the work cap
+\Cref{tab:concrete-security} records and whose dominance
+\Cref{sec:concrete-claim} proves.
+
+\paragraph{At the concrete cap.}
+At $\Ntot \leq 2^{63}$, the single-user, hash, CMTDs-4, and
+$\mathsf{CDY}^\ast$ context discoverability bounds are dominated by the flat
+sponge loss, except when a root or leaf birthday term reaches the same
+$2^{-131}$ scale. The multi-user bound is the exception: its hybrid-induced
+term $D\,\KeyGuess_k(\Nprim)$ can reach $2^{-130}$ at the extreme cap
+$D=\Nprim=2^{63}$. Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to
+at most $\rho \cdot 2^{63} = 167 \cdot 2^{63} < 2^{71}$ bytes of
+plaintext, associated data, ciphertext, and aggregation through the
+duplex (\Cref{sec:params}).
+
+\paragraph{Tightness.}
+\begin{itemize}
+\item \emph{$\KeyGuess_k(Q) = Q / 2^k$.} Tight at constants: a direct
+  random-guess attack on a $k$-bit key matches the per-query success
+  probability $1 / 2^k$. The multi-user bound's dominant term
+  $D\,\KeyGuess_k(\Nprim) = D\Nprim / 2^k$ is likewise tight at the
+  leading constant: against the $D$ independent user keys each direct
+  guess matches some key with probability $D / 2^k$, so $\Nprim$ guesses
+  recover a user key---and distinguish---with probability
+  $\approx D\Nprim / 2^k$, matching the bound.
+\item \emph{$\RootColl_\tau(Q, s) = \binom{Q + s}{s} / 2^{\tau (s -
+  1)}$.} Tight up to lower-order terms: it is the standard $s$-way
+  multi-collision bound on a $\tau$-bit projection of $\ROflat$, and
+  a generic birthday-style adversary against the random oracle
+  matches the leading-order term. It is the root term of the collision
+  bound ($\HTW$ Coll, \Cref{thm:coll}). Its $\Nprim$ counts every
+  primitive query, though by Output-Point Separation
+  (\Cref{cor:output-sep}) only those whose induced $\ROflat$ call lands at
+  a root tag output point ($\Rtag$, or $\Rmsg^+$ for single-chunk
+  ciphertexts) can enter the candidate sequence; a class-filtered count
+  would be no larger, and potentially smaller, but the displayed bound keeps the
+  $\Nprim$ form for uniformity with \Cref{cor:ae,thm:mu-ind}, the birthday
+  threshold at $\tauroot = 256$ being unaffected.
+\item \emph{$\RootPre_\tau(Q) = (Q + 1) / 2^\tau$.} Tight at constants: a
+  generic preimage search against a fixed $\tau$-bit target matches the
+  per-query $2^{-\tau}$ rate. It is the root term of the everywhere
+  preimage (ePre), always second-preimage (aSec), and context discoverability
+  ($\mathsf{CDY}^\ast$) bounds, where the single fixed target yields a
+  linear term.
+\item \emph{Leaf tag collision $\Nleaf (\Nleaf - 1) / 2^{\tauleaf +
+  1}$.} Tight for verification security: by reusing
+  a nonce, an adversary detects a leaf tag birthday collision through the
+  matching root tags and splices the colliding leaf chunk into a fresh
+  ciphertext that still verifies, forging at the leading
+  $\Nleaf^2 / 2^{\tauleaf + 1}$ rate. The mu-ind and all-in-one AE bounds
+  carry the term through the verification side of their real-vs-ideal
+  coupling; their nonce-respecting encryption rules this attack out, so
+  there it is inherited slack.
+\item \emph{Known-key leaf collision $\LeafColl_\tau(Q)$.} The same
+  birthday attack applies when keys are adversary-supplied and direct
+  queries can target leaf tag points; the collision and
+  always second-preimage proofs use $Q=\Nprim+\Nleaf$.
+\item \emph{Flat sponge lift.} The term
+  $\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{c + 1}$ dominates the
+  random-permutation differentiating bound $f_P(\Ntot)$ of
+  \cite[Lemma~5]{BDPV08} via \Cref{lem:lift-bound}. The
+  remaining slack is the unimproved
+  tightness of the \cite{BDPV08} simulator itself, which is an open
+  problem on the sponge side and not specific to \TW{}.
+\end{itemize}
+
+Cross-scheme bound-level comparisons against prior sponge AEADs and
+the committing AEAD line of \cite{BH22} are deferred to
+\Cref{sec:compare-table,sec:compare-sponge,sec:compare-commit}.

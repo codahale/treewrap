@@ -1,12 +1,12 @@
 \section{The Flat Sponge Lift}
 \label{app:flat-sponge-lift}
 
-This appendix expands the sketch of \Cref{sec:thms-pp} into the
-full argument: it supplies the flat sponge lift machinery
+This appendix supplies the flat sponge lift machinery
 (\Cref{lem:lift-bound,lem:derived-adversary,cor:lift-application}) invoked
-by the headline theorems of \Cref{sec:headline} and by
-\Cref{cor:committing-combined}. The machinery applies uniformly to the
-games named once here.
+by the AEAD security bounds of \Cref{sec:aead-security}, the root-tag bounds of
+\Cref{sec:root-tag-hash-security}, and the committing-notion bound of
+\Cref{cor:committing-combined}. The machinery applies uniformly to the games
+named once here.
 
 The lift has two steps. First, the \cite{BDPV08} indifferentiability theorem
 replaces the public permutation and all construction-internal primitive calls by
@@ -139,7 +139,7 @@ granularity as the underlying \Keccakp{} calls. This includes
 verification computations whether they accept or reject, the per-user
 sum of construction calls in mu-ind, and the deterministic challenger
 decryption or encryption checks actually performed in the committing
-and discoverability games.
+and context discoverability games.
 
 Second, each direct adversary query to $(\pi,\pi^{-1})$ contributes one
 primitive-interface query and is counted in $\Nprim$. These two counts
@@ -184,7 +184,8 @@ $\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ to run $\mathcal{A}$
 internally, answer each primitive-interface query by running the
 same simulator against direct finite-output queries to its own
 $\ROflat$ oracle, and forward construction interface queries (or, in
-the committing and discoverability games, the final structured output)
+the committing and context discoverability games, the final structured
+output)
 unchanged to the corresponding random oracle experiment. Then the
 simulator-world execution of $\mathcal{A}$ and the random oracle execution of
 $\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ have identical joint
@@ -262,7 +263,7 @@ $\badkey$ accounting used by the direct random oracle mu-ind proof. The
 derivation step itself does not
 prove a key-guessing statement; it only supplies the derived
 adversary and the query bound at which the random oracle bounds of
-\Cref{sec:thms-pp} are instantiated.
+\Cref{sec:aead-security,sec:root-tag-hash-security} are instantiated.
 
 Finally, the execution-uniform caps of \Cref{sec:resources} hold
 along every oracle-answer trace of $\mathcal{A}$, including traces
@@ -284,12 +285,11 @@ $\mathsf{New}$ calls and these caps user by user.
 
 The lift bound of \Cref{lem:lift-bound} and the derived-adversary
 construction of \Cref{lem:derived-adversary} combine into a single
-template, stated once and then instantiated by the headline theorems of
-\Cref{sec:headline} and the committing-notion bounds of
-\Cref{cor:committing-combined}.
-This is the only form used in \Cref{sec:headline}: every public-permutation
-bound is obtained by adding $\Lift_c(\Ntot)$ and substituting
-$\qRO \leq \Nprim$ in the corresponding random oracle theorem.
+template, stated once and then instantiated by the bounds of
+\Cref{sec:aead-security,sec:root-tag-hash-security} and by the
+committing-notion bounds of \Cref{cor:committing-combined}. Every
+public-permutation bound is obtained by adding $\Lift_c(\Ntot)$ and
+substituting $\qRO \leq \Nprim$ in the corresponding random oracle theorem.
 
 \begin{corollary}[Lift Application]
 \label{cor:lift-application}

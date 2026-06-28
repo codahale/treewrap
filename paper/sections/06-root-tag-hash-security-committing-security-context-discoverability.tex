@@ -1,4 +1,4 @@
-\section{Hash Security of the Root Tag}
+\section{Root Tag Hash Security, Committing Security, and Context Discoverability}
 \label{sec:cmtds3}
 \label{sec:root-tag-hash-security}
 
@@ -6,8 +6,8 @@ This section proves the digest claim for the root of the \TW{} tree. The
 construction adapts the KangarooTwelve final-node pattern to authenticated
 encryption: leaf tags play the role of chaining values, and the root emits the
 single tag returned by $\HTW$. The proof therefore tracks the final root inputs
-that can matter in the hash, committing, and discoverability games. The Root Tag
-Candidate Sequence lemma (\Cref{lem:root-candidate-seq}) collects those inputs
+that can matter in the hash, committing, and context discoverability games. The
+Root Tag Candidate Sequence lemma (\Cref{lem:root-candidate-seq}) collects those inputs
 into a chronological candidate sequence, and the Root Tag Hash Bound
 (\Cref{lem:root-tag-hash}) turns a collision, fixed-target preimage, or
 second-preimage among the candidates into the matching adaptive bound of
@@ -20,11 +20,11 @@ second-preimage (\Cref{thm:asec-ro}), and everywhere preimage
 case of the bound they invoke and in whether a leaf tag collision term is needed
 when colliding inputs may use different ciphertext bodies. CMTDs-4
 (\Cref{thm:cmtds4-ro}) and the remaining committing notions reuse the collision
-case. The context-discoverability proof of \Cref{thm:cdy-full} uses the same
+case. The context discoverability proof of \Cref{thm:cdy-full} uses the same
 fixed-target root-preimage case, plus hidden-component guessing.
 \Cref{app:flat-sponge-lift} transfers each instance to the public
-permutation setting, \Cref{sec:headline} records the concrete bounds, and
-\Cref{cor:committing-combined} forwards the remaining \cite{BH22}
+permutation setting, \Cref{sec:concrete-security} records the concrete bounds,
+and \Cref{cor:committing-combined} forwards the remaining \cite{BH22}
 committing notions to the same root-collision bound.
 
 The instantiations rest on two structural separation facts, recorded
@@ -141,7 +141,7 @@ The committing and hash (collision, always second-preimage, and everywhere
 preimage) games are keyless: all keys are adversary-supplied, so a direct
 query to a keyed transcript is one of
 $\mathcal{B}$'s visible $\ROflat$ queries counted in $\qRO(\mathcal{B})$,
-and there is no $\badkey$ event. The context-discoverability proof below
+and there is no $\badkey$ event. The context discoverability proof below
 uses the same candidate sequence after separately accounting for the
 hidden selector component. No construction oracle runs while
 $\mathcal{B}$ issues its direct queries, so each direct-query candidate is
@@ -302,6 +302,141 @@ with target $T^*$) gives
 $\AdvePre_\RO(\mathcal{B}) \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))$.
 \end{proof}
 
+\subsection{Public Permutation Hash Bounds}
+\label{sec:root-tag-pp}
+
+The flat sponge lift transfers the preceding random oracle bounds to the public
+permutation model. For these one-world hash games, the lift contributes
+$\Lift_c(\Ntot)$, and the derived random oracle adversary has
+$\qRO(\mathcal{B}) \leq \Nprim$; challenger encryption checks are
+construction-internal work counted in $N$.
+
+\begin{theorem}[Collision Resistance of $\HTW$]
+\label{thm:coll}
+For every $s \geq 2$ and every adversary $\mathcal{A}$ against the $s$-way
+multi-collision resistance of $\HTW$ in the sense of \cite{BH22}, with the
+resources of \Cref{sec:resources},
+\[
+  \AdvColl_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf)
+  + \RootColl_{\tauroot}(\Nprim, s).
+\]
+\end{theorem}
+
+\begin{proof}
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+collision game, the derived random oracle adversary $\mathcal{B}$ has
+$\qRO(\mathcal{B}) \leq \Nprim$ and $\nleaf(\mathcal{B}) \leq \Nleaf$. The
+random oracle bound of \Cref{thm:coll-ro} is nondecreasing in both
+$\qRO(\mathcal{B})$ and $\nleaf(\mathcal{B})$, so the monotone form of
+\Cref{cor:lift-application} gives the stated bound. The $s$ colliding
+inputs may differ in their messages, hence in their ciphertext bodies; the
+$\LeafColl$ term accounts for the only way two distinct inputs sharing a
+context $(K, N, A)$ can reach the same final root transcript---a collision
+among the leaf tags it absorbs---while distinct contexts already reach
+distinct final root transcripts by Opening Triple Separation
+(\Cref{cor:triple-sep}).
+\end{proof}
+
+\begin{corollary}[Two-Way Collision Resistance of $\HTW$]
+\label{cor:coll-rs04}
+Specializing \Cref{thm:coll} to $s = 2$ gives the classical two-way
+collision resistance of \cite{RS04}: for every collision adversary
+$\mathcal{A}$ against $\HTW$ with the resources of \Cref{sec:resources},
+\[
+  \AdvColl_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf)
+  + \RootColl_{\tauroot}(\Nprim, 2),
+\]
+with $\RootColl_{\tauroot}(\Nprim, 2) = \binom{\Nprim + 2}{2} / 2^{\tauroot}$.
+\end{corollary}
+
+\begin{proof}
+The $s = 2$ case of \Cref{thm:coll}; \cite{BH22} note that $s$-way
+multi-collision resistance at $s = 2$ is the classical collision resistance
+of \cite{RS04}.
+\end{proof}
+
+\begin{theorem}[Always Second-Preimage Resistance of $\HTW$]
+\label{thm:asec}
+For every aSec adversary $\mathcal{A}$ against $\HTW$ with the resources
+of \Cref{sec:resources},
+\[
+  \AdvaSec_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot)
+  + \RootPre_{\tauroot}(\Nprim)
+  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf).
+\]
+\end{theorem}
+
+\begin{proof}
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+aSec game, the derived random oracle adversary $\mathcal{B}$ has
+$\qRO(\mathcal{B}) \leq \Nprim$ and $\nleaf(\mathcal{B}) \leq \Nleaf$; the
+random oracle bound of \Cref{thm:asec-ro} is nondecreasing in both, so the
+monotone form of \Cref{cor:lift-application} gives the stated bound.
+Collision resistance (\Cref{thm:coll}) already implies eSec and hence Sec
+in the sense of \cite{RS04}, both with the looser root-collision term; the
+always-notion is the one \cite{RS04} shows collision resistance does not
+imply. Here the second preimage is sought against the single fixed tag
+$\HTW(X)$ of the challenge input $X$, yielding the linear root-preimage
+term.
+\end{proof}
+
+\begin{theorem}[Everywhere Preimage Resistance of $\HTW$]
+\label{thm:epre}
+For every target tag $T^* \in \bits^{\tauroot}$ fixed in advance and every
+ePre adversary $\mathcal{A}$ against $\HTW$ with the resources of
+\Cref{sec:resources},
+\[
+  \AdvePre_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim)
+  \;=\;
+  \Lift_c(\Ntot) + \frac{\Nprim + 1}{2^{\tauroot}}.
+\]
+\end{theorem}
+
+\begin{proof}
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+preimage game---whose target $T^*$ is fixed before the primitive
+sampling---the derived random oracle adversary $\mathcal{B}$ has
+$\qRO(\mathcal{B}) \leq \Nprim$, and the random oracle bound of
+\Cref{thm:epre-ro} is nondecreasing in $\qRO(\mathcal{B})$, so the monotone
+form of \Cref{cor:lift-application} gives the stated bound. With one fixed
+target tag, \Cref{thm:epre-ro} applies a candidate-preimage bound against
+that target and drops the exponent from $\tauroot(s-1)$ to $\tauroot$.
+\end{proof}
+
+\begin{corollary}[Root Tag as a Compact Commitment]
+\label{cor:tag-commitment}
+The wrapper $\HTW$ is a secure hash of the full encryption context
+$(K, N, A, M)$ in the sense of \cite{RS04}: collision-resistant
+(\Cref{thm:coll}), always second-preimage-resistant (\Cref{thm:asec}), and
+everywhere preimage-resistant (\Cref{thm:epre}). Under the implemented
+parameters and work cap $\Ntot \leq 2^{63}$, all three advantages are at most
+$2^{-128}$ (\Cref{cor:concrete-security}), so the single $\tauroot$-bit
+root tag is a binding compact commitment to $(K, N, A, M)$ with everywhere
+preimage resistance, native to the mode.
+\end{corollary}
+
+\begin{proof}
+Collision resistance is \Cref{thm:coll}, always second-preimage
+resistance is \Cref{thm:asec}, and everywhere preimage resistance is
+\Cref{thm:epre}; all three quantify
+the adversary's success at the same $\tauroot$-bit projection of the final
+root transcript, and \Cref{cor:concrete-security} evaluates them at the
+implemented parameters. Binding (collision resistance) is the property a
+compact commitment must have, and everywhere preimage resistance certifies
+that the tag alone reveals no opening; together they are the properties of
+a hash-based commitment.
+\end{proof}
+
 \subsection{Committing Consequences}
 
 \begin{theorem}[Random Oracle CMTDs-4]
@@ -330,6 +465,33 @@ are pairwise distinct (leaf tag collisions cannot merge them), and every
 accepting check carries the common root tag $T$. The Root Tag Hash Bound
 (\Cref{lem:root-tag-hash}, part~1) gives
 $\Advcmtds{4}_\RO(\mathcal{B}) \leq \RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$.
+\end{proof}
+
+\begin{corollary}[CMTDs-4 Committing Security]
+\label{cor:cmtds4}
+For every $s \geq 2$ and every $s$-way CMTDs-4
+adversary $\mathcal{A}$ against \TW{} with the resources of
+\Cref{sec:resources},
+\[
+  \Advcmtds{4}_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \RootColl_{\tauroot}(\Nprim, s)
+  \;=\;
+  \Lift_c(\Ntot) + \frac{\binom{\Nprim + s}{s}}{2^{\tauroot (s - 1)}}.
+\]
+\end{corollary}
+
+\begin{proof}
+A CMTDs-4 winner exhibits $s$ distinct inputs $(K_i,N_i,A_i,M_i)$ whose
+encryptions share one common ciphertext $C \concat T$; in particular they
+share the tag $T$, so they are an $s$-way collision of $\HTW$, and
+$\Advcmtds{4}_\TW \leq \AdvColl_\TW$. For the displayed no-$\LeafColl$
+bound, use the dedicated root-collision derivation of \Cref{thm:cmtds4-ro}
+for this all-bodies-equal case, lifted by \Cref{cor:lift-application}: the
+single shared body $C$ forces the triples $(K_i,N_i,A_i)$ pairwise
+distinct---by Opening Triple Separation (\Cref{cor:triple-sep})---so a
+leaf tag collision cannot merge two openings and no $\LeafColl$ term
+arises.
 \end{proof}
 
 \paragraph{Remaining committing notions.}
@@ -395,6 +557,21 @@ in $\Nprim$.
 \end{proof}
 
 \subsection{Context Discoverability}
+
+\begin{theorem}[Context Discoverability ($\mathsf{CDY}^\ast$) \textnormal{of} \cite{MLGR23}]
+\label{thm:cdy-full}
+For every target specifier $\mathsf{ts} \subsetneq \{k, n, a\}$---so that
+at least one context component stays hidden---and every adversary
+$\mathcal{A}$ against \TW{}, the restricted $\mathsf{CDY}^\ast[\mathsf{ts}]$
+advantage
+of \cite[Fig.~5]{MLGR23}---and in particular each per-component variant
+$\mathsf{CDY}^\ast_k$, $\mathsf{CDY}^\ast_n$, $\mathsf{CDY}^\ast_a$---satisfies
+\[
+  \Advcdy_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim) + \frac{\Nprim+1}{2^{256}}.
+\]
+\end{theorem}
 
 \begin{proof}[Proof of \Cref{thm:cdy-full}]
 Full reveal $\mathsf{ts} = \{k,n,a\}$ hides no component and is won
