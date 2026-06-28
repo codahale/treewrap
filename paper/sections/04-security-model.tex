@@ -1,12 +1,17 @@
 \section{Security Model}
 \label{sec:security-model}
 
-This section fixes the security model used throughout the paper. The scheme
-syntax and the authenticated encryption and committing security definitions of
-\Cref{sec:prelims} are instantiated here for \TW{} in the lifted public
-permutation model (\Cref{sec:games-pp}). We then instantiate the multi-user
-indistinguishability game for \TW{} (\Cref{sec:mu-setting}), define the
-intermediate random oracle world through which every bound is first proved
+This section sets up the two proof views used throughout the paper. For
+confidentiality and authenticity, \TW{} is treated as a nonce-based AEAD in the
+lifted public permutation model: real encryption and verification interfaces are
+compared with ideal random and replay interfaces, first in the multi-user
+setting and then in the single-user all-in-one AE setting. For the digest-like
+tag claim, the same construction is viewed through the root tag wrapper
+$\HTW$: adversaries supply full inputs, candidate openings, or target
+ciphertexts, and the games ask whether the root tag collides, can be hit as a
+preimage, or supports another valid decrypting context. We instantiate these
+games for \TW{} (\Cref{sec:games-pp,sec:mu-setting}), define the intermediate
+random oracle world through which every bound is first proved
 (\Cref{sec:ro-model}), and fix the resource accounting that all later bounds
 reference (\Cref{sec:resources}).
 

@@ -2,23 +2,26 @@
 \label{sec:cmtds3}
 \label{sec:root-tag-hash-security}
 
-The tag-level results of this section share one spine. The Root Tag
-Candidate Sequence lemma (\Cref{lem:root-candidate-seq}) collects the
-root tag inputs reached by the hash and committing games into a
-chronological candidate sequence, and the Root Tag Hash Bound
+This section proves the digest claim for the root of the \TW{} tree. The
+construction adapts the KangarooTwelve final-node pattern to authenticated
+encryption: leaf tags play the role of chaining values, and the root emits the
+single tag returned by $\HTW$. The proof therefore tracks the final root inputs
+that can matter in the hash, committing, and discoverability games. The Root Tag
+Candidate Sequence lemma (\Cref{lem:root-candidate-seq}) collects those inputs
+into a chronological candidate sequence, and the Root Tag Hash Bound
 (\Cref{lem:root-tag-hash}) turns a collision, fixed-target preimage, or
-second-preimage among those candidates into the matching adaptive bound of
-\Cref{app:lemmas}, controlling the chance that distinct inputs land on the
-same $\tauroot$-bit root tag projection. The
-hash random oracle theorems---collision (\Cref{thm:coll-ro}), always
+second-preimage among the candidates into the matching adaptive bound of
+\Cref{app:lemmas}, controlling the chance that distinct inputs land on the same
+$\tauroot$-bit root tag projection.
+
+The hash random oracle theorems---collision (\Cref{thm:coll-ro}), always
 second-preimage (\Cref{thm:asec-ro}), and everywhere preimage
-(\Cref{thm:epre-ro})---are then short instantiations, differing only in
-which case of the bound they invoke and in whether a leaf tag collision
-term is needed when colliding inputs may use different ciphertext bodies.
-CMTDs-4 (\Cref{thm:cmtds4-ro}) and the remaining committing notions
-reuse the collision case. The context-discoverability proof of
-\Cref{thm:cdy-full} uses the same fixed-target root-preimage case, plus
-hidden-component guessing.
+(\Cref{thm:epre-ro})---are then short instantiations, differing only in which
+case of the bound they invoke and in whether a leaf tag collision term is needed
+when colliding inputs may use different ciphertext bodies. CMTDs-4
+(\Cref{thm:cmtds4-ro}) and the remaining committing notions reuse the collision
+case. The context-discoverability proof of \Cref{thm:cdy-full} uses the same
+fixed-target root-preimage case, plus hidden-component guessing.
 \Cref{app:flat-sponge-lift} transfers each instance to the public
 permutation setting, \Cref{sec:headline} records the concrete bounds, and
 \Cref{cor:committing-combined} forwards the remaining \cite{BH22}

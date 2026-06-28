@@ -1,13 +1,17 @@
 \section{Main Results}
 \label{sec:main-results}
 
-This section states and instantiates \TW{}'s concrete security bounds. We
-first collect the recurring loss terms (\Cref{sec:loss-terms}). We then
-present the public-permutation headline theorem sequence
-(\Cref{sec:headline}), record the random oracle bounds used by the lift
+This section states the concrete bounds behind the two uses of the
+construction. The AEAD side proves multi-user indistinguishability and obtains
+all-in-one AE as its single-user corollary. The tag side treats the root output
+as the value of the wrapper $\HTW$: first as a hash in the sense of \cite{RS04},
+then as the source of the \cite{BH22} committing and \cite{MLGR23} context
+discoverability guarantees. We first collect the recurring loss terms
+(\Cref{sec:loss-terms}), present the public-permutation headline theorem
+sequence (\Cref{sec:headline}), record the random oracle bounds used by the lift
 (\Cref{sec:thms-pp}), give the concrete \TW{}-parameter forms
-(\Cref{sec:concrete,sec:concrete-claim}), and close with a discussion of
-the bounds' tightness (\Cref{sec:bound-discussion}).
+(\Cref{sec:concrete,sec:concrete-claim}), and close with a discussion of the
+bounds' tightness (\Cref{sec:bound-discussion}).
 
 \subsection{Loss Terms}
 \label{sec:loss-terms}
@@ -82,31 +86,29 @@ $Q=\Nprim+\Nleaf$.
 \subsection{Headline Theorems}
 \label{sec:headline}
 
-\TW{} delivers its headline results in the lifted
-public permutation model of \Cref{sec:games-pp}: multi-user
-indistinguishability \cite{BT16}, all-in-one AE security \cite{RS06} as
-its single-user corollary, and the commitment security of the root tag.
-The last is stated as the \cite{RS04} hash security of the wrapper
-$\HTW$ (\Cref{def:htw})---collision, always second-preimage, and
-everywhere preimage resistance---together with the \cite{BH22} CMTDs-4
-committing notion and the \cite{MLGR23} $\mathsf{CDY}^\ast$ notion. For
-the AE-style
-notions the ideal side exposes the BDPV simulator; the committing, hash,
-and discoverability bounds remain real public permutation success
-probabilities.
+\TW{} delivers its headline results in the lifted public permutation model of
+\Cref{sec:games-pp}. The first group is ordinary AEAD security: multi-user
+indistinguishability \cite{BT16} and all-in-one AE security \cite{RS06} as its
+single-user corollary. The second group is the digest behavior of the root tag:
+the \cite{RS04} hash security of the wrapper $\HTW$ (\Cref{def:htw})---collision,
+always second-preimage, and everywhere preimage resistance---followed by the
+AEAD-facing consequences, namely \cite{BH22} CMTDs-4 committing security and
+\cite{MLGR23} $\mathsf{CDY}^\ast$ context discoverability. For the AE-style
+notions the ideal side exposes the BDPV simulator; the hash, committing, and
+discoverability bounds remain real public permutation success probabilities.
 \Cref{thm:mu-ind-ro,thm:mu-ind,cor:ae,thm:coll,thm:asec,thm:epre,cor:cmtds4,thm:cdy-full}
 state these bounds in terms of the loss terms $\Lift_c$, $\KeyGuess_k$,
 $\RootColl_\tau$, $\LeafColl_\tau$, and $\RootPre_\tau$ of
 \Cref{sec:loss-terms}.
 
-The real-vs-ideal results come first: a random oracle mu-ind theorem, its
-public permutation lift, and the all-in-one AE corollary obtained by
-setting the mu-ind user cap to $D=1$. The independent hash, committing,
-and discoverability results follow afterward: first the hash security of
-the wrapper $\HTW$, then the AEAD commitment notions that use the same tag
-security. The collision, always second-preimage, everywhere preimage, and
-CMTDs-4 random oracle bounds, together with the proof of the
-context-discoverability theorem, are in \Cref{sec:cmtds3}.
+The theorem order follows this split. The real-vs-ideal results come first: a
+random oracle mu-ind theorem, its public permutation lift, and the all-in-one AE
+corollary obtained by setting the mu-ind user cap to $D=1$. The tag results
+follow afterward: the hash security of $\HTW$, then the AEAD commitment and
+discoverability notions that reuse the same root tag candidate analysis. The
+collision, always second-preimage, everywhere preimage, and CMTDs-4 random
+oracle bounds, together with the proof of the context-discoverability theorem,
+are in \Cref{sec:cmtds3}.
 All random oracle adversaries in this subsection are flat-RO adversaries
 (\Cref{sec:ro-model}) with the displayed resources, and the
 flat sponge lift of \Cref{app:flat-sponge-lift} transfers each random
