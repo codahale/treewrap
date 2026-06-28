@@ -19,104 +19,105 @@ the mu-ind and committing proofs only have to derive the relevant local
 event premise before applying the corresponding accounting argument.
 
 \paragraph{How to read this appendix.}
-\Cref{fig:lemma-dag} records the dependency graph. The Bridge \&
-Decode node is \Cref{lem:bridge-decode} together with the exact keyed
-decoder of \Cref{def:keyed-twout}; the Key-Indexed Renaming node
-(\Cref{lem:key-renaming}) supplies the key-field disjointness and
-renaming used by hidden-key encryption and verification accounting. The
-Adaptive Candidate node (\Cref{lem:adaptive-candidate}) is the generic
-probabilistic engine: it bounds the Leaf Tag Collision lemma
-(\Cref{lem:leaf-collision}) and, through the Root Tag Hash Bound
-(\Cref{lem:root-tag-hash}) of \Cref{sec:cmtds3}, the CMTDs-4,
-collision, preimage, and second-preimage proofs. The edge from
-\Cref{lem:transcript-inj} into the committing proofs is mediated by
-Opening Triple Separation (\Cref{cor:triple-sep}), Final-Root Input
-Separation (\Cref{prop:final-root-sep}), and \Cref{cor:output-sep}. The
-mu-ind proof reuses the same structural lemmas, adding freshness,
-key-test, leaf-collision, and verification-first root guessing
-accounting.
+\Cref{fig:lemma-dag} records the proof dependency map. It groups local
+interfaces when the exact proof citations would obscure the spine. The
+Bridge \& Decode node is \Cref{lem:bridge-decode} together with the
+exact keyed decoder of \Cref{def:keyed-twout}. The Root/Output
+Separation node groups Output-Point Separation (\Cref{cor:output-sep}),
+Opening Triple Separation (\Cref{cor:triple-sep}), and Final-Root Input
+Separation (\Cref{prop:final-root-sep}); the use of Leaf-Transcript
+Recovery (\Cref{lem:leaf-recovery}) is folded into the final-root
+separation fact. The Key-Indexed Renaming node (\Cref{lem:key-renaming})
+supplies the key-field disjointness and renaming used by hidden-key
+encryption and verification accounting. The Adaptive Candidate node
+(\Cref{lem:adaptive-candidate}) is the generic probabilistic engine: it
+bounds the Leaf Tag Collision lemma (\Cref{lem:leaf-collision}) and,
+through the Root Tag Candidate Sequence and Root Tag Hash Bound
+(\Cref{lem:root-candidate-seq,lem:root-tag-hash}) of \Cref{sec:cmtds3},
+the root tag hash and committing proofs. The mu-ind proof reuses the
+same structural lemmas, adding freshness, key-test, leaf-collision, and
+verification-first root guessing accounting.
 
-\begin{figure}[t]
+\begin{figure}[H]
   \centering
   \resizebox{\linewidth}{!}{%
   \begin{tikzpicture}[
     every node/.style={font=\footnotesize},
     lemma/.style={draw, rounded corners=2pt, align=center, inner sep=3pt,
                   minimum width=2.6cm, minimum height=0.7cm, fill=white},
+    group/.style={draw, rounded corners=2pt, align=center, inner sep=3pt,
+                  minimum width=2.8cm, minimum height=0.7cm, fill=white},
     consumer/.style={draw, dashed, rounded corners=2pt, align=center,
                      inner sep=3pt, minimum width=2.3cm, minimum height=0.7cm,
                      fill=white},
     arr/.style={-{Latex[length=1.6mm]}, semithick, draw=black!70},
   ]
     % Column 1: foundational lemmas.
-    \node[lemma] (df) at (0,  3.0) {Duplex\\ Flattening};
-    \node[lemma] (ba) at (0, -3.0) {Bridge \&\\ Decode};
+    \node[lemma] (df) at (0,  2.6) {Duplex\\ Flattening};
+    \node[lemma] (ba) at (0, -2.6) {Bridge \&\\ Decode};
 
-    % Column 2: structural lemmas.
-    \node[lemma] (ti) at (3.8, 3.0) {Transcript\\ Injectivity};
-    \node[lemma] (kr) at (3.8, 0.5) {Key-Indexed\\ Renaming};
-    \node[lemma] (kt) at (3.8, -2.0) {Adaptive\\ Key Tests};
+    % Column 2: structural interfaces.
+    \node[lemma] (ti) at (3.8,  2.6) {Transcript\\ Injectivity};
+    \node[lemma] (kr) at (3.8,  0.8) {Key-Indexed\\ Renaming};
+    \node[lemma] (kt) at (3.8, -1.0) {Adaptive\\ Key Tests};
+    \node[group] (rs) at (3.8, -2.8) {Root/Output\\ Separation};
 
-    % Column 3: derived lemmas.
-    \node[lemma] (tf) at (7.6,  2.0) {Transcript\\ Freshness};
-    \node[lemma] (lc) at (7.6, -0.5) {Leaf Tag\\ Collision};
-    \node[lemma] (cc) at (7.6, -1.75) {Adaptive\\ Candidate};
+    % Column 3: local accounting lemmas.
+    \node[lemma] (tf) at (7.6,  2.8) {Transcript\\ Freshness};
+    \node[lemma] (lc) at (7.6,  1.2) {Leaf Tag\\ Collision};
+    \node[lemma] (rg) at (7.6, -0.4) {Verification-First\\ Root Guessing};
+    \node[lemma] (cc) at (7.6, -2.0) {Adaptive\\ Candidate};
 
-    % Column 4: consumers.
-    \node[consumer] (c6) at (11.4,  2.4) {Mu-ind\\encryption side};
-    \node[consumer] (c7) at (11.4,  0.8) {Mu-ind\\verification side};
-    \node[consumer] (c8) at (11.4, -1.5) {Committing\\proofs};
-    \node[consumer] (cb) at (11.4, -3.0) {App.~\ref{app:flat-sponge-lift}};
+    % Column 4: grouped proof spines.
+    \node[group] (mi) at (11.4,  1.7) {Mu-ind\\ Accounting};
+    \node[lemma] (rc) at (11.4, -0.5) {Root Tag\\ Candidate Seq.};
+    \node[lemma] (rh) at (11.4, -2.0) {Root Tag\\ Hash Bound};
+
+    % Column 5: consumers.
+    \node[consumer] (c6) at (15.2,  1.7) {Mu-ind\\proof};
+    \node[consumer] (c8) at (15.2, -1.3) {Hash +\\committing proofs};
+    \node[consumer] (cb) at (15.2, -3.0) {App.~\ref{app:flat-sponge-lift}};
 
     \begin{scope}[on background layer]
-      % Foundational -> structural.
+      % Foundational -> structural interfaces.
       \draw[arr] (df) -- (ti);
-
-      % Transcript Injectivity feeds the derived transcript lemmas.
-      \draw[arr] (ti.east) -- (tf.west);
-      \draw[arr] (ti.east) to[out=-20, in=160] (lc.west);
-
-      % Derived lemmas -> mu-ind encryption side.
-      \draw[arr] (tf.east) to[out=30,  in=200] (c6.west);
-
-      % Derived lemmas -> mu-ind verification side.
-      \draw[arr] (lc.east) to[out=30,  in=200] (c7.west);
-
-      % Leaf Tag Collision also feeds the committing collision/aSec proofs.
-      \draw[arr] (lc.east) to[out=-25, in=160] (c8.west);
-
-      % Candidate collision accounting -> committing proofs.
-      \draw[arr] (cc.east) to[out=0,  in=180] (c8.west);
-
-      % Adaptive Candidate engine also bounds the Leaf Tag Collision lemma.
-      \draw[arr] (cc) -- (lc);
-
-      % Key-Indexed Renaming: fed by the structural lemmas, feeds
-      % hidden-key encryption and verification accounting.
       \draw[arr] (ti) -- (kr);
-      \draw[arr] (ba.east) to[out=50, in=215] (kr.west);
-      \draw[arr] (kr.east) to[out=35, in=205] (c6.west);
-      \draw[arr] (kr.east) to[out=5,  in=195] (c7.west);
+      \draw[arr] (ba.east) to[out=35, in=205] (kr.west);
+      \draw[arr] (ba.east) to[out=10, in=200] (kt.west);
+      \draw[arr] (ti.east) to[out=-35, in=145] (rs.west);
+      \draw[arr] (ba) -- (rs);
 
-      % Bridge decoding is consumed directly at the proof sites.
-      \draw[arr] (ba.east) to[out=10,  in=200] (kt.west);
-      \draw[arr] (kt.east) to[out=35,  in=220] (c6.west);
-      \draw[arr] (kt.east) to[out=15,  in=210] (c7.west);
-      \draw[arr] (ba.east) to[out=0,   in=210] (c6.west);
-      \draw[arr] (ba.east) to[out=-5,  in=200] (c7.west);
-      \draw[arr] (ba.east) to[out=-15, in=200] (c8.west);
-      \draw[arr] (ba.east) to[out=-10, in=180] (cb.west);
+      % Local accounting from the structural interfaces.
+      \draw[arr] (ti.east) to[out=20, in=180] (tf.west);
+      \draw[arr] (ti.east) to[out=0, in=180] (lc.west);
+      \draw[arr] (ti.east) to[out=-20, in=170] (rg.west);
+      \draw[arr] (cc) -- (lc);
+      \draw[arr] (rs.east) to[out=25, in=190] (rc.west);
+      \draw[arr] (ba.east) to[out=-5, in=200] (rc.west);
+      \draw[arr] (rc) -- (rh);
+      \draw[arr] (cc.east) to[out=-5, in=180] (rh.west);
 
-      % Transcript Injectivity -> committing proofs, routed
-      % orthogonally below the derived column.
-      \draw[arr] (ti.south)
-        -- ++(0, -4.95) -| (c8.south);
+      % Mu-ind accounting and consumer.
+      \draw[arr] (tf.east) to[out=0, in=170] (mi.west);
+      \draw[arr] (lc.east) to[out=0, in=185] (mi.west);
+      \draw[arr] (rg.east) to[out=20, in=205] (mi.west);
+      \draw[arr] (kr.east) to[out=25, in=195] (mi.west);
+      \draw[arr] (kt.east) to[out=35, in=215] (mi.west);
+      \draw[arr] (mi) -- (c6);
+
+      % Root tag hash and committing consumers.
+      \draw[arr] (lc.east) to[out=-20, in=160] (c8.west);
+      \draw[arr] (rs.east) to[out=-5, in=185] (c8.west);
+      \draw[arr] (rh.east) -- (c8.west);
+
+      % The flat sponge lift consumes bridge decoding directly.
+      \draw[arr] (ba.east) to[out=-20, in=180] (cb.west);
     \end{scope}
   \end{tikzpicture}
   }
-  \caption{Dependency graph of the supporting proof components in this
-    appendix and their consumers. Solid boxes are lemmas or local proof
-    interfaces; dashed boxes are proof components that consume them.}
+  \caption{Proof dependency map for the supporting components in this
+    appendix and their consumers. Solid boxes are lemmas or grouped local
+    proof interfaces; dashed boxes are proof components that consume them.}
   \label{fig:lemma-dag}
 \end{figure}
 
