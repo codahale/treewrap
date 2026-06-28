@@ -1,32 +1,35 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-\TW{} is a nonce-based AEAD mode built as a two-level tree of keyed duplexes over
-a single \Keccakp{} permutation. Its chunk decomposition is canonical, while the
-number of leaf duplexes evaluated in parallel is an implementation choice rather
-than a mode parameter. This gives scalar, SIMD, and multicore implementations the
-same ciphertexts and tags, with constant working memory and scalable
-parallelism.
+\TW{} starts from the premise that an AEAD tag should behave like the compact
+digest applications often take it to be, and builds the mode from a
+digest-shaped construction rather than adding commitment as an external layer.
+It adapts the KangarooTwelve tree-hashing pattern into a two-level tree of keyed
+duplexes over a single \Keccakp{} permutation. The chunk decomposition is
+canonical, while the number of leaf duplexes evaluated in parallel is an
+implementation choice rather than a mode parameter. This gives scalar, SIMD, and
+multicore implementations the same ciphertexts and tags, with constant working
+memory and scalable parallelism.
 
-The central security claim is that the authentication tag behaves like a
-digest-like commitment to the full $(K, N, A, M)$ context. In the public
-permutation model, via an intermediate random oracle and the flat sponge lift, we
-prove concrete multi-user indistinguishability and derive all-in-one AE as its
-single-user corollary. We also prove collision, second-preimage, and preimage
-security for the root tag wrapper. Those hash-style guarantees yield the
-AEAD-facing commitment results, including full-input \textsf{CMTDs-4} security
-and context discoverability ($\mathsf{CDY}^\ast$), at a $128$-bit target for the
-implemented parameters.
+The central security claim is that the resulting root tag satisfies the digest
+intuition: it is a compact commitment to the full $(K, N, A, M)$ context. In the
+public permutation model, via an intermediate random oracle and the flat sponge
+lift, we prove concrete multi-user indistinguishability and derive all-in-one AE
+as its single-user corollary. We also prove collision, second-preimage, and
+preimage security for the root tag wrapper. Those hash-style guarantees yield
+the AEAD-facing commitment results, including full-input \textsf{CMTDs-4}
+security and context discoverability ($\mathsf{CDY}^\ast$), at a $128$-bit
+target for the implemented parameters.
 
-The implementation results show that this commitment is not purchased by giving
-up the performance profile of modern duplex AEADs. Vectorized \texttt{amd64} and
-\texttt{arm64} implementations exploit the scalable leaf structure, exceed
-$10$\,Gbit/s, and reach $50$--$75\%$ of hardware-accelerated AES-128-GCM
-throughput.
+The implementation results show why the tree-hashing origin matters. Vectorized
+\texttt{amd64} and \texttt{arm64} implementations exploit the scalable leaf
+structure, exceed $10$\,Gbit/s, and reach $50$--$75\%$ of
+hardware-accelerated AES-128-GCM throughput.
 
 Several questions remain open (\Cref{sec:limitations}): a nonce-misuse-resistant
 variant, security under release of unverified plaintext, and sharper bounds,
 whether through a keyed duplex treatment of the BDPV11-style phasing used here or
 through a beyond-birthday argument. More broadly, \TW{} adds to the evidence that
 a single, well-scrutinized \Keccak{} permutation can support authenticated
-encryption that is fast, scalable, and committing.
+encryption whose tag is digest-like without giving up scalable hashing-style
+performance.

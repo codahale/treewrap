@@ -2,100 +2,105 @@
 \label{sec:introduction}
 
 Authenticated encryption with associated data (AEAD) is often treated in
-practice as if its tag were a compact digest of the encryption context: a short
-string that binds the key, nonce, associated data, and message as a hash digest
-would. Widely deployed AEADs do not generally provide that property. AES-GCM
-and ChaCha20-Poly1305, for example, are not key-committing: an adversary can
-craft a single ciphertext that decrypts to valid plaintexts under two or more
-keys \cite{DGRW18, ADGKLS22}. The cause is structural. Their authenticity rests
-on algebraic MACs whose outputs can often be made to validate under a second
-context, whereas a digest is expected to resist both collisions and preimages.
+practice as if its tag were a compact commitment to the full encryption context:
+a short string that binds the key, nonce, associated data, and message. One
+source of this intuition is that many practitioners first meet message
+authentication through hash-based MACs such as HMAC, whose tags look and behave
+much like keyed digests. Standard modern AEADs do not provide this full
+commitment property at all. AES-GCM and ChaCha20-Poly1305, for example, are not
+key-committing: an adversary can craft a single ciphertext that decrypts to
+valid plaintexts under two or more keys \cite{DGRW18, ADGKLS22}. The cause is
+structural. Their authenticity rests on algebraic MACs whose outputs can often
+be made to validate under a second context, whereas a digest is expected to
+resist both collisions and preimages.
 
 The resulting attacks are not edge cases in the formalism; they are failures of
-the digest intuition that users and protocols naturally assign to tags. The
-``invisible salamander'' attack defeats Facebook's attachment franking scheme
-\cite{DGRW18}; related constructions produce ciphertexts that open to different
-well-formed files under different keys \cite{ADGKLS22}; partitioning oracles
-recover passwords from systems built on non-committing AEAD \cite{LGR21}; and
-context discovery attacks break \textsf{GCM}, \textsf{CCM}, \textsf{EAX},
-\textsf{SIV}, and \textsf{OCB3} by exploiting authentication layers that are not
-preimage-resistant \cite{MLGR23}. These attacks differ in surface form, but all
-expose the same mismatch: the tag is used as if it were a binding digest, while
-the mode only proves ordinary authenticity.
+the compact-commitment intuition that users and protocols naturally assign to
+tags. The ``invisible salamander'' attack defeats Facebook's attachment
+franking scheme \cite{DGRW18}; related constructions produce ciphertexts that
+open to different well-formed files under different keys \cite{ADGKLS22};
+partitioning oracles recover passwords from systems built on non-committing AEAD
+\cite{LGR21}; and context discovery attacks break \textsf{GCM}, \textsf{CCM},
+\textsf{EAX}, \textsf{SIV}, and \textsf{OCB3} by exploiting authentication
+layers that are not preimage-resistant \cite{MLGR23}. These attacks differ in
+surface form, but all expose the same mismatch: the tag is used as if it were a
+full-context commitment, while the mode only proves ordinary authenticity.
 
-The AEAD commitment literature has captured important parts of this digest
-model. Compactly committing AEAD was introduced for message franking
-\cite{GLR17}, and the committing hierarchy of \cite{BH22} makes the
-collision-style requirement explicit: no two distinct contexts should open the
-same ciphertext and tag. Context discoverability \cite{MLGR23} captures the
-preimage-facing counterpart: given a target ciphertext, it should be infeasible
-to find a decrypting context. These notions explain when a ciphertext can have
-another valid opening, or any valid opening at all, but they are still phrased
-as AEAD games over ciphertexts. The practitioner's assumption is more
-hash-like: the tag itself is treated as a compact fingerprint of the encrypted
-object. We therefore analyze the tag with hash notions directly, and then
-recover the AEAD commitment notions as game-specific consequences of the same
-tag analysis.
+The AEAD literature has only recently begun to model this expectation directly.
+Compactly committing AEAD was introduced for message franking \cite{GLR17}, and
+the encryptment approach of \cite{DGRW18} builds commitment into a dedicated
+primitive. The committing hierarchy of \cite{BH22} makes the collision-style
+requirement explicit: no two distinct contexts should open the same ciphertext
+and tag. Context discoverability \cite{MLGR23} captures the preimage-facing
+counterpart: given a target ciphertext, it should be infeasible to find a
+decrypting context. These notions explain when a ciphertext can have another
+valid opening, or any valid opening at all, but they are still phrased as AEAD
+games over ciphertexts. The practitioner's assumption is more tag-centric: the
+tag itself is treated as a compact commitment string. We therefore analyze the
+tag with hash notions directly, and then recover the AEAD commitment notions as
+game-specific consequences of the same tag analysis.
 
-\TW{} (\emph{TreeWrap}) makes that shift structural: instead of starting with a
-non-committing AEAD and adding a hash-based commitment transform, we start from the
-structure of a modern parallel hash and add encryption.
-KangarooTwelve
-\cite{BDPVVV16} splits its input into fixed-size chunks, hashes the chunks
-independently under \Keccakp{}, and absorbs their chaining values into a root
-node; the leaves run in parallel across SIMD lanes and cores, with memory
-bounded independently of the input length. \TW{} adapts that tree into a
-nonce-based AEAD whose authentication tag is itself a digest of the full
-$(K, N, A, M)$ context.
+\TW{} (\emph{TreeWrap}) takes the digest intuition literally. If an AEAD tag is
+meant to behave like a compact digest, the mode should be shaped like a modern
+high-performance digest rather than like a serial stream cipher with an
+algebraic MAC. The relevant performance lesson from modern hashing is that large
+inputs are processed by splitting them into chunks, evaluating independent work
+in parallel, and aggregating short chaining values into a final root value.
+KangarooTwelve \cite{BDPVVV16} is the SHA-3-family exemplar of this pattern: it
+hashes fixed-size chunks independently under \Keccakp{}, absorbs their chaining
+values into a root node, runs leaves across SIMD lanes and cores, and keeps
+memory bounded independently of the input length.
 
-Structurally, \TW{} is a two-level tree of keyed duplexes over one permutation.
-A serial root duplex, initialized with the key $K$ and nonce $N$, absorbs the
-associated data, encrypts the first message chunk, absorbs a tag from each
-remaining chunk, and emits the final root tag. Each remaining chunk is processed
-by an independent leaf duplex keyed by $(K, N, j)$, where $j$ is the chunk index;
-the leaf encrypts its chunk and returns a leaf tag to the root. Thus every input
-reaches the root directly or through a leaf tag, while every duplex state remains
-bounded at $1600$ bits. As in KangarooTwelve's \emph{kangaroo hopping}, a
-single-chunk message uses only the root duplex and pays no tree overhead
-(\Cref{sec:latency}).
+\TW{} asks what this tree looks like when the sponge nodes are replaced by
+keyed duplexes that encrypt while they absorb. A serial root duplex, initialized
+with the key $K$ and nonce $N$, absorbs the associated data, encrypts the first
+message chunk, absorbs a tag from each remaining chunk, and emits the final root
+tag. Each remaining chunk is processed by an independent leaf duplex keyed by
+$(K, N, j)$, where $j$ is the chunk index; the leaf encrypts its chunk and
+returns a leaf tag to the root. Thus every input reaches the root directly or
+through a leaf tag, while every duplex state remains bounded at $1600$ bits. As
+in KangarooTwelve's \emph{kangaroo hopping}, a single-chunk message uses only
+the root duplex and pays no tree overhead (\Cref{sec:latency}).
 
-\TW{} is not merely parallelizable; it is scalable. The mode fixes a canonical
-leaf decomposition and transcript, but it does not fix how many leaves an
-implementation evaluates at once. A scalar implementation, an AVX2
-implementation, an AVX-512 implementation, a NEON implementation, and a
-multicore implementation all produce identical ciphertexts and tags. The degree
-of parallelism is therefore not a mode parameter and is not visible on the wire:
-it is an implementation choice made at run time to match the host. This separates
-\TW{} from prior duplex-based AEADs with parallel variants, where the
-parallelism degree is fixed by the mode instance or otherwise shared by the
-communicating parties.
+This gives a mode that is not merely parallelizable but scalable. The leaf
+decomposition and transcript are canonical, so there is only one ciphertext and
+tag for a given input, but the number of leaves evaluated at once is left to the
+implementation. A scalar implementation, an AVX2 implementation, an AVX-512
+implementation, a NEON implementation, and a multicore implementation all
+produce identical ciphertexts and tags. The degree of parallelism is therefore
+not a mode parameter and is not visible on the wire. This separates \TW{} from
+prior duplex-based AEADs with parallel variants, where the parallelism degree is
+fixed by the mode instance or otherwise shared by the communicating parties.
 
-We prove that the wrapper $\HTW$ returning the root tag is a secure hash in the
-sense of \cite{RS04}: collision-, second-preimage-, and preimage-resistant as a
-function of the full $(K, N, A, M)$ input. The $256$-bit root tag is therefore a
-compact digest-like commitment to the full context. The familiar AEAD
-commitment notions are recovered from the same root tag candidate analysis:
-full-input $s$-way \textsf{CMTDs-4} \cite{BH22} is the collision-facing AEAD
-consequence, while \cite{MLGR23} context discoverability
+Because \TW{} adapts the KangarooTwelve tree to encryption, the tag emitted by
+the root is naturally the output of a keyed tree hash. We formalize this by
+considering the wrapper $\HTW$ that returns the root tag, and prove that $\HTW$
+is a secure hash in the sense of \cite{RS04}: collision-, second-preimage-, and
+preimage-resistant as a function of the full $(K, N, A, M)$ input. The $256$-bit
+root tag is therefore a compact digest-like commitment to the full context. The
+familiar AEAD commitment notions are recovered from the same root tag candidate
+analysis: full-input $s$-way \textsf{CMTDs-4} \cite{BH22} is the
+collision-facing AEAD consequence, while \cite{MLGR23} context discoverability
 $\mathsf{CDY}^\ast$ is the preimage-facing consequence, with an additional
 hidden-component guessing term. The proofs use the structure of the AEAD games
 to keep the stated bounds tight.
 
-We analyze \TW{} in the public permutation model. We obtain a concrete
-multi-user indistinguishability bound in the sense of \cite{BT16}, with
-all-in-one authenticated encryption in the sense of \cite{RS06} as its
-single-user corollary, together with the hash, committing, and context
-discoverability bounds above. Each bound is proved first against an intermediate
-random oracle and then transferred to the real permutation by the flat sponge
-lift of \cite{BDPV08} (\Cref{app:flat-sponge-lift}). At the implemented
-parameters ($k = c = \tauroot = \tauleaf = 256$), the bounds meet a $128$-bit
-security target for adversaries running up to $\Ntot \leq 2^{63}$ \Keccakp{}
-calls---on the order of $2^{71}$ bytes of processed data.
+We also prove the standard AEAD security of the mode. In the public permutation
+model, \TW{} has a concrete multi-user indistinguishability bound in the sense
+of \cite{BT16}, with all-in-one authenticated encryption in the sense of
+\cite{RS06} as its single-user corollary. Each bound is proved first against an
+intermediate random oracle and then transferred to the real permutation by the
+flat sponge lift of \cite{BDPV08} (\Cref{app:flat-sponge-lift}). At the
+implemented parameters ($k = c = \tauroot = \tauleaf = 256$), the bounds meet a
+$128$-bit security target for adversaries running up to $\Ntot \leq 2^{63}$
+\Keccakp{} calls---on the order of $2^{71}$ bytes of processed data.
 
-Optimized \texttt{amd64} (AVX-512 and AVX2) and \texttt{arm64} (NEON with the
-SHA-3 extension) implementations turn this scalable leaf structure into
-measured throughput. On contemporary hardware, \TW{} exceeds $10$\,Gbit/s and
-reaches $50$--$75\%$ of hardware-accelerated AES-128-GCM
+The mode's design-level parallelism translates into measured implementation
+performance. Optimized \texttt{amd64} (AVX-512 and AVX2) and \texttt{arm64}
+(NEON with the SHA-3 extension) implementations evaluate leaf duplexes in
+batches while preserving the canonical transcript. On contemporary hardware,
+\TW{} exceeds $10$\,Gbit/s and reaches $50$--$75\%$ of hardware-accelerated
+AES-128-GCM
 (\Cref{sec:performance}), while using one permutation for confidentiality,
 authentication, and commitment.
 

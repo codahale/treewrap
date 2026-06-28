@@ -14,29 +14,35 @@
 \keywords{authenticated encryption \and committing security \and sponge constructions \and duplex constructions \and Keccak}
 
 \begin{abstract}
-  We present \TW{}, a nonce-based authenticated encryption mode with
-  associated data built as a two-level tree of keyed duplexes over the
-  \Keccakp{} permutation. A serial root duplex binds the key, nonce, and
-  associated data, encrypts the first message chunk, and aggregates tags from
-  independently keyed leaf duplexes for the remaining chunks. The leaf
-  decomposition is canonical, but the number of leaves evaluated at once is an
-  implementation choice: scalar, SIMD, and multicore implementations produce
-  identical ciphertexts and tags without making the degree of parallelism a mode
-  parameter.
+  AEAD tags are often expected to be compact commitments to the full encryption
+  context, an intuition reinforced by common experience with hash-based MACs
+  such as HMAC. The AEAD literature has only recently begun to formalize this
+  expectation through notions such as committing security, context
+  discoverability, and encryptment, but standard deployed modes such as AES-GCM
+  and ChaCha20-Poly1305 do not provide it. We present \TW{}, a nonce-based
+  authenticated encryption mode with associated data that adapts the
+  KangarooTwelve tree-hashing pattern to keyed duplex encryption over
+  \Keccakp{}. A serial root duplex binds the key, nonce, and associated data,
+  encrypts the first message chunk, and aggregates tags from independently keyed
+  leaf duplexes for the remaining chunks. The leaf decomposition is canonical,
+  but the number of leaves evaluated at once is an implementation choice:
+  scalar, SIMD, and multicore implementations produce identical ciphertexts and
+  tags without making the degree of parallelism a mode parameter.
 
-  \TW{} makes the authentication tag a digest-like commitment to the full
-  $(K, N, A, M)$ context. In the public permutation model, via an intermediate
-  random oracle and the flat sponge lift, we prove concrete multi-user
-  indistinguishability and derive all-in-one authenticated encryption as the
-  single-user corollary. We also prove that the wrapper returning the tag is a
-  secure hash of the full context---collision-, second-preimage-, and
-  preimage-resistant in the standard hash-function sense. The same tag analysis
-  gives the AEAD-facing commitment guarantees: full-input
+  The final root tag is the authentication tag and is also analyzed as a
+  digest-like commitment to the full $(K, N, A, M)$ context. In the public
+  permutation model, via an intermediate random oracle and the flat sponge lift,
+  we prove concrete multi-user indistinguishability and derive all-in-one
+  authenticated encryption as the single-user corollary. We also prove that the
+  wrapper returning the tag is a secure hash of the full context---collision-,
+  second-preimage-, and preimage-resistant in the standard hash-function sense.
+  The same tag analysis gives the AEAD-facing commitment guarantees: full-input
   \textsf{CMTDs-4} committing security and context discoverability
   ($\mathsf{CDY}^\ast$). At the implemented parameters, all stated notions meet
   a $128$-bit security target. Vectorized \texttt{amd64} and \texttt{arm64}
-  implementations exploit the scalable leaf structure, exceed $10$\,Gbit/s,
-  and reach $50$--$75\%$ of hardware-accelerated AES-128-GCM throughput.
+  implementations recover the scalable performance profile of the tree design,
+  exceed $10$\,Gbit/s, and reach $50$--$75\%$ of hardware-accelerated
+  AES-128-GCM throughput.
 \end{abstract}
 
 \input{sections/01-introduction}
