@@ -419,10 +419,11 @@ that target and drops the exponent from $\tauroot(s-1)$ to $\tauroot$.
 The wrapper $\HTW$ is a secure hash of the full encryption context
 $(K, N, A, M)$ in the sense of \cite{RS04}: collision-resistant
 (\Cref{thm:coll}), always second-preimage-resistant (\Cref{thm:asec}), and
-everywhere preimage-resistant (\Cref{thm:epre}). At the implemented parameters all
-three advantages are at most $2^{-128}$ (\Cref{cor:concrete-security}), so
-the single $\tauroot$-bit root tag is a binding compact commitment to
-$(K, N, A, M)$ with everywhere preimage resistance, native to the mode.
+everywhere preimage-resistant (\Cref{thm:epre}). Under the implemented
+parameters and work cap $\Ntot \leq 2^{63}$, all three advantages are at most
+$2^{-128}$ (\Cref{cor:concrete-security}), so the single $\tauroot$-bit
+root tag is a binding compact commitment to $(K, N, A, M)$ with everywhere
+preimage resistance, native to the mode.
 \end{corollary}
 
 \begin{proof}
