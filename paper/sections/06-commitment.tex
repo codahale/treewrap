@@ -344,7 +344,8 @@ For every $s \geq 2$, every
               \mathsf{CMTDs\text{-}4},\, \mathsf{CMTs\text{-}1},\,
               \mathsf{CMTs\text{-}3},\, \mathsf{CMTs\text{-}4}\bigr\},
 \]
-and every $s$-way $X$-adversary $\mathcal{A}$ against \TW{},
+and every $s$-way $X$-adversary $\mathcal{A}$ against \TW{} with the
+resources of \Cref{sec:resources},
 \[
   \Adv^X_\TW(\mathcal{A})
   \;\leq\;
@@ -376,6 +377,9 @@ distinctness. Thus each CMTs-$\ell$ winner reaches pairwise distinct
 opening triples. Opening Triple Separation (\Cref{cor:triple-sep}) makes
 the $s$ final-root candidates distinct while their $\tauroot$-bit
 projections all equal $T$.
+The hierarchy argument does not change the output distribution or the
+resource counts, and the CMTs-$\ell$ encryption checks are the
+construction-internal work counted in $N$ by \Cref{sec:resources}.
 
 By the Lift Application corollary (\Cref{cor:lift-application}) for the
 $X$ game, the derived random oracle adversary $\mathcal{B}$ has
