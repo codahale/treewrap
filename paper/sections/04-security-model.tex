@@ -59,6 +59,18 @@ implemented-parameter instantiations appear in \Cref{sec:concrete-security}.
   \label{tab:security-notions}
 \end{table}
 
+The proof dependency spine is as follows. \Cref{app:lemmas} first establishes
+transcript decoding, bridge injectivity, output-point separation, and the local
+probabilistic accounting lemmas for key tests, leaf tag collisions, and root tag
+guesses. \Cref{sec:aead-security} uses those facts directly for the random
+oracle mu-ind bound. \Cref{sec:root-tag-hash-security} then uses the same
+structural facts to build a chronological sequence of final root candidates and
+apply a single root tag hash bound; the hash, committing, and context
+discoverability theorems differ only in which collision or preimage event is
+reduced to that candidate sequence. Finally, \Cref{app:flat-sponge-lift}
+transfers the random oracle bounds to the public permutation games defined
+below.
+
 \subsection{Public Permutation Games}
 \label{sec:games-pp}
 
