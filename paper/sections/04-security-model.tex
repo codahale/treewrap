@@ -349,6 +349,53 @@ finite hybrid sequence. Such local caps are part of the adversary's
 fixed query bounds, but they are not listed as headline resource parameters
 unless they affect the final bound.
 
+\Cref{tab:resource-accounting} gives the compact notation summary used in later
+theorems. Lowercase quantities are realized counts in a random oracle
+experiment, while uppercase quantities are execution-uniform caps used in the
+public-permutation bounds. The detailed definitions below fix exactly which
+computations contribute to each count.
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{@{}p{0.18\linewidth}p{0.42\linewidth}p{0.32\linewidth}@{}}
+    \toprule
+    Symbol & Counted objects & Primary use \\
+    \midrule
+    $N$
+      & Construction-internal \Keccakp{} calls induced by valid construction
+        oracle queries and deterministic challenger checks.
+      & Public-permutation lift and concrete work cap. \\
+    $\Nprim$
+      & Direct adversary queries to the public primitive interface.
+      & Key-guess, root-collision, root-preimage terms; direct-query part of
+        the lift. \\
+    $\Ntot = N + \Nprim$
+      & Total public-primitive transcript length seen by the flat sponge
+        replacement.
+      & Argument of $\Lift_c(\Ntot)$. \\
+    $\qRO(\mathcal{B})$, $\QRO$
+      & Direct finite-output queries to $\ROflat$ in the intermediate random
+        oracle model; construction lookups are excluded.
+      & Random oracle bounds; after the lift $\qRO \leq \Nprim$. \\
+    $\qv(\mathcal{A})$, $\Qv$
+      & Valid verification queries that are not replay-table hits.
+      & Verification-tag terms in AE and mu-ind bounds. \\
+    $\nleaf(\mathcal{B})$, $\Nleaf$
+      & Distinct construction-generated final leaf transcripts.
+      & Leaf tag collision terms; always at most $N$. \\
+    $D$
+      & Execution-uniform cap on users activated in the mu-ind game.
+      & Multi-user key-collision and key-guess terms. \\
+    \bottomrule
+  \end{tabular}
+  \caption{Resource-accounting notation. Uppercase symbols are the caps that
+    appear in public-permutation theorems; lowercase symbols are realized counts
+    in random oracle executions or source games.}
+  \label{tab:resource-accounting}
+\end{table}
+
 \begin{description}
 \item[$N$:] the construction interface cost, measured as the number of
   \Keccakp{} calls that the adversary's construction interface
