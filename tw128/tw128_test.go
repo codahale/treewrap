@@ -277,6 +277,8 @@ func BenchmarkSeal(b *testing.B) {
 
 func BenchmarkAESGCM(b *testing.B) {
 	key := seq(KeySize)
+	block, _ := aes.NewCipher(key[:])
+	gcm, _ := cipher.NewGCM(block)
 	for _, size := range Sizes {
 		nonce := make([]byte, 12)
 		pt := make([]byte, size.N)
@@ -285,8 +287,6 @@ func BenchmarkAESGCM(b *testing.B) {
 			b.SetBytes(int64(size.N))
 			b.ReportAllocs()
 			for b.Loop() {
-				block, _ := aes.NewCipher(key[:])
-				gcm, _ := cipher.NewGCM(block)
 				gcm.Seal(output[:0], nonce, pt, nil)
 			}
 		})

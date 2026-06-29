@@ -93,6 +93,16 @@ func main() {
 
 	gcmKey := make([]byte, 16)
 	gcmNonce := make([]byte, 12)
+	gcmBlock, err := aes.NewCipher(gcmKey)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "aes:", err)
+		os.Exit(1)
+	}
+	gcm, err := cipher.NewGCM(gcmBlock)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "gcm:", err)
+		os.Exit(1)
+	}
 
 	for _, size := range sizes {
 		src := make([]byte, size.N)
@@ -120,25 +130,19 @@ func main() {
 		cpb, gbps = measure(decFn, iters, *nSamples, scale, size.N)
 		results = append(results, newResult("tw128", "open", size.Name, size.N, cpb, gbps))
 
-		// AES-128-GCM seal (key schedule included in measurement).
+		// AES-128-GCM seal.
 		gcmDst := make([]byte, 0, size.N+16)
 		sealFn := func() {
-			block, _ := aes.NewCipher(gcmKey)
-			gcm, _ := cipher.NewGCM(block)
 			gcmDst = gcm.Seal(gcmDst[:0], gcmNonce, src, nil)
 		}
 		iters = calibrate(sealFn, *target)
 		cpb, gbps = measure(sealFn, iters, *nSamples, scale, size.N)
 		results = append(results, newResult("aes128gcm", "seal", size.Name, size.N, cpb, gbps))
 
-		// AES-128-GCM open (key schedule included in measurement).
-		block, _ := aes.NewCipher(gcmKey)
-		gcm, _ := cipher.NewGCM(block)
+		// AES-128-GCM open.
 		ct := gcm.Seal(nil, gcmNonce, src, nil)
 		openDst := make([]byte, 0, size.N)
 		openFn := func() {
-			block, _ := aes.NewCipher(gcmKey)
-			gcm, _ := cipher.NewGCM(block)
 			openDst, _ = gcm.Open(openDst[:0], gcmNonce, ct, nil)
 		}
 		iters = calibrate(openFn, *target)
