@@ -46,7 +46,7 @@ func TestEncryptChunksRunAVX512(t *testing.T) {
 			t.Errorf("n=%d: ciphertext mismatch at byte %d", n, firstMismatch(dst, refDst[:n*chunkSize]))
 		}
 		if !bytes.Equal(tags[:n*32], refTags[:n*32]) {
-			t.Errorf("n=%d: leaf-tag mismatch vs generic path", n)
+			t.Errorf("n=%d: leaf tag mismatch vs generic path", n)
 		}
 	}
 }
@@ -85,7 +85,7 @@ func TestEncryptChunksRunAVX2(t *testing.T) {
 			t.Errorf("n=%d: ciphertext mismatch at byte %d", n, firstMismatch(dst, refDst[:n*chunkSize]))
 		}
 		if !bytes.Equal(tags[:n*32], refTags[:n*32]) {
-			t.Errorf("n=%d: leaf-tag mismatch vs generic path", n)
+			t.Errorf("n=%d: leaf tag mismatch vs generic path", n)
 		}
 	}
 }
@@ -120,7 +120,7 @@ func TestDecryptChunksRunAVX2(t *testing.T) {
 			t.Errorf("n=%d: plaintext mismatch at byte %d", n, firstMismatch(dst, refDst[:n*chunkSize]))
 		}
 		if !bytes.Equal(tags[:n*32], refTags[:n*32]) {
-			t.Errorf("n=%d: leaf-tag mismatch vs generic path", n)
+			t.Errorf("n=%d: leaf tag mismatch vs generic path", n)
 		}
 	}
 }
@@ -158,7 +158,7 @@ func TestDecryptChunksRunAVX512(t *testing.T) {
 			t.Errorf("n=%d: plaintext mismatch at byte %d", n, firstMismatch(dst, refDst[:n*chunkSize]))
 		}
 		if !bytes.Equal(tags[:n*32], refTags[:n*32]) {
-			t.Errorf("n=%d: leaf-tag mismatch vs generic path", n)
+			t.Errorf("n=%d: leaf tag mismatch vs generic path", n)
 		}
 	}
 }

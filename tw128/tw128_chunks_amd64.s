@@ -3,7 +3,7 @@
 // Each kernel processes the first 48 full rho (167-byte) blocks of 8 × 8183-byte
 // chunks under the strict BDPV11 framing and stores the resulting 8-way state
 // back into the state8. The final (49th) full rho-block — closed with MSG_LAST —
-// and the leaf-tag extraction are completed in Go (finish{Encrypt,Decrypt}Chunks),
+// and the leaf tag extraction are completed in Go (finish{Encrypt,Decrypt}Chunks),
 // shared with the generic path. (8183 = 49 × 167, so there is no ragged tail.)
 //
 // Per full block: 20 whole lanes (160 bytes) + a 7-byte partial lane 20, then

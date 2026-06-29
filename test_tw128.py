@@ -274,7 +274,7 @@ def _tv_cases():
 
     # Plaintext sizes: empty/tag-only, sub-block, the RHO block boundary and
     # keystream chaining, the CHUNK root/leaf boundary, and one/two/three leaves
-    # (exercising little-endian chunk_id and leaf-tag aggregation).
+    # (exercising little-endian chunk_id and leaf tag aggregation).
     pt_sizes = [
         ("empty", 0),
         ("1b", 1),

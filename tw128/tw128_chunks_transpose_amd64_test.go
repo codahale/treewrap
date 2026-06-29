@@ -43,7 +43,7 @@ func TestChunksTransposeKernel(t *testing.T) {
 		t.Errorf("encrypt: ciphertext mismatch at byte %d", firstMismatch(dst, refDst))
 	}
 	if tags != refTags {
-		t.Error("encrypt: leaf-tag mismatch vs generic")
+		t.Error("encrypt: leaf tag mismatch vs generic")
 	}
 
 	var dr state8
@@ -63,6 +63,6 @@ func TestChunksTransposeKernel(t *testing.T) {
 		t.Errorf("decrypt: plaintext mismatch at byte %d", firstMismatch(pt, refPt))
 	}
 	if dtags != refDTags {
-		t.Error("decrypt: leaf-tag mismatch vs generic")
+		t.Error("decrypt: leaf tag mismatch vs generic")
 	}
 }
