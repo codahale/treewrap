@@ -11,14 +11,16 @@ support, nonce-misuse resistance, committing security (CMT), and context
 discoverability security (CDY). The rows are representative rather than
 exhaustive: sponge/duplex relatives, AES baselines, a misuse-resistant AES
 baseline, and a generic committing transform.
-The comparison is structural; \TW{}'s own concrete bounds and the regimes in
-which each term dominates are treated in \Cref{sec:bound-discussion}, and its
-measured throughput against hardware-accelerated AES-128-GCM in
-\Cref{sec:compare-perf}. The CMT column records the published committing
-security level most relevant to the comparison: \TW{}'s $128$-bit
-\textsf{CMTDs-4} bound, Ascon's roughly $64$-bit committing bound
-\cite{KSW23}, published low-cost attacks where known
-\cite{KSW23,CR22,ADGKLS22}, and the hash-collision level inherited by
+The comparison is structural, not a total security ranking; \TW{}'s own
+concrete bounds and the regimes in which each term dominates are treated in
+\Cref{sec:bound-discussion}, and its measured throughput against
+hardware-accelerated AES-128-GCM in \Cref{sec:compare-perf}. The CMT and CDY
+columns should be read within their named notions only, and a negative entry
+there does not assert a confidentiality or integrity break of the underlying
+AEAD. The CMT column records the published committing result or attack most
+relevant to the comparison: \TW{}'s $128$-bit \textsf{CMTDs-4} bound, Ascon's
+roughly $64$-bit committing bound \cite{KSW23}, published low-cost attacks where
+known \cite{KSW23,CR22,ADGKLS22}, and the hash-collision level inherited by
 \textsf{CTX}. The CDY column records context discoverability security in the
 \cite{MLGR23} sense: \TW{} provides it within the mode
 (\Cref{thm:cdy-full}), AES-GCM is broken by the context discovery attacks of
@@ -38,13 +40,14 @@ schemes.
 \footnotesize
 \caption{Structural comparison of \TW{} with representative AEADs. Sizes are in
 bytes; AES-GCM-SIV also admits a $32$-byte key. ``Misuse'' is nonce-misuse
-resistance in the sense of \cite{RS06}; CMT records the relevant published
-committing level, with ``broken'' denoting a published low-cost attack and
-``hash CR'' denoting the collision-resistance level of the hash used by the
-transform; CDY is context discoverability in the sense of \cite{MLGR23}. A dash
-means the entry depends on the base scheme, and ``?'' means no result is
-established in the literature. \TW{}'s concrete bounds appear in
-\Cref{sec:bound-discussion}.}
+resistance in the sense of \cite{RS06}; CMT records a published committing
+result or attack in the relevant committing notion, with ``broken'' denoting a
+published low-cost committing attack and ``hash CR'' denoting the
+collision-resistance level of the hash used by the transform; CDY is context
+discoverability in the sense of \cite{MLGR23}. A dash means the entry depends on
+the base scheme, and ``?'' means no result is established in the literature.
+These entries are notion-specific summaries, not broad AE security claims.
+\TW{}'s concrete bounds appear in \Cref{sec:bound-discussion}.}
 \label{tab:scheme-compare}
 \begin{tabular}{@{}llcccccc@{}}
 \toprule
