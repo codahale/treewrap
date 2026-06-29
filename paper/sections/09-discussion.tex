@@ -187,32 +187,39 @@ $\Lift_c(\Ntot) = \Ntot(\Ntot+1)/2^{c+1}$ bounds the indifferentiability
 loss of \cite{BDPV08}, used here to lift the random oracle analysis to the
 public permutation model. This proof route matches the role of the root tag:
 \TW{}'s commitment and discoverability claims are consequences of hash security,
-and sponge hash security is supported by a mature literature. Newer keyed duplex
-analyses are attractive for AE bounds, but they are not developed for the
-commitment setting where the adversary may choose the key or context as part of a
-competing opening.
+and sponge hash security is supported by a mature literature.
 
-Even within ordinary AE, the available keyed duplex interface is not a direct
-substitute for \TW{}. The modern bounds synthesized by \cite{Men23} use a duplex
-call phased as permutation, squeeze, then absorb or overwrite
-(\cite[Sec.~3.4, Table~1]{Men23}). In the authenticated-encryption application,
-this interface is instantiated as \textsf{MonkeySpongeWrap} \cite[Alg.~8]{Men23}.
-As written, however, that algorithm is not correct for partial final message
-blocks. Encryption absorbs the padded final plaintext block after squeezing and
-then truncates the resulting ciphertext to the message length. Decryption
-receives only this truncated ciphertext, pads it independently, and uses the
-overwrite branch to set the rate. The missing ciphertext padding bits are
-therefore not reconstructed, so the decryption transcript can diverge before tag
-recomputation.
+A direct keyed-duplex treatment would have to close two gaps. First, existing
+keyed-duplex bounds are hidden-key AE bounds: the game samples the key, and the
+keyed initialization material is not part of the adversary's output. The
+root-tag claims here are adversarial-initialization statements. In the hash,
+committing, and context discoverability games, the adversary may choose the key,
+nonce, associated data, message, target ciphertext, or competing opening. Thus
+the proof must handle adversarially chosen initialization transcripts, not only
+hidden-key encryption and verification queries.
 
-\TW{} therefore stays with the BDPV11 duplex phasing: a call absorbs the actual
+Second, the available keyed-duplex AE interface is not a direct substitute for a
+byte-string AEAD with arbitrary final-block length. The modern bounds
+synthesized by \cite{Men23} use a duplex call phased as permutation, squeeze,
+then absorb or overwrite (\cite[Sec.~3.4, Table~1]{Men23}). In the
+authenticated-encryption application, this interface is instantiated as
+\textsf{MonkeySpongeWrap} \cite[Alg.~8]{Men23}. As written, however, the
+overwrite interface does not reconstruct the missing padding bits of a truncated
+final ciphertext block on decryption: encryption absorbs the padded final
+plaintext block after squeezing and then truncates the resulting ciphertext to
+the message length, while decryption receives only this truncated ciphertext,
+pads it independently, and uses the overwrite branch to set the rate. The
+decryption transcript can therefore diverge before tag recomputation.
+
+\TW{} instead stays with the BDPV11 duplex phasing: a call absorbs the actual
 input string, padded by the duplex rule, and then returns the requested output.
 At the stream layer this supports arbitrary length messages by splitting them
 into bounded duplex blocks, with the final short ciphertext block absorbed as it
 is rather than reconstructed through an overwrite branch (\Cref{sec:tw128}). A
-direct keyed duplex treatment would therefore need a theorem for this BDPV11
-phasing in adversarial key commitment games. We retain the indifferentiability
-lift because it is modular and already meets the $128$-bit target
+direct keyed-duplex theorem for \TW{} would therefore need both this BDPV11
+phasing and adversarial-initialization hash, committing, and context
+discoverability games. We retain the indifferentiability lift because it covers
+these claims uniformly and already meets the $128$-bit target
 (\Cref{sec:bound-discussion}).
 
 \paragraph{Beyond-birthday security and leakage.}
