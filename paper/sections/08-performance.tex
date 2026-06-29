@@ -33,8 +33,8 @@ initial state. The implementation therefore seeds lane~$0$ of the first batched
 call with the root state, runs chunk~$0$ alongside the first leaf chunks, then
 writes lane~$0$'s output state back to the root duplex before the root absorbs
 the leaf tags from that same call. This avoids a serial pass over chunk~$0$ and
-is the reason the throughput curve drops as soon as complete leaves are present
-(\Cref{sec:throughput}). \Cref{app:kernels} gives the lane-major layout,
+is the reason the cycles-per-byte curve drops as soon as complete leaves are
+present (\Cref{sec:throughput}). \Cref{app:kernels} gives the lane-major layout,
 remainder-kernel strategies, lane~$0$ writeback details, and instruction-level
 kernel structure.
 
@@ -105,13 +105,13 @@ The baseline is Go's AES-128-GCM implementation
 (\texttt{crypto/\allowbreak aes} with \texttt{crypto/\allowbreak cipher}).
 It uses AES-NI and \texttt{PCLMULQDQ} on \texttt{amd64}, and the AES
 and \texttt{PMULL} instructions on \texttt{arm64}.
-Each timed AES-128-GCM call constructs its cipher, so its measurement includes
-the key schedule and the GHASH key-power precomputation; this mirrors the
-\TW{} measurement, whose one-shot seal and open perform the root duplex
-initialization (one permutation) inside the timed call. Both directions are
-measured for each scheme; the two directions track each other to within a few
-percent across the sweep, with a worst-case divergence of $8\%$ (\TW{} on
-\texttt{arm64} at $64$\,B).
+The AES block cipher, GCM wrapper, and \TW{} AEAD object are constructed once
+before timing, so the measurements exclude key schedule and GHASH key-power
+precomputation and compare steady-state \texttt{Seal}/\texttt{Open} calls under
+a fixed key. Each timed \TW{} call still performs the root duplex initialization
+inside the call. Both directions are measured for each scheme; the
+cycles-per-byte table reports both, and the throughput table reports the
+encryption direction.
 
 \subsection{Throughput}
 \label{sec:throughput}
@@ -129,19 +129,20 @@ and three complete leaves run four-wide in the \texttt{amd64} remainder kernels
 and as two full pairs on \texttt{arm64}, and $64$\,KiB is the first length
 whose eight complete chunks ($8\beta \approx 64$\,KiB) fill the eight-way
 ($\times 8$) core. On the \texttt{amd64} AVX-512 path \TW{} encryption falls
-$1.89 \to 0.78 \to 0.40$ across the $8$, $32$, and $64$\,KiB columns and is
-already at its bulk rate at $64$\,KiB, holding at $0.39$--$0.40$ through
-$16$\,MiB. The AVX2 path follows the same shape at lower throughput ($2.20 \to
-1.10$ over the same span, thereafter between $1.02$ and $1.08$); it runs the
-eight instances as two groups of four rather than in a single $8$-wide
-register, leaving the AVX-512 core about $2.7\times$ faster in bulk. The
-\texttt{arm64} curve flattens earliest ($1.95 \to 0.91 \to 0.88 \to 0.88 \to
-0.89$ cycles per byte from $8$\,KiB to $16$\,MiB): the eight-way core itself
-processes its batch as four two-instance pairs, so the fused $2$-wide kernel
-runs at essentially the same per-chunk rate, and a $32$\,KiB message---chunk~$0$
-and three leaves as two full pairs---is already within $3\%$ of the $16$\,MiB
-floor. In wall-clock terms \TW{} reaches $5.77$\,GB/s on the \texttt{amd64}
-AVX-512 host and $5.04$\,GB/s on the M4 Pro for $16$\,MiB messages.
+$1.81 \to 0.73 \to 0.39$ across the $8$, $32$, and $64$\,KiB columns and is
+already at its bulk rate at $64$\,KiB, holding at $0.38$--$0.39$ through
+$16$\,MiB. The AVX2 path follows the same shape at lower throughput
+($2.21 \to 1.15 \to 1.10$ over the same span, thereafter roughly $1.1$ cycles
+per byte); it runs the eight instances as two groups of four rather than in a
+single $8$-wide register, leaving the AVX-512 core about $2.9\times$ faster in
+bulk. The \texttt{arm64} curve flattens earliest
+($1.97 \to 0.92 \to 0.89 \to 0.89 \to 0.91$ cycles per byte from $8$\,KiB to
+$16$\,MiB): the eight-way core itself processes its batch as four two-instance
+pairs, so the fused $2$-wide kernel runs at essentially the same per-chunk rate,
+and a $32$\,KiB message---chunk~$0$ and three leaves as two full pairs---is
+already close to the long-message rate. In wall-clock terms \TW{} reaches
+$6.00$\,GB/s on the \texttt{amd64} AVX-512 host and $4.93$\,GB/s on the M4 Pro
+for $16$\,MiB messages.
 
 \begin{table}
 \centering
@@ -158,20 +159,20 @@ frequency. Cycle counts are not directly comparable across architectures
 & $1$\,B & $64$\,B & $8$\,KiB & $32$\,KiB & $64$\,KiB & $1$\,MiB & $16$\,MiB \\
 \midrule
 \multicolumn{8}{l}{\emph{Intel Xeon 8581C (Emerald Rapids), AVX-512}} \\
-\quad \TW{} encrypt      & 590 & 9.27 & 1.89 & 0.78 & 0.40 & 0.39 & 0.40 \\
-\quad \TW{} decrypt      & 615 & 9.72 & 1.90 & 0.75 & 0.40 & 0.39 & 0.39 \\
-\quad AES-128-GCM seal   & 765 & 13.23 & 0.38 & 0.32 & 0.30 & 0.30 & 0.30 \\
-\quad AES-128-GCM open   & 785 & 12.79 & 0.37 & 0.31 & 0.30 & 0.29 & 0.29 \\
+\quad \TW{} encrypt      & 571 & 9.04 & 1.81 & 0.73 & 0.39 & 0.38 & 0.38 \\
+\quad \TW{} decrypt      & 605 & 9.55 & 1.82 & 0.73 & 0.39 & 0.38 & 0.38 \\
+\quad AES-128-GCM seal   & 119 & 2.74 & 0.30 & 0.29 & 0.29 & 0.29 & 0.29 \\
+\quad AES-128-GCM open   & 99 & 2.17 & 0.29 & 0.28 & 0.28 & 0.28 & 0.29 \\
 \midrule
 \multicolumn{8}{l}{\emph{Intel Xeon 8581C (Emerald Rapids), AVX2}} \\
-\quad \TW{} encrypt      & 656 & 10.31 & 2.20 & 1.10 & 1.02 & 1.07 & 1.08 \\
-\quad \TW{} decrypt      & 683 & 10.70 & 2.21 & 1.11 & 1.08 & 1.07 & 1.08 \\
+\quad \TW{} encrypt      & 647 & 10.18 & 2.21 & 1.15 & 1.10 & 1.09 & 1.10 \\
+\quad \TW{} decrypt      & 682 & 10.70 & 2.21 & 1.06 & 1.10 & 1.08 & 1.06 \\
 \midrule
 \multicolumn{8}{l}{\emph{Apple M4 Pro, NEON\,+\,\texttt{FEAT\_SHA3}}} \\
-\quad \TW{} encrypt      & 620 & 9.77 & 1.95 & 0.91 & 0.88 & 0.88 & 0.89 \\
-\quad \TW{} decrypt      & 667 & 10.59 & 2.00 & 0.89 & 0.87 & 0.87 & 0.87 \\
-\quad AES-128-GCM seal   & 1044 & 17.28 & 0.54 & 0.45 & 0.44 & 0.43 & 0.44 \\
-\quad AES-128-GCM open   & 1055 & 17.31 & 0.52 & 0.43 & 0.42 & 0.41 & 0.42 \\
+\quad \TW{} encrypt      & 620 & 9.88 & 1.97 & 0.92 & 0.89 & 0.89 & 0.91 \\
+\quad \TW{} decrypt      & 671 & 10.65 & 2.04 & 0.90 & 0.87 & 0.87 & 0.89 \\
+\quad AES-128-GCM seal   & 113 & 2.84 & 0.44 & 0.43 & 0.43 & 0.44 & 0.46 \\
+\quad AES-128-GCM open   & 123 & 2.56 & 0.42 & 0.41 & 0.41 & 0.42 & 0.43 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -179,22 +180,22 @@ frequency. Cycle counts are not directly comparable across architectures
 \begin{table}
 \centering
 \caption{Measured wall-clock throughput (GB/s, $\mathrm{GB} = 10^9$ bytes) from
-the same \texttt{cmd/cpb} run as \Cref{tab:cpb}, encryption direction; the
-decryption direction tracks it. The \texttt{amd64} AES-128-GCM row is the AVX-512
-host and is unaffected by the \TW{} core selection.}
+the same \texttt{cmd/cpb} run as \Cref{tab:cpb}, encryption direction. The
+\texttt{amd64} AES-128-GCM row is the AVX-512 host and is unaffected by the
+\TW{} core selection.}
 \label{tab:throughput}
 \begin{tabular}{l rrrrr}
 \toprule
 & $8$\,KiB & $32$\,KiB & $64$\,KiB & $1$\,MiB & $16$\,MiB \\
 \midrule
 \multicolumn{6}{l}{\emph{Intel Xeon 8581C (Emerald Rapids)}} \\
-\quad \TW{} (AVX-512)  & 1.22 & 2.95 & 5.78 & 5.94 & 5.77 \\
-\quad \TW{} (AVX2)     & 1.05 & 2.09 & 2.25 & 2.15 & 2.14 \\
-\quad AES-128-GCM      & 6.11 & 7.27 & 7.57 & 7.68 & 7.63 \\
+\quad \TW{} (AVX-512)  & 1.27 & 3.17 & 5.93 & 6.10 & 6.00 \\
+\quad \TW{} (AVX2)     & 1.04 & 2.00 & 2.10 & 2.10 & 2.08 \\
+\quad AES-128-GCM      & 7.75 & 8.00 & 8.05 & 8.00 & 7.87 \\
 \midrule
 \multicolumn{6}{l}{\emph{Apple M4 Pro}} \\
-\quad \TW{} (NEON+SHA3) & 2.30 & 4.92 & 5.06 & 5.10 & 5.04 \\
-\quad AES-128-GCM       & 8.25 & 9.89 & 10.18 & 10.33 & 10.09 \\
+\quad \TW{} (NEON+SHA3) & 2.27 & 4.84 & 5.04 & 5.01 & 4.93 \\
+\quad AES-128-GCM       & 10.04 & 10.27 & 10.33 & 10.07 & 9.71 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -203,24 +204,21 @@ host and is unaffected by the \TW{} core selection.}
 Each cell of \Cref{tab:cpb,tab:throughput} is the median of $100$ samples;
 \Cref{tab:dispersion} summarizes their spread as the interquartile range
 (IQR) relative to the median. The medians are stable: across the sweep the
-relative IQR of the \TW{} cycles-per-byte measurements is at most $1.6\%$
-on the \texttt{amd64} AVX-512 path, $2.1\%$ on AVX2, and $1.0\%$ on the M4
-Pro, with per-path medians of $1.2\%$, $1.4\%$, and $0.6\%$. The full
-min--max range is wider on the \texttt{amd64} guest---up to $16.5\%$
-(AVX-512) and $20.2\%$ (AVX2) at isolated lengths---because its turbo and
-governor states are not under our control (\Cref{sec:bench-method}); these
-are tail excursions that the IQR excludes, and the M4 Pro, whose frequency
-is steadier, keeps even its full range within $4.7\%$. We therefore report
-medians throughout and treat the IQR as the dispersion measure.
+relative IQR of the \TW{} cycles-per-byte measurements is at most $0.7\%$
+on the \texttt{amd64} AVX-512 path, $0.9\%$ on AVX2, and $1.9\%$ on the M4
+Pro, with per-path medians of $0.3\%$, $0.4\%$, and $1.2\%$. The full
+min--max range is wider at isolated points---up to $4.9\%$, $12.0\%$, and
+$16.7\%$ on the three paths---because turbo, governor, and scheduler states
+are not under our control (\Cref{sec:bench-method}); these are tail
+excursions that the IQR excludes. We therefore report medians throughout
+and treat the IQR as the dispersion measure.
 
 \begin{table}
 \centering
 \caption{Cycles-per-byte measurement dispersion for \TW{} across the
 seven-length sweep (seal and open, $100$ samples per point), as the
 interquartile range relative to the median. The final column is the widest
-single-point min--max range; its size on the \texttt{amd64} guest reflects
-the turbo and governor states we cannot pin (\Cref{sec:bench-method}) and
-is excluded from the IQR as a tail effect.}
+single-point min--max range; it is excluded from the IQR as a tail effect.}
 \label{tab:dispersion}
 \begin{tabular}{l rrr}
 \toprule
@@ -228,9 +226,9 @@ is excluded from the IQR as a tail effect.}
 \cmidrule(lr){2-3}
 Path & median & max & range \\
 \midrule
-Xeon 8581C, AVX-512 & $1.2\%$ & $1.6\%$ & $16.5\%$ \\
-Xeon 8581C, AVX2    & $1.4\%$ & $2.1\%$ & $20.2\%$ \\
-Apple M4 Pro        & $0.6\%$ & $1.0\%$ & $\phantom{0}4.7\%$ \\
+Xeon 8581C, AVX-512 & $0.3\%$ & $0.7\%$ & $\phantom{0}4.9\%$ \\
+Xeon 8581C, AVX2    & $0.4\%$ & $0.9\%$ & $12.0\%$ \\
+Apple M4 Pro        & $1.2\%$ & $1.9\%$ & $16.7\%$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -243,22 +241,22 @@ of the parallel leaf machinery. A message of at most $\rho = 167$ bytes occupies
 a single rate block and never enters leaf mode, so it costs exactly two
 permutations---one to initialize the root duplex and one to close the message
 block and extract the tag. The $1$\,B and $64$\,B columns of \Cref{tab:cpb} bear
-this out: per-message latency is nearly flat across them at roughly $590$
-reference cycles on \texttt{amd64} ($590$ at $1$\,B versus $9.27 \times 64
-\approx 593$ at $64$\,B) and $620$ core cycles on \texttt{arm64} ($620$ versus
-$9.77 \times 64 \approx 625$), i.e.\ about $295$ and $310$ cycles per
+this out: per-message latency is nearly flat across them at roughly $571$
+reference cycles on \texttt{amd64} ($571$ at $1$\,B versus $9.04 \times 64
+\approx 578$ at $64$\,B) and $620$ core cycles on \texttt{arm64} ($620$ versus
+$9.88 \times 64 \approx 633$), i.e.\ about $285$ and $310$ cycles per
 \Keccakp{} respectively. Because such messages bypass the leaf
 core entirely, leaf-level parallelism imposes no latency penalty on them.
 
 The latency/throughput trade-off appears instead in the intermediate regime,
 which chunk~$0$ fusion has narrowed to roughly the one-to-eight-chunk band. The
 worst per-byte cost in the sweep is the single-chunk regime at $8$\,KiB
-($1.9$--$2.2$ cycles per byte across the three paths), where the message is the
+($1.8$--$2.2$ cycles per byte across the three paths), where the message is the
 chunk-$0$ phase alone on the single-duplex core. Once the message has complete
 leaf chunks for chunk~$0$ to share a kernel with, the cost falls quickly: by
-$32$\,KiB \TW{} is within a factor of two of its AVX-512 floor and within $3\%$
-of its \texttt{arm64} floor, and the floor itself is reached once the eight-way
-core fills at $64$\,KiB. The root duplex also bounds the tail of a long
+$32$\,KiB \TW{} is within a factor of two of its AVX-512 floor and close to its
+\texttt{arm64} floor, and the floor itself is reached once the eight-way core
+fills at $64$\,KiB. The root duplex also bounds the tail of a long
 message: the final tag cannot be produced until chunk~$0$ has been processed and
 every leaf tag has been absorbed into the aggregation transcript. That absorption
 is cheap---each rate block of the root absorbs five $32$-byte leaf tags, so a
@@ -276,24 +274,22 @@ back-to-back at each length and reads both metrics from the same loop, so the
 cycles-per-byte and throughput comparisons hold under identical conditions and
 agree. In the bulk regime AES-128-GCM is faster on both architectures, as
 expected for a primitive with dedicated AES and carryless-multiply instructions:
-at $16$\,MiB it runs at $0.30$ cycles per byte on \texttt{amd64} and $0.44$ on
-\texttt{arm64}, against $0.40$ and $0.89$ for \TW{}---about $1.3\times$ and
-$2\times$ faster. The wall-clock throughputs show the same margins: \TW{} reaches
-$5.77$ and $5.04$\,GB/s against AES-128-GCM's $7.63$ and $10.09$\,GB/s. The wider
-\texttt{arm64} gap reflects the strength of Apple's AES and \texttt{PMULL} units.
-\TW{} attains these rates with a permutation that has no dedicated hardware
-support, relying only on the SHA-3 extension on \texttt{arm64} and on general SIMD
-on \texttt{amd64}.
+at $16$\,MiB it runs at $0.29$ cycles per byte on \texttt{amd64} and $0.46$ on
+\texttt{arm64}, against $0.38$ and $0.91$ for \TW{}---about $1.3\times$ and
+$2.0\times$ faster. The wall-clock throughputs show the same margins: \TW{}
+reaches $6.00$ and $4.93$\,GB/s against AES-128-GCM's $7.87$ and
+$9.71$\,GB/s. The wider \texttt{arm64} gap reflects the strength of Apple's AES
+and \texttt{PMULL} units. \TW{} attains these rates with a permutation that has
+no dedicated hardware support, relying only on the SHA-3 extension on
+\texttt{arm64} and on general SIMD on \texttt{amd64}.
 
-The ordering reverses for very short messages, where AES-128-GCM's key schedule
-and GHASH key-power precomputation dominate: at $1$\,B AES-128-GCM costs $765$
-and $1044$ cycles on the two hosts against \TW{}'s $590$ and $620$. This
-comparison is setup-bound rather than representative of steady state, since each
-timed call rebuilds its cipher; it nonetheless reflects the per-message cost an
-application pays when it does not amortize key setup across messages. In the
-sub-bulk regime AES-128-GCM is several times faster at one chunk ($0.38$ versus
-$1.89$ cycles per byte at $8$\,KiB on \texttt{amd64}), but the gap narrows
-quickly once the fused kernels engage: about $2.4\times$ at $32$\,KiB, and the
-bulk ratio from $64$\,KiB on. \TW{}'s intended value relative to AES-128-GCM
-lies in the tree structure and committing security properties analyzed in
-\Cref{sec:aead-security,sec:root-tag-hash-security} rather than in raw speed.
+AES-128-GCM is also faster for short messages in this steady-state measurement:
+at $1$\,B it costs $119$ and $113$ cycles on the two hosts against \TW{}'s
+$571$ and $620$. This is the expected result when AES-GCM key setup is
+amortized outside the timed call. In the sub-bulk regime AES-128-GCM is several
+times faster at one chunk ($0.30$ versus $1.81$ cycles per byte at $8$\,KiB on
+\texttt{amd64}), but the gap narrows once the fused kernels engage: about
+$2.5\times$ at $32$\,KiB and the bulk ratio from $64$\,KiB on. \TW{}'s intended
+value relative to AES-128-GCM lies in the tree structure and committing security
+properties analyzed in \Cref{sec:aead-security,sec:root-tag-hash-security}
+rather than in raw speed.

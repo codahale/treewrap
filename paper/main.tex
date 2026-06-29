@@ -40,9 +40,9 @@
   \textsf{CMTDs-4} committing security and context discoverability
   ($\mathsf{CDY}^\ast$). At the implemented parameters, all stated notions meet
   a $128$-bit security target. Vectorized \texttt{amd64} and \texttt{arm64}
-  implementations recover the scalable performance profile of the tree design,
-  exceed $10$\,Gbit/s, and reach $50$--$75\%$ of hardware-accelerated
-  AES-128-GCM throughput.
+  implementations recover the scalable performance profile of the tree design:
+  in bulk they exceed $16$\,Gbit/s, with the AVX-512 and \texttt{arm64} paths
+  reaching $51$--$76\%$ of hardware-accelerated AES-128-GCM throughput.
 \end{abstract}
 
 \input{sections/01-introduction}

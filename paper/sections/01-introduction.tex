@@ -100,8 +100,8 @@ The mode's design-level parallelism translates into measured implementation
 performance. Optimized \texttt{amd64} (AVX-512 and AVX2) and \texttt{arm64}
 (NEON with the SHA-3 extension) implementations evaluate leaf duplexes in
 batches while preserving the canonical transcript. On contemporary hardware,
-\TW{} exceeds $10$\,Gbit/s and reaches $50$--$75\%$ of hardware-accelerated
-AES-128-GCM
+\TW{} exceeds $16$\,Gbit/s in bulk; the AVX-512 and \texttt{arm64} paths reach
+$51$--$76\%$ of hardware-accelerated AES-128-GCM
 (\Cref{sec:performance}), while using one permutation for confidentiality,
 authentication, and commitment.
 
