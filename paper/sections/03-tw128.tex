@@ -284,6 +284,65 @@ flattened sponge input.
   \label{tab:suffixes}
 \end{table}
 
+\Cref{tab:transcript-schedule} summarizes the root and leaf transcript
+schedule. The algorithms of \Cref{sec:enc,sec:dec} give the normative
+byte-level specification; the table records which phase is present and what
+output the final call of that phase supplies.
+
+\begin{table}[ht]
+  \centering
+  \scriptsize
+  \setlength{\tabcolsep}{1pt}
+  \begin{tabular}{@{}p{0.10\linewidth}p{0.11\linewidth}p{0.13\linewidth}p{0.26\linewidth}p{0.24\linewidth}p{0.09\linewidth}@{}}
+    \toprule
+    Instance & Phase & Suffixes & Absorbed string & Output supplied & When \\
+    \midrule
+    Root
+      & Init
+      & \siginit
+      & $\prfxroot \concat K \concat N$
+      & $0$ if $A \neq \varepsilon$; otherwise first $M_0$ keystream
+      & Always \\
+    Root
+      & AD
+      & \sigadmore, \sigadlast
+      & $\rho$-byte block partition of $A$
+      & Final call emits first $M_0$ keystream
+      & $A \neq \varepsilon$ \\
+    Root
+      & Message
+      & \sigmsgmore, \sigmsglast
+      & $\rho$-byte block partition of $C_0$
+      & Non-final calls emit next keystream; final call emits $T$ if $n=0$,
+        and $0$ otherwise
+      & Always \\
+    Leaf $j$
+      & Init
+      & \siginit
+      & $\prfxleaf \concat K \concat N \concat \langle j \rangle_8$
+      & First $M_j$ keystream
+      & $1 \leq j \leq n$ \\
+    Leaf $j$
+      & Message
+      & \sigmsgmore, \sigmsglast
+      & $\rho$-byte block partition of $C_j$
+      & Non-final calls emit next keystream; final call emits $T_j$
+      & $1 \leq j \leq n$ \\
+    Root
+      & Aggregation
+      & \sigaggmore, \sigagglast
+      & $T_1 \concat \cdots \concat T_n \concat \langle n \rangle_8$
+      & Final call emits $T$
+      & $n \geq 1$ \\
+    \bottomrule
+  \end{tabular}
+  \caption{\TW{} transcript schedule. ``First $M_i$ keystream'' means
+    $8\min(\|M_i\|,\rho)$ output bits for the first duplex block of that
+    message chunk; subsequent message-phase outputs have the length of the next
+    duplex block, as in \Cref{alg:helpers}.}
+  \label{tab:transcript-schedule}
+\end{table}
+
 The combined effect of the initialization prefixes and the phase
 suffixes is that the flattened sponge input of any \TW{} duplex call
 uniquely determines the duplex instance, the leaf index when applicable,
