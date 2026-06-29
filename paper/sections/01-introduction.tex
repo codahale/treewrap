@@ -40,12 +40,13 @@ tag itself is treated as a compact commitment string. We therefore analyze the
 tag with hash notions directly, and then recover the AEAD commitment notions as
 game-specific consequences of the same tag analysis.
 
-\TW{} (\emph{TreeWrap}) takes the digest intuition literally. If an AEAD tag is
-meant to behave like a compact digest, the mode should be shaped like a modern
-high-performance digest rather than like a serial stream cipher with an
-algebraic MAC. The relevant performance lesson from modern hashing is that large
-inputs are processed by splitting them into chunks, evaluating independent work
-in parallel, and aggregating short chaining values into a final root value.
+\TW{} (\emph{TreeWrap}, with $128$ denoting the $128$-bit security target)
+takes the digest intuition literally. If an AEAD tag is meant to behave like a
+compact digest, the mode should be shaped like a modern high-performance digest
+rather than like a serial stream cipher with an algebraic MAC. The relevant
+performance lesson from modern hashing is that large inputs are processed by
+splitting them into chunks, evaluating independent work in parallel, and
+aggregating short chaining values into a final root value.
 KangarooTwelve \cite{BDPVVV16} is the SHA-3-family exemplar of this pattern: it
 hashes fixed-size chunks independently under \Keccakp{}, absorbs their chaining
 values into a root node, runs leaves across SIMD lanes and cores, and keeps
