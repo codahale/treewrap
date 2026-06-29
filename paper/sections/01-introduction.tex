@@ -72,15 +72,6 @@ preserve the canonical transcript while evaluating leaf duplexes in batches; in
 bulk, \TW{} exceeds $16$\,Gbit/s and reaches $51$--$76\%$ of
 hardware-accelerated AES-128-GCM throughput (\Cref{sec:performance}).
 
-The claims are scoped to the security model. The AE and multi-user bounds are
-nonce-respecting; \TW{} is not nonce-misuse-resistant. Decryption security is
-proved for implementations that release plaintext only after root tag
-verification succeeds, so release-of-unverified-plaintext security is outside
-the model. The concrete bounds are birthday-type at the $256$-bit capacity and
-target $128$-bit security under the work cap of \Cref{sec:concrete-claim};
-side-channel leakage is not modeled. \Cref{sec:limitations} discusses these
-limitations.
-
 \subsection{Our Contributions}
 \label{sec:contributions}
 

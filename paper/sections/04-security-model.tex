@@ -18,6 +18,11 @@ reference (\Cref{sec:resources}).
 \Cref{tab:security-notions} summarizes the proof obligations before the formal
 games. The loss terms named there are defined in \Cref{sec:loss-terms}, and the
 implemented-parameter instantiations appear in \Cref{sec:concrete-security}.
+The AE-style games are nonce-respecting on encryption queries and expose
+verification rather than a plaintext-returning decryption oracle; they model
+implementations that release plaintext only after root tag verification
+succeeds. Nonce misuse and release-of-unverified-plaintext security are outside
+these games and are discussed in \Cref{sec:limitations}.
 
 \begin{table}[t]
   \centering
