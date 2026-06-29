@@ -15,6 +15,50 @@ random oracle world through which every bound is first proved
 (\Cref{sec:ro-model}), and fix the resource accounting that all later bounds
 reference (\Cref{sec:resources}).
 
+\Cref{tab:security-notions} summarizes the proof obligations before the formal
+games. The loss terms named there are defined in \Cref{sec:loss-terms}, and the
+implemented-parameter instantiations appear in \Cref{sec:concrete-security}.
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{@{}p{0.18\linewidth}p{0.34\linewidth}p{0.23\linewidth}p{0.17\linewidth}@{}}
+    \toprule
+    Notion & Adversary goal & Main result & Loss shape \\
+    \midrule
+    AE / mu-ind
+      & Distinguish real encryption and verification from random ciphertexts
+        and replay-only verification, with nonce-respecting encryption queries.
+      & \Cref{thm:mu-ind,cor:ae}
+      & Capacity lift, key guess, leaf collision, tag guess \\
+    $\HTW$ collision
+      & Find distinct full inputs $(K,N,A,M)$ with the same root tag.
+      & \Cref{thm:coll}
+      & Capacity lift, root collision, leaf collision \\
+    $\HTW$ preimage
+      & Find a second preimage for a fixed input, or an input hitting a fixed
+        target tag.
+      & \Cref{thm:asec,thm:epre}
+      & Capacity lift, root preimage, leaf collision for aSec \\
+    CMT / CMTD
+      & Produce equal encryptions or one valid ciphertext opening under
+        distinct committed inputs.
+      & \Cref{cor:cmtds4,cor:committing-combined}
+      & Capacity lift, root collision \\
+    $\mathsf{CDY}^\ast$
+      & Given a target ciphertext and revealed context components, find the
+        missing context components under which it decrypts.
+      & \Cref{thm:cdy-full}
+      & Capacity lift, root preimage, hidden-component guess \\
+    \bottomrule
+  \end{tabular}
+  \caption{Proof obligations and the dominant loss shapes used for \TW{}.
+    The table is only a roadmap; the formal games and resource accounting are
+    defined in \Cref{sec:games-pp,sec:mu-setting,sec:resources}.}
+  \label{tab:security-notions}
+\end{table}
+
 \subsection{Public Permutation Games}
 \label{sec:games-pp}
 
