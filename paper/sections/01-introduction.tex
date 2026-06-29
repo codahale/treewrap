@@ -107,7 +107,7 @@ authentication, and commitment.
 
 The claims are scoped to the security model. The AE and multi-user bounds are
 nonce-respecting; \TW{} is not nonce-misuse-resistant. Decryption security is
-proved for implementations that release plaintext only after root-tag
+proved for implementations that release plaintext only after root tag
 verification succeeds, so release-of-unverified-plaintext security is outside
 the model. The concrete bounds are birthday-type at the $256$-bit capacity and
 target $128$-bit security under the work cap of \Cref{sec:concrete-claim};
@@ -214,7 +214,7 @@ discoverability \cite{MLGR23}, and the hash notions of \cite{RS04}.
 \Cref{sec:security-model} fixes the public permutation games, intermediate
 random oracle model, resource accounting, and loss terms.
 \Cref{sec:aead-security} proves multi-user indistinguishability and all-in-one
-AE security. \Cref{sec:root-tag-hash-security} proves root-tag hash security,
+AE security. \Cref{sec:root-tag-hash-security} proves root tag hash security,
 committing security, and context discoverability, and
 \Cref{sec:concrete-security} summarizes the concrete bounds.
 \Cref{sec:performance} reports implementation performance, and

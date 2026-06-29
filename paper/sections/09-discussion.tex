@@ -133,7 +133,7 @@ invoked, and the multi-input full-commitment bound follows from a single root ta
 collision bound (\Cref{sec:cmtds3}). More strongly,
 \Cref{thm:coll} shows that the root tag alone is a compact commitment
 string even when the ciphertext bodies used as openings differ, up to the
-additional leaf tag birthday term. The root-tag preimage bound also gives
+additional leaf tag birthday term. The root tag preimage bound also gives
 context discoverability for target ciphertexts. Generic context-committing
 transforms are not known to provide an analogous result. This places \TW{}
 alongside the dedicated committing primitives---the compactly committing AEAD of
@@ -192,7 +192,7 @@ and sponge hash security is supported by a mature literature.
 A direct keyed-duplex treatment would have to close two gaps. First, existing
 keyed-duplex bounds are hidden-key AE bounds: the game samples the key, and the
 keyed initialization material is not part of the adversary's output. The
-root-tag claims here are adversarial-initialization statements. In the hash,
+root tag claims here are adversarial-initialization statements. In the hash,
 committing, and context discoverability games, the adversary may choose the key,
 nonce, associated data, message, target ciphertext, or competing opening. Thus
 the proof must handle adversarially chosen initialization transcripts, not only
