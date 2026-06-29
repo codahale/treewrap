@@ -79,12 +79,3 @@ func runCmd(name string, args ...string) string {
 	}
 	return strings.TrimRight(string(out), "\n")
 }
-
-// readFileTrim reads a file and returns its trimmed contents, or "" on error.
-func readFileTrim(path string) string {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return ""
-	}
-	return strings.TrimSpace(string(data))
-}
