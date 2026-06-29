@@ -3,4 +3,4 @@ set -euo pipefail
 IFS=$'\n\t'
 set -o xtrace
 
-gcloud compute instances delete treewrap --zone=us-central1-b --quiet
+gcloud compute instances delete treewrap --zone=us-west3-a --quiet
