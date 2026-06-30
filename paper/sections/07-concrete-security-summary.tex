@@ -158,11 +158,11 @@ Notion & Dominant scale & At the cap \\
 \midrule
 All-in-one AE & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 Multi-user ind. & $D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
-\textsf{INT-RUP} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
-$\HTW$ collision (Coll) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+\textsf{INT-RUP} & $\Lift_c$ and birthday terms & $\leq 2^{-128}$ \\
+$\HTW$ collision (Coll) & $\Lift_c$, $\LeafColl$, $\RootColl$ & $\leq 2^{-128}$ \\
 $\HTW$ second-preimage (Sec/eSec) & inherited from Coll & $\leq 2^{-128}$ \\
 $\HTW$ everywhere preimage (ePre) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
-CMTDs-4 \cite{BH22} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+CMTDs-4 \cite{BH22} & $\Lift_c$ and $\RootColl$ & $\leq 2^{-128}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -176,9 +176,12 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
 \Cref{sec:concrete-claim} proves.
 
 \paragraph{At the concrete cap.}
-At $\Ntot \leq 2^{63}$, the single-user, hash, and CMTDs-4 bounds are
-dominated by the flat sponge loss, except when a root or leaf birthday term
-reaches the same $2^{-131}$ scale. The multi-user bound is the exception: its
+At $\Ntot \leq 2^{63}$, the single-user, hash, and CMTDs-4 bounds have
+flat-sponge and, where present, root or leaf birthday terms on the same
+$2^{-131}$ scale. Thus the flat sponge loss is not always the largest
+summand: at the extreme $s=2$ root-collision cap
+$\Nprim=\Ntot=2^{63}$, $\binom{\Nprim+2}{2}/2^{256}$ is slightly larger
+than $\Lift_c(\Ntot)$. The multi-user bound is the exception: its
 hybrid-induced
 term $D\,\KeyGuess_k(\Nprim)$ can reach $2^{-130}$ at the extreme cap
 $D=\Nprim=2^{63}$. Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to

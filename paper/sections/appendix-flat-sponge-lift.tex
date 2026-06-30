@@ -9,9 +9,10 @@ by the AEAD security bounds of \Cref{sec:aead-security}, the root tag bounds of
 named once here.
 
 The lift has two steps. First, the \cite{BDPV08} indifferentiability theorem
-replaces the public permutation and all construction-internal primitive calls by
-a simulator over a flat random oracle, at cost $\Lift_c(\Ntot)$, where
-$\Ntot = N + \Nprim$ counts both construction-internal calls and direct primitive
+replaces the construction interface by a flat random oracle and answers only
+direct public-permutation queries through a simulator over that oracle, at cost
+$\Lift_c(\Ntot)$, where $\Ntot = N + \Nprim$ counts construction-internal
+primitive calls induced by construction queries together with direct primitive
 queries. Second, the simulator-world adversary is converted into a flat-RO
 adversary whose direct random oracle query count is at most $\Nprim$. Thus the
 random oracle bounds are instantiated at $\qRO \leq \Nprim$, while the public

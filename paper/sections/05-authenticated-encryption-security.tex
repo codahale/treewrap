@@ -220,9 +220,9 @@ the same stream and leaf tag transcripts as decryption, but they do not reveal
 the final root tag value. Equivalently, the final root tag sample for an
 unrevealed class can be deferred until it is first needed for an encryption
 answer or a verification comparison; this does not change any plaintext reply.
-By Output-Point Separation (\Cref{cor:output-sep}), the returned plaintext
-blocks are projections at stream output points, not at the final root tag output
-point.
+By Output-Point Separation (\Cref{cor:output-sep}), the keystream values used
+to compute the returned plaintext blocks are projections at stream output
+points, not at the final root tag output point.
 
 Fix an unrevealed final root transcript class $\mathcal{C}$ and let
 $G_{\mathcal{C}}$ be the set of distinct tags submitted by non-replay
