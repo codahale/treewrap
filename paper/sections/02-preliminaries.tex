@@ -204,6 +204,18 @@ $\Advae_\SE(\mathcal{A})$ is the distinguishing advantage between these
 two worlds over nonce-respecting adversaries. This all-in-one notion is
 instantiated for \TW{} in \Cref{sec:games-pp}.
 
+\paragraph{Integrity under release of unverified plaintext.}
+For the RUP setting of \cite{ABLMMY14}, a conventional decryption algorithm is
+separated into a plaintext-computing algorithm and a verification algorithm.
+The integrity notion \textsf{INT-RUP} gives the adversary access to encryption,
+plaintext computation, and verification, and asks whether verification accepts a
+fresh ciphertext and tag not returned by encryption. As in the nonce-IV setting
+of \cite{ABLMMY14}, encryption queries are nonce-respecting, while plaintext
+computation and verification may be queried on arbitrary nonces. This notion
+protects only ciphertext integrity; privacy under release of unverified
+plaintext requires plaintext awareness in addition to ordinary encryption
+privacy.
+
 \subsection{Multi-User Indistinguishability}
 \label{sec:mu-ind}
 

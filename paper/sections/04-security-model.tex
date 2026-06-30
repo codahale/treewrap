@@ -23,15 +23,16 @@ All results below are public-permutation claims for \TW{} with the
 \Keccakp{} permutation modeled as a uniformly random permutation, obtained by
 first proving random oracle bounds for the flat duplex interface of
 \Cref{sec:ro-model} and then applying the flat sponge lift. In the AE-style
-games, encryption queries are nonce-respecting and the verification oracle
-returns only acceptance or rejection. Thus the AE claims model deployments that
-release plaintext only after successful root tag verification. They do not
-claim nonce-misuse resistance, security under release of unverified plaintext,
-or \textsf{INT-RUP}/plaintext-awareness security. The hash and committing games
-are adversarial-initialization games over the submitted inputs $(K,U,A,M)$ or
-ciphertext openings and impose no nonce uniqueness condition. Across all games,
-the stated bounds are birthday-type, single-stage, and leakage-free:
-beyond-birthday and side-channel security are outside the model.
+distinguishing games, encryption queries are nonce-respecting and the
+verification oracle returns only acceptance or rejection. The separate
+\textsf{INT-RUP} game below gives integrity under a plaintext-computing oracle,
+but it does not give privacy under release of unverified plaintext or
+plaintext-awareness security. The claims also do not provide nonce-misuse
+resistance. The hash and committing games are adversarial-initialization games
+over the submitted inputs $(K,U,A,M)$ or ciphertext openings and impose no
+nonce uniqueness condition. Across all games, the stated bounds are
+birthday-type, single-stage, and leakage-free: beyond-birthday and side-channel
+security are outside the model.
 \Cref{sec:limitations} discusses the consequences of these exclusions and the
 corresponding open problems.
 
@@ -47,6 +48,11 @@ corresponding open problems.
       & Distinguish real encryption and verification from random ciphertexts
         and replay-only verification, with nonce-respecting encryption queries.
       & \Cref{thm:mu-ind,cor:ae}
+      & Capacity lift, key guess, leaf collision, tag guess \\
+    \textsf{INT-RUP}
+      & Produce a fresh accepting ciphertext after encryption and
+        plaintext-computing queries.
+      & \Cref{thm:int-rup}
       & Capacity lift, key guess, leaf collision, tag guess \\
     $\HTW$ collision
       & Find distinct full inputs $(K,U,A,M)$ with the same root tag.
@@ -74,10 +80,11 @@ The proof dependency spine is as follows. \Cref{app:lemmas} first establishes
 transcript decoding, bridge injectivity, output-point separation, and the local
 probabilistic accounting lemmas for key tests, leaf tag collisions, and root tag
 guesses. \Cref{sec:aead-security} uses those facts directly for the random
-oracle mu-ind bound. \Cref{sec:root-tag-hash-security} then uses the same
-structural facts to build a chronological sequence of final root candidates and
-apply a single root tag hash bound; the hash and committing theorems differ
-only in which collision or preimage event is reduced to that candidate sequence.
+oracle mu-ind and \textsf{INT-RUP} bounds.
+\Cref{sec:root-tag-hash-security} then uses the same structural facts to build
+a chronological sequence of final root candidates and apply a single root tag
+hash bound; the hash and committing theorems differ only in which collision or
+preimage event is reduced to that candidate sequence.
 Finally, \Cref{app:flat-sponge-lift}
 transfers the random oracle bounds to the public permutation games defined
 below.
@@ -112,11 +119,12 @@ and $T \in \bits^{\tauroot}$. In the hash and committing games, each
 submitted input $(K, U, A, M)$ must be a valid encryption input including
 $K \in \bits^k$, and a submitted CMTDs ciphertext must be a valid
 verification/decryption ciphertext. Invalid encryption queries
-are rejected and not recorded, invalid verification queries return $0$,
-and invalid committing-game outputs make the game return $0$. Such rejected
-inputs contribute no construction cost and create no construction
-transcripts. Throughout, an \emph{accepted} encryption query is one that
-passes this validity check and any game-specific nonce or user check.
+are rejected and not recorded, invalid plaintext-computing queries return
+$\bot$, invalid verification queries return $0$, and invalid committing-game
+outputs make the game return $0$. Such rejected inputs contribute no
+construction cost and create no construction transcripts. Throughout, an
+\emph{accepted} encryption query is one that passes this validity check and any
+game-specific nonce or user check.
 
 \paragraph{All-in-one AE.}
 The real all-in-one AE game additionally samples
@@ -142,6 +150,34 @@ nonce-respecting on encryption queries.
 This lifted all-in-one AE advantage is the single-user case of the
 multi-user real-vs-ideal notion of \Cref{sec:mu-ind}; \Cref{cor:ae}
 therefore derives it from the direct mu-ind bound of \Cref{thm:mu-ind}.
+
+\paragraph{RUP integrity.}
+Following the separated AE syntax of \cite{ABLMMY14}, define
+$\PDec_K[\pi]$ as the plaintext-computing oracle that maps $(U,A,C,T)$ to
+the candidate plaintext computed by $\Dec_K[\pi](U,A,C \concat T)$ before the
+final root tag comparison is applied. The computation follows the same
+decryption transcript as \Cref{alg:dec}, but returns the recovered plaintext
+and never returns the recomputed tag or the verification bit.
+
+The \textsf{INT-RUP} game samples
+$K \sample \bits^k$ and $\pi \sample \Perm(\bits^{1600})$, exposes
+$\Enc_K[\pi]$, $\PDec_K[\pi]$, $\Ver_K[\pi]$, and $(\pi,\pi^{-1})$, and
+maintains the replay table $W$ of encryption outputs. Accepted encryption
+queries are nonce-respecting: an encryption query is rejected if its nonce has
+appeared in a previous accepted encryption query. Plaintext-computing and
+verification queries may use arbitrary nonces. On an accepted encryption query
+$(U,A,M)$ the game returns $\Enc_K[\pi](U,A,M)$, parsed and recorded as
+$(U,A,C,T)$ in $W$.
+On a valid plaintext-computing query $(U,A,C,T)$ it returns
+$\PDec_K[\pi](U,A,C,T)$, and on an invalid query it returns $\bot$. On a valid
+verification query $(U,A,C,T)$ it returns $\Ver_K[\pi](U,A,C,T)$; if this bit
+is $1$ and $(U,A,C,T) \notin W$ when the query is asked, the game records a
+forgery. Invalid verification queries return $0$. The game returns $1$ iff a
+forgery is recorded, and
+\[
+  \AdvintRUP_\TW(\mathcal{A}) =
+  \Pr[\mathsf{G}^{\mathsf{INT\text{-}RUP}}_\TW(\mathcal{A}) \Rightarrow 1].
+\]
 
 \paragraph{Hash games.}
 The hash games for the wrapper $\HTW$ (\Cref{def:htw}) have no
@@ -278,11 +314,11 @@ bridged image of the native flattened input under the
 \[
   \RF(X) = \ROflat(\flatmap(X)).
 \]
-The construction interfaces $\Enc_K^{\RO}$, $\Dec_K^{\RO}$, and
-$\Ver_K^{\RO}$ are the \TW{} algorithms of \Cref{sec:tw128} with every
-root or leaf duplex output replaced by the corresponding requested
-projection of $\RF(X)$; the projection length is the duplexing call's
-output parameter $\ell$, which may be zero. The bridge and the
+The construction interfaces $\Enc_K^{\RO}$, $\Dec_K^{\RO}$,
+$\PDec_K^{\RO}$, and $\Ver_K^{\RO}$ are the \TW{} algorithms of
+\Cref{sec:tw128} with every root or leaf duplex output replaced by the
+corresponding requested projection of $\RF(X)$; the projection length is the
+duplexing call's output parameter $\ell$, which may be zero. The bridge and the
 typed-restriction convention are formalized in
 \Cref{lem:bridge-decode}; the direct-query key-hit predicate ignores
 the adversary's requested output length and is formalized as
@@ -316,10 +352,15 @@ notation of \Cref{sec:mu-ind},
 \]
 where the superscripts name the entire multi-user construction
 interface in the corresponding world.
+The random oracle \textsf{INT-RUP} game is the same win-event game as above,
+with $\Enc_K^\RO$, $\PDec_K^\RO$, and $\Ver_K^\RO$ replacing the
+public-permutation construction oracles and with direct adversary access to
+$\ROflat$ replacing $(\pi,\pi^{-1})$; its advantage is
+$\AdvintRUP_{\RO}(\mathcal{B})$.
 Adversary queries to $\ROflat$ are finite-output and counted in
 $\qRO(\mathcal{B})$ of \Cref{sec:resources}. Construction-internal
 $\RF(\cdot)$ lookups --- those made by $\Enc_K^\RO$, $\Dec_K^\RO$,
-$\Ver_K^\RO$, or a committing challenger --- are not.
+$\PDec_K^\RO$, $\Ver_K^\RO$, or a committing challenger --- are not.
 
 \subsection{Resources}
 \label{sec:resources}
@@ -366,7 +407,7 @@ computations contribute to each count.
       & Random oracle bounds; after the lift $\qRO \leq \Nprim$. \\
     $\qv(\mathcal{A})$, $\Qv$
       & Valid verification queries that are not replay-table hits.
-      & Verification-tag terms in AE and mu-ind bounds. \\
+      & Verification-tag terms in AE, mu-ind, and \textsf{INT-RUP} bounds. \\
     $\nleaf(\mathcal{B})$, $\Nleaf$
       & Distinct construction-generated final leaf transcripts.
       & Leaf tag collision terms; always at most $N$. \\
@@ -392,10 +433,11 @@ computations contribute to each count.
   summing each root initialization, associated data duplex block, root
   message duplex block, leaf initialization, leaf message duplex block,
   and aggregation duplex block across the entire query
-  sequence. Valid AE-style non-replay verification computations are
-  counted whether they accept or reject; replay-table verification hits
-  are transcript-consistency checks and are not charged to $N$ or to the
-  verification-tag terms. In the hash and committing games there is no adversary
+  sequence. Valid plaintext-computing computations and valid AE-style
+  non-replay verification computations are counted whether they accept or
+  reject; replay-table verification hits are transcript-consistency checks and
+  are not charged to $N$ or to the verification-tag terms. In the hash and
+  committing games there is no adversary
   construction oracle: for the $\HTW$ collision game, $N$ counts the $s$
   deterministic encryptions on the submitted inputs (and the one or two
   encryptions of the second-preimage and preimage games); for
@@ -417,8 +459,9 @@ computations contribute to each count.
   chronological public primitive transcript.
 \item[$\qv(\mathcal{A})$, $\Qv$:] the number of verification queries
   with valid inputs that are not replay-table hits, and a cap on it.
-  Used in the verification terms of the direct mu-ind and AE bounds of
-  \Cref{sec:aead-security}. Every counted verification query contributes at least
+  Used in the verification terms of the direct mu-ind, AE, and
+  \textsf{INT-RUP} bounds of \Cref{sec:aead-security}. Every counted
+  verification query contributes at least
   one verification/decryption
   construction call in the $N$ accounting, so $\qv(\mathcal{A}) \leq N$.
 \item[$\qRO(\mathcal{B})$, $\QRO$:] the number of direct
@@ -432,7 +475,8 @@ computations contribute to each count.
 \item[$\nleaf(\mathcal{B})$, $\Nleaf$:] the number of distinct
   construction-generated final leaf transcripts in the execution of
   $\mathcal{B}$, and a cap on it. Distinct final leaf transcripts are
-  generated by valid encryption computations, by valid AE-style
+  generated by valid encryption computations, by valid plaintext-computing
+  computations, by valid AE-style
   verification computations (whether they accept or reject), and by
   hash and committing challenger construction checks that pass the early
   validity checks.
@@ -447,7 +491,8 @@ counts the leaf chunks induced by a body byte string of length $\|X\|$.
 Thus $\nleaf$ is bounded by the sum of $\leaves(X)$ over the valid
 construction computations that create final leaf transcripts, where
 $X$ is the plaintext body for encryption computations and the submitted
-ciphertext body for verification and committing decryption checks.
+ciphertext body for plaintext-computing, verification, and committing
+decryption checks.
 Each distinct final leaf transcript contains a final leaf duplex call
 counted in $N$, so $\nleaf(\mathcal{B}) \leq N$ unconditionally. The
 ratio $\nleaf/N$ is largest when most processed bytes lie in leaf

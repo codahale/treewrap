@@ -15,10 +15,11 @@ The central security claim is that the resulting root tag satisfies the digest
 intuition: it is a compact commitment to the full $(K, U, A, M)$ context. In the
 public permutation model, via an intermediate random oracle and the flat sponge
 lift, we prove concrete multi-user indistinguishability and derive all-in-one AE
-as its single-user corollary. We also prove collision, second-preimage, and
-preimage security for the root tag wrapper. Those hash-security bounds yield
-the AEAD-facing committing results, including full-input \textsf{CMTDs-4}
-security, at a $128$-bit target for the implemented parameters.
+as its single-user corollary, and prove \textsf{INT-RUP} integrity under release
+of unverified plaintext. We also prove collision, second-preimage, and preimage
+security for the root tag wrapper. Those hash-security bounds yield the
+AEAD-facing committing results, including full-input \textsf{CMTDs-4} security,
+at a $128$-bit target for the implemented parameters.
 
 The implementation results show why the tree-hashing origin matters. Vectorized
 \texttt{amd64} and \texttt{arm64} implementations exploit the scalable leaf
@@ -26,7 +27,7 @@ structure and exceed $16$\,Gbit/s in bulk, with the AVX-512 and \texttt{arm64}
 paths reaching $51$--$76\%$ of hardware-accelerated AES-128-GCM throughput.
 
 Several questions remain open (\Cref{sec:limitations}): a nonce-misuse-resistant
-variant, security under release of unverified plaintext, and sharper bounds,
+variant, privacy under release of unverified plaintext, and sharper bounds,
 whether through a keyed duplex treatment of the BDPV11-style phasing used here or
 through a beyond-birthday argument. More broadly, \TW{} adds to the evidence that
 a single, well-scrutinized \Keccak{} permutation can support authenticated

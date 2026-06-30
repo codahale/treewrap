@@ -60,6 +60,10 @@ analysis to obtain the AEAD-facing committing results. We also prove ordinary
 AEAD security: in the public permutation model,
 \TW{} has a concrete multi-user indistinguishability bound \cite{BT16}, with
 all-in-one authenticated encryption \cite{RS06} as the single-user corollary.
+For integrity, the same root-centered structure gives
+\textsf{INT-RUP} security \cite{ABLMMY14}: even if an adversary can obtain
+unverified plaintexts, it cannot make verification accept a fresh ciphertext
+except within the same tag-guessing and collision terms.
 At the implemented parameters ($k = c = \tauroot = \tauleaf = 256$), the bounds
 meet a $128$-bit security target for adversaries running up to
 $\Ntot \leq 2^{63}$ \Keccakp{} calls---on the order of $2^{71}$ bytes of
@@ -94,12 +98,15 @@ hardware-accelerated AES-128-GCM throughput (\Cref{sec:performance}).
   for $\ell \in \{1, 3, 4\}$ follow from the committing hierarchy and direct
   source-game arguments (\Cref{cor:committing-combined}).
 
-\item \textbf{Multi-user and AE security.} We give a concrete multi-user
+\item \textbf{Multi-user, AE, and RUP integrity.} We give a concrete multi-user
   indistinguishability bound \cite{BT16} for $D$ users (\Cref{thm:mu-ind}).
   The $D = 1$ case yields a concrete all-in-one AE bound \cite{RS06} in the
-  public permutation model (\Cref{cor:ae}). The proof proceeds through a
-  dedicated \TW{} random oracle model and is transferred to the public
-  permutation setting by the \cite{BDPV08} flat sponge lift.
+  public permutation model (\Cref{cor:ae}). We also prove
+  \textsf{INT-RUP} integrity \cite{ABLMMY14}, with plaintext-computing oracle
+  work charged through the same transcript resources (\Cref{thm:int-rup}). The
+  proof proceeds through a dedicated \TW{} random oracle model and is
+  transferred to the public permutation setting by the \cite{BDPV08} flat sponge
+  lift.
 
 \item \textbf{Optimized implementations.} We describe and evaluate vectorized
   \texttt{amd64} (AVX-512 and AVX2) and \texttt{arm64} (NEON with the SHA-3
@@ -142,6 +149,15 @@ decomposition into indexed leaves is fixed by the transcript, but the number of
 leaves evaluated at once is chosen by the implementation and is invisible to the
 wire format (\Cref{sec:compare-sponge}).
 
+\paragraph{Release of unverified plaintext.}
+Andreeva et al.~\cite{ABLMMY14} formalized authenticated encryption in the
+release-of-unverified-plaintext setting by separating plaintext computation
+from verification. They define \textsf{INT-RUP} for integrity and plaintext
+awareness notions for privacy, and show that ordinary ciphertext integrity does
+not imply \textsf{INT-RUP}. \TW{} targets the integrity side of this model: the
+released stream plaintext is not claimed to be private, but it does not reveal
+the hidden tag values needed to make a fresh ciphertext verify.
+
 \paragraph{Tree hashing.}
 \TW{}'s two-level shape is inspired by KangarooTwelve \cite{BDPVVV16}, a tree
 hash over the same permutation. \TW{} adopts its choice of permutation and
@@ -158,15 +174,16 @@ unambiguous (\Cref{sec:tw128}).
 \label{sec:organization}
 
 \Cref{sec:prelims} recalls the notation, sponge and duplex constructions,
-nonce-based AEAD security, committing security \cite{BH22}, and the hash
-notions of \cite{RS04}.
+nonce-based AEAD and RUP integrity notions, committing security \cite{BH22},
+and the hash notions of \cite{RS04}.
 \Cref{sec:tw128} specifies the \TW{} construction and parameters.
 \Cref{sec:security-model} fixes the scope of the security claims, the public
 permutation games, intermediate random oracle model, resource accounting, and
 loss terms.
-\Cref{sec:aead-security} proves multi-user indistinguishability and all-in-one
-AE security. \Cref{sec:root-tag-hash-security} proves root tag hash security
-and committing security, and
+\Cref{sec:aead-security} proves multi-user indistinguishability, all-in-one
+AE security, and \textsf{INT-RUP} integrity.
+\Cref{sec:root-tag-hash-security} proves root tag hash security and committing
+security, and
 \Cref{sec:concrete-security} summarizes the concrete bounds.
 \Cref{sec:performance} reports implementation performance, and
 \Cref{sec:discussion} compares \TW{} to prior AEAD and committing constructions

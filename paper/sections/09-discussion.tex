@@ -166,11 +166,13 @@ repetition at the price of a second pass. A misuse-resistant variant of \TW{}
 is left open.
 
 \paragraph{Unverified plaintext release.}
-The security model requires plaintext release only after the tag verifies.
-\TW{} is online and single-pass, so an implementation that streams decrypted
-leaf output before checking the root tag operates in the
-release-of-unverified-plaintext setting of \cite{ABLMMY14}; plaintext-awareness
-and \textsf{INT-RUP} security for \TW{} are unstudied.
+The \textsf{INT-RUP} theorem of \Cref{thm:int-rup} covers integrity when an
+adversary can obtain plaintext-computing oracle outputs before verification, in
+the release-of-unverified-plaintext setting of \cite{ABLMMY14}. This is an
+integrity-only statement. It does not give plaintext awareness or privacy under
+release of unverified plaintext: \TW{} is online and single-pass, and exposing
+unverified stream plaintext can reveal keystream information. Application
+behavior on unverified plaintext is likewise outside the provable model.
 
 \paragraph{Conservative lift.}
 Per-term tightness is itemized in \Cref{sec:bound-discussion}; one term is

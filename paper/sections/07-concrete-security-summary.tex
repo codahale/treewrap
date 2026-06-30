@@ -15,7 +15,7 @@ The implemented parameters of \Cref{sec:params} fix
   k = c = \tauroot = \tauleaf = 256.
 \]
 Substituting into
-\Cref{cor:ae,thm:mu-ind,thm:coll,thm:asec,cor:cmtds4,thm:epre}
+\Cref{cor:ae,thm:mu-ind,thm:int-rup,thm:coll,thm:asec,cor:cmtds4,thm:epre}
 gives the following closed-form bounds.
 
 \paragraph{All-in-one AE.}
@@ -34,6 +34,15 @@ gives the following closed-form bounds.
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
   + \frac{D \Nprim + \Qv}{2^{256}}
   + \frac{D(D - 1) + \Nleaf(\Nleaf - 1)}{2^{257}}.
+\]
+
+\paragraph{\textsf{INT-RUP} integrity.}
+\[
+  \AdvintRUP_\TW(\mathcal{A})
+  \;\leq\;
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\Nprim + \Qv}{2^{256}}
+  + \frac{\Nleaf(\Nleaf - 1)}{2^{257}}.
 \]
 
 \paragraph{$s$-way collision resistance of $\HTW$.}
@@ -107,10 +116,11 @@ Under the implemented parameters $k = c = \tauroot = \tauleaf = 256$, every
 adversary with work cap $\Ntot \leq 2^{63}$---and, in the multi-user case,
 user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
 \TW{}'s notions: multi-user indistinguishability (\Cref{thm:mu-ind}),
-all-in-one AE (\Cref{cor:ae}), the \cite{RS04} hash security of
+all-in-one AE (\Cref{cor:ae}), \textsf{INT-RUP} integrity
+(\Cref{thm:int-rup}), the \cite{RS04} hash security of
 $\HTW$---$s$-way collision resistance for every $s \geq 2$, always second-preimage
 resistance, and everywhere preimage resistance
-(\Cref{thm:coll,thm:asec,thm:epre})---the \cite{BH22}
+(\Cref{thm:coll,thm:asec,thm:epre})---and the \cite{BH22}
 CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}).
 \end{corollary}
 
@@ -152,6 +162,7 @@ Notion & Dominant scale & At the cap \\
 \midrule
 All-in-one AE & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 Multi-user ind. & $D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
+\textsf{INT-RUP} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 $\HTW$ collision (Coll) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 $\HTW$ second-preimage (aSec) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 $\HTW$ everywhere preimage (ePre) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\

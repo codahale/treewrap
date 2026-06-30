@@ -33,11 +33,13 @@
   digest-like commitment to the full $(K, U, A, M)$ context. In the public
   permutation model, via an intermediate random oracle and the flat sponge lift,
   we prove concrete multi-user indistinguishability and derive all-in-one
-  authenticated encryption as the single-user corollary. We also prove that the
-  wrapper returning the tag is a secure hash of the full context---collision-,
-  second-preimage-, and preimage-resistant in the standard hash-function sense.
-  The same tag analysis gives the AEAD-facing committing results, including
-  full-input \textsf{CMTDs-4} committing security. At the implemented
+  authenticated encryption as the single-user corollary. We also prove
+  integrity under release of unverified plaintext in the sense of
+  \cite{ABLMMY14}. Separately, we prove that the wrapper returning the tag is a
+  secure hash of the full context---collision-, second-preimage-, and
+  preimage-resistant in the standard hash-function sense. The same tag analysis
+  gives the AEAD-facing committing results, including full-input
+  \textsf{CMTDs-4} committing security. At the implemented
   parameters, all stated notions meet a $128$-bit security target. Vectorized
   \texttt{amd64} and \texttt{arm64}
   implementations recover the scalable performance profile of the tree design:
