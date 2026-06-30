@@ -766,8 +766,9 @@ $\KeyedTWOut_Z$ returns either $\bot$ or a unique candidate $Z$-value.
 \label{lem:leaf-collision}
 Consider any \TW{} random oracle model game with an adversary
 $\mathcal{B}$ that has direct access to $\ROflat$ and construction
-computations that may generate final leaf transcripts---by encryption or
-by verification computations, whether they accept or reject. Let
+computations that may generate final leaf transcripts---by encryption,
+plaintext-computing, or verification computations, whether they accept or
+reject. Let
 $\badleaf$ be the event that two distinct construction-generated final
 leaf transcript prefixes $X \neq X'$ in leaf tag output-point classes
 receive the same $\tauleaf$-bit projection from $\RF(\cdot)$, and let
