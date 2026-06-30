@@ -15,7 +15,7 @@ The implemented parameters of \Cref{sec:params} fix
   k = c = \tauroot = \tauleaf = 256.
 \]
 Substituting into
-\Cref{cor:ae,thm:mu-ind,thm:int-rup,thm:coll,thm:asec,cor:cmtds4,thm:epre}
+\Cref{cor:ae,thm:mu-ind,thm:int-rup,thm:coll,cor:second-preimage-rs04,cor:cmtds4,thm:epre}
 gives the following closed-form bounds.
 
 \paragraph{All-in-one AE.}
@@ -65,15 +65,10 @@ For $s=2$, this is the ordinary two-input collision bound:
 \end{aligned}
 \]
 
-\paragraph{Always second-preimage resistance of $\HTW$.}
-The root-preimage contribution is linear in the primitive-query budget:
-\[
-  \AdvaSec_\TW(\mathcal{A})
-  \;\leq\;
-  \frac{\Ntot(\Ntot + 1)}{2^{257}}
-  + \frac{\Nprim + 1}{2^{256}}
-  + \frac{\binom{\Nprim+\Nleaf}{2}}{2^{256}}.
-\]
+\paragraph{Second-preimage resistance of $\HTW$.}
+By \Cref{cor:second-preimage-rs04}, the standard and everywhere
+\cite{RS04} second-preimage advantages of $\HTW$ are bounded by the same
+$s=2$ collision expression above.
 
 \paragraph{$s$-way CMTDs-4 committing security.}
 For every $s \geq 2$, the all-bodies-equal special case drops the leaf
@@ -118,9 +113,10 @@ user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
 \TW{}'s notions: multi-user indistinguishability (\Cref{thm:mu-ind}),
 all-in-one AE (\Cref{cor:ae}), \textsf{INT-RUP} integrity
 (\Cref{thm:int-rup}), the \cite{RS04} hash security of
-$\HTW$---$s$-way collision resistance for every $s \geq 2$, always second-preimage
-resistance, and everywhere preimage resistance
-(\Cref{thm:coll,thm:asec,thm:epre})---and the \cite{BH22}
+$\HTW$---$s$-way collision resistance for every $s \geq 2$, standard and
+everywhere second-preimage resistance inherited from collision resistance, and
+everywhere preimage resistance
+(\Cref{thm:coll,cor:second-preimage-rs04,thm:epre})---and the \cite{BH22}
 CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}).
 \end{corollary}
 
@@ -164,7 +160,7 @@ All-in-one AE & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 Multi-user ind. & $D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
 \textsf{INT-RUP} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 $\HTW$ collision (Coll) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
-$\HTW$ second-preimage (aSec) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+$\HTW$ second-preimage (Sec/eSec) & inherited from Coll & $\leq 2^{-128}$ \\
 $\HTW$ everywhere preimage (ePre) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 CMTDs-4 \cite{BH22} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 \bottomrule
@@ -216,8 +212,8 @@ duplex (\Cref{sec:params}).
 \item \emph{$\RootPre_\tau(Q) = (Q + 1) / 2^\tau$.} Tight at constants: a
   generic preimage search against a fixed $\tau$-bit target matches the
   per-query $2^{-\tau}$ rate. It is the root term of the everywhere
-  preimage (ePre) and always second-preimage (aSec) bounds, where the single
-  fixed target yields a linear term.
+  preimage (ePre) bound, where the single fixed target yields a linear
+  term.
 \item \emph{Leaf tag collision $\Nleaf (\Nleaf - 1) / 2^{\tauleaf +
   1}$.} Tight for verification security: by reusing
   a nonce, an adversary detects a leaf tag birthday collision through the
@@ -229,8 +225,8 @@ duplex (\Cref{sec:params}).
   there it is inherited slack.
 \item \emph{Known-key leaf collision $\LeafColl_\tau(Q)$.} The same
   birthday attack applies when keys are adversary-supplied and direct
-  queries can target leaf tag points; the collision and
-  always second-preimage proofs use $Q=\Nprim+\Nleaf$.
+  queries can target leaf tag points; the collision proof uses
+  $Q=\Nprim+\Nleaf$.
 \item \emph{Flat sponge lift.} The term
   $\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{c + 1}$ dominates the
   random-permutation differentiating bound $f_P(\Ntot)$ of

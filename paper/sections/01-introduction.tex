@@ -83,12 +83,13 @@ hardware-accelerated AES-128-GCM throughput (\Cref{sec:performance}).
   implementation, so scalar and vectorized implementations interoperate without
   changing ciphertexts or tags.
 
-\item \textbf{Digest-like commitment.} We prove that the wrapper $\HTW$
+  \item \textbf{Digest-like commitment.} We prove that the wrapper $\HTW$
   returning the root tag is a secure hash of the full $(K, U, A, M)$ input in
   the sense of \cite{RS04}: collision-, second-preimage-, and
-  preimage-resistant (\Cref{thm:coll,thm:asec,thm:epre}). Thus the
-  authentication tag behaves like the compact digest practitioners often expect
-  an AEAD tag to be.
+  preimage-resistant
+  (\Cref{thm:coll,cor:second-preimage-rs04,thm:epre}). Thus the authentication
+  tag behaves like the compact digest practitioners often expect an AEAD tag to
+  be.
 
 \item \textbf{AEAD commitment consequences.} We instantiate the same root tag
   analysis in the existing AEAD vocabulary. The all-bodies-equal structure of

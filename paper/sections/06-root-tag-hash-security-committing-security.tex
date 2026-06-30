@@ -9,16 +9,16 @@ single tag returned by $\HTW$. The proof therefore tracks the final root inputs
 that can matter in the hash and committing games. The Root Tag Candidate
 Sequence lemma (\Cref{lem:root-candidate-seq}) collects those inputs into a
 chronological candidate sequence, and the Root Tag Hash Bound
-(\Cref{lem:root-tag-hash}) turns a collision, fixed-target preimage, or
-second-preimage among the candidates into the matching adaptive bound of
-\Cref{app:lemmas}, controlling the chance that distinct inputs land on the same
-$\tauroot$-bit root tag projection.
+(\Cref{lem:root-tag-hash}) turns a collision or fixed-target preimage among the
+candidates into the matching adaptive bound of \Cref{app:lemmas}, controlling
+the chance that distinct inputs land on the same $\tauroot$-bit root tag
+projection.
 
-The hash random oracle theorems---collision (\Cref{thm:coll-ro}), always
-second-preimage (\Cref{thm:asec-ro}), and everywhere preimage
-(\Cref{thm:epre-ro})---are then short instantiations, differing only in which
-case of the bound they invoke and in whether a leaf tag collision term is needed
-when colliding inputs may use different ciphertext bodies. CMTDs-4
+The hash random oracle theorems---collision (\Cref{thm:coll-ro}) and
+everywhere preimage (\Cref{thm:epre-ro})---are then short instantiations,
+differing only in which case of the bound they invoke and in whether a leaf tag
+collision term is needed when colliding inputs may use different ciphertext
+bodies. CMTDs-4
 (\Cref{thm:cmtds4-ro}) and the remaining committing notions reuse the collision
 case.
 \Cref{app:flat-sponge-lift} transfers each instance to the public
@@ -136,8 +136,8 @@ such that
 \end{lemma}
 
 \begin{proof}
-The committing and hash (collision, always second-preimage, and everywhere
-preimage) games are keyless: all keys are adversary-supplied, so a direct
+The committing and hash (collision and everywhere preimage) games are keyless:
+all keys are adversary-supplied, so a direct
 query to a keyed transcript is one of
 $\mathcal{B}$'s visible $\ROflat$ queries counted in $\qRO(\mathcal{B})$,
 and there is no $\badkey$ event. No construction oracle runs while
@@ -180,10 +180,6 @@ $\qRO = \qRO(\mathcal{B})$:
 \item if $\mathsf{W}$ forces a single check ($m = 1$) to carry a root tag
   equal to a target fixed independently of $\ROflat$, then
   $\Pr[\mathsf{W}] \leq \RootPre_{\tauroot}(\qRO)$;
-\item if a designated check reaches $R_X$ whose root tag is exposed before
-  $\mathcal{B}$ outputs, and $\mathsf{W}$ forces a single further check
-  ($m = 1$ besides $R_X$) to reach a transcript $R' \neq R_X$ carrying
-  $R_X$'s root tag, then $\Pr[\mathsf{W}] \leq \RootPre_{\tauroot}(\qRO)$.
 \end{enumerate}
 \end{lemma}
 
@@ -197,11 +193,6 @@ $\binom{\qRO + s}{s} \cdot 2^{-\tauroot(s-1)}
 = \RootColl_{\tauroot}(\qRO, s)$.
 \emph{(2)} The candidate hitting the fixed target is a preimage; the
 preimage case with $L = \qRO + 1$ gives
-$(\qRO + 1) \cdot 2^{-\tauroot} = \RootPre_{\tauroot}(\qRO)$.
-\emph{(3)} Prepend $\flatmap(R_X)$ as the designated candidate, its value
-the exposed root tag; the further candidate colliding with it on its
-$\tauroot$-projection is a second-preimage, and the second-preimage
-corollary with $L = \qRO + 2$ gives
 $(\qRO + 1) \cdot 2^{-\tauroot} = \RootPre_{\tauroot}(\qRO)$.
 \end{proof}
 
@@ -240,39 +231,6 @@ pairwise distinct. The Root Tag Hash Bound (\Cref{lem:root-tag-hash},
 part~1) bounds the win under $\neg\badleaf^\star$ by
 $\RootColl_{\tauroot}(\qRO(\mathcal{B}),s)$; adding $\Pr[\badleaf^\star]$
 gives the theorem.
-\end{proof}
-
-\begin{theorem}[Random Oracle aSec]
-\label{thm:asec-ro}
-For every aSec adversary $\mathcal{B}$ in the \TW{} random oracle model
-(\Cref{sec:ro-model}),
-\[
-  \AdvaSec_\RO(\mathcal{B})
-  \;\leq\;
-  \RootPre_{\tauroot}(\qRO(\mathcal{B}))
-  + \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B})).
-\]
-\end{theorem}
-
-\begin{proof}
-Run the random oracle aSec game: the challenger draws the challenge input
-$X$, encrypts it to obtain $T = \HTW(X)$ at a final root transcript $R_X$,
-and gives $X$ to $\mathcal{B}$, which outputs $X' \neq X$, winning if
-$\HTW(X') = T$. Let $\badleaf^\star$ be the event that two distinct
-construction-generated final leaf transcripts receive the same
-$\tauleaf$-bit $\RF$ projection; by \Cref{lem:leaf-collision},
-$\Pr[\badleaf^\star] \leq \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))$,
-so it remains to bound the win under $\neg\badleaf^\star$. Encrypting $X'$
-reaches a final root transcript $R'$. If $\flatmap(R') = \flatmap(R_X)$
-then on $\neg\badleaf^\star$ Final-Root Input Separation
-(\Cref{prop:final-root-sep}) makes $X$ and $X'$ share $(K,U,A,C)$, hence
-the same message by determinism, so $X' = X$---a contradiction; thus
-$R' \neq R_X$. The challenge root tag
-$T = \lfloor \RF(R_X) \rfloor_{\tauroot}$ is exposed to $\mathcal{B}$, and
-a win places $R'$'s root tag at $T$. The Root Tag Hash Bound
-(\Cref{lem:root-tag-hash}, part~3, with designated $R_X$) bounds the win
-under $\neg\badleaf^\star$ by $\RootPre_{\tauroot}(\qRO(\mathcal{B}))$;
-adding $\Pr[\badleaf^\star]$ gives the theorem.
 \end{proof}
 
 \begin{theorem}[Random Oracle Everywhere Preimage Resistance of $\HTW$]
@@ -358,31 +316,24 @@ multi-collision resistance at $s = 2$ is the classical collision resistance
 of \cite{RS04}.
 \end{proof}
 
-\begin{theorem}[Always Second-Preimage Resistance of $\HTW$]
-\label{thm:asec}
-For every aSec adversary $\mathcal{A}$ against $\HTW$ with the resources
-of \Cref{sec:resources},
+\begin{corollary}[Second-Preimage Resistance of $\HTW$]
+\label{cor:second-preimage-rs04}
+For every adversary against $\HTW$, with the resources of
+\Cref{sec:resources}, in either the standard second-preimage (Sec) or
+everywhere second-preimage (eSec) sense of \cite{RS04}, the corresponding
+advantage is bounded by the two-way collision bound of
+\Cref{cor:coll-rs04}:
 \[
-  \AdvaSec_\TW(\mathcal{A})
-  \;\leq\;
   \Lift_c(\Ntot)
-  + \RootPre_{\tauroot}(\Nprim)
-  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf).
+  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf)
+  + \RootColl_{\tauroot}(\Nprim, 2).
 \]
-\end{theorem}
+\end{corollary}
 
 \begin{proof}
-By the Lift Application corollary (\Cref{cor:lift-application}) for the
-aSec game, the derived random oracle adversary $\mathcal{B}$ has
-$\qRO(\mathcal{B}) \leq \Nprim$ and $\nleaf(\mathcal{B}) \leq \Nleaf$; the
-random oracle bound of \Cref{thm:asec-ro} is nondecreasing in both, so the
-monotone form of \Cref{cor:lift-application} gives the stated bound.
-Collision resistance (\Cref{thm:coll}) already implies eSec and hence Sec
-in the sense of \cite{RS04}, both with the looser root-collision term; the
-always-notion is the one \cite{RS04} shows collision resistance does not
-imply. Here the second preimage is sought against the single fixed tag
-$\HTW(X)$ of the challenge input $X$, yielding the linear root-preimage
-term.
+By \cite[Proposition~6]{RS04}, collision resistance implies both Sec and
+eSec. Applying this implication to the two-way collision bound of
+\Cref{cor:coll-rs04} gives the stated bound.
 \end{proof}
 
 \begin{theorem}[Everywhere Preimage Resistance of $\HTW$]
@@ -414,8 +365,9 @@ that target and drops the exponent from $\tauroot(s-1)$ to $\tauroot$.
 \label{cor:tag-commitment}
 The wrapper $\HTW$ is a secure hash of the full encryption context
 $(K, U, A, M)$ in the sense of \cite{RS04}: collision-resistant
-(\Cref{thm:coll}), always second-preimage-resistant (\Cref{thm:asec}), and
-everywhere preimage-resistant (\Cref{thm:epre}). Under the implemented
+(\Cref{thm:coll}), second-preimage-resistant
+(\Cref{cor:second-preimage-rs04}), and everywhere preimage-resistant
+(\Cref{thm:epre}). Under the implemented
 parameters and work cap $\Ntot \leq 2^{63}$, all three advantages are at most
 $2^{-128}$ (\Cref{cor:concrete-security}), so the single $\tauroot$-bit
 root tag is a binding compact commitment to $(K, U, A, M)$ with everywhere
@@ -423,9 +375,9 @@ preimage resistance, native to the mode.
 \end{corollary}
 
 \begin{proof}
-Collision resistance is \Cref{thm:coll}, always second-preimage
-resistance is \Cref{thm:asec}, and everywhere preimage resistance is
-\Cref{thm:epre}; all three quantify
+Collision resistance is \Cref{thm:coll}, second-preimage resistance follows
+from collision resistance by \Cref{cor:second-preimage-rs04}, and everywhere
+preimage resistance is \Cref{thm:epre}; these guarantees quantify
 the adversary's success at the same $\tauroot$-bit projection of the final
 root transcript, and \Cref{cor:concrete-security} evaluates them at the
 implemented parameters. Binding (collision resistance) is the property a

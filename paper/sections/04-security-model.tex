@@ -59,10 +59,14 @@ corresponding open problems.
       & \Cref{thm:coll}
       & Capacity lift, root collision, leaf collision \\
     $\HTW$ preimage
-      & Find a second preimage for a fixed input, or an input hitting a fixed
-        target tag.
-      & \Cref{thm:asec,thm:epre}
-      & Capacity lift, root preimage, leaf collision for aSec \\
+      & Find an input hitting a fixed target tag.
+      & \Cref{thm:epre}
+      & Capacity lift, root preimage \\
+    $\HTW$ second preimage
+      & Find a second preimage in the standard or everywhere
+        \cite{RS04} sense.
+      & \Cref{cor:second-preimage-rs04}
+      & Inherited from collision resistance \\
     CMT / CMTD
       & Produce equal encryptions or one valid ciphertext opening under
         distinct committed inputs.
@@ -193,13 +197,10 @@ a root tag:
      \HTW(K_s,U_s,A_s,M_s)\bigr],
 \end{align*}
 with advantage $\AdvColl_\TW(\mathcal{A}) = \Pr[\text{the game returns }
-1]$; no nonce uniqueness is imposed. The always second-preimage (aSec)
-game is parameterized by a valid challenge input $X$, fixed before the
-permutation is sampled. It gives $X$ to
-$\mathcal{A}$ and returns $1$ iff $\mathcal{A}$ outputs $X' \neq X$ in the
-domain with $\HTW(X') = \HTW(X)$; the advantage $\AdvaSec_\TW$ is the
-worst-case success probability over fixed valid $X$. The preimage game
-fixes a target tag
+1]$; no nonce uniqueness is imposed. The \cite{RS04} standard and
+everywhere second-preimage notions are obtained from this collision game by
+\cite[Proposition~6]{RS04}; no separate second-preimage game is needed. The
+preimage game fixes a target tag
 $T^* \in \bits^{\tauroot}$ before the primitive sampling and returns $1$
 iff $\mathcal{A}(T^*)$ outputs an input $X$ in the domain with
 $\HTW(X) = T^*$, the advantage $\AdvePre_\TW$ taken as the worst case over
@@ -331,7 +332,7 @@ oracle uses the corresponding ${}^\RO$ algorithm, the ideal oracles
 $(\Rand,\Replay)$ being unchanged. Under this substitution
 $\Adv^{\mathsf{ae}}_{\RO}$ is the all-in-one advantage of
 \Cref{sec:games-pp} with no simulator on the ideal side; the keyless hash advantages
-$\AdvColl_{\RO}(\mathcal{B})$, $\AdvaSec_{\RO}(\mathcal{B})$,
+$\AdvColl_{\RO}(\mathcal{B})$ and
 $\AdvePre_{\RO}(\mathcal{B})$ of $\HTW$, the committing
 $\Advcmtds{4}_{\RO}(\mathcal{B})$, and, for $\ell \in \{1,3,4\}$,
 $\Advcmts{\ell}_{\RO}(\mathcal{B})$ are the probabilities that the
@@ -439,8 +440,8 @@ computations contribute to each count.
   are not charged to $N$ or to the verification-tag terms. In the hash and
   committing games there is no adversary
   construction oracle: for the $\HTW$ collision game, $N$ counts the $s$
-  deterministic encryptions on the submitted inputs (and the one or two
-  encryptions of the second-preimage and preimage games); for
+  deterministic encryptions on the submitted inputs, and for the preimage
+  game it counts the one deterministic encryption on the submitted input; for
   CMTDs-$\ell$, $N$ counts only the deterministic decryption checks
   performed by the challenger on the common ciphertext; while for the
   CMTs-$\ell$ source games of
@@ -566,8 +567,7 @@ The known-key leaf tag collision term is
   \LeafColl_\tau(Q) = \binom{Q}{2} \big/ 2^\tau.
 \]
 It is the pairwise birthday bound on $\tau$-bit leaf tag projections
-used by the collision-resistance and always second-preimage theorems
-(\Cref{thm:coll}, \Cref{thm:asec}). In these games the keys are
-adversary-supplied, so direct primitive queries can pre-read candidate
-leaf tag points; after the flat sponge lift this gives
+used by the collision-resistance theorem (\Cref{thm:coll}). In this game
+the keys are adversary-supplied, so direct primitive queries can pre-read
+candidate leaf tag points; after the flat sponge lift this gives
 $Q=\Nprim+\Nleaf$.
