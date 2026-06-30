@@ -1,4 +1,4 @@
-\section{Root Tag Hash Security, Committing Security, and Context Discoverability}
+\section{Root Tag Hash Security and Committing Security}
 \label{sec:cmtds3}
 \label{sec:root-tag-hash-security}
 
@@ -6,9 +6,9 @@ This section proves the digest claim for the root of the \TW{} tree. The
 construction adapts the KangarooTwelve final-node pattern to authenticated
 encryption: leaf tags play the role of chaining values, and the root emits the
 single tag returned by $\HTW$. The proof therefore tracks the final root inputs
-that can matter in the hash, committing, and context discoverability games. The
-Root Tag Candidate Sequence lemma (\Cref{lem:root-candidate-seq}) collects those inputs
-into a chronological candidate sequence, and the Root Tag Hash Bound
+that can matter in the hash and committing games. The Root Tag Candidate
+Sequence lemma (\Cref{lem:root-candidate-seq}) collects those inputs into a
+chronological candidate sequence, and the Root Tag Hash Bound
 (\Cref{lem:root-tag-hash}) turns a collision, fixed-target preimage, or
 second-preimage among the candidates into the matching adaptive bound of
 \Cref{app:lemmas}, controlling the chance that distinct inputs land on the same
@@ -20,8 +20,7 @@ second-preimage (\Cref{thm:asec-ro}), and everywhere preimage
 case of the bound they invoke and in whether a leaf tag collision term is needed
 when colliding inputs may use different ciphertext bodies. CMTDs-4
 (\Cref{thm:cmtds4-ro}) and the remaining committing notions reuse the collision
-case. The context discoverability proof of \Cref{thm:cdy-full} uses the same
-fixed-target root-preimage case, plus hidden-component guessing.
+case.
 \Cref{app:flat-sponge-lift} transfers each instance to the public
 permutation setting, \Cref{sec:concrete-security} records the concrete bounds,
 and \Cref{cor:committing-combined} forwards the remaining \cite{BH22}
@@ -141,9 +140,7 @@ The committing and hash (collision, always second-preimage, and everywhere
 preimage) games are keyless: all keys are adversary-supplied, so a direct
 query to a keyed transcript is one of
 $\mathcal{B}$'s visible $\ROflat$ queries counted in $\qRO(\mathcal{B})$,
-and there is no $\badkey$ event. The context discoverability proof below
-uses the same candidate sequence after separately accounting for the
-hidden selector component. No construction oracle runs while
+and there is no $\badkey$ event. No construction oracle runs while
 $\mathcal{B}$ issues its direct queries, so each direct-query candidate is
 first read no earlier than its append step. The append predicate depends
 on $Y$ alone through the exact decoder of \Cref{lem:bridge-decode}, which
@@ -554,64 +551,4 @@ $\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$ in the random oracle model,
 which the lift transfers to the public permutation setting at $\Nprim$;
 the encryption checks are construction-internal work counted in $N$, not
 in $\Nprim$.
-\end{proof}
-
-\subsection{Context Discoverability}
-
-\begin{theorem}[Context Discoverability ($\mathsf{CDY}^\ast$) \textnormal{of} \cite{MLGR23}]
-\label{thm:cdy-full}
-For every target specifier $\mathsf{ts} \subsetneq \{k, n, a\}$---so that
-at least one context component stays hidden---and every adversary
-$\mathcal{A}$ against \TW{}, the restricted $\mathsf{CDY}^\ast[\mathsf{ts}]$
-advantage
-of \cite[Fig.~5]{MLGR23}---and in particular each per-component variant
-$\mathsf{CDY}^\ast_k$, $\mathsf{CDY}^\ast_n$, $\mathsf{CDY}^\ast_a$---satisfies
-\[
-  \Advcdy_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot) + \RootPre_{\tauroot}(\Nprim) + \frac{\Nprim+1}{2^{256}}.
-\]
-\end{theorem}
-
-\begin{proof}[Proof of \Cref{thm:cdy-full}]
-Full reveal $\mathsf{ts} = \{k,n,a\}$ hides no component and is won
-trivially by any scheme, so the restriction to
-$\mathsf{ts} \subsetneq \{k,n,a\}$ excludes no meaningful case. The
-restricted advantage requires $\mathcal{A}$ to win against every
-valid query-independent selector, so it is at most the success probability
-against the valid selector $S^\star$ that samples a fresh context
-$(K_0, N_0, A_0)$---each of $K_0$, $N_0$, and $A_0$ uniform on a
-$256$-bit space---encrypts a fixed valid message under it to obtain the
-valid target ciphertext $C^* = C \concat T^*$, and reveals only the
-$\mathsf{ts}$-components. By the Lift Application corollary
-(\Cref{cor:lift-application}), the derived random oracle adversary
-$\mathcal{B}$ has $\qRO(\mathcal{B}) \leq \Nprim$; it remains to bound the
-random oracle success against $S^\star$. Here
-$T^* = \lfloor \RF(R_0) \rfloor_{\tauroot}$ is the root tag of the
-selector's final root transcript $R_0$ under $(K_0, N_0, A_0)$, and a
-winning $\mathcal{A}$ outputs a context reaching a final root transcript
-$R$ with $\RF(R)$ projecting to $T^*$.
-
-Let $Z_0$ be any context component hidden by $\mathsf{ts}$---one exists
-because $\mathsf{ts} \subsetneq \{k,n,a\}$---which $\mathcal{A}$ must itself
-supply (for the named variants, the key for
-$\mathsf{ts} \in \{\varnothing, \{n,a\}\}$, the nonce for
-$\mathsf{ts} = \{k,a\}$, the associated data for $\mathsf{ts} = \{k,n\}$),
-and which $S^\star$ sampled uniformly on $\bits^w$
-with $w = 256$ and which $\mathcal{A}$ never sees: the only values
-revealed to it, the body and tag of $C^*$, are $\RF$ projections
-independent of $Z_0$. If $R = R_0$, then $\mathcal{A}$ has reconstructed
-the selector's transcript, in particular its $Z_0$-component. A direct
-query whose decoded transcript contains a candidate value for $Z_0$ tests
-that value against the hidden component, and the final context output is
-one additional test. The same union bound as \Cref{lem:key-tests} (hidden
-component $Z_0$, $w = 256$) bounds this exact-reconstruction case by
-$(\Nprim+1)/2^{256}$.
-
-If $R \neq R_0$, the win is that $R$ collides with $R_0$ on its
-$\tauroot$-bit projection, which the Root Tag Candidate Sequence lemma
-(\Cref{lem:root-candidate-seq}) and the second-preimage corollary of
-\Cref{lem:adaptive-candidate}, with the designated candidate
-$\flatmap(R_0)$, bound by $\RootPre_{\tauroot}(\Nprim)$. Adding the lift
-gives the bound, uniformly over $\mathsf{ts}$.
 \end{proof}

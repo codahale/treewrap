@@ -18,25 +18,21 @@ definitions. The ``invisible salamander'' attack defeats Facebook's attachment
 franking scheme \cite{DGRW18}; related constructions produce ciphertexts that
 open to different well-formed files under different keys \cite{ADGKLS22};
 partitioning oracles recover passwords from systems built on non-committing AEAD
-\cite{LGR21}; and context discovery attacks break \textsf{GCM}, \textsf{CCM},
-\textsf{EAX}, \textsf{SIV}, and \textsf{OCB3} by exploiting authentication
-layers that are not preimage-resistant \cite{MLGR23}. These attacks differ in
-surface form, but all expose the same mismatch: the tag is used as if it were a
-full-context commitment, while the mode only proves ordinary authenticity.
+\cite{LGR21}. These attacks differ in surface form, but all expose the same
+mismatch: the tag is used as if it were a full-context commitment, while the
+mode only proves ordinary authenticity.
 
 Recent work has begun to model this expectation directly. Compactly committing
 AEAD was introduced for message franking \cite{GLR17}, and the encryptment
 approach of \cite{DGRW18} builds commitment into a dedicated primitive. The
 committing hierarchy of \cite{BH22} makes the collision-style requirement
 explicit: no two distinct contexts should open the same ciphertext and tag.
-Context discoverability \cite{MLGR23} captures the preimage-facing counterpart:
-given a target ciphertext, it should be infeasible to find a decrypting context.
-These notions explain when a ciphertext can have another valid opening, or any
-valid opening at all, but they are still phrased as AEAD games over
-ciphertexts. The assumption made by protocols is often more tag-centric: the tag
-itself is treated as a compact commitment string. This paper therefore analyzes
-the tag with hash notions directly, and then recovers the AEAD commitment
-notions as game-specific consequences of the same tag analysis.
+These notions explain when a ciphertext can have another valid opening, but they
+are still phrased as AEAD games over ciphertexts. The assumption made by
+protocols is often more tag-centric: the tag itself is treated as a compact
+commitment string. This paper therefore analyzes the tag with hash notions
+directly, and then recovers the AEAD commitment notions as game-specific
+consequences of the same tag analysis.
 
 \TW{} (\emph{TreeWrap}, with $128$ denoting the $128$-bit security target)
 takes this tag-centric view as a design constraint. If the authentication tag is
@@ -60,8 +56,8 @@ communicating parties.
 
 We prove that the wrapper $\HTW$ returning the root tag is a secure hash of the
 full $(K, N, A, M)$ input in the sense of \cite{RS04}, and use the same root tag
-analysis to obtain the AEAD-facing committing and context-discoverability
-results. We also prove ordinary AEAD security: in the public permutation model,
+analysis to obtain the AEAD-facing committing results. We also prove ordinary
+AEAD security: in the public permutation model,
 \TW{} has a concrete multi-user indistinguishability bound \cite{BT16}, with
 all-in-one authenticated encryption \cite{RS06} as the single-user corollary.
 At the implemented parameters ($k = c = \tauroot = \tauleaf = 256$), the bounds
@@ -96,10 +92,7 @@ hardware-accelerated AES-128-GCM throughput (\Cref{sec:performance}).
   leaf-collision slack of the general hash collision theorem \cite{BH22}
   (\Cref{cor:cmtds4}), and the remaining \textsf{CMT}/\textsf{CMTD} notions
   for $\ell \in \{1, 3, 4\}$ follow from the committing hierarchy and direct
-  source-game arguments (\Cref{cor:committing-combined}). The same fixed-target
-  root-preimage analysis, plus hidden-component guessing, gives
-  $\mathsf{CDY}^\ast$ context discoverability security \cite{MLGR23}
-  (\Cref{thm:cdy-full}).
+  source-game arguments (\Cref{cor:committing-combined}).
 
 \item \textbf{Multi-user and AE security.} We give a concrete multi-user
   indistinguishability bound \cite{BT16} for $D$ users (\Cref{thm:mu-ind}).
@@ -129,8 +122,7 @@ context by adding a hash. These transforms are efficient and broadly
 applicable, but they treat commitment as an external layer. \TW{} instead makes
 the authentication tag itself the hash-like commitment: the root tag is the
 compact commitment, and the root tag analysis gives both the \cite{BH22}
-full-input committing consequence and the \cite{MLGR23} context discoverability
-bound. Closest in spirit is the recent work
+full-input committing consequence. Closest in spirit is the recent work
 of \cite{DHMVV24}, which also builds nonce-based AE natively on SHA-3 functions
 and obtains \textsf{CMT-4} from collision resistance; it targets session-based
 communication through a sequential duplex chain, whereas \TW{} is a single
@@ -166,14 +158,14 @@ unambiguous (\Cref{sec:tw128}).
 \label{sec:organization}
 
 \Cref{sec:prelims} recalls the notation, sponge and duplex constructions,
-nonce-based AEAD security, committing security \cite{BH22}, context
-discoverability \cite{MLGR23}, and the hash notions of \cite{RS04}.
+nonce-based AEAD security, committing security \cite{BH22}, and the hash
+notions of \cite{RS04}.
 \Cref{sec:tw128} specifies the \TW{} construction and parameters.
 \Cref{sec:security-model} fixes the public permutation games, intermediate
 random oracle model, resource accounting, and loss terms.
 \Cref{sec:aead-security} proves multi-user indistinguishability and all-in-one
-AE security. \Cref{sec:root-tag-hash-security} proves root tag hash security,
-committing security, and context discoverability, and
+AE security. \Cref{sec:root-tag-hash-security} proves root tag hash security
+and committing security, and
 \Cref{sec:concrete-security} summarizes the concrete bounds.
 \Cref{sec:performance} reports implementation performance, and
 \Cref{sec:discussion} compares \TW{} to prior AEAD and committing constructions

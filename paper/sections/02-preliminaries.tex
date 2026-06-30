@@ -255,7 +255,7 @@ may appear under distinct users but not twice under the same user.
 This is strictly weaker than the global nonce-uniqueness requirement
 that would force each nonce value $N$ to appear under at most one user.
 
-\subsection{Committing and Context Discoverability Notions}
+\subsection{Committing Notions and Root Tag Hash Security}
 \label{sec:commit-defs}
 
 \cite{BH22} formalize a family of committing security notions for
@@ -263,13 +263,11 @@ nonce-based AEAD schemes, parameterized by how much of the
 encryption input is committed and by whether commitment is
 established through decryption (the D-notions) or through encryption
 agreement (the E-notions). We recall their definitions and the
-$s$-way generalization, the complementary \emph{context discoverability}
-notion of \cite{MLGR23}, and then frame the root tag itself as a hash
-function whose \cite{RS04} security---collision, second-preimage, and
-preimage resistance---captures the binding and preimage properties expected
-of a compact commitment. The AEAD committing and context discoverability
-notions are then proved from the same tag analysis in
-\Cref{sec:root-tag-hash-security}.
+$s$-way generalization, and then frame the root tag itself as a hash function
+whose \cite{RS04} security---collision, second-preimage, and preimage
+resistance---captures the binding and preimage properties expected of a compact
+commitment. The AEAD committing notions are then proved from the same tag
+analysis in \Cref{sec:root-tag-hash-security}.
 
 \paragraph{What-is-committed functions.}
 For $\ell \in \{1, 3, 4\}$, the \emph{what-is-committed} function
@@ -360,38 +358,3 @@ distinct full tuples, so every CMTDs-$\ell$ winner is a CMTDs-4 winner).
 The E-notions are bounded directly in \Cref{cor:committing-combined} by
 the same final-root candidate-collision argument, rather than through an
 encryption reduction.
-
-\paragraph{Context discoverability.}
-Where committing security forbids two contexts from colliding on one
-ciphertext, \emph{context discoverability security} \cite{MLGR23} forbids an
-adversary from \emph{finding} a decrypting context for a target
-ciphertext: it is to committing security what preimage resistance is to
-collision resistance. \cite[Fig.~5]{MLGR23} formalize it as the game
-$\mathsf{CDY}[\mathsf{ts}, S]$, in which a query-independent context
-selector $S$---a randomized algorithm taking no input---produces a
-valid target ciphertext together with the context components named by a
-target specifier $\mathsf{ts} \subseteq \{k, n, a\}$, and the adversary,
-given the revealed components, supplies the remaining components of a
-decryption context $(K, N, A)$ and wins if the target ciphertext decrypts
-under it without error. The \emph{restricted} notion
-$\mathsf{CDY}^\ast[\mathsf{ts}]$ requires success against every
-query-independent selector $S$ whose output is supported on valid target
-ciphertexts; equivalently, an adversary's restricted advantage is no
-larger than its success probability against any fixed valid selector.
-Its three per-component variants $\mathsf{CDY}^\ast_k$,
-$\mathsf{CDY}^\ast_n$, $\mathsf{CDY}^\ast_a$ pin two of the three context
-components and have the adversary supply the third
-($\mathsf{ts} = \{n, a\}, \{k, a\}, \{k, n\}$ respectively). In every
-nontrivial variant the selector fixes the \emph{entire} target ciphertext;
-the full-reveal case $\mathsf{ts} = \{k,n,a\}$ hides no context component
-and is excluded from \Cref{thm:cdy-full}.
-\cite{MLGR23} show that schemes which delegate authenticity to a
-non-preimage-resistant MAC, including \textsf{CCM}, \textsf{EAX},
-\textsf{SIV}, \textsf{GCM}, and \textsf{OCB3}, admit efficient
-context discovery attacks; the preimage character of the notion is what the
-root tag preimage analysis addresses.
-
-The preimage resistance of \HTW{} (ePre, above) is the tag-level preimage
-notion that the \cite{MLGR23} context discoverability notion is the
-ciphertext-level counterpart of; the two are distinct, and \TW{} is shown
-to satisfy both (\Cref{thm:epre,thm:cdy-full}).

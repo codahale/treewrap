@@ -7,9 +7,8 @@ lifted public permutation model: real encryption and verification interfaces are
 compared with ideal random and replay interfaces, first in the multi-user
 setting and then in the single-user all-in-one AE setting. For the digest-like
 tag claim, the same construction is viewed through the root tag wrapper
-$\HTW$: adversaries supply full inputs, candidate openings, or target
-ciphertexts, and the games ask whether the root tag collides, can be hit as a
-preimage, or supports another valid decrypting context. We instantiate these
+$\HTW$: adversaries supply full inputs or candidate openings, and the games ask
+whether the root tag collides or can be hit as a preimage. We instantiate these
 games for \TW{} (\Cref{sec:games-pp,sec:mu-setting}), define the intermediate
 random oracle world through which every bound is first proved
 (\Cref{sec:ro-model}), and fix the resource accounting that all later bounds
@@ -51,11 +50,6 @@ these games and are discussed in \Cref{sec:limitations}.
         distinct committed inputs.
       & \Cref{cor:cmtds4,cor:committing-combined}
       & Capacity lift, root collision \\
-    $\mathsf{CDY}^\ast$
-      & Given a target ciphertext and revealed context components, find the
-        missing context components under which it decrypts.
-      & \Cref{thm:cdy-full}
-      & Capacity lift, root preimage, hidden-component guess \\
     \bottomrule
   \end{tabular}
   \caption{Proof obligations and the dominant loss shapes used for \TW{}.
@@ -70,9 +64,9 @@ probabilistic accounting lemmas for key tests, leaf tag collisions, and root tag
 guesses. \Cref{sec:aead-security} uses those facts directly for the random
 oracle mu-ind bound. \Cref{sec:root-tag-hash-security} then uses the same
 structural facts to build a chronological sequence of final root candidates and
-apply a single root tag hash bound; the hash, committing, and context
-discoverability theorems differ only in which collision or preimage event is
-reduced to that candidate sequence. Finally, \Cref{app:flat-sponge-lift}
+apply a single root tag hash bound; the hash and committing theorems differ
+only in which collision or preimage event is reduced to that candidate sequence.
+Finally, \Cref{app:flat-sponge-lift}
 transfers the random oracle bounds to the public permutation games defined
 below.
 
@@ -88,10 +82,10 @@ ideal interface specified by the game and the public primitive interface is
 $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$. The simulator
 $\Sim^{\ROflat}$ together with its inverse $\Sim^{-1,\ROflat}$ is fixed in
 \Cref{app:flat-sponge-lift}; both directions share an internal lazy table
-for the random oracle $\ROflat$ of \Cref{sec:ro-model}. The hash,
-committing, and context discoverability games below are one-world success
-probabilities in the real public permutation world. For them, the simulator
-appears only in the later lift from the intermediate random oracle model.
+for the random oracle $\ROflat$ of \Cref{sec:ro-model}. The hash and committing
+games below are one-world success probabilities in the real public permutation
+world. For them, the simulator appears only in the later lift from the
+intermediate random oracle model.
 
 \paragraph{Validity convention.}
 All construction interface inputs are checked against \TW{}'s public
@@ -177,32 +171,6 @@ $\Advcmtds{\ell}_\TW(\mathcal{A})$. The CMTs-$\ell$ (encryption) game has
 the adversary output the $s$ tuples alone and returns $1$ iff the
 encryptions $\Enc_{K_i}[\pi](N_i,A_i,M_i)$ are all equal; its advantage is
 $\Advcmts{\ell}_\TW(\mathcal{A})$.
-
-\paragraph{Context discoverability.}
-The \cite[Fig.~5]{MLGR23} context discoverability game
-(\Cref{sec:commit-defs}) is a ciphertext-level preimage notion, distinct
-from the preimage resistance of $\HTW$ above. A query-independent selector
-chooses a valid target ciphertext and a hidden decryption context, then
-reveals the context components named by a target specifier $\mathsf{ts}$.
-The adversary sees the target ciphertext and the revealed components, and
-wins by finding the missing components of a context under which the
-ciphertext decrypts. Formally, for valid selector $S$:
-\begin{align*}
-  &\pi \sample \Perm(\bits^{1600}), \quad
-   (C^*, \mathsf{rev}) \sample S[\pi], \\
-  &(K, N, A) \sample \mathcal{A}^{\pi,\, \pi^{-1}}(C^*, \mathsf{rev}), \\
-  &\text{return $0$ if $(K,N,A)$ is outside the domain,} \\
-  &\qquad\text{or if $(K,N,A)$ disagrees with $\mathsf{rev}$ on its
-    $\mathsf{ts}$-components}, \\
-  &\text{return } \bigl[\Dec_{K}[\pi](N, A, C^*) \neq \bot\bigr].
-\end{align*}
-The restricted advantage $\Advcdy_\TW(\mathcal{A})$ is measured against
-every valid query-independent selector $S$, matching
-$\mathsf{CDY}^\ast[\mathsf{ts}]$; in particular, it is no larger than the
-success probability against any fixed valid selector. At
-$\mathsf{ts} = \{n,a\}, \{k,a\}, \{k,n\}$, this gives the per-component
-variants $\mathsf{CDY}^\ast_k, \mathsf{CDY}^\ast_n,
-\mathsf{CDY}^\ast_a$.
 
 \subsection{Multi-User Setting}
 \label{sec:mu-setting}
@@ -415,16 +383,12 @@ computations contribute to each count.
   sequence. Valid AE-style non-replay verification computations are
   counted whether they accept or reject; replay-table verification hits
   are transcript-consistency checks and are not charged to $N$ or to the
-  verification-tag terms. In the hash, committing, and context discoverability
-  games there is no adversary
+  verification-tag terms. In the hash and committing games there is no adversary
   construction oracle: for the $\HTW$ collision game, $N$ counts the $s$
   deterministic encryptions on the submitted inputs (and the one or two
   encryptions of the second-preimage and preimage games); for
   CMTDs-$\ell$, $N$ counts only the deterministic decryption checks
-  performed by the challenger on the common ciphertext; for the
-  context discoverability game, $N$ counts the worst-case selector's
-  encryption producing $C^*$ together with the single deterministic
-  decryption check the challenger performs on $C^*$; while for the
+  performed by the challenger on the common ciphertext; while for the
   CMTs-$\ell$ source games of
   \Cref{cor:committing-combined}, $N$ counts only the deterministic
   encryption checks actually used by the challenger to compare the $s$
@@ -458,8 +422,8 @@ computations contribute to each count.
   $\mathcal{B}$, and a cap on it. Distinct final leaf transcripts are
   generated by valid encryption computations, by valid AE-style
   verification computations (whether they accept or reject), and by
-  hash, committing, and context discoverability challenger
-  construction checks that pass the early validity checks.
+  hash and committing challenger construction checks that pass the early
+  validity checks.
 \end{description}
 
 For a byte string $X$,
@@ -471,8 +435,7 @@ counts the leaf chunks induced by a body byte string of length $\|X\|$.
 Thus $\nleaf$ is bounded by the sum of $\leaves(X)$ over the valid
 construction computations that create final leaf transcripts, where
 $X$ is the plaintext body for encryption computations and the submitted
-ciphertext body for verification and committing or context discoverability
-decryption checks.
+ciphertext body for verification and committing decryption checks.
 Each distinct final leaf transcript contains a final leaf duplex call
 counted in $N$, so $\nleaf(\mathcal{B}) \leq N$ unconditionally. The
 ratio $\nleaf/N$ is largest when most processed bytes lie in leaf

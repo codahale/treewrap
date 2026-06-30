@@ -18,8 +18,7 @@ lift, we prove concrete multi-user indistinguishability and derive all-in-one AE
 as its single-user corollary. We also prove collision, second-preimage, and
 preimage security for the root tag wrapper. Those hash-security bounds yield
 the AEAD-facing committing results, including full-input \textsf{CMTDs-4}
-security and context discoverability ($\mathsf{CDY}^\ast$), at a $128$-bit
-target for the implemented parameters.
+security, at a $128$-bit target for the implemented parameters.
 
 The implementation results show why the tree-hashing origin matters. Vectorized
 \texttt{amd64} and \texttt{arm64} implementations exploit the scalable leaf

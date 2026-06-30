@@ -17,9 +17,9 @@
   AEAD tags are often expected to be compact commitments to the full encryption
   context, an intuition reinforced by common experience with hash-based MACs
   such as HMAC. The AEAD literature has only recently begun to formalize this
-  expectation through notions such as committing security, context
-  discoverability, and encryptment, but standard deployed modes such as AES-GCM
-  and ChaCha20-Poly1305 do not provide it. We present \TW{}, a nonce-based
+  expectation through notions such as committing security and encryptment, but
+  standard deployed modes such as AES-GCM and ChaCha20-Poly1305 do not provide
+  it. We present \TW{}, a nonce-based
   authenticated encryption mode with associated data that adapts the
   KangarooTwelve tree-hashing pattern to keyed duplex encryption over
   \Keccakp{}. A serial root duplex binds the key, nonce, and associated data,
@@ -36,10 +36,10 @@
   authenticated encryption as the single-user corollary. We also prove that the
   wrapper returning the tag is a secure hash of the full context---collision-,
   second-preimage-, and preimage-resistant in the standard hash-function sense.
-  The same tag analysis gives the AEAD-facing committing results: full-input
-  \textsf{CMTDs-4} committing security and context discoverability
-  ($\mathsf{CDY}^\ast$). At the implemented parameters, all stated notions meet
-  a $128$-bit security target. Vectorized \texttt{amd64} and \texttt{arm64}
+  The same tag analysis gives the AEAD-facing committing results, including
+  full-input \textsf{CMTDs-4} committing security. At the implemented
+  parameters, all stated notions meet a $128$-bit security target. Vectorized
+  \texttt{amd64} and \texttt{arm64}
   implementations recover the scalable performance profile of the tree design:
   in bulk they exceed $16$\,Gbit/s, with the AVX-512 and \texttt{arm64} paths
   reaching $51$--$76\%$ of hardware-accelerated AES-128-GCM throughput.
@@ -50,7 +50,7 @@
 \input{sections/03-tw128}
 \input{sections/04-security-model}
 \input{sections/05-authenticated-encryption-security}
-\input{sections/06-root-tag-hash-security-committing-security-context-discoverability}
+\input{sections/06-root-tag-hash-security-committing-security}
 \input{sections/07-concrete-security-summary}
 \input{sections/08-performance}
 \input{sections/09-discussion}

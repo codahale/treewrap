@@ -2,8 +2,8 @@
 \label{sec:concrete-security}
 
 \Cref{sec:aead-security,sec:root-tag-hash-security} separate the security
-analysis into AEAD bounds and root tag hash, committing, and context
-discoverability bounds. This section instantiates those bounds at the
+analysis into AEAD bounds and root tag hash and committing bounds. This section
+instantiates those bounds at the
 implemented \TW{} parameters and records the single concrete work cap used
 throughout the paper.
 
@@ -15,7 +15,7 @@ The implemented parameters of \Cref{sec:params} fix
   k = c = \tauroot = \tauleaf = 256.
 \]
 Substituting into
-\Cref{cor:ae,thm:mu-ind,thm:coll,thm:asec,cor:cmtds4,thm:epre,thm:cdy-full}
+\Cref{cor:ae,thm:mu-ind,thm:coll,thm:asec,cor:cmtds4,thm:epre}
 gives the following closed-form bounds.
 
 \paragraph{All-in-one AE.}
@@ -98,14 +98,6 @@ CMTDs-4 statement of \cite{BH22}:
   + \frac{\Nprim + 1}{2^{256}}.
 \]
 
-\paragraph{Context discoverability \textnormal{(\cite{MLGR23})}.}
-\[
-  \Advcdy_\TW(\mathcal{A})
-  \;\leq\;
-  \frac{\Ntot(\Ntot + 1)}{2^{257}}
-  + \frac{2\Nprim + 2}{2^{256}}.
-\]
-
 \subsection{Concrete Security Claim}
 \label{sec:concrete-claim}
 
@@ -119,8 +111,7 @@ all-in-one AE (\Cref{cor:ae}), the \cite{RS04} hash security of
 $\HTW$---$s$-way collision resistance for every $s \geq 2$, always second-preimage
 resistance, and everywhere preimage resistance
 (\Cref{thm:coll,thm:asec,thm:epre})---the \cite{BH22}
-CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}), and \cite{MLGR23}
-$\mathsf{CDY}^\ast$ context discoverability (\Cref{thm:cdy-full}).
+CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}).
 \end{corollary}
 
 \begin{proof}
@@ -131,7 +122,7 @@ created-but-idle users need not contribute to $N$.
 
 At $\Ntot \leq 2^{63}$, the flat-sponge term and each birthday-scale
 root or leaf term at $s=2$ is at most a $2^{-131}$-scale term, while each
-linear root-preimage, hidden-component guessing, key-guessing, or
+linear root-preimage, key-guessing, or
 verification term with no factor $D$ is at most a $2^{-193}$-scale term.
 Thus the largest non-multi-user bound is the $s=2$ collision bound, which is below
 $4 \cdot 2^{-131} = 2^{-129}$; larger $s$ only decreases the
@@ -165,7 +156,6 @@ $\HTW$ collision (Coll) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 $\HTW$ second-preimage (aSec) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 $\HTW$ everywhere preimage (ePre) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 CMTDs-4 \cite{BH22} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
-$\mathsf{CDY}^\ast$ \cite{MLGR23} & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -179,10 +169,10 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
 \Cref{sec:concrete-claim} proves.
 
 \paragraph{At the concrete cap.}
-At $\Ntot \leq 2^{63}$, the single-user, hash, CMTDs-4, and
-$\mathsf{CDY}^\ast$ context discoverability bounds are dominated by the flat
-sponge loss, except when a root or leaf birthday term reaches the same
-$2^{-131}$ scale. The multi-user bound is the exception: its hybrid-induced
+At $\Ntot \leq 2^{63}$, the single-user, hash, and CMTDs-4 bounds are
+dominated by the flat sponge loss, except when a root or leaf birthday term
+reaches the same $2^{-131}$ scale. The multi-user bound is the exception: its
+hybrid-induced
 term $D\,\KeyGuess_k(\Nprim)$ can reach $2^{-130}$ at the extreme cap
 $D=\Nprim=2^{63}$. Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to
 at most $\rho \cdot 2^{63} = 167 \cdot 2^{63} < 2^{71}$ bytes of
@@ -215,9 +205,8 @@ duplex (\Cref{sec:params}).
 \item \emph{$\RootPre_\tau(Q) = (Q + 1) / 2^\tau$.} Tight at constants: a
   generic preimage search against a fixed $\tau$-bit target matches the
   per-query $2^{-\tau}$ rate. It is the root term of the everywhere
-  preimage (ePre), always second-preimage (aSec), and context discoverability
-  ($\mathsf{CDY}^\ast$) bounds, where the single fixed target yields a
-  linear term.
+  preimage (ePre) and always second-preimage (aSec) bounds, where the single
+  fixed target yields a linear term.
 \item \emph{Leaf tag collision $\Nleaf (\Nleaf - 1) / 2^{\tauleaf +
   1}$.} Tight for verification security: by reusing
   a nonce, an adversary detects a leaf tag birthday collision through the
