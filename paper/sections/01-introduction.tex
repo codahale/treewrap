@@ -161,13 +161,15 @@ unambiguous (\Cref{sec:tw128}).
 nonce-based AEAD security, committing security \cite{BH22}, and the hash
 notions of \cite{RS04}.
 \Cref{sec:tw128} specifies the \TW{} construction and parameters.
-\Cref{sec:security-model} fixes the public permutation games, intermediate
-random oracle model, resource accounting, and loss terms.
+\Cref{sec:security-model} fixes the scope of the security claims, the public
+permutation games, intermediate random oracle model, resource accounting, and
+loss terms.
 \Cref{sec:aead-security} proves multi-user indistinguishability and all-in-one
 AE security. \Cref{sec:root-tag-hash-security} proves root tag hash security
 and committing security, and
 \Cref{sec:concrete-security} summarizes the concrete bounds.
 \Cref{sec:performance} reports implementation performance, and
 \Cref{sec:discussion} compares \TW{} to prior AEAD and committing constructions
-and discusses limitations. The appendices collect structural lemmas, the flat
-sponge lift, vectorized kernel details, and test vectors.
+and discusses limitations outside the formal scope. The appendices collect
+structural lemmas, the flat sponge lift, vectorized kernel details, and test
+vectors.

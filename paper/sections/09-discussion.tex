@@ -152,20 +152,25 @@ well-scrutinized \Keccak{} permutation.
 \subsection{Limitations and Open Problems}
 \label{sec:limitations}
 
+\Cref{sec:security-model} states the formal scope of the security claims; this
+subsection discusses the consequences of the excluded settings and the
+corresponding open problems.
+
 \paragraph{Nonce misuse.}
-\TW{}'s AE and mu-ind bounds require nonce-respecting encryption queries, and the mode is
-not misuse-resistant: a repeated nonce reuses leaf keystream and breaks
-confidentiality, as for any online duplex stream cipher. Schemes such as
-AES-GCM-SIV \cite{GLL17}, in the deterministic/misuse-resistant lineage of
-\cite{RS06}, tolerate nonce repetition at the price of a second pass. A
-misuse-resistant variant of \TW{} is left open.
+As scoped in \Cref{sec:security-model}, \TW{}'s AE and mu-ind bounds require
+nonce-respecting encryption queries, and the mode is not misuse-resistant: a
+repeated nonce reuses leaf keystream and breaks confidentiality, as for any
+online duplex stream cipher. Schemes such as AES-GCM-SIV \cite{GLL17}, in the
+deterministic/misuse-resistant lineage of \cite{RS06}, tolerate nonce
+repetition at the price of a second pass. A misuse-resistant variant of \TW{}
+is left open.
 
 \paragraph{Unverified plaintext release.}
-The analysis assumes that plaintext is released only after the tag verifies. \TW{}
-is online and single-pass, so an implementation that streams decrypted leaf
-output before checking the root tag operates in the release-of-unverified-plaintext
-setting of \cite{ABLMMY14}, which our bounds do not cover; plaintext-awareness and
-\textsf{INT-RUP} security for \TW{} are unstudied.
+The security model requires plaintext release only after the tag verifies.
+\TW{} is online and single-pass, so an implementation that streams decrypted
+leaf output before checking the root tag operates in the
+release-of-unverified-plaintext setting of \cite{ABLMMY14}; plaintext-awareness
+and \textsf{INT-RUP} security for \TW{} are unstudied.
 
 \paragraph{Conservative lift.}
 Per-term tightness is itemized in \Cref{sec:bound-discussion}; one term is
