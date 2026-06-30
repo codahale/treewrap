@@ -181,9 +181,9 @@ primitive-interface queries. Define
 $\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ to run $\mathcal{A}$
 internally, answer each primitive-interface query by running the
 same simulator against direct finite-output queries to its own
-$\ROflat$ oracle, and forward construction interface queries (or, in
-the committing games, the final structured output)
-unchanged to the corresponding random oracle experiment. Then the
+$\ROflat$ oracle, forward construction interface queries unchanged in games
+with construction oracles, and forward the adversary's final structured output
+unchanged in the output-checked $\HTW$ hash and committing games. Then the
 simulator-world execution of $\mathcal{A}$ and the random oracle execution of
 $\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ have identical joint
 distributions, and
@@ -216,12 +216,13 @@ In the simulator-world execution, $\mathcal{A}$ sees construction
 answers from the selected game interface and public primitive answers
 from $(\Sim^{\ROflat}, \Sim^{-1,\ROflat})$. In the derived
 random oracle execution, $\mathcal{B}_{\mathrm{derived}}$ runs the
-same $\mathcal{A}$, forwards construction interface queries (or the
-final committing-game output) unchanged, and answers
+same $\mathcal{A}$, forwards construction interface queries or the final
+structured output required by the selected game unchanged, and answers
 primitive-interface queries by invoking the same simulator code with the same
-lazy $\ROflat$ table. The construction interface or committing challenger
-therefore receives the same forwarded inputs, the simulator receives the same
-primitive queries in the same order, and the lazy table supplies the same values.
+lazy $\ROflat$ table. The construction interface, hash challenger, or
+committing challenger therefore receives the same forwarded queries or final
+output, the simulator receives the same primitive queries in the same order, and
+the lazy table supplies the same values.
 The full views of $\mathcal{A}$ in the simulator-world execution and of
 $\mathcal{B}_{\mathrm{derived}}$ in the random oracle execution are identically
 distributed.
