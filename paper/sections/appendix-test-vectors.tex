@@ -7,7 +7,7 @@ strings for the long cases and the regeneration harness, is maintained with the
 reference implementation at \url{https://github.com/codahale/treewrap}.
 
 All byte strings are written in hexadecimal. For each vector we list the key
-$K$, nonce $N$, associated data $A$, message $M$, ciphertext $C$, and tag $T$;
+$K$, nonce $U$, associated data $A$, message $M$, ciphertext $C$, and tag $T$;
 the sealed output of encryption is $C \concat T$. The empty string is written
 $\varepsilon$. The parameters used below are $\rho = 167$ bytes,
 $\beta = 8183$ bytes, and $32$-byte keys, nonces, and tags. The leaf index is
@@ -34,7 +34,7 @@ result.
 \multicolumn{2}{@{}p{0.94\textwidth}@{}}{\textbf{Vector 1.}~ Empty associated data and empty message: the associated data and aggregation phases are both elided, and the root tag is emitted by the single closing message call with no leaves.} \\
 \midrule
   $K$ & \texttt{000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f} \\
-  $N$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
+  $U$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
   $A$ & $\varepsilon$ \\
   $M$ & $\varepsilon$ \\
   $C$ & $\varepsilon$ \\
@@ -50,7 +50,7 @@ result.
 \multicolumn{2}{@{}p{0.94\textwidth}@{}}{\textbf{Vector 2.}~ Multi-block associated data with an empty message: the associated data spans two rate blocks and no message bytes are processed.} \\
 \midrule
   $K$ & \texttt{000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f} \\
-  $N$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
+  $U$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
   $A$ & 168 bytes, SHA-256\newline \texttt{4c7d125a3488a7603e2f403f0010a6060b8321b60b0fd2471120ae627bbe759a} \\
   $M$ & $\varepsilon$ \\
   $C$ & $\varepsilon$ \\
@@ -66,7 +66,7 @@ result.
 \multicolumn{2}{@{}p{0.94\textwidth}@{}}{\textbf{Vector 3.}~ Empty associated data and a single-block message: the root message phase only, no leaves.} \\
 \midrule
   $K$ & \texttt{000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f} \\
-  $N$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
+  $U$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
   $A$ & $\varepsilon$ \\
   $M$ & \texttt{1f30415263748596a7b8c9daebfc0d1e2f405162738495a6b7c8d9eafb0c1d2e} \\
   $C$ & \texttt{676a1441e20daea0f1ee4571ee4543842c946d59e0d3df6f1dd2f92dc4f876aa} \\
@@ -82,7 +82,7 @@ result.
 \multicolumn{2}{@{}p{0.94\textwidth}@{}}{\textbf{Vector 4.}~ Empty associated data and a two-block message: the root keystream is chained across two rate blocks.} \\
 \midrule
   $K$ & \texttt{000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f} \\
-  $N$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
+  $U$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
   $A$ & $\varepsilon$ \\
   $M$ & 168 bytes, SHA-256\newline \texttt{4c7d125a3488a7603e2f403f0010a6060b8321b60b0fd2471120ae627bbe759a} \\
   $C$ & 168 bytes, SHA-256\newline \texttt{df3f0a98a91a69ed474edbc52e0dc1d8e54bfd6fc514966ce7b878d48be0bf9a} \\
@@ -98,7 +98,7 @@ result.
 \multicolumn{2}{@{}p{0.94\textwidth}@{}}{\textbf{Vector 5.}~ A message of exactly one chunk: the root is full, there is still no leaf, and the aggregation phase is elided so the closing root message call emits the tag.} \\
 \midrule
   $K$ & \texttt{000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f} \\
-  $N$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
+  $U$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
   $A$ & $\varepsilon$ \\
   $M$ & 8183 bytes, SHA-256\newline \texttt{6532a370a4ab6b5f4094dd8a6016512ab8e8416abe910bc1a0b532979224151d} \\
   $C$ & 8183 bytes, SHA-256\newline \texttt{8d58f8aa3413ea0ba1b8cc3ed4e9a334521d8dafe9694a0661fb8251049907e9} \\
@@ -114,7 +114,7 @@ result.
 \multicolumn{2}{@{}p{0.94\textwidth}@{}}{\textbf{Vector 6.}~ A message of one chunk and one further byte: one root chunk and one leaf, exercising leaf tag aggregation.} \\
 \midrule
   $K$ & \texttt{000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f} \\
-  $N$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
+  $U$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
   $A$ & $\varepsilon$ \\
   $M$ & 8184 bytes, SHA-256\newline \texttt{c4c383bca0808e2ce44d481ddfe56efdcd7a147dcd5a14c898ef5423f2604cd7} \\
   $C$ & 8184 bytes, SHA-256\newline \texttt{ef1b2f7607ade503ab497fc61e62cef2b44c6328fa06e499718eb7da5fdd04d3} \\
@@ -130,7 +130,7 @@ result.
 \multicolumn{2}{@{}p{0.94\textwidth}@{}}{\textbf{Vector 7.}~ A multi-leaf message of two chunks and one further byte: the full tree path with two leaves.} \\
 \midrule
   $K$ & \texttt{000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f} \\
-  $N$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
+  $U$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
   $A$ & $\varepsilon$ \\
   $M$ & 16367 bytes, SHA-256\newline \texttt{17e31f3700d0602aab8a686024ecc05b8192e80a531483c67dd90d5a26557c5e} \\
   $C$ & 16367 bytes, SHA-256\newline \texttt{6d83d8fbdc2a7c2ef590d29a36527a45019e50d1f8c8db037959081685a46908} \\
@@ -146,7 +146,7 @@ result.
 \multicolumn{2}{@{}p{0.94\textwidth}@{}}{\textbf{Vector 8.}~ Multi-block associated data with a short message: the associated data blocks dominate the cost.} \\
 \midrule
   $K$ & \texttt{000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f} \\
-  $N$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
+  $U$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\
   $A$ & 337 bytes, SHA-256\newline \texttt{04ca7b24930bc6b5fe8b95ff1eb0933907657c1283cc3a7e69c5f7f02220f281} \\
   $M$ & \texttt{1f30415263748596a7b8c9daebfc0d1e} \\
   $C$ & \texttt{0dd615a0a05ed82a78c3999b9e80cbed} \\
@@ -162,7 +162,7 @@ result.
 \multicolumn{2}{@{}p{0.94\textwidth}@{}}{\textbf{Vector 9.}~ An all-ones key and nonce with a multi-chunk message.} \\
 \midrule
   $K$ & \texttt{ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff} \\
-  $N$ & \texttt{ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff} \\
+  $U$ & \texttt{ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff} \\
   $A$ & 168 bytes, SHA-256\newline \texttt{4c7d125a3488a7603e2f403f0010a6060b8321b60b0fd2471120ae627bbe759a} \\
   $M$ & 8184 bytes, SHA-256\newline \texttt{c4c383bca0808e2ce44d481ddfe56efdcd7a147dcd5a14c898ef5423f2604cd7} \\
   $C$ & 8184 bytes, SHA-256\newline \texttt{49818c320ab282296639798d840cbd60751e1623f449dcbf9423371d44145dfb} \\

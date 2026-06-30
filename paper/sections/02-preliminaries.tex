@@ -173,23 +173,25 @@ random oracle proofs throughout the paper.
 A \emph{nonce-based authenticated encryption scheme with associated
 data} (AEAD scheme) is a pair $\SE = (\Enc, \Dec)$ of deterministic
 algorithms with associated key space $\mathcal{K} \subseteq (\bits^8)^*$,
-nonce space $\mathcal{N} \subseteq (\bits^8)^*$, associated data space
+nonce space $\mathcal{U} \subseteq (\bits^8)^*$, associated data space
 $\mathcal{A} \subseteq (\bits^8)^*$, message space $\mathcal{M} \subseteq
 (\bits^8)^*$, and ciphertext space $\mathcal{C} \subseteq (\bits^8)^*$. The
-encryption algorithm $\Enc : \mathcal{K} \times \mathcal{N} \times
+encryption algorithm $\Enc : \mathcal{K} \times \mathcal{U} \times
 \mathcal{A} \times \mathcal{M} \to \mathcal{C}$ produces a ciphertext
-$C = \Enc_K(N, A, M)$. The decryption algorithm $\Dec : \mathcal{K}
-\times \mathcal{N} \times \mathcal{A} \times \mathcal{C} \to
+$C = \Enc_K(U, A, M)$. The decryption algorithm $\Dec : \mathcal{K}
+\times \mathcal{U} \times \mathcal{A} \times \mathcal{C} \to
 \mathcal{M} \cup \{\bot\}$ returns either a plaintext or the
 rejection symbol $\bot$. The \emph{tag length in bytes} is the constant
-$\|\Enc_K(N, A, M)\| - \|M\|$, fixed by the scheme.
+$\|\Enc_K(U, A, M)\| - \|M\|$, fixed by the scheme.
+We write nonce values as $U$ to keep $N$ available for the construction-cost
+resource variable used in the concrete bounds.
 In this generic syntax, $C$ denotes the full AEAD ciphertext, including
 any tag material. The \TW{} algorithm section (\Cref{sec:tw128}) writes this same value as
 $C \concat T$, with $C$ the ciphertext body and $T$ the root tag.
 
 \paragraph{Correctness.}
-For every $(K, N, A, M) \in \mathcal{K} \times \mathcal{N} \times
-\mathcal{A} \times \mathcal{M}$, $\Dec_K(N, A, \Enc_K(N, A, M)) = M$.
+For every $(K, U, A, M) \in \mathcal{K} \times \mathcal{U} \times
+\mathcal{A} \times \mathcal{M}$, $\Dec_K(U, A, \Enc_K(U, A, M)) = M$.
 
 \paragraph{All-in-one AE.}
 We use the all-in-one authenticated encryption notion of \cite{RS06},
@@ -222,7 +224,7 @@ outputs a guess $b'$ and wins if $b' = b$.
 \paragraph{Game and advantage.}
 The game $\mathsf{G}^{\mathsf{mu\text{-}ind}}_\SE(\mathcal{A})$ of
 \cite[Fig.~3]{BT16} samples $b \sample \bits$ and maintains a user
-counter $v$, a set $V$ of $(d, N)$ pairs already used by encryption,
+counter $v$, a set $V$ of $(d, U)$ pairs already used by encryption,
 and a set $W$ of recorded encryption tuples; its $\mathsf{New}$,
 $\mathsf{Enc}$, and $\mathsf{Vf}$ oracles, together with the public
 primitive interface---the real permutation when $b = 1$ and the
@@ -253,7 +255,7 @@ simulator in the ideal world).
 Nonce uniqueness is enforced per user via the set $V$: the same nonce
 may appear under distinct users but not twice under the same user.
 This is strictly weaker than the global nonce-uniqueness requirement
-that would force each nonce value $N$ to appear under at most one user.
+that would force each nonce value $U$ to appear under at most one user.
 
 \subsection{Committing Notions and Root Tag Hash Security}
 \label{sec:commit-defs}
@@ -271,26 +273,26 @@ analysis in \Cref{sec:root-tag-hash-security}.
 
 \paragraph{What-is-committed functions.}
 For $\ell \in \{1, 3, 4\}$, the \emph{what-is-committed} function
-$\WiC_\ell$ projects an encryption input $(K, N, A, M) \in \mathcal{K}
-\times \mathcal{N} \times \mathcal{A} \times \mathcal{M}$ to the
+$\WiC_\ell$ projects an encryption input $(K, U, A, M) \in \mathcal{K}
+\times \mathcal{U} \times \mathcal{A} \times \mathcal{M}$ to the
 portion it should commit:
 \[
 \begin{aligned}
-  \WiC_1(K, N, A, M) &= K, \\
-  \WiC_3(K, N, A, M) &= (K, N, A), \\
-  \WiC_4(K, N, A, M) &= (K, N, A, M).
+  \WiC_1(K, U, A, M) &= K, \\
+  \WiC_3(K, U, A, M) &= (K, U, A), \\
+  \WiC_4(K, U, A, M) &= (K, U, A, M).
 \end{aligned}
 \]
 
 \paragraph{CMTDs-$\ell$ and CMTs-$\ell$ games.}
 For $s \geq 2$, \cite[Fig.~5]{BH22} defines the $s$-way committing
-games on tuples $(K_i, N_i, A_i, M_i)_{i=1}^s$ with pairwise distinct
+games on tuples $(K_i, U_i, A_i, M_i)_{i=1}^s$ with pairwise distinct
 $\WiC_\ell$-images, all entries in the scheme's syntactic domain and
 none equal to $\bot$. The $s$-way CMTDs-$\ell$ (decryption) game has
 the adversary output a ciphertext $C$ alongside the tuples and returns
-$1$ if $\Dec_{K_i}(N_i, A_i, C) = M_i$ for every $i$; the $s$-way
+$1$ if $\Dec_{K_i}(U_i, A_i, C) = M_i$ for every $i$; the $s$-way
 CMTs-$\ell$ (encryption) game has the adversary output the tuples alone
-and returns $1$ if all encryptions $\Enc_{K_i}(N_i, A_i, M_i)$ are
+and returns $1$ if all encryptions $\Enc_{K_i}(U_i, A_i, M_i)$ are
 equal. Advantages $\Advcmtds{\ell}_\SE(\mathcal{A})$ and
 $\Advcmts{\ell}_\SE(\mathcal{A})$ are the probabilities that the
 adversary wins the respective game; the parameter $s$ is suppressed
@@ -301,14 +303,14 @@ with the public permutation lift deferred to that section.
 
 \begin{definition}[Root tag wrapper]
 \label{def:htw}
-For every \TW{} encryption input $X = (K,N,A,M)$ in the scheme domain,
+For every \TW{} encryption input $X = (K,U,A,M)$ in the scheme domain,
 define the root tag wrapper by
 \[
-  \HTW(K,N,A,M) = T
+  \HTW(K,U,A,M) = T
   \quad\text{where}\quad
-  \Enc_K(N,A,M) = C \concat T.
+  \Enc_K(U,A,M) = C \concat T.
 \]
-We also write $\HTW(X)$ for $\HTW(K,N,A,M)$. Equivalently, \HTW{} runs
+We also write $\HTW(X)$ for $\HTW(K,U,A,M)$. Equivalently, \HTW{} runs
 \TW{} encryption and discards the ciphertext body.
 \end{definition}
 
@@ -334,7 +336,7 @@ security notions of \cite{RS04}, over the \TW{} input domain:
 Their advantages $\AdvColl_\TW$, $\AdvaSec_\TW$, $\AdvePre_\TW$ are the
 respective success probabilities, instantiated for \TW{} in
 \Cref{sec:games-pp}. Coll is the binding property and ePre the preimage
-property of the tag taken as a compact commitment to $(K, N, A, M)$---the
+property of the tag taken as a compact commitment to $(K, U, A, M)$---the
 two properties a cryptographic hash commitment provides. Of the \cite{RS04}
 second-preimage notions, collision resistance already implies the
 everywhere and average-case forms (eSec and Sec), so we prove the
@@ -353,7 +355,7 @@ For the D-notions we use:
   \mathsf{CMTDs}\text{-}\ell \text{ for } \ell \in \{1, 3\}
 \]
 (both immediate: pairwise distinct keys ($\ell = 1$) or pairwise
-distinct $(K, N, A)$ triples ($\ell = 3$) are \emph{a fortiori} pairwise
+distinct $(K, U, A)$ triples ($\ell = 3$) are \emph{a fortiori} pairwise
 distinct full tuples, so every CMTDs-$\ell$ winner is a CMTDs-4 winner).
 The E-notions are bounded directly in \Cref{cor:committing-combined} by
 the same final-root candidate-collision argument, rather than through an

@@ -55,7 +55,7 @@ the parallelism degree is fixed by the mode instance or otherwise shared by the
 communicating parties.
 
 We prove that the wrapper $\HTW$ returning the root tag is a secure hash of the
-full $(K, N, A, M)$ input in the sense of \cite{RS04}, and use the same root tag
+full $(K, U, A, M)$ input in the sense of \cite{RS04}, and use the same root tag
 analysis to obtain the AEAD-facing committing results. We also prove ordinary
 AEAD security: in the public permutation model,
 \TW{} has a concrete multi-user indistinguishability bound \cite{BT16}, with
@@ -80,7 +80,7 @@ hardware-accelerated AES-128-GCM throughput (\Cref{sec:performance}).
   changing ciphertexts or tags.
 
 \item \textbf{Digest-like commitment.} We prove that the wrapper $\HTW$
-  returning the root tag is a secure hash of the full $(K, N, A, M)$ input in
+  returning the root tag is a secure hash of the full $(K, U, A, M)$ input in
   the sense of \cite{RS04}: collision-, second-preimage-, and
   preimage-resistant (\Cref{thm:coll,thm:asec,thm:epre}). Thus the
   authentication tag behaves like the compact digest practitioners often expect
@@ -147,7 +147,7 @@ wire format (\Cref{sec:compare-sponge}).
 hash over the same permutation. \TW{} adopts its choice of permutation and
 final-node/leaf split and adapts them to authenticated encryption: each leaf
 chunk is encrypted and tagged independently, leaf tags replace unkeyed chaining
-values, and the root is keyed by $(K, N)$. The construction also inherits
+values, and the root is keyed by $(K, U)$. The construction also inherits
 KangarooTwelve's short-message behavior: inputs fitting in one chunk use only
 the root duplex. Because \TW{} has a fixed two-level topology with independently
 keyed, indexed leaves and phase-separated duplex calls, it does not need

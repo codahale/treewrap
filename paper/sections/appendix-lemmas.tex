@@ -156,14 +156,14 @@ $r = 1344$ and $\rho_{\max}(\padtenone, r) = r - 2 = 1342$ bits, the
 maximum byte-aligned input is $\rho = 167$ bytes
 (\Cref{sec:params}), giving a worst-case duplex-call input of $8 \cdot
 167 + 4 = 1340 \leq 1342$ bits. The two initialization calls are
-shorter still: $|\prfxroot \concat K \concat N| + 4 = 8
+shorter still: $|\prfxroot \concat K \concat U| + 4 = 8
 \cdot (6 + 32 + 32) + 4 = 564$ bits and $|\prfxleaf \concat
-K \concat N \concat \langle j \rangle_8| + 4 = 8 \cdot (6 + 32 + 32 +
+K \concat U \concat \langle j \rangle_8| + 4 = 8 \cdot (6 + 32 + 32 +
 8) + 4 = 628$ bits. \cite[Lemmas~3 and~4]{BDPV11} therefore apply
 independently to every \TW{} duplex object.
 
 The root duplex is initialized by absorbing $\prfxroot
-\concat K \concat N$ under \siginit (\Cref{alg:enc}), then
+\concat K \concat U$ under \siginit (\Cref{alg:enc}), then
 absorbs the associated data blocks under \sigadmore /
 \sigadlast, the root ciphertext blocks in the message phase under
 \sigmsgmore / \sigmsglast, and the leaf tag aggregation
@@ -171,7 +171,7 @@ blocks under \sigaggmore / \sigagglast. By the
 duplex-to-sponge equality, every root duplex output is the sponge
 function evaluated on the root transcript prefix accumulated up to the
 relevant output point. The same holds for each leaf duplex,
-initialized by $\prfxleaf \concat K \concat N \concat
+initialized by $\prfxleaf \concat K \concat U \concat
 \langle j \rangle_8$ and absorbing only its own ciphertext blocks in the
 message phase. In decryption and verification, \Cref{alg:dec} absorbs the
 submitted ciphertext blocks before the root tag comparison, so the same
@@ -202,8 +202,8 @@ ending at a construction transcript lookup point, of one of the following
 two call languages.
 \begin{itemize}
 \item A root transcript starts with
-  $(\prfxroot \concat K \concat N,\siginit)$, with fixed-width fields
-  $K \in \bits^k$ and $N \in \bits^\nu$. It then absorbs the
+  $(\prfxroot \concat K \concat U,\siginit)$, with fixed-width fields
+  $K \in \bits^k$ and $U \in \bits^\nu$. It then absorbs the
   associated data byte string (only when the associated data is
   nonempty; the phase is otherwise elided, \Cref{sec:enc}), the root
   ciphertext byte string, and the aggregation byte string (only when
@@ -217,7 +217,7 @@ two call languages.
   $\sigadmore/\sigadlast$, $\sigmsgmore/\sigmsglast$, and
   $\sigaggmore/\sigagglast$.
 \item A leaf-$j$ transcript starts with
-  $(\prfxleaf \concat K \concat N \concat \langle j \rangle_8,\siginit)$,
+  $(\prfxleaf \concat K \concat U \concat \langle j \rangle_8,\siginit)$,
   where $1 \leq j < 2^{64}$ and the fields have fixed width. It then
   absorbs the leaf ciphertext byte string under
   $\sigmsgmore/\sigmsglast$, using the same block rule.
@@ -413,10 +413,10 @@ trailing zero bits introduced by step~(2) together with the closing
 $1$ of step~(1). For \TW{} with $r = r_{\max}$, step~(2) appends an
 empty string and step~(3) strips zero trailing zeros and the closing
 $1$, so the net effect of steps~(1) and~(3) is to map a native flattened
-input $U = \mathsf{raw\_flat}(X)$ to $U \concat 1 \concat 0^q$. Any
+input $W = \mathsf{raw\_flat}(X)$ to $W \concat 1 \concat 0^q$. Any
 string in this image has a unique inverse: $q$ is the number of trailing
 zero bits, the preceding bit is the inserted $1$, and deleting this
-suffix recovers $U$.
+suffix recovers $W$.
 
 Injectivity of $\flatmap$ on well-formed typed \TW{} prefixes then
 follows from \Cref{lem:transcript-inj}: distinct well-formed typed
@@ -430,7 +430,7 @@ $\badkey$.
 
 The bridge injectivity established here underlies Opening Triple
 Separation (\Cref{cor:triple-sep}, \Cref{sec:cmtds3}): distinct
-$(K, N, A)$ triples yield distinct bridged final root transcripts.
+$(K, U, A)$ triples yield distinct bridged final root transcripts.
 
 \begin{corollary}[Output-Point Separation]
 \label{cor:output-sep}
@@ -450,7 +450,7 @@ instance and the $4$-bit suffix of its final call:
 \end{itemize}
 For any two such prefixes whose bridged flattened inputs are equal, the
 separation of \Cref{lem:transcript-inj} recovers the same duplex
-instance, leaf index $j$ when present, $(K, N)$ pair, output-point
+instance, leaf index $j$ when present, $(K, U)$ pair, output-point
 class, and duplex-call sequence. Equivalently, any two distinct counted
 transcript prefixes already differ in one of these recovered fields, and
 hence in their flattened inputs.
@@ -461,10 +461,10 @@ hence in their flattened inputs.
 from equality of bridged inputs, after which \Cref{lem:transcript-inj}
 recovers the duplex-call sequence and its per-call
 $(\sigma, \sigph)$ pairs. The first call's $\sigma$ is
-$\prfxroot \concat K \concat N$ for root instances and
-$\prfxleaf \concat K \concat N \concat \langle j \rangle_8$ for leaf
+$\prfxroot \concat K \concat U$ for root instances and
+$\prfxleaf \concat K \concat U \concat \langle j \rangle_8$ for leaf
 instances, with fixed-width fields, so it fixes the instance type (by
-$\prfxroot$ vs $\prfxleaf$), the $(K, N)$ pair, and the leaf index $j$;
+$\prfxroot$ vs $\prfxleaf$), the $(K, U)$ pair, and the leaf index $j$;
 within each instance type the phase suffixes are pairwise distinct, so the
 recovered instance type together with the final-call suffix fixes the
 output-point class, and each prefix therefore lies in exactly one class.
@@ -484,19 +484,19 @@ $Y = \flatmap(X)$, the raw flattened prefix of $X$ parses as a
 well-formed \TW{} transcript prefix in the class $\mathcal{C}$ listed in
 \Cref{tab:keyed-twout}, and the first call of $X$ contains the
 candidate key $K$ in the fixed-width root field
-$\prfxroot \concat K \concat N$ or leaf field
-$\prfxleaf \concat K \concat N \concat \langle j \rangle_8$. If no
+$\prfxroot \concat K \concat U$ or leaf field
+$\prfxleaf \concat K \concat U \concat \langle j \rangle_8$. If no
 such prefix exists, $\KeyedTWOut(Y) = \bot$. In particular, inputs with
 the right final suffix but a malformed phase order, noncanonical block
 partition, malformed aggregation string, or out-of-range leaf index are
 outside the well-formed language and decode to $\bot$. A non-$\bot$
-decoding always fixes the candidate key $K$ and nonce $N$ in the
+decoding always fixes the candidate key $K$ and nonce $U$ in the
 fixed-width initialization field. It fixes the associated data $A$ only
 for root prefixes whose recovered phase order determines the complete AD
 string: a final AD prefix, or any later root message or aggregation
 prefix, with absence of AD calls determining $A=\varepsilon$. We use the
 key projection $(K,\mathcal{C})$ throughout. When a game hides a single
-context component $Z \in \{K,N,A\}$, write $\KeyedTWOut_Z(Y)$ for the
+context component $Z \in \{K,U,A\}$, write $\KeyedTWOut_Z(Y)$ for the
 decoded value of that component when it is determined, and $\bot$
 otherwise.
 \end{definition}
@@ -587,8 +587,8 @@ of \Cref{tab:keyed-twout} for key $K$. Then:
 By bridge injectivity (\Cref{lem:bridge-decode}) and Transcript
 Injectivity (\Cref{lem:transcript-inj}), a bridged input $\flatmap(X)$
 determines the native flattened prefix and hence the first duplex call
-$\prfxroot \concat K \concat N$ or
-$\prfxleaf \concat K \concat N \concat \langle j \rangle_8$, in
+$\prfxroot \concat K \concat U$ or
+$\prfxleaf \concat K \concat U \concat \langle j \rangle_8$, in
 particular its fixed-width key field $K$. \emph{(1)} If
 $\flatmap(X) = \flatmap(X')$ with key fields $K_0$ and $K_1$ then
 $K_0 = K_1$, so distinct keys give disjoint address sets. \emph{(2)}
@@ -869,7 +869,7 @@ encryption query.
 \paragraph{First root keystream block.}
 The first root keystream block, when present, is produced by the root
 duplex after the initialization call $\prfxroot \concat K
-\concat N$ and any AD absorption (elided when $A = \varepsilon$, in
+\concat U$ and any AD absorption (elided when $A = \varepsilon$, in
 which case the \siginit call itself emits the first root keystream
 block). Since the nonce-respecting adversary never repeats
 a nonce, no previous encryption query can have used the same root
@@ -883,7 +883,7 @@ point and there is nothing to prove for that output.
 \paragraph{First leaf keystream block.}
 For each leaf chunk $j \geq 1$, the first leaf keystream block is
 produced after the initialization call $\prfxleaf \concat
-K \concat N \concat \langle j \rangle_8$. The prefix separates leaves
+K \concat U \concat \langle j \rangle_8$. The prefix separates leaves
 from the root, the nonce separates this encryption query from all
 previous encryption queries, and $\langle j \rangle_8$ separates
 leaves within this query. Hence every first leaf keystream transcript
@@ -945,7 +945,7 @@ output points (separated by the \sigaggmore vs
 the same aggregation transcript (or, for $n = 0$, the same root
 ciphertext), the full root transcript also
 contains the root initialization $\prfxroot \concat K
-\concat N$, and nonce uniqueness separates that initialization from
+\concat U$, and nonce uniqueness separates that initialization from
 all previous encryption queries. The final root tag transcript is
 therefore fresh, and its $\tauroot$-bit $\ROflat$ output is uniform
 independently of the conditioned information.
@@ -1109,11 +1109,11 @@ fixed and is uniform independently of $G_{\mathcal{C}}$.
 
 After the cutoff, if it exists, class $\mathcal{C}$ contributes no accepting
 non-replay submission. Let the cutoff encryption query return
-$(N_e,A_e,C_e,T_e)$. Any later verification submission in the same
+$(U_e,A_e,C_e,T_e)$. Any later verification submission in the same
 final root transcript class has, by the final-root determinacy of
 \Cref{lem:transcript-inj} and Leaf-Transcript Recovery
 (\Cref{lem:leaf-recovery}) under the absence of
-$\badleaf$, the same $(N,A,C)$ as that encryption
+$\badleaf$, the same $(U,A,C)$ as that encryption
 computation. If the submitted tag is $T_e$, the tuple is a recorded
 encryption tuple and the verification is a replay; if the submitted tag
 is not $T_e$, the final tag comparison fails.

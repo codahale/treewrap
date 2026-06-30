@@ -27,7 +27,7 @@ and \Cref{cor:committing-combined} forwards the remaining \cite{BH22}
 committing notions to the same root-collision bound.
 
 The instantiations rest on two structural separation facts, recorded
-first: distinct contexts $(K, N, A)$ reach distinct final root
+first: distinct contexts $(K, U, A)$ reach distinct final root
 transcripts regardless of the leaf tags they aggregate (Opening Triple
 Separation, \Cref{cor:triple-sep}), and---absent a collision among those
 leaf tags---so do distinct full inputs (Final-Root Input Separation,
@@ -37,7 +37,7 @@ leaf tags---so do distinct full inputs (Final-Root Input Separation,
 
 \begin{proposition}[Opening Triple Separation]
 \label{cor:triple-sep}
-If two \TW{} root computations have distinct $(K, N, A)$ triples, then
+If two \TW{} root computations have distinct $(K, U, A)$ triples, then
 their bridged final root transcript inputs under $\flatmap(\cdot)$ are
 distinct, regardless of whether each computation is an encryption or
 a decryption check on a common ciphertext.
@@ -56,12 +56,12 @@ calls in the recovered sequence are unambiguously identified. The
 aggregation phase is present exactly when $n \geq 1$, and
 $n = \leaves(C)$ is determined by the common ciphertext, so the two
 recovered sequences either both carry an aggregation phase or both omit
-it; either way the recovery of $(K, N, A)$ below uses only the
+it; either way the recovery of $(K, U, A)$ below uses only the
 \siginit and AD calls, which precede any message or aggregation block.
 
 Equality of the recovered sequences forces equality of the \siginit
-call, whose $\sigma$ is $\prfxroot \concat K \concat N$ with
-fixed-width $K$ and $N$, hence $K_i = K_j$ and $N_i = N_j$. It also
+call, whose $\sigma$ is $\prfxroot \concat K \concat U$ with
+fixed-width $K$ and $U$, hence $K_i = K_j$ and $U_i = U_j$. It also
 forces equality of the recovered AD subsequences. By the AD bullet of
 \Cref{lem:transcript-inj} the associated data phase contributes a
 $\sigadlast$-tagged block exactly when the associated data is nonempty,
@@ -72,7 +72,7 @@ equality; hence either both are empty, giving $A_i = A_j = \varepsilon$,
 or both are nonempty, in which case the phase-recovery sub-claim of
 \Cref{lem:transcript-inj} inverts the $\rho$-byte-block partition map on
 the AD byte string and equal AD $\sigma$-block sequences imply
-$A_i = A_j$. In all cases $(K_i, N_i, A_i) = (K_j, N_j, A_j)$,
+$A_i = A_j$. In all cases $(K_i, U_i, A_i) = (K_j, U_j, A_j)$,
 contradicting the hypothesis of distinct triples.
 \end{proof}
 
@@ -86,17 +86,17 @@ Let $\badleaf^\star$ be the event that two distinct construction-generated
 final leaf transcripts receive the same $\tauleaf$-bit $\RF$ projection.
 On $\neg\badleaf^\star$, if two \TW{} construction computations reach
 final root transcripts with $\flatmap(R) = \flatmap(R')$, then they share
-the same context $(K, N, A)$ and the same full ciphertext $C$.
+the same context $(K, U, A)$ and the same full ciphertext $C$.
 Equivalently, on $\neg\badleaf^\star$ computations with distinct
-$(K, N, A, C)$ reach distinct bridged final root transcripts.
+$(K, U, A, C)$ reach distinct bridged final root transcripts.
 \end{proposition}
 
 \begin{proof}
 By bridge injectivity (\Cref{lem:bridge-decode}),
 $\flatmap(R) = \flatmap(R')$ gives equal native flattened final-root
 inputs. \Cref{lem:transcript-inj} then recovers the same root
-initialization $\prfxroot \concat K \concat N$---hence the same $K$ and
-$N$---the same associated data blocks---hence the same $A$---the same root
+initialization $\prfxroot \concat K \concat U$---hence the same $K$ and
+$U$---the same associated data blocks---hence the same $A$---the same root
 ciphertext chunk, and the same leaf count and ordered leaf tag sequence.
 Under $\neg\badleaf^\star$, Leaf-Transcript Recovery
 (\Cref{lem:leaf-recovery}) identifies the equal leaf tag sequences with
@@ -228,10 +228,10 @@ $\Pr[\badleaf^\star] \leq \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal
 so it remains to bound the win under $\neg\badleaf^\star$. After rejecting
 unless the $s$ output inputs are pairwise distinct and in the \TW{}
 domain, the challenger performs $s$ deterministic encryptions
-$\Enc_{K_i}^{\RO}(N_i,A_i,M_i)$, reaching $R_1,\dots,R_s$, all carrying a
-common root tag $T$ on a win. Pairwise distinct tuples $(K_i,N_i,A_i,M_i)$
-have pairwise distinct $(K_i,N_i,A_i,C_i)$: two tuples differing in their
-context already differ in $(K,N,A)$, while two sharing a context but
+$\Enc_{K_i}^{\RO}(U_i,A_i,M_i)$, reaching $R_1,\dots,R_s$, all carrying a
+common root tag $T$ on a win. Pairwise distinct tuples $(K_i,U_i,A_i,M_i)$
+have pairwise distinct $(K_i,U_i,A_i,C_i)$: two tuples differing in their
+context already differ in $(K,U,A)$, while two sharing a context but
 differing in the message yield distinct ciphertexts, since for a fixed
 context encryption maps the message to the ciphertext bijectively. So on
 $\neg\badleaf^\star$ Final-Root Input Separation
@@ -265,7 +265,7 @@ $\Pr[\badleaf^\star] \leq \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal
 so it remains to bound the win under $\neg\badleaf^\star$. Encrypting $X'$
 reaches a final root transcript $R'$. If $\flatmap(R') = \flatmap(R_X)$
 then on $\neg\badleaf^\star$ Final-Root Input Separation
-(\Cref{prop:final-root-sep}) makes $X$ and $X'$ share $(K,N,A,C)$, hence
+(\Cref{prop:final-root-sep}) makes $X$ and $X'$ share $(K,U,A,C)$, hence
 the same message by determinism, so $X' = X$---a contradiction; thus
 $R' \neq R_X$. The challenge root tag
 $T = \lfloor \RF(R_X) \rfloor_{\tauroot}$ is exposed to $\mathcal{B}$, and
@@ -290,8 +290,8 @@ random oracle model (\Cref{sec:ro-model}),
 \begin{proof}
 Run the random oracle preimage game for the query-independent target
 $T^*$, which is independent of $\ROflat$. After rejecting unless the
-output input $X = (K,N,A,M)$ is in the \TW{} domain, the challenger
-performs one encryption $\Enc_{K}^\RO(N,A,M)$, reaching a final root
+output input $X = (K,U,A,M)$ is in the \TW{} domain, the challenger
+performs one encryption $\Enc_{K}^\RO(U,A,M)$, reaching a final root
 transcript $R$. A win means $\HTW(X) = T^*$, i.e.\ the root tag
 $\lfloor \ROflat(\flatmap(R)) \rfloor_{\tauroot}$ at $R$ equals the fixed
 target $T^*$. The Root Tag Hash Bound (\Cref{lem:root-tag-hash}, part~2,
@@ -331,7 +331,7 @@ $\qRO(\mathcal{B})$ and $\nleaf(\mathcal{B})$, so the monotone form of
 \Cref{cor:lift-application} gives the stated bound. The $s$ colliding
 inputs may differ in their messages, hence in their ciphertext bodies; the
 $\LeafColl$ term accounts for the only way two distinct inputs sharing a
-context $(K, N, A)$ can reach the same final root transcript---a collision
+context $(K, U, A)$ can reach the same final root transcript---a collision
 among the leaf tags it absorbs---while distinct contexts already reach
 distinct final root transcripts by Opening Triple Separation
 (\Cref{cor:triple-sep}).
@@ -413,12 +413,12 @@ that target and drops the exponent from $\tauroot(s-1)$ to $\tauroot$.
 \begin{corollary}[Root Tag as a Compact Commitment]
 \label{cor:tag-commitment}
 The wrapper $\HTW$ is a secure hash of the full encryption context
-$(K, N, A, M)$ in the sense of \cite{RS04}: collision-resistant
+$(K, U, A, M)$ in the sense of \cite{RS04}: collision-resistant
 (\Cref{thm:coll}), always second-preimage-resistant (\Cref{thm:asec}), and
 everywhere preimage-resistant (\Cref{thm:epre}). Under the implemented
 parameters and work cap $\Ntot \leq 2^{63}$, all three advantages are at most
 $2^{-128}$ (\Cref{cor:concrete-security}), so the single $\tauroot$-bit
-root tag is a binding compact commitment to $(K, N, A, M)$ with everywhere
+root tag is a binding compact commitment to $(K, U, A, M)$ with everywhere
 preimage resistance, native to the mode.
 \end{corollary}
 
@@ -451,11 +451,11 @@ adversary $\mathcal{B}$ in the \TW{} random oracle model
 \begin{proof}
 Run the random oracle CMTDs-4 game. After rejecting on any failed syntax,
 message-length, or pairwise-full-input check, the challenger performs $s$
-deterministic decryption checks $\Dec_{K_i}^\RO(N_i,A_i,C \concat T)$ on
+deterministic decryption checks $\Dec_{K_i}^\RO(U_i,A_i,C \concat T)$ on
 the one common body $C \concat T$, reaching $R_1,\dots,R_s$. On a winning
-execution the tuples $(K_i,N_i,A_i,M_i)$ are pairwise distinct, and since
+execution the tuples $(K_i,U_i,A_i,M_i)$ are pairwise distinct, and since
 all checks decrypt the common body, determinism of $\Dec$ makes the
-triples $(K_i,N_i,A_i)$ pairwise distinct---equal triples would return
+triples $(K_i,U_i,A_i)$ pairwise distinct---equal triples would return
 equal messages, hence equal tuples. By Opening Triple Separation
 (\Cref{cor:triple-sep}) the candidates $\flatmap(R_1),\dots,\flatmap(R_s)$
 are pairwise distinct (leaf tag collisions cannot merge them), and every
@@ -479,13 +479,13 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
 \end{corollary}
 
 \begin{proof}
-A CMTDs-4 winner exhibits $s$ distinct inputs $(K_i,N_i,A_i,M_i)$ whose
+A CMTDs-4 winner exhibits $s$ distinct inputs $(K_i,U_i,A_i,M_i)$ whose
 encryptions share one common ciphertext $C \concat T$; in particular they
 share the tag $T$, so they are an $s$-way collision of $\HTW$, and
 $\Advcmtds{4}_\TW \leq \AdvColl_\TW$. For the displayed no-$\LeafColl$
 bound, use the dedicated root-collision derivation of \Cref{thm:cmtds4-ro}
 for this all-bodies-equal case, lifted by \Cref{cor:lift-application}: the
-single shared body $C$ forces the triples $(K_i,N_i,A_i)$ pairwise
+single shared body $C$ forces the triples $(K_i,U_i,A_i)$ pairwise
 distinct---by Opening Triple Separation (\Cref{cor:triple-sep})---so a
 leaf tag collision cannot merge two openings and no $\LeafColl$ term
 arises.
@@ -531,7 +531,7 @@ checks, which supply the candidate final-root transcripts
 encryption and decryption checks alike). On a winning execution all
 $s$ encryptions are equal, hence of equal length and with one common root
 tag $T$. Pairwise $\WiC_1$-distinctness gives pairwise distinct keys,
-pairwise $\WiC_3$-distinctness gives pairwise distinct $(K,N,A)$ triples,
+pairwise $\WiC_3$-distinctness gives pairwise distinct $(K,U,A)$ triples,
 and pairwise $\WiC_4$-distinctness gives pairwise distinct full inputs; in
 the last case, equal triples and equal ciphertexts would decrypt
 deterministically to equal messages, contradicting full-input

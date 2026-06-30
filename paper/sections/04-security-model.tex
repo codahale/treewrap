@@ -37,7 +37,7 @@ these games and are discussed in \Cref{sec:limitations}.
       & \Cref{thm:mu-ind,cor:ae}
       & Capacity lift, key guess, leaf collision, tag guess \\
     $\HTW$ collision
-      & Find distinct full inputs $(K,N,A,M)$ with the same root tag.
+      & Find distinct full inputs $(K,U,A,M)$ with the same root tag.
       & \Cref{thm:coll}
       & Capacity lift, root collision, leaf collision \\
     $\HTW$ preimage
@@ -91,13 +91,13 @@ intermediate random oracle model.
 All construction interface inputs are checked against \TW{}'s public
 syntax and domain before any construction computation or
 construction-internal primitive lookup is performed. An encryption input
-is valid when $N \in \bits^\nu$, $A$ is a byte string with
+is valid when $U \in \bits^\nu$, $A$ is a byte string with
 $\|A\| \leq A_{\max}$, and $M$ is a byte string with
 $\|M\| \leq M_{\max}$. A verification or decryption input is valid when
-$N \in \bits^\nu$, $A$ is a byte string with $\|A\| \leq A_{\max}$, and
+$U \in \bits^\nu$, $A$ is a byte string with $\|A\| \leq A_{\max}$, and
 the full ciphertext parses as $C \concat T$ with $\|C\| \leq M_{\max}$
 and $T \in \bits^{\tauroot}$. In the hash and committing games, each
-submitted input $(K, N, A, M)$ must be a valid encryption input including
+submitted input $(K, U, A, M)$ must be a valid encryption input including
 $K \in \bits^k$, and a submitted CMTDs ciphertext must be a valid
 verification/decryption ciphertext. Invalid encryption queries
 are rejected and not recorded, invalid verification queries return $0$,
@@ -110,15 +110,15 @@ passes this validity check and any game-specific nonce or user check.
 The real all-in-one AE game additionally samples
 $K \sample \bits^k$ and exposes the construction oracles $\Enc_K[\pi]$
 (the \TW{} encryption algorithm of \Cref{alg:enc} with the sampled
-$\pi$) and $\Ver_K[\pi]$, defined by $\Ver_K[\pi](N, A, C, T) = 1$ if
-$\Dec_K[\pi](N, A, C \concat T) \neq \bot$ and $0$ otherwise.
+$\pi$) and $\Ver_K[\pi]$, defined by $\Ver_K[\pi](U, A, C, T) = 1$ if
+$\Dec_K[\pi](U, A, C \concat T) \neq \bot$ and $0$ otherwise.
 The all-in-one authenticated encryption game~\cite{RS06} replaces the
 construction interface by the ideal pair $(\Rand, \Replay)$. On each
-accepted encryption query $(N,A,M)$, $\Rand$ samples a uniformly
+accepted encryption query $(U,A,M)$, $\Rand$ samples a uniformly
 random byte string of length $\|M\| + \tauroot/8$, parses it as
-$C \concat T$ with $T \in \bits^{\tauroot}$, records $(N,A,C,T)$, and
+$C \concat T$ with $T \in \bits^{\tauroot}$, records $(U,A,C,T)$, and
 returns $C \concat T$. The oracle $\Replay$ returns $1$ exactly on
-recorded tuples $(N,A,C,T)$ and $0$ otherwise. The adversary is
+recorded tuples $(U,A,C,T)$ and $0$ otherwise. The adversary is
 nonce-respecting on encryption queries.
 \[
   \Advae_\TW(\mathcal{A}) =
@@ -139,10 +139,10 @@ returns $1$ iff they are pairwise distinct, in the \TW{} domain, and share
 a root tag:
 \begin{align*}
   &\pi \sample \Perm(\bits^{1600}), \quad
-   (K_i,N_i,A_i,M_i)_{i=1}^s \sample \mathcal{A}^{\pi,\, \pi^{-1}}, \\
+   (K_i,U_i,A_i,M_i)_{i=1}^s \sample \mathcal{A}^{\pi,\, \pi^{-1}}, \\
   &\text{return $0$ unless the inputs are pairwise distinct and in the \TW{} domain}, \\
-  &\text{return } \bigl[\HTW(K_1,N_1,A_1,M_1) = \cdots =
-     \HTW(K_s,N_s,A_s,M_s)\bigr],
+  &\text{return } \bigl[\HTW(K_1,U_1,A_1,M_1) = \cdots =
+     \HTW(K_s,U_s,A_s,M_s)\bigr],
 \end{align*}
 with advantage $\AdvColl_\TW(\mathcal{A}) = \Pr[\text{the game returns }
 1]$; no nonce uniqueness is imposed. The always second-preimage (aSec)
@@ -161,15 +161,15 @@ query-independent targets.
 The \cite{BH22} committing games are instantiated as in
 \Cref{sec:commit-defs}, with no challenger-sampled key. The $s$-way
 CMTDs-$\ell$ (decryption) game has the adversary output a ciphertext
-$C \concat T$ and $s$ tuples $(K_i,N_i,A_i,M_i)$ with pairwise distinct
+$C \concat T$ and $s$ tuples $(K_i,U_i,A_i,M_i)$ with pairwise distinct
 $\WiC_\ell$-images, and returns $1$ iff
-$\Dec_{K_i}[\pi](N_i,A_i,C \concat T) = M_i$ for every $i$, with the eager
+$\Dec_{K_i}[\pi](U_i,A_i,C \concat T) = M_i$ for every $i$, with the eager
 length rejection justified by \Cref{alg:dec}
-($\Dec_K(N,A,C \concat T)$ returns $\bot$ or a message of length $\|C\|$);
+($\Dec_K(U,A,C \concat T)$ returns $\bot$ or a message of length $\|C\|$);
 its advantage is
 $\Advcmtds{\ell}_\TW(\mathcal{A})$. The CMTs-$\ell$ (encryption) game has
 the adversary output the $s$ tuples alone and returns $1$ iff the
-encryptions $\Enc_{K_i}[\pi](N_i,A_i,M_i)$ are all equal; its advantage is
+encryptions $\Enc_{K_i}[\pi](U_i,A_i,M_i)$ are all equal; its advantage is
 $\Advcmts{\ell}_\TW(\mathcal{A})$.
 
 \subsection{Multi-User Setting}
@@ -191,18 +191,18 @@ experiment and let the $d$-th $\mathsf{New}$ call activate $K_d$; inactive
 indices are never valid users.
 
 The mu-ind construction oracles inherit the validity convention of
-\Cref{sec:games-pp}. The encryption oracle on input $(d, N, A, M)$
-rejects, without recording, if $(N,A,M)$ is outside the \TW{} encryption
-domain, if $d \notin \{1, \dots, v\}$, or if $(d, N) \in V$; otherwise
-it sets $C = \Enc_{K_d}[\pi](N, A, M)$ when $b = 1$, and samples a
+\Cref{sec:games-pp}. The encryption oracle on input $(d, U, A, M)$
+rejects, without recording, if $(U,A,M)$ is outside the \TW{} encryption
+domain, if $d \notin \{1, \dots, v\}$, or if $(d, U) \in V$; otherwise
+it sets $C = \Enc_{K_d}[\pi](U, A, M)$ when $b = 1$, and samples a
 uniformly random byte string $C$ of length $\|M\| + \tauroot/8$ when
 $b = 0$. The game records
-$(d, N)$ in $V$ and $(d, N, A, C)$ in $W$, and returns $C$. The
-verification oracle on input $(d, N, A, C)$ rejects if $d \notin
-\{1, \dots, v\}$ or if $(N,A,C)$ is not a valid \TW{}
-verification/decryption input; if $(d, N, A, C) \in W$ it returns
+$(d, U)$ in $V$ and $(d, U, A, C)$ in $W$, and returns $C$. The
+verification oracle on input $(d, U, A, C)$ rejects if $d \notin
+\{1, \dots, v\}$ or if $(U,A,C)$ is not a valid \TW{}
+verification/decryption input; if $(d, U, A, C) \in W$ it returns
 $\mathsf{true}$; if $b = 0$ it returns $\mathsf{false}$; otherwise it
-returns $[\Dec_{K_d}[\pi](N, A, C) \neq \bot]$. Nonce uniqueness is
+returns $[\Dec_{K_d}[\pi](U, A, C) \neq \bot]$. Nonce uniqueness is
 enforced per user by the set $V$.
 
 After querying these oracles, $\mathcal{A}$ outputs $b' \in \bits$.

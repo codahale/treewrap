@@ -40,7 +40,7 @@ not broad AE security claims. \TW{}'s concrete bounds appear in
 \label{tab:scheme-compare}
 \begin{tabular}{@{}llccccc@{}}
 \toprule
-Scheme & Primitive & Par. & K/N/T & AD & Misuse & CMT \\
+Scheme & Primitive & Par. & K/U/T & AD & Misuse & CMT \\
 \midrule
 \TW{}                        & \Keccakp   & yes & $32/32/32$ & yes & no  & $128$ b \\
 Ascon-128a \cite{DEMS21}     & Ascon-$p$ ($320$ b) & no  & $16/16/16$ & yes & no  & $\approx64$ b \\
@@ -81,7 +81,7 @@ tags in index order and then absorbs the leaf count $\langle n \rangle_8$
 by mode initialization and domain separation rather than by a tree coding. The
 transcript separation lemmas make this explicit
 (\Cref{lem:transcript-inj,cor:output-sep}). The committing bounds do not depend
-on tree-coding soundness: distinct $(K,N,A)$ triples
+on tree-coding soundness: distinct $(K,U,A)$ triples
 already diverge before leaf aggregation (\Cref{cor:triple-sep}), and the leaf
 encoding enters the hash collision bound only through the explicit leaf tag
 collision term of \Cref{thm:coll}.
