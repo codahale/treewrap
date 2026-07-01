@@ -305,10 +305,11 @@ games on tuples $(K_i, U_i, A_i, M_i)_{i=1}^s$ with pairwise distinct
 $\WiC_\ell$-images, all entries in the scheme's syntactic domain and
 none equal to $\bot$. The $s$-way CMTDs-$\ell$ (decryption) game has
 the adversary output a ciphertext $C$ alongside the tuples and returns
-$1$ if $\Dec_{K_i}(U_i, A_i, C) = M_i$ for every $i$; the $s$-way
-CMTs-$\ell$ (encryption) game has the adversary output the tuples alone
-and returns $1$ if all encryptions $\Enc_{K_i}(U_i, A_i, M_i)$ are
-equal. Advantages $\Advcmtds{\ell}_\SE(\mathcal{A})$ and
+$1$ if $\Dec_{K_i}(U_i, A_i, C) = M_i$ for every $i$; the printed
+return line of \cite[Fig.~5]{BH22} writes $C_i$, but the game outputs a
+single ciphertext $C$. The $s$-way CMTs-$\ell$ (encryption) game has the
+adversary output the tuples alone and returns $1$ if all encryptions
+$\Enc_{K_i}(U_i, A_i, M_i)$ are equal. Advantages $\Advcmtds{\ell}_\SE(\mathcal{A})$ and
 $\Advcmts{\ell}_\SE(\mathcal{A})$ are the probabilities that the
 adversary wins the respective game; the parameter $s$ is suppressed
 from the notation when clear from context. The two-tuple case $s = 2$
@@ -337,8 +338,9 @@ for message franking. \TW{} ciphertexts are written $C \concat T$ with
 $T$ the $\tauroot$-bit root tag, and we capture this goal directly by
 treating \Cref{def:htw} as a hash function. Keyed by the permutation,
 this is a hash family, and we ask that it satisfy the hash-function
-security notions of \cite{RS04}, over the \TW{} input domain. For fixed
-byte lengths $a$ and $\mu$, write
+security notions of \cite{RS04}, over the \TW{} input domain, together
+with the local $s$-way multicollision extension used for the committing
+theorems. For fixed byte lengths $a$ and $\mu$, write
 \[
   \mathcal{X}_{a,\mu}
   =
@@ -349,7 +351,8 @@ $m_{a,\mu} = k + \nu + 8a + 8\mu$.
 \begin{description}
   \item[Collision resistance (Coll).] No adversary finds distinct inputs
     $X_1, \dots, X_s$ (any $s \geq 2$) with
-    $\HTW(X_1) = \cdots = \HTW(X_s)$.
+    $\HTW(X_1) = \cdots = \HTW(X_s)$. The case $s=2$ is the RS04 Coll
+    notion; larger $s$ is the corresponding multicollision extension.
   \item[Preimage resistance (Pre).] For fixed $a,\mu$, given
     $\HTW(X^*)$ for a uniform $X^* \sample \mathcal{X}_{a,\mu}$, no
     adversary finds any valid input $X$ with $\HTW(X) = \HTW(X^*)$.
