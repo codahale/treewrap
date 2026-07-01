@@ -1158,6 +1158,74 @@ $\sum_{\mathcal{C}} |G_{\mathcal{C}}| \leq \qv(\mathcal{B})$, and a
 union bound over the verification-first classes gives the claim.
 \end{proof}
 
+\begin{lemma}[\textsf{INT-RUP} Root Guessing]
+\label{lem:int-rup-root-guess}
+In the stopped single-key \TW{} random oracle
+encryption/plaintext-computing/verification interaction before
+$\badkey \cup \badleaf$, let $\forge$ be the event that some valid
+non-replay verification query accepts. Then
+\[
+  \Pr[\forge \text{ before } \badkey \cup \badleaf]
+  \leq \qv(\mathcal{B}) / 2^{\tauroot}.
+\]
+\end{lemma}
+
+\begin{proof}
+Throughout, a \emph{non-replay verification submission} means a valid
+non-replay verification query; invalid verification queries return $0$,
+perform no construction computation, realize no bridged final root
+input, and contribute to no set of guessed tags.
+
+Work in the game stopped at the first occurrence of
+$\badkey$ or $\badleaf$. A final root transcript class is
+\emph{tag-revealed} once an encryption query has returned the root tag
+for that class. If a non-replay verification submission belongs to a
+tag-revealed class, compare it with an encryption computation that
+revealed the class. The two computations are well-formed typed
+transcript prefixes with the same bridged final root input; by
+\Cref{lem:bridge-decode}, they have the same native flattened input.
+Then final-root determinacy (\Cref{lem:transcript-inj}) and
+Leaf-Transcript Recovery (\Cref{lem:leaf-recovery}) under
+$\neg\badleaf$ recover the same $(U,A,C)$. If the submitted tag is the
+revealed tag, the tuple is a replay-table hit; if it is any other tag,
+the final comparison rejects. Thus any accepting non-replay
+verification submission must lie in a class whose root tag has not yet
+been revealed by encryption.
+
+For tag-unrevealed classes, define an all-reject continuation:
+encryption and plaintext-computing queries are answered normally,
+replay verification queries accept normally, and each non-replay
+verification submission performs the same construction computation but
+returns reject to the adversary. Plaintext-computing queries may
+generate the same stream and leaf tag transcripts as decryption, but
+they do not reveal the final root tag value. Equivalently, the final
+root tag sample for a tag-unrevealed class can be deferred until it is
+first needed for an encryption answer or a verification comparison;
+this does not change any plaintext reply. By Output-Point Separation
+(\Cref{cor:output-sep}), the keystream values used to compute returned
+plaintext blocks are projections at stream output points, not at the
+final root tag output point.
+
+Fix a tag-unrevealed final root transcript class $\mathcal{C}$ and
+follow the all-reject path until the first later encryption query that
+reveals the class, if any. Let $G_{\mathcal{C}}$ be the set of distinct
+tags submitted by non-replay verification queries in class
+$\mathcal{C}$ before that cutoff. Before the cutoff, no encryption query
+has returned the class tag and no direct query has read the hidden-key
+root tag point without triggering $\badkey$. Conditioned on the
+all-reject path and on all lazy-table values except this final root tag
+projection, the correct tag for $\mathcal{C}$ is uniform in
+$\bits^{\tauroot}$ and independent of $G_{\mathcal{C}}$. The
+probability that any pre-cutoff verification submission in the class
+accepts is therefore at most $|G_{\mathcal{C}}|/2^{\tauroot}$.
+
+Each valid non-replay verification query contributes its submitted tag
+to at most one such set $G_{\mathcal{C}}$, and replay-table hits do not
+contribute. Thus
+$\sum_{\mathcal{C}} |G_{\mathcal{C}}| \leq \qv(\mathcal{B})$, and a
+union bound over tag-unrevealed classes gives the claim.
+\end{proof}
+
 \subsection{Mu-Ind Adjacent-Hybrid Lemma}
 
 The multi-user indistinguishability theorem (\Cref{thm:mu-ind}) telescopes a
