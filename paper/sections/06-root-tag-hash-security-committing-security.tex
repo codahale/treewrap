@@ -8,17 +8,17 @@ encryption: leaf tags play the role of chaining values, and the root emits the
 single tag returned by $\HTW$. The proof therefore tracks the final root inputs
 that can matter in the hash and committing games. The Root Tag Candidate
 Sequence lemma (\Cref{lem:root-candidate-seq}) collects those inputs into a
-chronological candidate sequence, and the Root Tag Hash Bound
-(\Cref{lem:root-tag-hash}) turns a collision or fixed-target preimage among the
+chronological candidate sequence, and the Root Tag Hash and Target-Hit Bound
+(\Cref{lem:root-tag-hash}) turns a collision or target hit among the
 candidates into the matching adaptive bound of \Cref{app:lemmas}, controlling
 the chance that distinct inputs land on the same $\tauroot$-bit root tag
 projection.
 
 The hash random oracle theorems---collision (\Cref{thm:coll-ro}) and
-everywhere preimage (\Cref{thm:epre-ro})---are then short instantiations,
-differing only in which case of the bound they invoke and in whether a leaf tag
-collision term is needed when colliding inputs may use different ciphertext
-bodies. CMTDs-4
+preimage (\Cref{thm:pre-ro,thm:epre-ro})---are then short instantiations,
+differing only in which case of the bound they invoke, whether the target is
+external or sampled from a fixed input slice, and whether a leaf tag collision
+term is needed when distinct inputs may use different ciphertext bodies. CMTDs-4
 (\Cref{thm:cmtds4-ro}) and the remaining committing notions reuse the collision
 case.
 \Cref{app:flat-sponge-lift} transfers each instance to the public
@@ -108,15 +108,15 @@ with the common root ciphertext chunk this gives the same full $C$.
 
 \begin{lemma}[Root Tag Candidate Sequence]
 \label{lem:root-candidate-seq}
-Consider a random oracle game of \Cref{sec:ro-model} in which the
-adversary $\mathcal{B}$ makes direct $\ROflat$ queries and the challenger
-runs $m \geq 1$ deterministic
-encryption or decryption checks, the $i$-th reaching a final root transcript $R_i$
-whose root tag is read by a single $\ROflat$ lookup at $\flatmap(R_i)$.
-Every execution then admits a chronological sequence of root tag inputs
+Consider a random oracle game of \Cref{sec:ro-model} in which the adversary
+$\mathcal{B}$ makes direct $\ROflat$ queries and the challenger runs
+$m \geq 1$ deterministic encryption or decryption checks at fixed points in
+the game, the $i$-th reaching a final root transcript $R_i$ whose root tag is
+read by a single $\ROflat$ lookup at $\flatmap(R_i)$. Every execution then
+admits a chronological sequence of root tag inputs
 such that
 \begin{enumerate}
-\item each distinct direct query whose input $Y$ decodes under
+\item each distinct direct query, when it is made, whose input $Y$ decodes under
   $\KeyedTWOut$ to a root tag output-point class---$\Rmsg^+$ (the final
   root message block, which carries the root tag only on the no-leaf path)
   or $\Rtag$ (the aggregated root tag)---is appended as a candidate before
@@ -124,9 +124,9 @@ such that
   computations also reach $\Rmsg^+$ with zero requested output before
   aggregation, so this predicate over-approximates the root tag candidate
   set, which only loosens the count;
-\item if the challenger reaches its checks, each $\flatmap(R_i)$ is in
-  the sequence, appended---if not already present---immediately before
-  the $i$-th root tag answer is sampled;
+\item if the challenger reaches its checks, each $\flatmap(R_i)$ is in the
+  sequence, appended---if not already present---immediately before the
+  $i$-th root tag answer is sampled;
 \item no candidate's $\ROflat$ value is read before its append step, so
   the sequence satisfies the predictability and unrevealed-value premises
   of \Cref{lem:adaptive-candidate};
@@ -136,18 +136,17 @@ such that
 \end{lemma}
 
 \begin{proof}
-The committing and hash (collision and everywhere preimage) games are keyless:
-all keys are adversary-supplied, so a direct
-query to a keyed transcript is one of
+The committing and hash games have no persistent challenger-sampled key: all
+keys are adversary-supplied except for the hidden source in the standard
+preimage game. A direct query to a keyed transcript is therefore one of
 $\mathcal{B}$'s visible $\ROflat$ queries counted in $\qRO(\mathcal{B})$,
-and there is no $\badkey$ event. No construction oracle runs while
-$\mathcal{B}$ issues its direct queries, so each direct-query candidate is
-first read no earlier than its append step. The append predicate depends
-on $Y$ alone through the exact decoder of \Cref{lem:bridge-decode}, which
-ignores the requested output length, and by Output-Point Separation
-(\Cref{cor:output-sep}) each input decodes to at most one output-point
-class; hence each distinct direct query contributes at most one
-candidate, giving~(1).
+not a separate construction query. Each direct-query candidate is appended
+before that direct query reads its value. The append predicate depends on $Y$
+alone through the exact decoder of \Cref{lem:bridge-decode}, which ignores the
+requested output length, and by Output-Point Separation
+(\Cref{cor:output-sep}) each input decodes to at most one output-point class;
+hence each distinct direct query contributes at most one candidate,
+giving~(1).
 
 If the challenger reaches its $m$ checks, append $\flatmap(R_i)$
 immediately before the $i$-th root tag answer is sampled, unless it is
@@ -163,15 +162,15 @@ append step, giving~(2) and~(3). At most $\qRO(\mathcal{B})$ direct
 candidates and $m$ challenger candidates are appended, giving~(4).
 \end{proof}
 
-\begin{lemma}[Root Tag Hash Bound]
+\begin{lemma}[Root Tag Hash and Target-Hit Bound]
 \label{lem:root-tag-hash}
 Consider a keyless \TW{} random oracle game (\Cref{sec:ro-model}) in
-which, after $\mathcal{B}$'s direct $\ROflat$ queries, the challenger runs
-deterministic encryption or decryption checks reaching final root
-transcripts, with win event $\mathsf{W}$. By the Root Tag Candidate
-Sequence lemma (\Cref{lem:root-candidate-seq}) the root tag inputs form a
-chronological candidate sequence meeting the premises of
-\Cref{lem:adaptive-candidate} with $\tau = \tauroot$. Writing
+which $\mathcal{B}$ makes direct $\ROflat$ queries and the challenger runs
+deterministic encryption or decryption checks reaching final root transcripts,
+with win event $\mathsf{W}$. By the Root Tag Candidate Sequence lemma
+(\Cref{lem:root-candidate-seq}) the root tag inputs form a chronological
+candidate sequence meeting the premises of \Cref{lem:adaptive-candidate} with
+$\tau = \tauroot$. Writing
 $\qRO = \qRO(\mathcal{B})$:
 \begin{enumerate}
 \item if $\mathsf{W}$ forces $s$ checks to reach pairwise distinct bridged
@@ -180,6 +179,10 @@ $\qRO = \qRO(\mathcal{B})$:
 \item if $\mathsf{W}$ forces a single check ($m = 1$) to carry a root tag
   equal to a target fixed independently of $\ROflat$, then
   $\Pr[\mathsf{W}] \leq \RootPre_{\tauroot}(\qRO)$;
+\item if the game first runs a designated source check, reveals its root tag,
+  and $\mathsf{W}$ forces one later check to reach a distinct bridged final
+  root transcript carrying that designated tag, then, with $m = 2$ checks,
+  $\Pr[\mathsf{W}] \leq \RootPre_{\tauroot}(\qRO)$.
 \end{enumerate}
 \end{lemma}
 
@@ -194,6 +197,13 @@ $\binom{\qRO + s}{s} \cdot 2^{-\tauroot(s-1)}
 \emph{(2)} The candidate hitting the fixed target is a preimage; the
 preimage case with $L = \qRO + 1$ gives
 $(\qRO + 1) \cdot 2^{-\tauroot} = \RootPre_{\tauroot}(\qRO)$.
+\emph{(3)} Let $j_0$ be the position of the designated source check. The
+later check is required to be a distinct bridged final root transcript, so it
+is a candidate position $j \neq j_0$ with the same $\tauroot$-bit projection.
+The candidate sequence has length at most $L = \qRO + 2$, and the
+second-preimage corollary of \Cref{lem:adaptive-candidate} gives
+$(L-1)2^{-\tauroot} = (\qRO+1)2^{-\tauroot}
+= \RootPre_{\tauroot}(\qRO)$.
 \end{proof}
 
 \subsection{Hash Random Oracle Bounds}
@@ -227,10 +237,62 @@ differing in the message yield distinct ciphertexts, since for a fixed
 context encryption maps the message to the ciphertext bijectively. So on
 $\neg\badleaf^\star$ Final-Root Input Separation
 (\Cref{prop:final-root-sep}) makes $\flatmap(R_1),\dots,\flatmap(R_s)$
-pairwise distinct. The Root Tag Hash Bound (\Cref{lem:root-tag-hash},
+pairwise distinct. The Root Tag Hash and Target-Hit Bound (\Cref{lem:root-tag-hash},
 part~1) bounds the win under $\neg\badleaf^\star$ by
 $\RootColl_{\tauroot}(\qRO(\mathcal{B}),s)$; adding $\Pr[\badleaf^\star]$
 gives the theorem.
+\end{proof}
+
+\begin{theorem}[Random Oracle Preimage Resistance of $\HTW$]
+\label{thm:pre-ro}
+Fix byte lengths $0 \leq a \leq A_{\max}$ and
+$0 \leq \mu \leq M_{\max}$, and let
+$m_{a,\mu}=k+\nu+8a+8\mu$. For every Pre adversary
+$\mathcal{B}$ against $\HTW$ on the fixed input slice
+$\mathcal{X}_{a,\mu}$ in the \TW{} random oracle model
+(\Cref{sec:ro-model}),
+\[
+\begin{aligned}
+  \AdvPreSlice{a}{\mu}_\RO(\mathcal{B})
+  \;\leq\;&
+  \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B})) \\
+  &+ \RootPre_{\tauroot}(\qRO(\mathcal{B}))
+  + 2^{\tauroot-m_{a,\mu}} .
+\end{aligned}
+\]
+\end{theorem}
+
+\begin{proof}
+Run the random oracle Pre game. The challenger samples
+$X^* \sample \mathcal{X}_{a,\mu}$, writes
+$X^*=(K^*,U^*,A^*,M^*)$, computes $T^*=\HTW(X^*)$, gives $T^*$ to
+$\mathcal{B}$, and later checks the output $X=(K,U,A,M)$. Let
+$\mathsf{same}$ be the event $X=X^*$. For a
+fixed random oracle table and fixed adversary coins, the adversary's output
+is a function of the $\tauroot$-bit challenge tag $T^*$, so over the
+uniform source $X^*$ it can equal $X^*$ with probability at most
+$2^{\tauroot}/2^{m_{a,\mu}}=2^{\tauroot-m_{a,\mu}}$. Hence
+$\Pr[\mathsf{same}] \leq 2^{\tauroot-m_{a,\mu}}$.
+
+It remains to bound winning executions with $X \neq X^*$. Let
+$\badleaf^\star$ be the event that two distinct construction-generated
+final leaf transcripts in the source and output checks receive the same
+$\tauleaf$-bit $\RF$ projection. By the leaf-collision bound of
+\Cref{lem:leaf-collision},
+\[
+  \Pr[\badleaf^\star]
+  \leq
+  \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B})).
+\]
+On $\neg\badleaf^\star$, the distinct tuples $X^*$ and $X$ have distinct
+final root transcripts: distinct contexts are separated by
+\Cref{cor:triple-sep}, while equal contexts and distinct messages produce
+distinct ciphertexts, and then \Cref{prop:final-root-sep} applies. A win
+with $X \neq X^*$ therefore forces the later output check to hit the
+designated source tag $T^*$ at a distinct bridged final root transcript.
+The sampled-source case of \Cref{lem:root-tag-hash} bounds this probability
+by $\RootPre_{\tauroot}(\qRO(\mathcal{B}))$. Adding the source-guess and
+leaf-collision events gives the theorem.
 \end{proof}
 
 \begin{theorem}[Random Oracle Everywhere Preimage Resistance of $\HTW$]
@@ -252,7 +314,7 @@ output input $X = (K,U,A,M)$ is in the \TW{} domain, the challenger
 performs one encryption $\Enc_{K}^\RO(U,A,M)$, reaching a final root
 transcript $R$. A win means $\HTW(X) = T^*$, i.e.\ the root tag
 $\lfloor \ROflat(\flatmap(R)) \rfloor_{\tauroot}$ at $R$ equals the fixed
-target $T^*$. The Root Tag Hash Bound (\Cref{lem:root-tag-hash}, part~2,
+target $T^*$. The Root Tag Hash and Target-Hit Bound (\Cref{lem:root-tag-hash}, part~2,
 with target $T^*$) gives
 $\AdvePre_\RO(\mathcal{B}) \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))$.
 \end{proof}
@@ -336,6 +398,34 @@ eSec. Applying this implication to the two-way collision bound of
 \Cref{cor:coll-rs04} gives the stated bound.
 \end{proof}
 
+\begin{theorem}[Preimage Resistance of $\HTW$]
+\label{thm:pre}
+Fix byte lengths $0 \leq a \leq A_{\max}$ and
+$0 \leq \mu \leq M_{\max}$, and let
+$m_{a,\mu}=k+\nu+8a+8\mu$. For every adversary against $\HTW$, with the
+resources of \Cref{sec:resources}, in the standard preimage (Pre) sense of
+\cite{RS04} on the fixed input slice $\mathcal{X}_{a,\mu}$,
+\[
+\begin{aligned}
+  \AdvPreSlice{a}{\mu}_\TW(\mathcal{A})
+  \;\leq\;&
+  \Lift_c(\Ntot)
+  + \LeafColl_{\tauleaf}(\Nprim+\Nleaf) \\
+  &+ \RootPre_{\tauroot}(\Nprim)
+  + 2^{\tauroot - m_{a,\mu}}.
+\end{aligned}
+\]
+\end{theorem}
+
+\begin{proof}
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+preimage game, the derived random oracle adversary $\mathcal{B}$ has
+$\qRO(\mathcal{B}) \leq \Nprim$ and
+$\nleaf(\mathcal{B}) \leq \Nleaf$. The random oracle bound of
+\Cref{thm:pre-ro} is nondecreasing in both resources, so the monotone form
+of \Cref{cor:lift-application} gives the stated bound.
+\end{proof}
+
 \begin{theorem}[Everywhere Preimage Resistance of $\HTW$]
 \label{thm:epre}
 For every target tag $T^* \in \bits^{\tauroot}$ fixed in advance and every
@@ -365,25 +455,29 @@ that target and drops the exponent from $\tauroot(s-1)$ to $\tauroot$.
 \label{cor:tag-commitment}
 The wrapper $\HTW$ is a secure hash of the full encryption context
 $(K, U, A, M)$ in the sense of \cite{RS04}: collision-resistant
-(\Cref{thm:coll}), second-preimage-resistant
+(\Cref{thm:coll}), preimage-resistant on each fixed input slice
+(\Cref{thm:pre}), second-preimage-resistant
 (\Cref{cor:second-preimage-rs04}), and everywhere preimage-resistant
 (\Cref{thm:epre}). Under the implemented
-parameters and work cap $\Ntot \leq 2^{63}$, all three advantages are at most
+parameters and work cap $\Ntot \leq 2^{63}$, these advantages are at most
 $2^{-128}$ (\Cref{cor:concrete-security}), so the single $\tauroot$-bit
-root tag is a binding compact commitment to $(K, U, A, M)$ with everywhere
-preimage resistance, native to the mode.
+root tag is a binding compact commitment to $(K, U, A, M)$ with standard and
+everywhere preimage resistance, native to the mode.
 \end{corollary}
 
 \begin{proof}
-Collision resistance is \Cref{thm:coll}, second-preimage resistance follows
-from collision resistance by \Cref{cor:second-preimage-rs04}, and everywhere
-preimage resistance is \Cref{thm:epre}; these guarantees quantify
-the adversary's success at the same $\tauroot$-bit projection of the final
-root transcript, and \Cref{cor:concrete-security} evaluates them at the
-implemented parameters. Binding (collision resistance) is the property a
-compact commitment must have, and everywhere preimage resistance certifies
-that the tag alone reveals no opening; together they are the properties of
-a hash-based commitment.
+Collision resistance is \Cref{thm:coll}; standard preimage resistance on
+fixed input slices is \Cref{thm:pre}; second-preimage resistance follows from
+collision resistance by \Cref{cor:second-preimage-rs04}; and everywhere
+preimage resistance is \Cref{thm:epre}. These guarantees quantify the
+adversary's success at the same $\tauroot$-bit projection of the final root
+transcript, and \Cref{cor:concrete-security} evaluates them at the
+implemented parameters. Binding is the compact-commitment property supplied
+by collision and second-preimage resistance. Standard preimage resistance is
+the property that a tag produced from a uniformly sampled fixed-length
+opening does not reveal an efficiently findable opening; everywhere preimage
+resistance is the corresponding fixed-target property for tags chosen
+independently of the primitive.
 \end{proof}
 
 \subsection{Committing Consequences}
@@ -411,7 +505,7 @@ triples $(K_i,U_i,A_i)$ pairwise distinct---equal triples would return
 equal messages, hence equal tuples. By Opening Triple Separation
 (\Cref{cor:triple-sep}) the candidates $\flatmap(R_1),\dots,\flatmap(R_s)$
 are pairwise distinct (leaf tag collisions cannot merge them), and every
-accepting check carries the common root tag $T$. The Root Tag Hash Bound
+accepting check carries the common root tag $T$. The Root Tag Hash and Target-Hit Bound
 (\Cref{lem:root-tag-hash}, part~1) gives
 $\Advcmtds{4}_\RO(\mathcal{B}) \leq \RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$.
 \end{proof}
@@ -498,7 +592,7 @@ construction-internal work counted in $N$ by \Cref{sec:resources}.
 
 By the Lift Application corollary (\Cref{cor:lift-application}) for the
 $X$ game, the derived random oracle adversary $\mathcal{B}$ has
-$\qRO(\mathcal{B}) \leq \Nprim$. The Root Tag Hash Bound
+$\qRO(\mathcal{B}) \leq \Nprim$. The Root Tag Hash and Target-Hit Bound
 (\Cref{lem:root-tag-hash}, part~1) then bounds its win by
 $\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$ in the random oracle model,
 which the lift transfers to the public permutation setting at $\Nprim$;

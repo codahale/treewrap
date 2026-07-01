@@ -32,7 +32,7 @@ supplies the key-field disjointness and renaming used by hidden-key
 encryption and verification accounting. The Adaptive Candidate node
 (\Cref{lem:adaptive-candidate}) is the generic probabilistic engine: it
 bounds the Leaf Tag Collision lemma (\Cref{lem:leaf-collision}) and,
-through the Root Tag Candidate Sequence and Root Tag Hash Bound
+through the Root Tag Candidate Sequence and Root Tag Hash and Target-Hit Bound
 (\Cref{lem:root-candidate-seq,lem:root-tag-hash}) of \Cref{sec:cmtds3},
 the root tag hash and committing proofs. The mu-ind proof reuses the
 same structural lemmas, adding freshness, key-test, leaf-collision, and
@@ -71,7 +71,7 @@ verification-first root guessing accounting.
     % Column 4: grouped proof spines.
     \node[group] (mi) at (11.4,  1.7) {Mu-ind\\ Accounting};
     \node[lemma] (rc) at (11.4, -0.5) {Root Tag\\ Candidate Seq.};
-    \node[lemma] (rh) at (11.4, -2.0) {Root Tag\\ Hash Bound};
+    \node[lemma] (rh) at (11.4, -2.0) {Root Tag\\ Hash/Target};
 
     % Column 5: consumers.
     \node[consumer] (c6) at (15.2,  1.7) {Mu-ind\\proof};
@@ -611,9 +611,10 @@ Consider any interaction with a lazy random oracle $\ROflat : \bits^* \to
 \bits^\infty$ that builds a sequence of distinct \emph{candidate} inputs
 $Y_1,\dots,Y_m$. The process may make arbitrary non-candidate oracle
 queries and may choose each candidate adaptively from the full prior
-transcript. Whenever a new candidate $Y_j$ is appended, two premises hold:
+transcript and private state sampled before the candidate's unread oracle
+value. Whenever a new candidate $Y_j$ is appended, two premises hold:
 \emph{predictability}---both the decision to append and the string $Y_j$
-are determined by the transcript preceding the append step---and
+are determined by the state preceding the append step---and
 \emph{unrevealed value}---no oracle lookup before the append step has
 requested a positive number of bits of $\ROflat(Y_j)$; zero-length lookups
 at $Y_j$ are permitted. Fix a projection length $\tau$, and suppose the
@@ -648,8 +649,8 @@ $\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$.
 \begin{proof}
 Both parts expose the interaction in chronological order and sample each
 candidate's $\ROflat$ value lazily at its append step, which the premises
-license: when $Y_j$ is appended its string is fixed by the prior
-transcript (predictability) and no bit of $\ROflat(Y_j)$ has yet been
+license: when $Y_j$ is appended its string is fixed by the prior state
+(predictability) and no bit of $\ROflat(Y_j)$ has yet been
 revealed (unrevealed value), so $\ROflat(Y_j)$ may be drawn then, uniform
 and independent of everything so far.
 

@@ -64,8 +64,8 @@ For integrity, the same root-centered structure gives
 \textsf{INT-RUP} security \cite{ABLMMY14}: even if an adversary can obtain
 unverified plaintexts, it cannot make verification accept a fresh ciphertext
 except within the same tag-guessing and collision terms.
-At the implemented parameters ($k = c = \tauroot = \tauleaf = 256$), the bounds
-meet a $128$-bit security target for adversaries running up to
+At the implemented parameters ($k = c = \nu = \tauroot = \tauleaf = 256$), the
+bounds meet a $128$-bit security target for adversaries running up to
 $\Ntot \leq 2^{63}$ \Keccakp{} calls---on the order of $2^{71}$ bytes of
 processed data. Optimized \texttt{amd64} and \texttt{arm64} implementations
 preserve the canonical transcript while evaluating leaf duplexes in batches; in
@@ -87,9 +87,9 @@ hardware-accelerated AES-128-GCM throughput (\Cref{sec:performance}).
   returning the root tag is a secure hash of the full $(K, U, A, M)$ input in
   the sense of \cite{RS04}: collision-, second-preimage-, and
   preimage-resistant
-  (\Cref{thm:coll,cor:second-preimage-rs04,thm:epre}). Thus the authentication
-  tag behaves like the compact digest practitioners often expect an AEAD tag to
-  be.
+  (\Cref{thm:coll,cor:second-preimage-rs04,thm:pre,thm:epre}). Thus the
+  authentication tag behaves like the compact digest practitioners often
+  expect an AEAD tag to be.
 
 \item \textbf{AEAD commitment consequences.} We instantiate the same root tag
   analysis in the existing AEAD vocabulary. The all-bodies-equal structure of

@@ -12,10 +12,10 @@ throughout the paper.
 
 The implemented parameters of \Cref{sec:params} fix
 \[
-  k = c = \tauroot = \tauleaf = 256.
+  k = c = \nu = \tauroot = \tauleaf = 256.
 \]
 Substituting into
-\Cref{cor:ae,thm:mu-ind,thm:int-rup,thm:coll,cor:second-preimage-rs04,cor:cmtds4,thm:epre}
+\Cref{cor:ae,thm:mu-ind,thm:int-rup,thm:coll,thm:pre,cor:second-preimage-rs04,cor:cmtds4,thm:epre}
 gives the following closed-form bounds.
 
 \paragraph{All-in-one AE.}
@@ -70,6 +70,22 @@ By \Cref{cor:second-preimage-rs04}, the standard and everywhere
 \cite{RS04} second-preimage advantages of $\HTW$ are bounded by the same
 $s=2$ collision expression above.
 
+\paragraph{Preimage resistance of $\HTW$.}
+For fixed byte lengths $a,\mu$, let
+$m_{a,\mu}=k+\nu+8a+8\mu$. By \Cref{thm:pre},
+\[
+\begin{aligned}
+  \AdvPreSlice{a}{\mu}_\TW(\mathcal{A})
+\leq\;&
+  \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{(\Nprim+\Nleaf)(\Nprim+\Nleaf-1)}{2^{257}} \\
+& + \frac{\Nprim + 1}{2^{256}}
+  + 2^{256 - m_{a,\mu}} .
+\end{aligned}
+\]
+Under the implemented parameters $\nu=256$, so the slice term is
+$2^{-256-8a-8\mu}$.
+
 \paragraph{$s$-way CMTDs-4 committing security.}
 For every $s \geq 2$, the all-bodies-equal special case drops the leaf
 tag term:
@@ -107,16 +123,17 @@ CMTDs-4 statement of \cite{BH22}:
 
 \begin{corollary}[Concrete \TW{} Security]
 \label{cor:concrete-security}
-Under the implemented parameters $k = c = \tauroot = \tauleaf = 256$, every
+Under the implemented parameters $k = c = \nu = \tauroot = \tauleaf = 256$, every
 adversary with work cap $\Ntot \leq 2^{63}$---and, in the multi-user case,
 user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
 \TW{}'s notions: multi-user indistinguishability (\Cref{thm:mu-ind}),
 all-in-one AE (\Cref{cor:ae}), \textsf{INT-RUP} integrity
 (\Cref{thm:int-rup}), the \cite{RS04} hash security of
 $\HTW$---$s$-way collision resistance for every $s \geq 2$, standard and
-everywhere second-preimage resistance inherited from collision resistance, and
-everywhere preimage resistance
-(\Cref{thm:coll,cor:second-preimage-rs04,thm:epre})---and the \cite{BH22}
+everywhere second-preimage resistance inherited from collision resistance,
+standard preimage resistance on every fixed input slice, and everywhere
+preimage resistance
+(\Cref{thm:coll,cor:second-preimage-rs04,thm:pre,thm:epre})---and the \cite{BH22}
 CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}).
 \end{corollary}
 
@@ -128,8 +145,10 @@ created-but-idle users need not contribute to $N$.
 
 At $\Ntot \leq 2^{63}$, the flat-sponge term and each birthday-scale
 root or leaf term at $s=2$ is at most a $2^{-131}$-scale term, while each
-linear root-preimage, key-guessing, or
-verification term with no factor $D$ is at most a $2^{-193}$-scale term.
+linear root-preimage, key-guessing, or verification term with no factor $D$
+is at most a $2^{-193}$-scale term.
+The fixed-slice Pre degradation is at most $2^{-256}$, since
+$m_{a,\mu} \geq k+\nu = 512$.
 Thus the largest non-multi-user bound is the $s=2$ collision bound, which is below
 $4 \cdot 2^{-131} = 2^{-129}$; larger $s$ only decreases the
 root-collision term. In the multi-user case,
@@ -146,7 +165,7 @@ using $D \leq 2^{63}$. These estimates instantiate every closed form in
 \centering
 \caption{Concrete \TW{} security at the work cap $\Ntot \leq 2^{63}$
 (with $D \leq 2^{63}$ for mu-ind), under
-$k = c = \tauroot = \tauleaf = 256$ and the resource consequences
+$k = c = \nu = \tauroot = \tauleaf = 256$ and the resource consequences
 $\Nprim, \Qv, \Nleaf \leq \Ntot$ and $\Nprim + \Nleaf \leq \Ntot$ of
 \Cref{sec:resources}. The committing
 rows hold for every $s \geq 2$; larger $s$ only shrinks the
@@ -161,6 +180,7 @@ Multi-user ind. & $D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
 \textsf{INT-RUP} & $\Lift_c$ and birthday terms & $\leq 2^{-128}$ \\
 $\HTW$ collision (Coll) & $\Lift_c$, $\LeafColl$, $\RootColl$ & $\leq 2^{-128}$ \\
 $\HTW$ second-preimage (Sec/eSec) & inherited from Coll & $\leq 2^{-128}$ \\
+$\HTW$ preimage (Pre) & $\Lift_c$, $\LeafColl$, $\RootPre$, slice term & $\leq 2^{-128}$ \\
 $\HTW$ everywhere preimage (ePre) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
 CMTDs-4 \cite{BH22} & $\Lift_c$ and $\RootColl$ & $\leq 2^{-128}$ \\
 \bottomrule
@@ -214,9 +234,8 @@ duplex (\Cref{sec:params}).
   threshold at $\tauroot = 256$ being unaffected.
 \item \emph{$\RootPre_\tau(Q) = (Q + 1) / 2^\tau$.} Tight at constants: a
   generic preimage search against a fixed $\tau$-bit target matches the
-  per-query $2^{-\tau}$ rate. It is the root term of the everywhere
-  preimage (ePre) bound, where the single fixed target yields a linear
-  term.
+  per-query $2^{-\tau}$ rate. It is the root term of the standard and
+  everywhere preimage bounds, where a single target tag yields a linear term.
 \item \emph{Leaf tag collision $\Nleaf (\Nleaf - 1) / 2^{\tauleaf +
   1}$.} Tight for verification security: by reusing
   a nonce, an adversary detects a leaf tag birthday collision through the

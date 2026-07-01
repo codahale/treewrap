@@ -199,8 +199,14 @@ a root tag:
 with advantage $\AdvColl_\TW(\mathcal{A}) = \Pr[\text{the game returns }
 1]$; no nonce uniqueness is imposed. The \cite{RS04} standard and
 everywhere second-preimage notions are obtained from this collision game by
-\cite[Proposition~6]{RS04}; no separate second-preimage game is needed. The
-preimage game fixes a target tag
+\cite[Proposition~6]{RS04}; no separate second-preimage game is needed.
+For fixed byte lengths $a,\mu$, the standard preimage game samples
+$X^* \sample \mathcal{X}_{a,\mu}$ independently of the primitive, computes
+$T^*=\HTW(X^*)$, gives $T^*$ to
+$\mathcal{A}^{\pi,\pi^{-1}}$, and returns $1$ iff $\mathcal{A}$ outputs a
+valid input $X$ in the \TW{} domain with $\HTW(X)=T^*$; the advantage is
+$\AdvPreSlice{a}{\mu}_\TW(\mathcal{A})$. The
+everywhere preimage game fixes a target tag
 $T^* \in \bits^{\tauroot}$ before the primitive sampling and returns $1$
 iff $\mathcal{A}(T^*)$ outputs an input $X$ in the domain with
 $\HTW(X) = T^*$, the advantage $\AdvePre_\TW$ taken as the worst case over

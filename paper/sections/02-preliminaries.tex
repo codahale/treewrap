@@ -337,23 +337,36 @@ for message franking. \TW{} ciphertexts are written $C \concat T$ with
 $T$ the $\tauroot$-bit root tag, and we capture this goal directly by
 treating \Cref{def:htw} as a hash function. Keyed by the permutation,
 this is a hash family, and we ask that it satisfy the hash-function
-security notions of \cite{RS04}, over the \TW{} input domain:
+security notions of \cite{RS04}, over the \TW{} input domain. For fixed
+byte lengths $a$ and $\mu$, write
+\[
+  \mathcal{X}_{a,\mu}
+  =
+  \bits^k \times \bits^\nu \times (\bits^8)^a \times (\bits^8)^\mu
+\]
+for the fixed-length slice of valid inputs, with bit length
+$m_{a,\mu} = k + \nu + 8a + 8\mu$.
 \begin{description}
   \item[Collision resistance (Coll).] No adversary finds distinct inputs
     $X_1, \dots, X_s$ (any $s \geq 2$) with
     $\HTW(X_1) = \cdots = \HTW(X_s)$.
+  \item[Preimage resistance (Pre).] For fixed $a,\mu$, given
+    $\HTW(X^*)$ for a uniform $X^* \sample \mathcal{X}_{a,\mu}$, no
+    adversary finds any valid input $X$ with $\HTW(X) = \HTW(X^*)$.
   \item[Second-preimage resistance (Sec/eSec).] The standard and
     everywhere forms of second-preimage resistance of \cite{RS04} follow from
     collision resistance by \cite[Proposition~6]{RS04}.
   \item[Everywhere preimage resistance (ePre).] For a target tag $T^*$ fixed in
     advance, no adversary finds $X$ with $\HTW(X) = T^*$.
 \end{description}
-The directly proved advantages $\AdvColl_\TW$ and $\AdvePre_\TW$ are the
-respective success probabilities, instantiated for \TW{} in
-\Cref{sec:games-pp}; the second-preimage guarantees are inherited from
-Coll in \Cref{cor:second-preimage-rs04}. Coll is the binding property and
-ePre the preimage property of the tag taken as a compact commitment to
-$(K, U, A, M)$---the two properties a cryptographic hash commitment provides.
+The advantages $\AdvColl_\TW$, $\AdvPreSlice{a}{\mu}_\TW$, and
+$\AdvePre_\TW$ are the respective success probabilities, instantiated for
+\TW{} in \Cref{sec:games-pp}. The Pre guarantee is proved directly in
+\Cref{thm:pre}, while the second-preimage guarantees are inherited from Coll
+in \Cref{cor:second-preimage-rs04}. Coll is the binding property of the tag
+taken as a compact commitment to $(K, U, A, M)$, Pre is the random-opening
+preimage property on fixed input slices, and ePre is the fixed-target
+preimage property for query-independent tags.
 The \cite{BH22} committing notions are the collision-facing AEAD
 projection of the same tag analysis: a winning opening gives distinct
 inputs sharing a tag, while the dedicated CMTDs-4 proof uses the
