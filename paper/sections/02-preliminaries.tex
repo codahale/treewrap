@@ -192,6 +192,9 @@ $C \concat T$, with $C$ the ciphertext body and $T$ the root tag.
 \paragraph{Correctness.}
 For every $(K, U, A, M) \in \mathcal{K} \times \mathcal{U} \times
 \mathcal{A} \times \mathcal{M}$, $\Dec_K(U, A, \Enc_K(U, A, M)) = M$.
+An AEAD scheme is \emph{tidy} if every accepting decryption is consistent
+with encryption: whenever $\Dec_K(U, A, C) = M \neq \bot$, one has
+$\Enc_K(U, A, M) = C$.
 
 \paragraph{All-in-one AE.}
 We use the all-in-one authenticated encryption notion of \cite{RS06},

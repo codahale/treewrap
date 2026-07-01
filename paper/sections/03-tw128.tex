@@ -582,3 +582,25 @@ phase tag in both directions), so the duplex states and the recomputed
 root tag $T'$ exactly match. The constant-time comparison $T' = T$
 succeeds, and the recovered $m_i = c_i \oplus Z^{(i)} = (m_i \oplus
 Z^{(i)}) \oplus Z^{(i)} = m_i$ at every position.
+
+\begin{lemma}[\TW{} tidiness]
+\label{lem:tw-tidiness}
+For every valid \TW{} decryption input, if
+$\Dec_K(U, A, C \concat T) = M \neq \bot$, then
+$\Enc_K(U, A, M) = C \concat T$.
+\end{lemma}
+
+\begin{proof}
+An accepting decryption first passes the syntax and length checks of
+\Cref{alg:dec}, so the recovered message $M$ has $\|M\| = \|C\|$ and the
+same canonical chunking as the ciphertext body. The decryption transcript
+absorbs $K$, $U$, $A$, and each ciphertext block under the same duplex
+instances and phase suffixes used by encryption. Its stream outputs recover
+each plaintext block as $M_i = C_i \oplus Z_i$, so re-encrypting the recovered
+message under the same transcript emits $C_i = M_i \oplus Z_i$ and absorbs the
+same ciphertext block at every message position. The leaf tags and final root
+candidate tag recomputed by decryption are therefore exactly the values
+recomputed by this re-encryption. Since decryption accepts only when its final
+candidate tag equals the submitted tag $T$, re-encryption returns the submitted
+body and tag $C \concat T$.
+\end{proof}

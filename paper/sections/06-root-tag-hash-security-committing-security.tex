@@ -431,16 +431,17 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
 \end{corollary}
 
 \begin{proof}
-A CMTDs-4 winner exhibits $s$ distinct inputs $(K_i,U_i,A_i,M_i)$ whose
-encryptions share one common ciphertext $C \concat T$; in particular they
-share the tag $T$, so they are an $s$-way collision of $\HTW$, and
-$\Advcmtds{4}_\TW \leq \AdvColl_\TW$. For the displayed no-$\LeafColl$
-bound, use the dedicated root-collision derivation of \Cref{thm:cmtds4-ro}
-for this all-bodies-equal case, lifted by \Cref{cor:lift-application}: the
-single shared body $C$ forces the triples $(K_i,U_i,A_i)$ pairwise
-distinct---by Opening Triple Separation (\Cref{cor:triple-sep})---so a
-leaf tag collision cannot merge two openings and no $\LeafColl$ term
-arises.
+A CMTDs-4 winner gives one ciphertext $C \concat T$ and $s$ distinct inputs
+$(K_i,U_i,A_i,M_i)$ such that
+$\Dec_{K_i}(U_i,A_i,C \concat T) = M_i$ for every $i$. By \TW{} tidiness
+(\Cref{lem:tw-tidiness}), each opened input re-encrypts to the same ciphertext:
+$\Enc_{K_i}(U_i,A_i,M_i) = C \concat T$. In particular the opened inputs share
+the root tag $T$. For the displayed no-$\LeafColl$ bound, use the dedicated
+root-collision derivation of \Cref{thm:cmtds4-ro}, lifted by
+\Cref{cor:lift-application}: in this all-bodies-equal case, the single shared
+body $C$ forces the triples $(K_i,U_i,A_i)$ pairwise distinct; by Opening
+Triple Separation (\Cref{cor:triple-sep}), a leaf tag collision cannot merge
+two openings and no $\LeafColl$ term arises.
 \end{proof}
 
 \paragraph{Remaining committing notions.}
