@@ -171,8 +171,8 @@ $(D \Nprim + \Qv + \Nleaf)/2^{256} \leq (2^{126} + 2^{64})/2^{256}
 (with $D \leq 2^{63}$ for mu-ind), under
 $k = c = \nu = \tauroot = \tauleaf = 256$ and the resource consequences
 $\Nprim, \Qv, \Nleaf \leq \Ntot$ and $\Nprim + \Nleaf \leq \Ntot$ of
-\Cref{sec:resources}. The committing
-rows hold for every $s \geq 2$; larger $s$ only shrinks the
+\Cref{sec:resources}. The Coll and
+CMTDs-4 rows hold for every $s \geq 2$; larger $s$ only shrinks the
 root-collision term.}
 \label{tab:concrete-security}
 \begin{tabular}{@{}lcc@{}}
@@ -184,8 +184,8 @@ Multi-user ind. & $D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
 \textsf{INT-RUP} & $\Lift_c$ & $\leq 2^{-128}$ \\
 $\HTW$ collision (Coll) & $\Lift_c$, $\LeafColl$, $\RootColl$ & $\leq 2^{-128}$ \\
 $\HTW$ second-preimage (Sec/eSec) & inherited from Coll & $\leq 2^{-128}$ \\
-$\HTW$ preimage (Pre) & $\Lift_c$, $\LeafColl$, $\RootPre$, slice term & $\leq 2^{-128}$ \\
-$\HTW$ everywhere preimage (ePre) & $\Lift_c(\Ntot)$ & $\leq 2^{-128}$ \\
+$\HTW$ preimage (Pre) & $\Lift_c$, $\LeafColl$ & $\leq 2^{-128}$ \\
+$\HTW$ everywhere preimage (ePre) & $\Lift_c$ & $\leq 2^{-128}$ \\
 CMTDs-4 \cite{BH22} & $\Lift_c$ and $\RootColl$ & $\leq 2^{-128}$ \\
 \bottomrule
 \end{tabular}
