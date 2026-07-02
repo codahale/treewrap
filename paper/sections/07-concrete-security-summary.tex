@@ -85,8 +85,8 @@ Under the implemented parameters $k = \nu = 256$, the slice term is
 $2^{-256-8a-8\mu}$.
 
 \paragraph{$s$-way CMTDs-4 committing security.}
-For every $s \geq 2$, the all-bodies-equal special case drops the leaf
-tag term:
+For every $s \geq 2$, the all-bodies-equal special case drops the
+known-key leaf tag collision term:
 \[
   \Advcmtds{4}_\TW(\mathcal{A})
   \;\leq\;
@@ -94,9 +94,9 @@ tag term:
   + \frac{\binom{\Nprim + s}{s}}{2^{256 (s - 1)}}.
 \]
 
-\begin{remark}[Two-Key CMTDs-4 Specialization]
+\begin{remark}[Two-Opening CMTDs-4 Specialization]
 \label{rem:cmtd4-s2}
-Setting $s = 2$ recovers the ordinary two-key
+Setting $s = 2$ recovers the ordinary two-opening
 CMTDs-4 statement of \cite{BH22}:
 \[
   \Advcmtds{4}_\TW(\mathcal{A})
@@ -200,9 +200,10 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
 \Cref{sec:concrete-claim} proves.
 
 \paragraph{At the concrete cap.}
-At $\Ntot \leq 2^{63}$, the hash and CMTDs-4 bounds have flat-sponge
-and root or leaf birthday terms on the same $2^{-131}$ scale, and the
-single-user AE and \textsf{INT-RUP} bounds retain the flat sponge loss
+At $\Ntot \leq 2^{63}$, the hash bounds other than ePre and the
+CMTDs-4 bound have flat-sponge
+and root or leaf birthday terms on the same $2^{-131}$ scale, while the
+ePre, single-user AE, and \textsf{INT-RUP} bounds retain the flat sponge loss
 as their only birthday-scale term. Thus the flat sponge loss is not always the largest
 summand: under the loose per-term cap, the $s=2$ root-collision term
 $\binom{\Nprim+2}{2}/2^{256}$ is on the same scale as $\Lift_c(\Ntot)$.

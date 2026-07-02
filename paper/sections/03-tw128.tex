@@ -390,7 +390,7 @@ blocks exchanged: it takes ciphertext duplex blocks $c_i$ as input,
 recovers each plaintext duplex block as $m_i = c_i \oplus Z$, absorbs the
 same $c_i$ under the same phase suffix, and returns
 $(m_1 \concat \cdots \concat m_t, Z')$; we omit its pseudocode. In both
-helpers, each duplex call absorbs a
+streaming helpers, each duplex call absorbs a
 duplex block followed by its phase suffix---$\sigma^-$ for a non-final
 block and $\sigma^+$ for the final block---and requests the output bits
 the caller consumes next: $\ell$ (possibly zero) on the final call, and
@@ -418,28 +418,28 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(U,A,M)$.
   \caption{TW128 helper procedures.}
   \label{alg:helpers}
   \begin{algorithmic}[1]
-    \Procedure{Absorb}{$D$, $s$, $\sigma^-$, $\sigma^+$, $\ell$}
+    \Procedure{Absorb}{$\mathcal{D}$, $s$, $\sigma^-$, $\sigma^+$, $\ell$}
       \State Partition $s$ into duplex blocks $s_1, \dots, s_t$ of exactly
         $\rho$ bytes each, except that the last block may be shorter.
       \State Require $t \geq 1$; the empty case yields the single empty
         duplex block $s_1 = \varepsilon$.
       \For{$i \gets 1$ \textbf{to} $t - 1$}
-        \State $D.\duplexing(s_i \concat \sigma^-, 0)$
+        \State $\mathcal{D}.\duplexing(s_i \concat \sigma^-, 0)$
       \EndFor
-      \State \Return $D.\duplexing(s_t \concat \sigma^+, \ell)$
+      \State \Return $\mathcal{D}.\duplexing(s_t \concat \sigma^+, \ell)$
     \EndProcedure
     \Statex
-    \Procedure{StreamEnc}{$D$, $m$, $Z$, $\sigma^-$, $\sigma^+$, $\ell$}
+    \Procedure{StreamEnc}{$\mathcal{D}$, $m$, $Z$, $\sigma^-$, $\sigma^+$, $\ell$}
       \State Partition $m$ into duplex blocks $m_1, \dots, m_t$ of exactly
         $\rho$ bytes each, except that the last block may be shorter.
       \State Require $t \geq 1$; if $m = \varepsilon$, set $t = 1$ and
         $m_1 = \varepsilon$.
       \For{$i \gets 1$ \textbf{to} $t - 1$}
         \State $c_i \gets m_i \oplus Z$
-        \State $Z \gets D.\duplexing(c_i \concat \sigma^-, 8\|m_{i+1}\|)$
+        \State $Z \gets \mathcal{D}.\duplexing(c_i \concat \sigma^-, 8\|m_{i+1}\|)$
       \EndFor
       \State $c_t \gets m_t \oplus Z$
-      \State $Z' \gets D.\duplexing(c_t \concat \sigma^+, \ell)$
+      \State $Z' \gets \mathcal{D}.\duplexing(c_t \concat \sigma^+, \ell)$
       \State \Return $(c_1 \concat \cdots \concat c_t, Z')$
     \EndProcedure
   \end{algorithmic}
@@ -453,25 +453,25 @@ $C \concat T$ for the full AEAD ciphertext returned by $\Enc_K(U,A,M)$.
     \Ensure $C \concat T$ with $\|C\| = \|M\|$ and $T \in \bits^{\tauroot}$.
     \State $M_0 \gets$ first $\min(\|M\|, \beta)$ bytes of $M$ (possibly $\varepsilon$).
     \State Partition the remaining suffix into chunks $M_1, \dots, M_n$ of exactly $\beta$ bytes each, except that the last chunk may be shorter but nonempty, so $n = \leaves(M)$.
-    \State $D_{\text{root}} \gets$ new $\Duplex$
+    \State $\mathcal{D}_{\text{root}} \gets$ new $\Duplex$
     \If{$A = \varepsilon$}
-      \State $Z \gets D_{\text{root}}.\duplexing(\prfxroot \concat K \concat U \concat \siginit, 8\min(\|M_0\|, \rho))$
+      \State $Z \gets \mathcal{D}_{\text{root}}.\duplexing(\prfxroot \concat K \concat U \concat \siginit, 8\min(\|M_0\|, \rho))$
     \Else
-      \State $D_{\text{root}}.\duplexing(\prfxroot \concat K \concat U \concat \siginit, 0)$
-      \State $Z \gets \Call{Absorb}{D_{\text{root}}, A, \sigadmore, \sigadlast, 8\min(\|M_0\|, \rho)}$
+      \State $\mathcal{D}_{\text{root}}.\duplexing(\prfxroot \concat K \concat U \concat \siginit, 0)$
+      \State $Z \gets \Call{Absorb}{\mathcal{D}_{\text{root}}, A, \sigadmore, \sigadlast, 8\min(\|M_0\|, \rho)}$
     \EndIf
     \If{$n = 0$}
-      \State $(C_0,\, T) \gets \Call{StreamEnc}{D_{\text{root}}, M_0, Z, \sigmsgmore, \sigmsglast, \tauroot}$
+      \State $(C_0,\, T) \gets \Call{StreamEnc}{\mathcal{D}_{\text{root}}, M_0, Z, \sigmsgmore, \sigmsglast, \tauroot}$
       \State \Return $C_0 \concat T$
     \EndIf
-    \State $(C_0,\, \_) \gets \Call{StreamEnc}{D_{\text{root}}, M_0, Z, \sigmsgmore, \sigmsglast, 0}$
+    \State $(C_0,\, \_) \gets \Call{StreamEnc}{\mathcal{D}_{\text{root}}, M_0, Z, \sigmsgmore, \sigmsglast, 0}$
     \For{$j \gets 1$ \textbf{to} $n$ \textbf{in parallel}}
-      \State $D_j \gets$ new $\Duplex$
-      \State $Z_j \gets D_j.\duplexing(\prfxleaf \concat K \concat U \concat \langle j \rangle_8 \concat \siginit, 8\min(\|M_j\|, \rho))$
-      \State $(C_j, T_j) \gets \Call{StreamEnc}{D_j, M_j, Z_j, \sigmsgmore, \sigmsglast, \tauleaf}$
+      \State $\mathcal{D}_j \gets$ new $\Duplex$
+      \State $Z_j \gets \mathcal{D}_j.\duplexing(\prfxleaf \concat K \concat U \concat \langle j \rangle_8 \concat \siginit, 8\min(\|M_j\|, \rho))$
+      \State $(C_j, T_j) \gets \Call{StreamEnc}{\mathcal{D}_j, M_j, Z_j, \sigmsgmore, \sigmsglast, \tauleaf}$
     \EndFor
     \State $G \gets T_1 \concat \cdots \concat T_n$.
-    \State $T \gets \Call{Absorb}{D_{\text{root}},\, G \concat \langle n \rangle_8,\, \sigaggmore,\, \sigagglast,\, \tauroot}$
+    \State $T \gets \Call{Absorb}{\mathcal{D}_{\text{root}},\, G \concat \langle n \rangle_8,\, \sigaggmore,\, \sigagglast,\, \tauroot}$
     \State \Return $C_0 \concat C_1 \concat \cdots \concat C_n \concat T$
   \end{algorithmic}
 \end{algorithm}
@@ -542,25 +542,25 @@ tag-comparison outcome.
     \Ensure $M$ with $\|M\| = \|C\|$, or $\bot$.
     \State $C_0 \gets$ first $\min(\|C\|, \beta)$ bytes of $C$ (possibly $\varepsilon$).
     \State Partition the remaining suffix into chunks $C_1, \dots, C_n$ of exactly $\beta$ bytes each, except that the last chunk may be shorter but nonempty, so $n = \leaves(C)$.
-    \State $D_{\text{root}} \gets$ new $\Duplex$
+    \State $\mathcal{D}_{\text{root}} \gets$ new $\Duplex$
     \If{$A = \varepsilon$}
-      \State $Z \gets D_{\text{root}}.\duplexing(\prfxroot \concat K \concat U \concat \siginit, 8\min(\|C_0\|, \rho))$
+      \State $Z \gets \mathcal{D}_{\text{root}}.\duplexing(\prfxroot \concat K \concat U \concat \siginit, 8\min(\|C_0\|, \rho))$
     \Else
-      \State $D_{\text{root}}.\duplexing(\prfxroot \concat K \concat U \concat \siginit, 0)$
-      \State $Z \gets \Call{Absorb}{D_{\text{root}}, A, \sigadmore, \sigadlast, 8\min(\|C_0\|, \rho)}$
+      \State $\mathcal{D}_{\text{root}}.\duplexing(\prfxroot \concat K \concat U \concat \siginit, 0)$
+      \State $Z \gets \Call{Absorb}{\mathcal{D}_{\text{root}}, A, \sigadmore, \sigadlast, 8\min(\|C_0\|, \rho)}$
     \EndIf
     \If{$n = 0$}
-      \State $(M_0,\, T') \gets \Call{StreamDec}{D_{\text{root}}, C_0, Z, \sigmsgmore, \sigmsglast, \tauroot}$
+      \State $(M_0,\, T') \gets \Call{StreamDec}{\mathcal{D}_{\text{root}}, C_0, Z, \sigmsgmore, \sigmsglast, \tauroot}$
       \State \Return $M_0$ if $T' = T$ (compared in constant time), else $\bot$.
     \EndIf
-    \State $(M_0,\, \_) \gets \Call{StreamDec}{D_{\text{root}}, C_0, Z, \sigmsgmore, \sigmsglast, 0}$
+    \State $(M_0,\, \_) \gets \Call{StreamDec}{\mathcal{D}_{\text{root}}, C_0, Z, \sigmsgmore, \sigmsglast, 0}$
     \For{$j \gets 1$ \textbf{to} $n$ \textbf{in parallel}}
-      \State $D_j \gets$ new $\Duplex$
-      \State $Z_j \gets D_j.\duplexing(\prfxleaf \concat K \concat U \concat \langle j \rangle_8 \concat \siginit, 8\min(\|C_j\|, \rho))$
-      \State $(M_j, T_j) \gets \Call{StreamDec}{D_j, C_j, Z_j, \sigmsgmore, \sigmsglast, \tauleaf}$
+      \State $\mathcal{D}_j \gets$ new $\Duplex$
+      \State $Z_j \gets \mathcal{D}_j.\duplexing(\prfxleaf \concat K \concat U \concat \langle j \rangle_8 \concat \siginit, 8\min(\|C_j\|, \rho))$
+      \State $(M_j, T_j) \gets \Call{StreamDec}{\mathcal{D}_j, C_j, Z_j, \sigmsgmore, \sigmsglast, \tauleaf}$
     \EndFor
     \State $G \gets T_1 \concat \cdots \concat T_n$.
-    \State $T' \gets \Call{Absorb}{D_{\text{root}},\, G \concat \langle n \rangle_8,\, \sigaggmore,\, \sigagglast,\, \tauroot}$
+    \State $T' \gets \Call{Absorb}{\mathcal{D}_{\text{root}},\, G \concat \langle n \rangle_8,\, \sigaggmore,\, \sigagglast,\, \tauroot}$
     \If{$T' = T$ (compared in constant time)}
       \State \Return $M_0 \concat M_1 \concat \cdots \concat M_n$
     \Else
@@ -583,7 +583,7 @@ duplex call in $\Dec_K$ receives the same input as the corresponding
 call in $\Enc_K$ (each ciphertext duplex block is absorbed under the same
 phase tag in both directions), so the duplex states and the recomputed
 root tag $T'$ exactly match. The constant-time comparison $T' = T$
-succeeds, and the recovered $m_i = c_i \oplus Z^{(i)} = (m_i \oplus
+succeeds, and the recovered block $c_i \oplus Z^{(i)} = (m_i \oplus
 Z^{(i)}) \oplus Z^{(i)} = m_i$ at every position.
 
 \begin{lemma}[\TW{} tidiness]
