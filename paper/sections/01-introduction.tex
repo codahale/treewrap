@@ -18,7 +18,10 @@ definitions. The ``invisible salamander'' attack defeats Facebook's attachment
 franking scheme \cite{DGRW18}; related constructions produce ciphertexts that
 open to different well-formed files under different keys \cite{ADGKLS22};
 partitioning oracles recover passwords from systems built on non-committing AEAD
-\cite{LGR21}. These attacks differ in surface form, but all expose the same
+\cite{LGR21}; and context discovery attacks compute valid decryption contexts
+for ciphertexts under standard modes such as CCM, EAX, and SIV, defeating the
+preimage half of the digest expectation \cite{MLGR23}. These attacks differ in
+surface form, but all expose the same
 mismatch: the tag is used as if it were a full-context commitment, while the
 mode only proves ordinary authenticity.
 
