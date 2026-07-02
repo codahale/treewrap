@@ -620,48 +620,12 @@ avoidance claim.
 \subsection{Adaptive Candidate Bounds}
 \label{app:lem-candidate-collisions}
 
-\begin{lemma}[Adaptive Candidate Collision and Preimage]
-\label{lem:adaptive-candidate}
-Consider any interaction with a lazy random oracle $\ROflat : \bits^* \to
-\bits^\infty$ that builds a sequence of distinct \emph{candidate} inputs
-$Y_1,\dots,Y_m$. The process may make arbitrary non-candidate oracle
-queries and may choose each candidate adaptively from the full prior
-transcript and private state sampled before the candidate's unread oracle
-value. Whenever a new candidate $Y_j$ is appended, two premises hold:
-\emph{predictability}---both the decision to append and the string $Y_j$
-are determined by the state preceding the append step---and
-\emph{unrevealed value}---no oracle lookup before the append step has
-requested a positive number of bits of $\ROflat(Y_j)$; zero-length lookups
-at $Y_j$ are permitted. Fix a projection length $\tau$, and suppose the
-sequence has at most $L$ candidates ($m \leq L$).
-\begin{enumerate}
-\item \emph{Collision.} For every $s \geq 2$, the
-  probability $\Pr[\mathsf{coll}_{s,\tau}]$ that some $s$ distinct
-  candidates have equal $\tau$-bit projections,
-  \[
-    \bigl\lfloor \ROflat(Y_{i_1}) \bigr\rfloor_\tau = \cdots =
-    \bigl\lfloor \ROflat(Y_{i_s}) \bigr\rfloor_\tau
-    \quad \text{for some } 1 \leq i_1 < \cdots < i_s \leq m,
-  \]
-  satisfies
-  $\Pr[\mathsf{coll}_{s,\tau}] \leq \binom{L}{s} \cdot 2^{-\tau(s-1)}$.
-\item \emph{Preimage.} For every target $t \in \bits^\tau$ chosen
-  independently of $\ROflat$, the probability
-  $\Pr[\mathsf{pre}_{\tau,t}]$ that some candidate's $\tau$-bit projection
-  equals $t$, i.e.\ $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$ for
-  some $1 \leq j \leq m$, satisfies
-  $\Pr[\mathsf{pre}_{\tau,t}] \leq L \cdot 2^{-\tau}$.
-\end{enumerate}
-The preimage case has a \emph{second-preimage} corollary: for a
-designated candidate position $j_0$, the probability
-$\Pr[\mathsf{sec}_{\tau,j_0}]$ that some candidate $j \neq j_0$ has
-$\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau =
- \bigl\lfloor \ROflat(Y_{j_0}) \bigr\rfloor_\tau$, i.e.\ collides with the
-designated candidate on its $\tau$-bit projection, satisfies
-$\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$.
-\end{lemma}
+The Adaptive Candidate Collision and Preimage lemma is stated as
+\Cref{lem:adaptive-candidate} in \Cref{sec:root-tag-hash-security},
+where a proof sketch also appears; this subsection supplies the full
+proof.
 
-\begin{proof}
+\begin{proof}[Proof of \Cref{lem:adaptive-candidate}]
 Both parts expose the interaction in chronological order and sample each
 candidate's $\ROflat$ value lazily at its append step, which the premises
 license: when $Y_j$ is appended its string is fixed by the prior state

@@ -108,6 +108,70 @@ with the common root ciphertext chunk this gives the same full $C$.
 
 \subsection{Root Tag Candidate Bound}
 
+The candidate machinery rests on a single probabilistic engine, stated
+here and proved in full in \Cref{app:lem-candidate-collisions}:
+adaptively chosen distinct random oracle inputs whose values are still
+unread when they are chosen behave, for collision and target-hitting
+purposes, as fresh uniform draws.
+
+\begin{lemma}[Adaptive Candidate Collision and Preimage]
+\label{lem:adaptive-candidate}
+Consider any interaction with a lazy random oracle $\ROflat : \bits^* \to
+\bits^\infty$ that builds a sequence of distinct \emph{candidate} inputs
+$Y_1,\dots,Y_m$. The process may make arbitrary non-candidate oracle
+queries and may choose each candidate adaptively from the full prior
+transcript and private state sampled before the candidate's unread oracle
+value. Whenever a new candidate $Y_j$ is appended, two premises hold:
+\emph{predictability}---both the decision to append and the string $Y_j$
+are determined by the state preceding the append step---and
+\emph{unrevealed value}---no oracle lookup before the append step has
+requested a positive number of bits of $\ROflat(Y_j)$; zero-length lookups
+at $Y_j$ are permitted. Fix a projection length $\tau$, and suppose the
+sequence has at most $L$ candidates ($m \leq L$).
+\begin{enumerate}
+\item \emph{Collision.} For every $s \geq 2$, the
+  probability $\Pr[\mathsf{coll}_{s,\tau}]$ that some $s$ distinct
+  candidates have equal $\tau$-bit projections,
+  \[
+    \bigl\lfloor \ROflat(Y_{i_1}) \bigr\rfloor_\tau = \cdots =
+    \bigl\lfloor \ROflat(Y_{i_s}) \bigr\rfloor_\tau
+    \quad \text{for some } 1 \leq i_1 < \cdots < i_s \leq m,
+  \]
+  satisfies
+  $\Pr[\mathsf{coll}_{s,\tau}] \leq \binom{L}{s} \cdot 2^{-\tau(s-1)}$.
+\item \emph{Preimage.} For every target $t \in \bits^\tau$ chosen
+  independently of $\ROflat$, the probability
+  $\Pr[\mathsf{pre}_{\tau,t}]$ that some candidate's $\tau$-bit projection
+  equals $t$, i.e.\ $\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau = t$ for
+  some $1 \leq j \leq m$, satisfies
+  $\Pr[\mathsf{pre}_{\tau,t}] \leq L \cdot 2^{-\tau}$.
+\end{enumerate}
+The preimage case has a \emph{second-preimage} corollary: for a
+designated candidate position $j_0$, the probability
+$\Pr[\mathsf{sec}_{\tau,j_0}]$ that some candidate $j \neq j_0$ has
+$\bigl\lfloor \ROflat(Y_j) \bigr\rfloor_\tau =
+ \bigl\lfloor \ROflat(Y_{j_0}) \bigr\rfloor_\tau$, i.e.\ collides with the
+designated candidate on its $\tau$-bit projection, satisfies
+$\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+The premises license lazy sampling at the append step: predictability
+fixes the candidate string before its value is drawn, and the
+unrevealed-value premise guarantees that no bit of that value has been
+exposed, so $\ROflat(Y_j)$ is uniform and independent of the entire prior
+transcript. Conditioning position by position, each fixed position set
+then contributes at most $2^{-\tau(s-1)}$ (each fixed position at most
+$2^{-\tau}$), and a union bound over the $\binom{L}{s}$ position sets
+(the $L$ positions) gives the bounds. The full argument, including the
+second-preimage corollary, appears in
+\Cref{app:lem-candidate-collisions}.
+\end{proof}
+
+The remaining work is structural: exhibiting, in each game, a candidate
+sequence that satisfies these premises and contains the final root
+transcripts the win event constrains.
+
 \begin{lemma}[Root Tag Candidate Sequence]
 \label{lem:root-candidate-seq}
 Consider a random oracle game of \Cref{sec:ro-model} in which the adversary
