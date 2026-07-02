@@ -5,7 +5,7 @@ description: Run a multi-perspective adversarial review of the LaTeX paper manus
 
 # Adversarial review
 
-Use when the user asks to "review" or "adversarially review" the paper manuscript in `./paper/`, or a specific section/appendix within it. The skill runs two parallel waves of subagents — reviewers (claim generators) then validators (claim checkers) — and writes the surviving findings to `./review.tmp.md`. Initial reviewers have a high false-positive rate; the validator pass is what makes the report trustworthy.
+Use when the user asks to "review" or "adversarially review" the paper manuscript in `./paper/`, or a specific section/appendix within it. The skill runs two parallel waves of subagents — reviewers (claim generators) then validators (claim checkers) — and writes the surviving findings to `./review.tmp.md`. Reviewers still raise the occasional false positive; the validator pass is what makes the report trustworthy regardless of how clean any given reviewer run is.
 
 ## Caller signature
 
@@ -86,27 +86,33 @@ Reviewers number locally (F1, F2, …); the orchestrator renumbers globally duri
 
 Collect every reviewer's output. Dedupe near-identical findings (same quoted passage and same problem) — keep the more specific one. If two reviewers raised overlapping but distinct issues at the same location, keep both. Renumber globally as F1…FN.
 
-Do not write anything to disk yet. Hold the aggregated list in memory for Step 4.
+Do not write anything to disk yet. Hold the aggregated list in memory for Step 4, where it gets grouped by file location before validation.
 
-## Step 4 — Validate, one validator per finding, in parallel
+## Step 4 — Validate, one validator per file group, in parallel
 
-For each global F<n>, spawn one Agent with `subagent_type: general-purpose`. Use a single message with all calls so they run concurrently. **Each validator gets ONLY that one finding — no other findings, no reviewer reasoning beyond the schema, no grid context, no aggregated list.** Isolation is what makes "treat as a claim, not a fact" actually bite.
+Group the aggregated findings by their cited file location (the file in each finding's `Location:` field). Split any group larger than 5 findings into batches of at most 5 (e.g. 8 findings in one file → two batches of 4). For each group, spawn one Agent with `subagent_type: general-purpose` and `model: sonnet`. Use a single message with all calls so they run concurrently.
+
+**A validator gets ONLY the findings in its group — no other groups, no reviewer reasoning beyond the schema, no grid context.** Within a group, each finding must still be judged independently: verdict on one finding must not influence the verdict on another. Isolation across groups plus independence within a group is what makes "treat as a claim, not a fact" actually bite.
 
 Each validator prompt must:
 
-1. Quote the finding verbatim — the whole F<n> block, nothing else.
-2. Open with: "Treat this as a *claim*, not a fact. Your job is to determine whether the claim holds. Reviewers in the first pass have a high false-positive rate; be willing to refute."
+1. Quote every finding in the group verbatim — the whole F<n> block for each, nothing else.
+2. Open with: "Treat each of these as an independent *claim*, not a fact. Your job is to determine whether each claim holds, on its own merits. Reviewers in the first pass have a high false-positive rate; be willing to refute. Judging one claim in this batch must not color your judgment of another — evaluate each from scratch."
 3. Grant access to the manuscript (`paper/`, especially the cited section file), `paper/refs.bib`, and `./refs/`.
-4. Require them to apply, in order:
+4. Require them to apply, per finding, in order:
    - **Quote check.** Verify the quoted passage exists at the cited location, **exactly as quoted** (LaTeX source matched verbatim — do not normalize macros or whitespace). If paraphrased, misquoted, or at a different line: **REFUTED**.
    - **Context check.** Verify the claimed problem actually follows from the text. If the reviewer misread the surrounding context: **REFUTED**.
    - **Reference check.** Verify any reference claim by resolving the BibTeX key through `paper/refs.bib` and reading the corresponding `./refs/` PDF at the cited location. If the external result supports the document's use of it: **REFUTED**.
    - **Severity gate.** If the claim survives the three checks above, the finding is true; now classify its impact. Ask: *what concrete bound, theorem statement, game definition, or adversary strategy changes if this finding is true and unfixed?* If a concrete consequence exists, the verdict is **CONFIRMED** (or **PARTIAL** with a corrected problem statement). If the answer is "nothing concrete — the reader can repair it locally, no bound moves, no theorem statement is invalidated, no proof step relies on it," the verdict is **COSMETIC**: the finding is true and its only cost is polish. COSMETIC is a *surfaced* verdict — this pass is hunting exactly these smaller findings, so it is kept and filed under the Cosmetic severity in Step 5, not dropped. Only REFUTED is discarded.
-5. Forbid them from raising *additional* problems. They validate this one claim only.
+5. Forbid them from raising *additional* problems. They validate only the claims in their group.
+6. Require one verdict block per finding in the group, in the same order, each tagged with its F<n>.
 
 ### Validator return format
 
+One block per finding in the group:
+
 ```
+F<n>
 Verdict: CONFIRMED | REFUTED | PARTIAL | COSMETIC
 Reasoning: <one short paragraph citing what was verified — quote the document and any reference if relevant>
 Corrected problem (PARTIAL only): <revised problem statement>
@@ -152,8 +158,9 @@ Omit any severity section that has no findings. Do not include refuted findings,
 
 ## Operating notes
 
-- Keep your own user-facing chatter to a minimum: announce the grid (Step 1), confirm the aggregate count after Step 3 (`Aggregated <T> raw findings, validating in parallel…`), and announce the final counts after writing `review.tmp.md`. Nothing else.
-- Reviewers and validators are independent — never let a validator see another finding or another validator's verdict.
+- Keep your own user-facing chatter to a minimum: announce the grid (Step 1), confirm the aggregate count after Step 3 (`Aggregated <T> raw findings, validating in <G> groups…`), and announce the final counts after writing `review.tmp.md`. Nothing else.
+- Reviewers and validator groups are independent — never let a validator see findings or verdicts from another group. Within a group, findings are judged independently of each other; a validator's job is to avoid cross-contaminating verdicts within its own batch, not just across groups.
 - If a reviewer returns malformed output (missing schema fields), do not retry — drop the malformed entries from the aggregate. The validator pass will catch missing schema fields anyway by failing to find the quoted passage.
+- **Cost tuning.** Validators run on `model: sonnet` rather than inheriting the session model — their task (verify a quote against source, check context, check a reference PDF, classify impact) is closer to structured verification-against-ground-truth than the open-ended synthesis reviewers do, which is a better fit for a lighter model. Reviewers deliberately keep no model override: they inherit whatever model the session is running, since reviewer output quality is harder to backstop once findings are dropped from the pool entirely — a well-tuned reviewer pass can run high-precision (few spurious findings per run), so there's less slack to spend on a lighter model there than the skill's generic false-positive framing above might suggest. If a run's verdicts look off — too lenient, too harsh, or COSMETIC/REFUTED rates drift from what past sessions produced — revert the validator model override first before touching anything else; it's the single knob most likely to explain a quality regression.
 - **Two prompts are load-bearing and must be passed through verbatim.** The reviewer calibration prompt in Step 2 and the severity gate in Step 4 are what keep the review *trustworthy* — every surfaced finding is true and specifically located, with no fabricated, merely-suspected, or pure-style noise. The current policy deliberately *surfaces* COSMETIC findings rather than dropping them: the proof has passed several rounds clean on its major issues, so this pass hunts the smaller stuff. Convergence across rounds is maintained by signal-history routing and dedup, not by discarding true findings. If a future round wants to raise the floor back to major-only, do it by an explicit policy change — restore the older calibration that excluded copyedit-level findings and have the severity gate drop COSMETIC again — not by quietly paraphrasing these prompts.
 - The grid is intentionally smaller than it used to be (4–8 cells, not 6–12). Sharper perspectives plus signal-history routing replaces broadcast coverage. A run with two reviewers returning NO FINDINGS is a healthy outcome, not under-coverage — it means the proof has been polished where those perspectives bite.

@@ -22,7 +22,7 @@ Throughout this skill, "the report file" means `<report-path>` (or `./review.tmp
 
 ## Step 1 — Cluster the findings
 
-Spawn one Agent (`subagent_type: general-purpose`) with this brief:
+Spawn one Agent (`subagent_type: general-purpose`, `model: sonnet`) with this brief:
 
 - Read the report file and the manuscript it references (named in the report title — typically `paper/` as a whole, or a specific `paper/sections/<file>.tex`). Read `paper/main.tex` first to understand which section files exist and how they fit together.
 - Group findings by **underlying cause**, not by surface symptom. Two findings that both stem from, say, "L7 quietly assumes nonce-respecting queries" belong in one cluster even if they surface in different section files.
@@ -65,7 +65,7 @@ Then ask: `Which cluster would you like to tackle next?` Wait for the user's rep
 - A bare number → resolve that cluster (Step 3).
 - `defer <number>` → move that cluster to the end of the queue; do not present again this round unless the user runs out of other choices. Reprint the menu.
 - `merge <a>,<b>` → combine the two clusters' findings, regenerate a single `name`/`root_cause`/`severity_counts`/`kind`/`affected_scope` (kind is `design` if either input was design), and reprint the menu. The new cluster's `depends_on` is the union minus the merged-in names.
-- `split <n>` → re-spawn the Step 1 agent on just cluster `n`'s findings with instructions to produce 2+ sub-clusters; reprint the menu with the split applied.
+- `split <n>` → re-spawn the Step 1 agent (same `model: sonnet`) on just cluster `n`'s findings with instructions to produce 2+ sub-clusters; reprint the menu with the split applied.
 - `done` → Step 4 (summary and stop).
 
 If only `mechanical-cleanup` remains, nudge: `Only mechanical-cleanup left — wrap up?`
