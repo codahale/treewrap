@@ -50,8 +50,9 @@ root duplex and pays no tree overhead (\Cref{sec:latency}).
 
 The construction fixes the root/leaf transcript, but not the amount of
 parallelism used by an implementation. A scalar implementation, an AVX2
-implementation, an AVX-512 implementation, a NEON implementation, and a
-multicore implementation all produce identical ciphertexts and tags. The degree
+implementation, an AVX-512 implementation, and a NEON implementation all
+produce identical ciphertexts and tags, as would a multicore
+implementation. The degree
 of parallelism is therefore not a mode parameter and is not visible on the wire.
 This separates \TW{} from prior duplex-based AEADs with parallel variants, where
 the parallelism degree is fixed by the mode instance or otherwise shared by the
