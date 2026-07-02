@@ -189,7 +189,9 @@ $\log D$ bits in $D$ users; the concrete $D$-indexed bound appears in
 compatible with the chosen capacity. The 12-round
 \Keccakp{} permutation matches KangarooTwelve's
 choice~\cite{BDPVVV16}; \TW{} adopts that established tree-hashing
-parameter rather than introducing a new reduced-round setting.
+parameter rather than introducing a new reduced-round setting
+(\Cref{sec:permutation-cryptanalysis} surveys the cryptanalytic record
+behind this round count).
 
 \item $\tauroot = \tauleaf = 256$. Matching the
 capacity ensures that the per-tag guessing terms in the authenticity

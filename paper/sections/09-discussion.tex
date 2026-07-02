@@ -149,6 +149,61 @@ provides and \TW{} does not. Both demonstrate
 that committing AE needs no add-on transform once it is built on a
 well-scrutinized \Keccak{} permutation.
 
+\subsection{Cryptanalysis of the Underlying Permutation}
+\label{sec:permutation-cryptanalysis}
+
+Every bound in this paper models \Keccakp{} as a uniformly random permutation
+(\Cref{sec:security-model}). That modeling choice is supported by
+cryptanalytic scrutiny rather than by proof, so this subsection summarizes the
+third-party record and the safety margin it indicates. The Keccak round
+function has been unchanged since 2008, and \TW{} uses the permutation at the
+round count introduced by KangarooTwelve \cite{BDPVVV16} and later exposed
+directly as TurboSHAKE \cite{BDHPVVV23}, whose designers maintain a survey of
+third-party cryptanalysis. TurboSHAKE128 shares \TW{}'s rate and capacity
+($r = 1344$, $c = 256$) as well as its permutation, so attacks on it and on
+round-reduced SHAKE128 transfer to \TW{}'s geometry directly.
+
+In the unkeyed setting, the deepest collision attacks on any SHA-3 or SHAKE
+instance reach $6$ of \TW{}'s $12$ rounds: a SAT-aided attack on $6$-round
+SHAKE128 with time $2^{123.5}$ \cite{GLST22}, and internal-differential
+attacks reaching $6$ rounds of SHAKE256 and $5$ rounds of SHA3-384
+\cite{ZHL24}. Preimage attacks reach $5$ rounds \cite{ZHL25}. Against the
+collision- and preimage-style attacks most relevant to the root tag hash
+claims of \Cref{sec:root-tag-hash-security}, the permutation therefore
+retains a margin of $6$ of $12$ rounds---the assessment under which the
+KangarooTwelve round count was chosen and later reaffirmed
+\cite{BDPVVV16,BDHPVVV23}. The structural distinguisher reaching the most
+rounds of the permutation itself, the SymSum property on $9$ rounds reported
+in the survey of \cite{BDHPVVV23}, has, like the zero-sum distinguishers
+before it, not been extended to an attack on any sponge or duplex mode.
+
+The keyed setting is closer to \TW{}'s AE games: a hidden key, with
+adversary-controlled nonces and messages entering through the duplex rate.
+The attacks reaching the most rounds here are cube and conditional cube
+attacks. Dinur et al.~break up to $9$ rounds of Keccak-based stream ciphers
+and MACs faster than generic search, with keystream prediction on $8$ rounds
+at time and data $2^{128}$ and on $9$ rounds (of a $512$-bit-key variant) at
+$2^{256}$ \cite{DMPSS15}. With MILP-optimized conditional cubes,
+nonce-respecting key recovery reaches $8$ of Lake Keyak's $12$ rounds at time
+$2^{71}$ for $128$-bit keys, $9$ rounds at $2^{137}$ for $256$-bit keys, and
+$9$ of KMAC256's $24$ rounds at $2^{147}$ \cite{SGLS18}. Lake Keyak is a
+keyed duplex over the same $1600$-bit permutation whose initialization, like
+\TW{}'s root and leaf initializations, absorbs the key and nonce ahead of
+nonce-varied cube queries, so these results are the closest published analog
+to \TW{}'s keyed setting. They leave a margin of $3$ to $4$ of $12$ rounds
+against attacks whose complexities start at $2^{71}$.
+
+In sum, the known attack frontier stands at $6$ of $12$ rounds for collisions
+and preimages and at $8$ to $9$ rounds for keyed-mode key recovery and
+structural distinguishers. \TW{} uses \Keccakp{} at the same round count and
+with the same rate/capacity split as KangarooTwelve and TurboSHAKE128, so its
+margin assessment tracks theirs, and any future advance against the
+permutation applies to all three alike. What \TW{} adds at the mode level and
+these analyses do not cover is the tree structure itself---in particular the
+family of leaf initializations sharing $(K, U)$ and differing only in the
+leaf index---and we consider dedicated cryptanalysis of that structure a
+natural target for future work.
+
 \subsection{Limitations and Open Problems}
 \label{sec:limitations}
 
