@@ -12,7 +12,8 @@ The lift has two steps. First, the \cite{BDPV08} indifferentiability theorem
 replaces the construction interface by a flat random oracle and answers only
 direct public-permutation queries through a simulator over that oracle, at cost
 $\Lift_c(\Ntot)$, where $\Ntot = N + \Nprim$ counts construction-internal
-primitive calls induced by construction queries together with direct primitive
+primitive calls---induced by construction queries and by deterministic
+challenger computations---together with direct primitive
 queries. Second, the simulator-world adversary is converted into a flat-RO
 adversary whose direct random oracle query count is at most $\Nprim$. Thus the
 random oracle bounds are instantiated at $\qRO \leq \Nprim$, while the public
@@ -25,7 +26,7 @@ The \emph{single-stage \TW{} games} are the games of
 handled by one \cite{BDPV08} replacement, including deterministic challenger
 checks after the adversary's final output. They are all-in-one AE, mu-ind,
 \textsf{INT-RUP}, CMTDs-4, the $\HTW$ collision and preimage
-games, and CMTs-$\ell$ for $\ell \in \{1,3,4\}$.
+games (standard and everywhere), and CMTs-$\ell$ for $\ell \in \{1,3,4\}$.
 \end{definition}
 
 The derived adversary forwards the following game data to the corresponding
@@ -140,8 +141,9 @@ plaintext-computing computations, verification computations whether they
 accept or reject, the per-user sum of construction calls in mu-ind, the
 deterministic challenger decryption or encryption checks actually performed in
 the committing games, and the hash games' challenger encryptions---the
-collision game's $s$ submitted-input encryptions and the preimage game's
-source encryption and post-output check.
+collision game's $s$ submitted-input encryptions, the standard preimage
+game's source encryption and post-output check, and the
+everywhere-preimage game's post-output check.
 
 Second, each direct adversary query to $(\pi,\pi^{-1})$ contributes one
 primitive-interface query and is counted in $\Nprim$. These two counts

@@ -449,16 +449,21 @@ computations contribute to each count.
   are not charged to $N$ or to the verification-tag terms. In the hash and
   committing games there is no adversary
   construction oracle: for the $\HTW$ collision game, $N$ counts the $s$
-  deterministic encryptions on the submitted inputs, and for the preimage
-  game it counts both challenger encryptions: the source encryption
-  computing $T^* = \HTW(X^*)$ and the one deterministic encryption on the
-  submitted input; for
+  deterministic encryptions on the submitted inputs; for the standard
+  preimage game it counts both challenger encryptions: the source
+  encryption computing $T^* = \HTW(X^*)$ and the one deterministic
+  encryption on the submitted input; for the everywhere-preimage game,
+  the one deterministic encryption on the submitted input; for
   CMTDs-$\ell$, $N$ counts only the deterministic decryption checks
   performed by the challenger on the common ciphertext; while for the
   CMTs-$\ell$ source games of
   \Cref{cor:committing-combined}, $N$ counts only the deterministic
   encryption checks actually used by the challenger to compare the $s$
-  ciphertexts.
+  ciphertexts. For the Sec and eSec games of
+  \Cref{cor:second-preimage-rs04}, $N$ and $\Nprim$ are those of the
+  induced two-way collision adversary of \cite[Proposition~6]{RS04},
+  whose two deterministic encryptions are counted exactly as in the
+  $s = 2$ collision game.
 \item[$\Nprim$:] the number of direct adversary queries to the
   primitive interface (the pair $(\pi, \pi^{-1})$ in
   public permutation games; the simulator's $\ROflat$ table is internal

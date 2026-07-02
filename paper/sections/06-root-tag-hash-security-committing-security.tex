@@ -521,8 +521,9 @@ By the Lift Application corollary (\Cref{cor:lift-application}) for the
 preimage game, the derived random oracle adversary $\mathcal{B}$ has
 $\qRO(\mathcal{B}) \leq \Nprim$ and
 $\nleaf(\mathcal{B}) \leq \Nleaf$; per \Cref{sec:resources}, these caps
-cover both challenger encryptions, the source encryption's duplex calls
-and final leaf transcripts included. The random oracle bound of
+cover both challenger encryptions' final leaf transcripts, the source
+encryption's included; the encryptions' duplex calls are counted in $N$
+and enter through $\Lift_c(\Ntot)$. The random oracle bound of
 \Cref{thm:pre-ro} is nondecreasing in both resources, so the monotone form
 of \Cref{cor:lift-application} gives the stated bound.
 \end{proof}
@@ -543,7 +544,8 @@ ePre adversary $\mathcal{A}$ against $\HTW$ with the resources of
 
 \begin{proof}
 By the Lift Application corollary (\Cref{cor:lift-application}) for the
-preimage game---whose target $T^*$ is fixed before the primitive
+everywhere-preimage game---whose target $T^*$ is fixed before the
+primitive
 sampling---the derived random oracle adversary $\mathcal{B}$ has
 $\qRO(\mathcal{B}) \leq \Nprim$, and the random oracle bound of
 \Cref{thm:epre-ro} is nondecreasing in $\qRO(\mathcal{B})$, so the monotone
@@ -693,7 +695,7 @@ resource counts, and the CMTs-$\ell$ encryption checks are the
 construction-internal work counted in $N$ by \Cref{sec:resources}.
 
 By the Lift Application corollary (\Cref{cor:lift-application}) for the
-$X$ game, the derived random oracle adversary $\mathcal{B}$ has
+CMTs-$\ell$ game, the derived random oracle adversary $\mathcal{B}$ has
 $\qRO(\mathcal{B}) \leq \Nprim$. The Root Tag Hash and Target-Hit Bound
 (\Cref{lem:root-tag-hash}, part~1) then bounds its win by
 $\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$ in the random oracle model,
