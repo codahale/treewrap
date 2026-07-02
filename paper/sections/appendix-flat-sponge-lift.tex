@@ -116,7 +116,8 @@ $\mathcal{A}$ be a
 public permutation $\mathsf{G}$ adversary with construction interface
 cost at most $N$ and at most $\Nprim$ direct primitive-interface
 queries. In the \cite{BDPV08} single-stage replacement, the combined
-construction-and-primitive transcript has length at most
+construction-and-primitive transcript has \cite{BDPV08} query cost at
+most
 \[
   \Ntot = N + \Nprim .
 \]
@@ -146,9 +147,28 @@ Second, each direct adversary query to $(\pi,\pi^{-1})$ contributes one
 primitive-interface query and is counted in $\Nprim$. These two counts
 are disjoint in the public permutation experiment: $N$ counts
 construction-internal use of the primitive, while $\Nprim$ counts only
-the adversary's public primitive interface queries. The execution-uniform
-caps ensure that every adaptive transcript seen by the single-stage
-replacement has length at most $N+\Nprim=\Ntot$. If $\Ntot \geq 2^c$
+the adversary's public primitive interface queries.
+
+The hypothesis and bound of \cite[Theorem~2]{BDPV08} are stated for the
+\emph{cost} of the query sequence: a direct primitive query costs one,
+and a construction query costs the number of primitive calls in its
+sponge evaluation. Under the flat sponge view each duplex output point
+is a construction lookup at its full flattened transcript prefix, so a
+$d$-call computation's lookups have quadratic total cost when counted
+in isolation. \cite[Lemma~3]{BDPV08} converts each construction lookup
+into the chain of primitive queries along its padded input blocks, and,
+as its proof notes, identical primitive queries arising from common
+prefixes coincide. Within one construction computation successive
+flattened lookups are nested prefixes, each extending the previous
+flattened-and-padded input by exactly one $r$-bit block
+(\Cref{lem:duplex-flat}), so after conversion and deduplication each
+duplex call contributes exactly one new primitive query---the call
+absorbing its single padded block, whose output also supplies the
+call's at most $r$ requested output bits, so no separate squeezing
+queries arise. Prefixes shared across computations only reduce the
+count further, and each direct adversary query is already a single
+primitive query. The execution-uniform caps therefore bound the
+converted transcript's cost by $N+\Nprim=\Ntot$. If $\Ntot \geq 2^c$
 then $\Lift_c(\Ntot) \geq 1$ and the claimed bound holds trivially, so
 assume $\Ntot < 2^c$, satisfying the hypothesis of
 \cite[Theorem~2]{BDPV08}. That theorem gives distinguishing or
