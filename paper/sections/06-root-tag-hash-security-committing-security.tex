@@ -325,7 +325,8 @@ $\AdvePre_\RO(\mathcal{B}) \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))$.
 The flat sponge lift transfers the preceding random oracle bounds to the public
 permutation model. For these one-world hash games, the lift contributes
 $\Lift_c(\Ntot)$, and the derived random oracle adversary has
-$\qRO(\mathcal{B}) \leq \Nprim$; challenger encryption checks are
+$\qRO(\mathcal{B}) \leq \Nprim$; challenger construction
+computations---including the preimage game's source encryption---are
 construction-internal work counted in $N$.
 
 \begin{theorem}[Collision Resistance of $\HTW$]
@@ -421,7 +422,9 @@ resources of \Cref{sec:resources}, in the standard preimage (Pre) sense of
 By the Lift Application corollary (\Cref{cor:lift-application}) for the
 preimage game, the derived random oracle adversary $\mathcal{B}$ has
 $\qRO(\mathcal{B}) \leq \Nprim$ and
-$\nleaf(\mathcal{B}) \leq \Nleaf$. The random oracle bound of
+$\nleaf(\mathcal{B}) \leq \Nleaf$; per \Cref{sec:resources}, these caps
+cover both challenger encryptions, the source encryption's duplex calls
+and final leaf transcripts included. The random oracle bound of
 \Cref{thm:pre-ro} is nondecreasing in both resources, so the monotone form
 of \Cref{cor:lift-application} gives the stated bound.
 \end{proof}

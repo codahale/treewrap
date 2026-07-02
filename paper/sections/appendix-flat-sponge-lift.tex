@@ -136,9 +136,11 @@ flat sponge construction, and by the definition of $N$ in
 \Cref{sec:resources} these calls are counted at the same per-block
 granularity as the underlying \Keccakp{} calls. This includes
 plaintext-computing computations, verification computations whether they
-accept or reject, the per-user sum of construction calls in mu-ind, and the
+accept or reject, the per-user sum of construction calls in mu-ind, the
 deterministic challenger decryption or encryption checks actually performed in
-the committing games.
+the committing games, and the hash games' challenger encryptions---the
+collision game's $s$ submitted-input encryptions and the preimage game's
+source encryption and post-output check.
 
 Second, each direct adversary query to $(\pi,\pi^{-1})$ contributes one
 primitive-interface query and is counted in $\Nprim$. These two counts
@@ -323,7 +325,9 @@ $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ and the flat-RO construction
 interface costs at most $\Lift_c(\Ntot)$, where $\Ntot = N + \Nprim$
 counts both the construction calls of $N$---including any construction
 oracle exposed during $\mathcal{A}$'s run and, in the win-event games,
-the challenger's post-output decryption or encryption checks---and the
+the challenger's construction computations, pre- and post-output (in the
+preimage game, the source encryption computing $T^*$ as well as the
+post-output check)---and the
 $\Nprim$ direct primitive queries. The derived-adversary contract
 (\Cref{lem:derived-adversary}) expresses the resulting simulator-world
 execution as the identically distributed random oracle execution of
@@ -331,8 +335,10 @@ $\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$, with
 $\qRO(\mathcal{B}) \leq \Nprim$ and the stated construction-side
 inheritances, giving the first bound. The second follows by the
 monotonicity of $\varepsilon_{\mathsf{G}}$. When $\mathsf{G}$ is
-parameterized by a target fixed before $\mathcal{A}$ runs---the preimage
-target $T^*$---the coupling holds for each fixed target and the
-target-independent bound holds for the maximum defining
+parameterized by a challenge fixed before $\mathcal{A}$ runs---the
+everywhere-preimage target tag, or the standard preimage source $X^*$,
+whose tag $T^* = \HTW(X^*)$ each coupled world computes---the coupling
+holds for each fixed challenge and the challenge-independent bound holds
+for the maximum or average over challenges defining
 $\Adv^{\mathsf{G}}_\TW(\mathcal{A})$.
 \end{proof}
