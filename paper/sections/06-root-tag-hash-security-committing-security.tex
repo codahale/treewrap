@@ -178,25 +178,24 @@ Consider a random oracle game of \Cref{sec:ro-model} in which the adversary
 $\mathcal{B}$ makes direct $\ROflat$ queries and the challenger runs
 $m \geq 1$ deterministic encryption or decryption checks at fixed points in
 the game, the $i$-th reaching a final root transcript $R_i$ whose root tag is
-read by a single $\ROflat$ lookup at $\flatmap(R_i)$. Every execution then
-admits a chronological sequence of root tag inputs
-such that
+read by a single $\ROflat$ lookup at $\flatmap(R_i)$. Call an $\ROflat$
+input a \emph{root tag input} if it decodes under $\KeyedTWOut$ to a root
+tag output-point class---$\Rmsg^+$ (the final root message block, which
+carries the root tag only on the no-leaf path) or $\Rtag$ (the aggregated
+root tag); multi-chunk computations also reach $\Rmsg^+$ with zero
+requested output before aggregation, so this predicate over-approximates
+the root tag candidate set, which only loosens the count. Every execution
+then admits a chronological candidate sequence in which each root tag
+input is appended exactly once, immediately before the first event that is
+either a direct $\ROflat$ query at it or a positive-length $\ROflat$
+lookup reading it, and inputs never reached by such an event are never
+appended. This sequence is such that
 \begin{enumerate}
-\item each distinct direct query, when it is made, whose input $Y$ decodes under
-  $\KeyedTWOut$ to a root tag output-point class---$\Rmsg^+$ (the final
-  root message block, which carries the root tag only on the no-leaf path)
-  or $\Rtag$ (the aggregated root tag)---is appended as a candidate before
-  its $\ROflat$ lookup, and contributes at most one candidate; multi-chunk
-  computations also reach $\Rmsg^+$ with zero requested output before
-  aggregation, so this predicate over-approximates the root tag candidate
-  set, which only loosens the count;
-\item if the challenger reaches its checks, each $\flatmap(R_i)$ is in the
-  sequence, appended---if not already present---immediately before the
-  $i$-th root tag answer is sampled;
-\item no candidate's $\ROflat$ value is read before its append step, so
-  the sequence satisfies the predictability and unrevealed-value premises
-  of \Cref{lem:adaptive-candidate};
-  and
+\item the candidates are pairwise distinct, and if the challenger reaches
+  its checks, each $\flatmap(R_i)$ is in the sequence no later than the
+  sampling of the $i$-th root tag answer;
+\item it satisfies the predictability and unrevealed-value premises of
+  \Cref{lem:adaptive-candidate}; and
 \item its length is at most $\qRO(\mathcal{B}) + m$.
 \end{enumerate}
 \end{lemma}
@@ -206,26 +205,47 @@ The committing and hash games have no persistent challenger-sampled key: all
 keys are adversary-supplied except for the hidden source in the standard
 preimage game. A direct query to a keyed transcript is therefore one of
 $\mathcal{B}$'s visible $\ROflat$ queries counted in $\qRO(\mathcal{B})$,
-not a separate construction query. Each direct-query candidate is appended
-before that direct query reads its value. The append predicate depends on $Y$
-alone through the exact decoder of \Cref{lem:bridge-decode}, which ignores the
-requested output length, and by Output-Point Separation
-(\Cref{cor:output-sep}) each input decodes to at most one output-point class;
-hence each distinct direct query contributes at most one candidate,
-giving~(1).
+not a separate construction query.
 
-If the challenger reaches its $m$ checks, append $\flatmap(R_i)$
-immediately before the $i$-th root tag answer is sampled, unless it is
-already present. The intermediate $\ROflat$ lookups of check $i$ lie at
-non-root tag output points, so by \Cref{cor:output-sep} they do not read
-$\flatmap(R_i)$. If $\flatmap(R_i)$ was touched earlier---by a direct
-query or by an earlier check $j < i$---then \Cref{lem:bridge-decode} and
-\Cref{cor:output-sep} make that earlier access a final-root lookup at the
-same address, which was therefore already appended, so the input is in
-the sequence and is not appended again. Otherwise its value is still
-unread when appended. Either way no candidate's value is read before its
-append step, giving~(2) and~(3). At most $\qRO(\mathcal{B})$ direct
-candidates and $m$ challenger candidates are appended, giving~(4).
+\emph{Distinctness and coverage.} Each root tag input is appended at its
+first triggering event and never again, so the candidates are pairwise
+distinct by construction, and the rule is well defined however direct
+queries and challenger checks interleave. In particular, in the standard
+preimage game the source check's root tag sampling may be the trigger for
+$\flatmap(R_1)$; a later direct query at the same address is not a first
+trigger and appends nothing. Each $\flatmap(R_i)$ is appended no later
+than the sampling of the $i$-th root tag answer, since that sampling is a
+positive-length lookup at $\flatmap(R_i)$, giving~(1).
+
+\emph{Predictability.} The append predicate depends on the input string
+alone through the exact decoder of \Cref{lem:bridge-decode}, which ignores
+the requested output length, and by Output-Point Separation
+(\Cref{cor:output-sep}) each input decodes to at most one output-point
+class. The string itself is fixed in the state preceding the trigger: a
+direct query's input is chosen by $\mathcal{B}$ before its lookup, and a
+check's final root transcript is determined by the check's input and the
+prior oracle answers---including any private challenger state sampled
+before the candidate's unread value, which \Cref{lem:adaptive-candidate}
+expressly allows.
+
+\emph{Unrevealed value.} The trigger is the first direct query or
+positive-length lookup at the address, so no earlier direct query at it
+exists, and it suffices that no earlier construction lookup has read a
+positive number of its bits. The only positive-length construction
+lookups at root tag inputs are the checks' root tag samplings, which are
+themselves triggers; every other intermediate construction lookup either
+lies at a stream output point---a different class and hence, by
+\Cref{cor:output-sep}, a different address---or is the
+zero-requested-output $\Rmsg^+$ lookup a multi-chunk computation makes
+before aggregation, which the unrevealed-value premise of
+\Cref{lem:adaptive-candidate} expressly permits, including when that
+zero-length lookup lands at another check's future no-leaf final-root
+address. Together with predictability this gives~(2).
+
+\emph{Length.} Appends are triggered only by direct queries---at most
+$\qRO(\mathcal{B})$ of them---or by the $m$ root tag samplings;
+zero-length lookups never trigger an append. Hence the sequence has
+length at most $\qRO(\mathcal{B}) + m$, giving~(3).
 \end{proof}
 
 \begin{lemma}[Root Tag Hash and Target-Hit Bound]
