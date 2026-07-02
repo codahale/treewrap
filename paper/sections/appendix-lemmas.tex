@@ -756,7 +756,7 @@ $\nleaf(\mathcal{B})$ be the execution-uniform count of distinct
 construction-generated final leaf transcripts (\Cref{sec:resources}).
 The first bound applies the collision case ($s = 2$, $\tau = \tauleaf$)
 of \Cref{lem:adaptive-candidate} to a chronological leaf tag candidate
-sequence; the second is a same-slot conditioning argument in the
+sequence; the second is a same-slot freshness argument in the
 all-reject continuation.
 \begin{enumerate}
 \item \emph{General count.} Unconditionally---in particular when some
@@ -767,13 +767,11 @@ all-reject continuation.
     \LeafColl_{\tauleaf}\bigl(\qRO(\mathcal{B})+\nleaf(\mathcal{B})\bigr)
     = \binom{\qRO(\mathcal{B})+\nleaf(\mathcal{B})}{2} \big/ 2^{\tauleaf}.
   \]
-\item \emph{Hidden key, same slot.} Suppose the game has a hidden key,
-  nonce-respecting encryption queries, and a visible interface that
-  exposes no $\tauleaf$-bit leaf tag projection of a
-  construction-generated final leaf transcript: work in the all-reject
-  continuation of the stopped interaction, in which every non-replay
+\item \emph{Hidden key, same slot.} Suppose the game has a hidden key
+  and nonce-respecting encryption queries: work in the all-reject
+  continuation of the interaction, in which every non-replay
   verification submission performs its construction computation but
-  returns reject (as in \Cref{lem:ver-first-root-guess}). Say two final
+  returns reject. Say two final
   leaf transcripts \emph{share a slot} if they recover the same key,
   nonce, and leaf index $(K, U, j)$ (\Cref{cor:output-sep}). Let
   $\badleaf$ be the event that some construction-generated final leaf
@@ -820,40 +818,35 @@ leaf transcript regardless of key provenance, so no assumption on the
 keys is used.
 
 \emph{(2) Hidden key, same slot.} Every $\badleaf$ pair is a pair of
-construction-generated hidden-key transcripts. Before
-$\mathsf{hit}_{\mathsf{leaf}}$ no direct query has read the bridged
-$\Ltag(j)$ input of any such transcript---by \Cref{lem:bridge-decode}
-such a query would decode under $\KeyedTWOut$ to the hidden key and its
-$\Ltag(j)$ class, which is exactly $\mathsf{hit}_{\mathsf{leaf}}$---so
-each projection is first sampled, uniformly, when a construction
-computation first reads it. Nonce-respecting encryption uses each nonce
-in at most one encryption query, and within one encryption computation
-the leaf index separates final leaf transcripts, so each slot contains
-at most one encryption-generated final leaf transcript; each
-construction-generated final leaf transcript therefore belongs to at
-most one $\badleaf$ pair, and at most $\nleaf(\mathcal{B})$ pairs can
+construction-generated hidden-key transcripts. Nonce-respecting
+encryption uses each nonce in at most one encryption query, and within
+one encryption computation the leaf index separates final leaf
+transcripts, so each slot contains at most one encryption-generated
+final leaf transcript---which may be a transcript first created by an
+earlier verification or plaintext-computing computation, when the
+encryption's absorbed leaf body reproduces an earlier absorbed body.
+Each construction-generated final leaf transcript therefore belongs to
+at most one $\badleaf$ pair, and at most $\nleaf(\mathcal{B})$ pairs can
 occur.
 
-In the all-reject continuation no leaf tag projection is exposed:
-non-replay verification replies are the constant reject, replay
-decisions read the visible replay table, plaintext-computing replies
-are keystream projections at stream output points
-(\Cref{cor:output-sep}), and an encryption reply exposes ciphertext
-blocks and its final root tag, an $\ROflat$ value at a final-root
-address distinct from every $\Ltag$ address. Condition on the visible
-continuation prefix and on every lazy-table coordinate other than the
-$\Ltag$ projections of construction-generated hidden-key final leaf
-transcripts, deferring the sampling of those projections and of the
-final-root values that absorb them until needed. Under this
-conditioning the deferred projections are independent and uniform,
-while the identity of each slot's encryption-generated
-transcript---which may be a transcript first created by an earlier
-verification or plaintext-computing computation, when the encryption's
-absorbed leaf body reproduces an earlier absorbed body---is fixed. Each
-of the at most $\nleaf(\mathcal{B})$ pairs therefore collides on its
-$\tauleaf$-bit projections with probability $2^{-\tauleaf}$, and a
-union bound gives the claim. By Leaf-Transcript Recovery
-(\Cref{lem:leaf-recovery}), on $\neg\badleaf$ equal flattened
+Each pair's collision is decided at the first creation of its
+second-created member. At that moment the earlier member's
+$\tauleaf$-bit projection is a function of the prior execution, while
+the later member's projection is a fresh uniform lazy sample: by
+Transcript Injectivity (\Cref{lem:transcript-inj}) two construction
+reaches of the same bridged input come from the same final leaf
+transcript, so no construction computation has read that bridged input
+before the creation, and a direct query reading it before the creation
+would decode under $\KeyedTWOut$ to the hidden key and its $\Ltag(j)$
+class (\Cref{lem:bridge-decode})---precisely
+$\mathsf{hit}_{\mathsf{leaf}}$. Hence before
+$\mathsf{hit}_{\mathsf{leaf}}$, conditioned on the entire prior
+execution, each pair collides on its $\tauleaf$-bit projections with
+probability $2^{-\tauleaf}$, and a union bound over the at most
+$\nleaf(\mathcal{B})$ pairs gives the claim. No assumption on what the
+visible interface exposes is needed: a projection revealed after its
+sampling cannot alter a collision already decided. By Leaf-Transcript
+Recovery (\Cref{lem:leaf-recovery}), on $\neg\badleaf$ equal flattened
 final-root inputs of an encryption computation and any construction
 computation identify the same leaf transcript sequence.
 \end{proof}
