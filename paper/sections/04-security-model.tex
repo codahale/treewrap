@@ -417,7 +417,7 @@ computations contribute to each count.
       & Verification-tag terms in AE, mu-ind, and \textsf{INT-RUP} bounds. \\
     $\nleaf(\mathcal{B})$, $\Nleaf$
       & Distinct construction-generated final leaf transcripts.
-      & Leaf tag collision terms; always at most $N$. \\
+      & Leaf tag collision and tag-guessing terms; always at most $N$. \\
     $D$
       & Execution-uniform cap on users activated in the mu-ind game.
       & Multi-user key-collision and key-guess terms. \\
@@ -578,4 +578,6 @@ It is the pairwise birthday bound on $\tau$-bit leaf tag projections
 used by the collision-resistance theorem (\Cref{thm:coll}). In this game
 the keys are adversary-supplied, so direct primitive queries can pre-read
 candidate leaf tag points; after the flat sponge lift this gives
-$Q=\Nprim+\Nleaf$.
+$Q=\Nprim+\Nleaf$. The hidden-key AE-style bounds instead carry the
+linear same-slot term $\nleaf/2^{\tauleaf}$ of
+\Cref{lem:leaf-collision}, written inline.

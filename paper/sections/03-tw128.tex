@@ -192,8 +192,9 @@ choice~\cite{BDPVVV16}; \TW{} adopts that established tree-hashing
 parameter rather than introducing a new reduced-round setting.
 
 \item $\tauroot = \tauleaf = 256$. Matching the
-capacity ensures that the per-tag collision terms in the
-authenticity and committing bounds (\Cref{sec:concrete}) are dominated
+capacity ensures that the per-tag guessing terms in the authenticity
+bounds and the tag collision terms in the hash and committing bounds
+(\Cref{sec:concrete}) are dominated
 by the capacity birthday rather than the tag length.
 
 \item $k = 256$. Matching the capacity ensures that the per-user key
