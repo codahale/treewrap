@@ -40,7 +40,7 @@ leaf tags---so do distinct full inputs (Final-Root Input Separation,
 If two \TW{} root computations have distinct $(K, U, A)$ triples, then
 their bridged final root transcript inputs under $\flatmap(\cdot)$ are
 distinct, regardless of whether each computation is an encryption or
-a decryption check on a common ciphertext.
+a decryption check, and whether or not they act on a common ciphertext.
 \end{proposition}
 
 \begin{proof}
@@ -53,10 +53,9 @@ $(\sigma,\sigph)$ for each call. The seven $4$-bit phase suffixes are
 pairwise distinct, so the \siginit, $\sigma_{\mathsf{ad}}^\pm$,
 $\sigma_{\mathsf{msg}}^\pm$, and (when present) $\sigma_{\mathsf{agg}}^\pm$
 calls in the recovered sequence are unambiguously identified. The
-aggregation phase is present exactly when $n \geq 1$, and
-$n = \leaves(C)$ is determined by the common ciphertext, so the two
-recovered sequences either both carry an aggregation phase or both omit
-it; either way the recovery of $(K, U, A)$ below uses only the
+aggregation phase is present exactly when $n \geq 1$, and the two
+recovered sequences are equal, so they either both carry an aggregation
+phase or both omit it; either way the recovery of $(K, U, A)$ below uses only the
 \siginit and AD calls, which precede any message or aggregation block.
 
 Equality of the recovered sequences forces equality of the \siginit
@@ -164,7 +163,10 @@ candidates and $m$ challenger candidates are appended, giving~(4).
 
 \begin{lemma}[Root Tag Hash and Target-Hit Bound]
 \label{lem:root-tag-hash}
-Consider a keyless \TW{} random oracle game (\Cref{sec:ro-model}) in
+Consider a \TW{} random oracle game (\Cref{sec:ro-model}) with no
+persistent challenger-sampled key---all keys adversary-supplied except,
+in the standard preimage game, the hidden source
+(\Cref{lem:root-candidate-seq})---in
 which $\mathcal{B}$ makes direct $\ROflat$ queries and the challenger runs
 deterministic encryption or decryption checks reaching final root transcripts,
 with win event $\mathsf{W}$. By the Root Tag Candidate Sequence lemma
@@ -223,8 +225,8 @@ adversary $\mathcal{B}$ in the \TW{} random oracle model,
 \begin{proof}
 Run the random oracle collision game. Let $\badleaf^\star$ be the event
 that two distinct construction-generated final leaf transcripts receive
-the same $\tauleaf$-bit $\RF$ projection; by the adversary-supplied-key
-bound of \Cref{lem:leaf-collision},
+the same $\tauleaf$-bit $\RF$ projection; by the general count
+of \Cref{lem:leaf-collision},
 $\Pr[\badleaf^\star] \leq \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))$,
 so it remains to bound the win under $\neg\badleaf^\star$. After rejecting
 unless the $s$ output inputs are pairwise distinct and in the \TW{}
@@ -277,8 +279,10 @@ $\Pr[\mathsf{same}] \leq 2^{\tauroot-m_{a,\mu}}$.
 It remains to bound winning executions with $X \neq X^*$. Let
 $\badleaf^\star$ be the event that two distinct construction-generated
 final leaf transcripts in the source and output checks receive the same
-$\tauleaf$-bit $\RF$ projection. By the leaf-collision bound of
-\Cref{lem:leaf-collision},
+$\tauleaf$-bit $\RF$ projection. By the general count of
+\Cref{lem:leaf-collision}---which charges every direct query and every
+construction-generated final leaf transcript regardless of key
+provenance, covering the challenger-sampled source key---
 \[
   \Pr[\badleaf^\star]
   \leq

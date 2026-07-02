@@ -790,9 +790,9 @@ of \Cref{lem:adaptive-candidate} to a chronological leaf tag candidate
 sequence; the second is a same-slot conditioning argument in the
 all-reject continuation.
 \begin{enumerate}
-\item \emph{Adversary-supplied keys.} When the game's keys are
-  adversary-supplied---so direct queries may themselves land on leaf tag
-  output points---
+\item \emph{General count.} Unconditionally---in particular when some
+  or all keys are adversary-supplied, so direct queries may themselves
+  land on leaf tag output points---
   \[
     \Pr[\badleaf] \;\leq\;
     \LeafColl_{\tauleaf}\bigl(\qRO(\mathcal{B})+\nleaf(\mathcal{B})\bigr)
@@ -838,14 +838,17 @@ that two candidates share a $\tauleaf$-bit projection by
 $\binom{L}{2} \cdot 2^{-\tauleaf}$ for a length-$L$ sequence. Every
 $\badleaf$ pair is a pair of construction-generated candidates.
 
-\emph{(1) Adversary-supplied keys.} Direct queries may decode to a leaf
+\emph{(1) General count.} Direct queries may decode to a leaf
 tag class $\Ltag(j)$ and are appended as candidates; together with the
 $\nleaf(\mathcal{B})$ construction-generated transcripts the sequence has
 length at most $\qRO(\mathcal{B}) + \nleaf(\mathcal{B})$, so the case
 with $L = \qRO(\mathcal{B}) + \nleaf(\mathcal{B})$ gives
 $\Pr[\badleaf] \leq
 \binom{\qRO(\mathcal{B})+\nleaf(\mathcal{B})}{2} \cdot 2^{-\tauleaf}
-= \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))$.
+= \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))$. The
+count charges every direct query and every construction-generated final
+leaf transcript regardless of key provenance, so no assumption on the
+keys is used.
 
 \emph{(2) Hidden key, same slot.} Every $\badleaf$ pair is a pair of
 construction-generated hidden-key transcripts. Before
