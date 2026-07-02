@@ -89,8 +89,9 @@ loss terms in \Cref{sec:loss-terms}.
 \label{sec:sponge}
 
 \paragraph{The \Keccak{} permutation.}
-The \Keccak{} family of permutations, introduced as part of the Keccak
-design and standardized within FIPS~202~\cite{FIPS202}, is parameterized
+The \Keccak{} family of permutations, defined in
+FIPS~202~\cite{FIPS202} as the generalization of the Keccak design's
+Keccak-$f$ permutations to a free round count, is parameterized
 by a state width $b$ and a round count $n_r$; we write $\Keccak[b, n_r]
 \in \Perm(\bits^b)$ for the corresponding permutation. \TW{} uses
 \Keccakp{}, the same primitive as
@@ -233,7 +234,11 @@ an ideal interface (uniform strings of matching length, verification
 that accepts only previously-issued encryption tuples). The adversary
 also accesses a public primitive interface: the real permutation
 $(\pi,\pi^{-1})$ in the real world and the simulator
-$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ in the ideal world. The adversary
+$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ in the ideal world; this
+world-dependent primitive interface is our modification---\cite{BT16}
+work in the ideal-cipher model and give both worlds the same
+ideal-cipher oracles---using the same ideal-side simulator convention
+as the single-user AE-style games. The adversary
 outputs a guess $b'$ and wins if $b' = b$.
 
 \paragraph{Game and advantage.}
@@ -241,10 +246,10 @@ The game $\mathsf{G}^{\mathsf{mu\text{-}ind}}_\SE(\mathcal{A})$ of
 \cite[Fig.~3]{BT16} samples $b \sample \bits$ and maintains a user
 counter $v$, a set $V$ of $(d, U)$ pairs already used by encryption,
 and a set $W$ of recorded encryption tuples; its $\mathsf{New}$,
-$\mathsf{Enc}$, and $\mathsf{Vf}$ oracles, together with the public
+$\mathsf{Enc}$, and $\mathsf{Vf}$ oracles are instantiated for \TW{} in
+\Cref{sec:mu-setting}, together with the added public
 primitive interface---the real permutation when $b = 1$ and the
-simulator when $b = 0$---are instantiated for \TW{} in
-\Cref{sec:mu-setting}. We write the user index as $d$ and the
+simulator when $b = 0$. We write the user index as $d$ and the
 associated data input as $A$, where \cite{BT16} writes $i$ and $H$, and
 take the absolute value of their signed advantage so that
 \[

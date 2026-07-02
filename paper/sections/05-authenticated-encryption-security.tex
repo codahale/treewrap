@@ -136,7 +136,12 @@ encryption and verification query of $\mathcal{A}$ to user $1$. The
 primitive interface is forwarded unchanged. The real and ideal views of
 $\mathcal{A}$ in the all-in-one AE experiment are exactly the real and
 ideal views of $\mathcal{A}^{\mu}$ in the mu-ind experiment with
-$D = 1$, and the resource counts are unchanged. Applying
+$D = 1$, and the resource counts are unchanged. On a replayed
+encryption tuple the two real verification oracles agree: the mu-ind
+oracle short-circuits through its replay table, while the AE oracle
+re-runs decryption, which accepts by \TW{} decryption correctness
+(\Cref{sec:dec}); all other queries are answered by identical
+code. Applying
 \Cref{thm:mu-ind} with $D = 1$ eliminates the key-collision term and
 gives the stated bound.
 \end{proof}

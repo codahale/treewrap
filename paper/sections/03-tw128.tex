@@ -41,7 +41,7 @@ explicit aggregation of leaf tags through a single deterministic root
 transcript is the AEAD analog of KangarooTwelve's final-node hashing of
 per-chunk chaining values. In \TW{}, the chaining values are the leaf tags
 and the final digest is the root tag. This makes the root tag the natural
-hash point for the full $(K, U, A, M)$ context; the formal hash,
+hash point for the full $(K, U, A, M)$ context; the formal hash and
 committing analysis appears in \Cref{sec:root-tag-hash-security}.
 
 \begin{figure}[t]
@@ -597,9 +597,11 @@ An accepting decryption first passes the syntax and length checks of
 same canonical chunking as the ciphertext body. The decryption transcript
 absorbs $K$, $U$, $A$, and each ciphertext block under the same duplex
 instances and phase suffixes used by encryption. Its stream outputs recover
-each plaintext block as $M_i = C_i \oplus Z_i$, so re-encrypting the recovered
-message under the same transcript emits $C_i = M_i \oplus Z_i$ and absorbs the
-same ciphertext block at every message position. The leaf tags and final root
+each plaintext duplex block as $m_i = c_i \oplus Z^{(i)}$, so
+re-encrypting the recovered
+message under the same transcript emits $c_i = m_i \oplus Z^{(i)}$ and
+absorbs the
+same ciphertext duplex block at every message position. The leaf tags and final root
 candidate tag recomputed by decryption are therefore exactly the values
 recomputed by this re-encryption. Since decryption accepts only when its final
 candidate tag equals the submitted tag $T$, re-encryption returns the submitted

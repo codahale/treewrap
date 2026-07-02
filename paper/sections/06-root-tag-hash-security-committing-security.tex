@@ -44,7 +44,10 @@ a decryption check, and whether or not they act on a common ciphertext.
 \end{proposition}
 
 \begin{proof}
-Suppose for contradiction that $\flatmap(R_i) = \flatmap(R_j)$. Since the
+Consider two root computations $i$ and $j$ with contexts
+$(K_i, U_i, A_i) \neq (K_j, U_j, A_j)$, reaching final root transcripts
+$R_i$ and $R_j$. Suppose for contradiction that
+$\flatmap(R_i) = \flatmap(R_j)$. Since the
 bridge $\flatmap(\cdot)$ is injective on well-formed transcript prefixes
 (\Cref{lem:bridge-decode}), the native flattened inputs of the two
 final-root prefixes are equal. Then \Cref{lem:transcript-inj}
@@ -460,9 +463,10 @@ preimage game---whose target $T^*$ is fixed before the primitive
 sampling---the derived random oracle adversary $\mathcal{B}$ has
 $\qRO(\mathcal{B}) \leq \Nprim$, and the random oracle bound of
 \Cref{thm:epre-ro} is nondecreasing in $\qRO(\mathcal{B})$, so the monotone
-form of \Cref{cor:lift-application} gives the stated bound. With one fixed
-target tag, \Cref{thm:epre-ro} applies a candidate-preimage bound against
-that target and drops the exponent from $\tauroot(s-1)$ to $\tauroot$.
+form of \Cref{cor:lift-application} gives the stated bound. Compared with the
+$s$-way root-collision term $\RootColl_{\tauroot}(\cdot, s)$ of
+\Cref{sec:loss-terms}, the single fixed target replaces the exponent
+$\tauroot(s-1)$ by $\tauroot$.
 \end{proof}
 
 \begin{corollary}[Root Tag as a Compact Commitment]
