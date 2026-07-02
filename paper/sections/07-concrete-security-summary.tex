@@ -214,6 +214,20 @@ at most $\rho \cdot 2^{63} = 167 \cdot 2^{63} < 2^{71}$ bytes of
 plaintext, associated data, ciphertext, and aggregation through the
 duplex (\Cref{sec:params}).
 
+\paragraph{Reading the work cap.}
+\Cref{cor:concrete-security} is a success-probability statement at a fixed
+cap, not a statement that security is exhausted there. The closed forms of
+\Cref{sec:concrete} remain explicit functions of the resources beyond
+$2^{63}$, and their dominant terms are birthday-type in $\Ntot$ on the
+$256$-bit capacity, so the guarantees degrade quadratically rather than
+abruptly: at $\Ntot = 2^{100}$, for example, the $s = 2$ collision bound is
+still below $2^{-55}$. The bounds become vacuous only as $\Ntot$ approaches
+$2^{c/2} = 2^{128}$, where $\Lift_c(\Ntot)$ exceeds $1/2$
+(\Cref{sec:loss-terms}). The cap $\Ntot \leq 2^{63}$ is therefore a
+data-scale choice: a single work bound at which every notion's advantage
+lies below the $2^{-128}$ target simultaneously, not the largest workload
+the mode tolerates.
+
 \paragraph{Tightness.}
 \begin{itemize}
 \item \emph{$\KeyGuess_k(Q) = Q / 2^k$.} Tight at constants: a direct
