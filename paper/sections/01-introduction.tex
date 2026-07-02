@@ -75,8 +75,9 @@ processed data. The cap is a data-scale choice rather than a security
 ceiling: the bounds are birthday-type on the $256$-bit capacity and become
 vacuous only near $2^{128}$ calls (\Cref{sec:concrete-claim}). Optimized \texttt{amd64} and \texttt{arm64} implementations
 preserve the canonical transcript while evaluating leaf duplexes in batches; in
-bulk, \TW{} exceeds $16$\,Gbit/s and reaches $51$--$76\%$ of
-hardware-accelerated AES-128-GCM throughput (\Cref{sec:performance}).
+bulk, \TW{} reaches $48$\,Gbit/s with AVX-512 and $39$\,Gbit/s on an Apple
+M4 Pro---$51$--$76\%$ of hardware-accelerated AES-128-GCM throughput
+(\Cref{sec:performance}).
 
 \subsection{Our Contributions}
 \label{sec:contributions}

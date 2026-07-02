@@ -23,8 +23,10 @@ at a $128$-bit target for the implemented parameters.
 
 The implementation results show why the tree-hashing origin matters. Vectorized
 \texttt{amd64} and \texttt{arm64} implementations exploit the scalable leaf
-structure and exceed $16$\,Gbit/s in bulk, with the AVX-512 and \texttt{arm64}
-paths reaching $51$--$76\%$ of hardware-accelerated AES-128-GCM throughput.
+structure, reaching bulk throughputs of $48.0$\,Gbit/s on the AVX-512 path,
+$39.4$\,Gbit/s on the \texttt{arm64} path, and $16.6$\,Gbit/s on the AVX2
+path, with the AVX-512 and \texttt{arm64} paths at $51$--$76\%$ of
+hardware-accelerated AES-128-GCM throughput.
 
 Several questions remain open (\Cref{sec:limitations}): a nonce-misuse-resistant
 variant, privacy under release of unverified plaintext, and sharper bounds,
