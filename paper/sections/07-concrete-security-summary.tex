@@ -209,7 +209,14 @@ $\binom{\Nprim+2}{2}/2^{256}$ is on the same scale as $\Lift_c(\Ntot)$.
 The multi-user bound is the exception: its
 hybrid-induced
 term $D\,\KeyGuess_k(\Nprim)$ can reach $2^{-130}$ at the extreme cap
-$D=\Nprim=2^{63}$. Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to
+$D=\Nprim=2^{63}$. That corner is a property of the bound, not of any
+admissible attack: the matching attack of the Tightness paragraph below
+needs
+one construction transcript per targeted user, charging $N \geq D'$ for
+$D'$ targeted users, so under the joint cap $\Ntot \leq 2^{63}$ the
+corner forces $N = 0$; the attack-feasible maximum of the term is
+$\approx 2^{-132}$, at $D' = \Nprim = 2^{62}$, and the remaining factor
+is hybrid slack from charging created-but-idle users. Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to
 at most $\rho \cdot 2^{63} = 167 \cdot 2^{63} < 2^{71}$ bytes of
 plaintext, associated data, ciphertext, and aggregation through the
 duplex (\Cref{sec:params}).
@@ -234,10 +241,15 @@ the mode tolerates.
   random-guess attack on a $k$-bit key matches the per-query success
   probability $1 / 2^k$. The multi-user bound's dominant term
   $D\,\KeyGuess_k(\Nprim) = D\Nprim / 2^k$ is likewise tight at the
-  leading constant: against the $D$ independent user keys each direct
-  guess matches some key with probability $D / 2^k$, so $\Nprim$ guesses
-  recover a user key---and distinguish---with probability
-  $\approx D\Nprim / 2^k$, matching the bound.
+  leading constant in the theorem's free-parameter setting: the
+  adversary first obtains one encryption transcript per targeted
+  user---construction work charged to $N$, which does not enter the
+  term---then tests each direct guess against the collected
+  transcripts; each guess matches some targeted key with probability
+  $D / 2^k$, so $\Nprim$ guesses recover a user key---and
+  distinguish---with probability $\approx D\Nprim / 2^k$, matching the
+  bound. Under the joint cap the extreme corner is unreachable, as
+  noted in the concrete-cap paragraph above.
 \item \emph{$\RootColl_\tau(Q, s) = \binom{Q + s}{s} / 2^{\tau (s -
   1)}$.} Tight up to lower-order terms: it is the standard $s$-way
   multi-collision bound on a $\tau$-bit projection of $\ROflat$, and
@@ -261,7 +273,7 @@ the mode tolerates.
   tag $T$, then submit non-replay verification queries that each
   replace the leaf chunk by fresh bytes of the same length, keeping
   $T$. Each query recomputes the leaf tag at the hidden slot
-  $(K, U, 1)$ and accepts exactly when that fresh tag equals the
+  $(K, U, 1)$ and accepts whenever that fresh tag equals the
   encryption's hidden leaf tag $T_1$, since the aggregation
   string---and hence the recomputed root tag---is then unchanged. Each
   verification-side final leaf transcript therefore forges with
@@ -276,9 +288,13 @@ the mode tolerates.
   $\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{c + 1}$ dominates the
   random-permutation differentiating bound $f_P(\Ntot)$ of
   \cite[Lemma~5]{BDPV08} via \Cref{lem:lift-bound}. The
-  remaining slack is the unimproved
-  tightness of the \cite{BDPV08} simulator itself, which is an open
-  problem on the sponge side and not specific to \TW{}.
+  differentiating bound $f_P(\Ntot)$ is itself matched at leading order
+  by the standard inner-collision differentiator, which succeeds
+  against every simulator because the ideal-world construction
+  interface is the random oracle regardless of simulator strategy; any
+  residual conservatism in $\Lift_c(\Ntot)$ lies in composing
+  indifferentiability into the specific keyed games, not in an
+  improvable simulator bound, and is not specific to \TW{}.
 \end{itemize}
 
 Cross-scheme bound-level comparisons against prior sponge AEADs and
