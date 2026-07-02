@@ -378,17 +378,21 @@ with $\RootColl_{\tauroot}(\Nprim, 2) = \binom{\Nprim + 2}{2} / 2^{\tauroot}$.
 \end{corollary}
 
 \begin{proof}
-The $s = 2$ case of \Cref{thm:coll}; \cite{BH22} note that $s$-way
-multi-collision resistance at $s = 2$ is the classical collision resistance
-of \cite{RS04}.
+The $s = 2$ case of \Cref{thm:coll}; \cite{BH22} note that $s = 2$
+recovers the classical notion of collision resistance, which under the
+keyed-by-the-permutation convention of \Cref{sec:commit-defs} is the
+Coll notion of \cite{RS04}.
 \end{proof}
 
 \begin{corollary}[Second-Preimage Resistance of $\HTW$]
 \label{cor:second-preimage-rs04}
-For every adversary against $\HTW$, with the resources of
-\Cref{sec:resources}, in either the standard second-preimage (Sec) or
-everywhere second-preimage (eSec) sense of \cite{RS04}, the corresponding
-advantage is bounded by the two-way collision bound of
+Fix byte lengths $0 \leq a \leq A_{\max}$ and
+$0 \leq \mu \leq M_{\max}$. For every adversary against $\HTW$, with the
+resources of \Cref{sec:resources}, in either the standard
+second-preimage (Sec) or everywhere second-preimage (eSec) sense of
+\cite{RS04} on the fixed input slice $\mathcal{X}_{a,\mu}$, the
+corresponding advantage is bounded, independently of $(a, \mu)$, by the
+two-way collision bound of
 \Cref{cor:coll-rs04}:
 \[
   \Lift_c(\Ntot)
@@ -398,9 +402,12 @@ advantage is bounded by the two-way collision bound of
 \end{corollary}
 
 \begin{proof}
-By \cite[Proposition~6]{RS04}, collision resistance implies both Sec and
-eSec. Applying this implication to the two-way collision bound of
-\Cref{cor:coll-rs04} gives the stated bound.
+The Sec and eSec notions of \cite{RS04} are the slice-parameterized
+$\mathrm{Sec}[m]$ and $\mathrm{eSec}[m]$, and \cite[Proposition~6]{RS04}
+shows that collision resistance implies both on each fixed slice.
+Applying the implication on the slice $\mathcal{X}_{a,\mu}$ to the
+two-way collision bound of \Cref{cor:coll-rs04}, which does not depend
+on the slice, gives the stated bound for every $(a, \mu)$.
 \end{proof}
 
 \begin{theorem}[Preimage Resistance of $\HTW$]

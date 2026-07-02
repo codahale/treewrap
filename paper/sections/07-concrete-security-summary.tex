@@ -126,11 +126,12 @@ adversary with work cap $\Ntot \leq 2^{63}$---and, in the multi-user case,
 user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
 \TW{}'s notions: multi-user indistinguishability (\Cref{thm:mu-ind}),
 all-in-one AE (\Cref{cor:ae}), \textsf{INT-RUP} integrity
-(\Cref{thm:int-rup}), the \cite{RS04} hash security of
-$\HTW$---$s$-way collision resistance for every $s \geq 2$, standard and
-everywhere second-preimage resistance inherited from collision resistance,
-standard preimage resistance on every fixed input slice, and everywhere
-preimage resistance
+(\Cref{thm:int-rup}), the hash security of
+$\HTW$---$s$-way collision resistance for every $s \geq 2$ in the sense
+of \cite{BH22}, with the \cite{RS04} notions of standard and everywhere
+second-preimage resistance inherited from collision resistance on every
+fixed input slice, standard preimage resistance on every fixed input
+slice, and everywhere preimage resistance
 (\Cref{thm:coll,cor:second-preimage-rs04,thm:pre,thm:epre})---and the \cite{BH22}
 CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}).
 \end{corollary}
