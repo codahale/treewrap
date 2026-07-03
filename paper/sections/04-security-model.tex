@@ -405,8 +405,7 @@ computations contribute to each count.
       & Key-guess, root-collision, root-preimage terms; direct-query part of
         the lift. \\
     $\Ntot = N + \Nprim$
-      & Total public-primitive query cost seen by the flat sponge
-        replacement.
+      & Converted primitive-query cost used by the flat sponge replacement.
       & Argument of $\Lift_c(\Ntot)$. \\
     $\qRO(\mathcal{B})$, $\QRO$
       & Direct finite-output queries to $\ROflat$ in the intermediate random
@@ -467,12 +466,13 @@ computations contribute to each count.
 \item[$\Nprim$:] the number of direct adversary queries to the
   primitive interface, the pair $(\pi, \pi^{-1})$ in
   public permutation games.
-\item[$\Ntot = N + \Nprim$:] the total query-sequence cost. The
-  flat sponge lift of \Cref{app:flat-sponge-lift} is applied at
-  $\Ntot$ because the indifferentiability replacement sees both the
-  construction-internal sponge calls counted by $N$ and the adversary's
-  direct primitive-interface queries counted by $\Nprim$ in one
-  chronological public primitive transcript.
+\item[$\Ntot = N + \Nprim$:] the total converted primitive-query cost
+  used by the flat sponge lift. The lift of
+  \Cref{app:flat-sponge-lift} is applied at $\Ntot$ because after the
+  conversion of \cite[Lemma~3]{BDPV08} and common-prefix deduplication,
+  the construction-internal sponge calls counted by $N$ and the
+  adversary's direct primitive-interface queries counted by $\Nprim$
+  form a primitive-query sequence of cost at most $N+\Nprim$.
 \item[$\qv(\mathcal{A})$, $\Qv$:] the number of verification queries
   with valid inputs that are not replay-table hits, and a cap on it.
   Used in the verification terms of the direct mu-ind, AE, and

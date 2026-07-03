@@ -12,10 +12,11 @@ The lift has two steps in the win-event games and three in the
 real-vs-ideal games. First, the \cite{BDPV08} indifferentiability theorem
 replaces the construction interface by a flat random oracle and answers only
 direct public-permutation queries through a simulator over that oracle, at cost
-$\Lift_c(\Ntot)$, where $\Ntot = N + \Nprim$ counts construction-internal
-primitive calls---induced by construction queries and by deterministic
-challenger computations---together with direct primitive
-queries. Second, the simulator-world adversary is converted into a flat-RO
+$\Lift_c(\Ntot)$, where $\Ntot = N + \Nprim$ bounds the converted
+\cite{BDPV08} primitive-query cost: construction-internal primitive calls
+induced by construction queries and deterministic challenger computations,
+after common-prefix deduplication, together with direct primitive queries.
+Second, the simulator-world adversary is converted into a flat-RO
 adversary whose direct random oracle query count is at most $\Nprim$. Thus the
 random oracle bounds are instantiated at $\qRO \leq \Nprim$, while the public
 permutation lift pays $\Lift_c(N+\Nprim)$. Third, in the real-vs-ideal games,
@@ -126,9 +127,11 @@ Let $\mathsf{G}$ be a single-stage \TW{} game
 $\mathcal{A}$ be a
 public permutation $\mathsf{G}$ adversary with construction interface
 cost at most $N$ and at most $\Nprim$ direct primitive-interface
-queries. In the \cite{BDPV08} single-stage replacement, the combined
-construction-and-primitive transcript has \cite{BDPV08} query cost at
-most
+queries. In the \cite{BDPV08} single-stage replacement, convert the
+combined construction-and-primitive transcript to the primitive-query
+sequence of \cite[Lemma~3]{BDPV08}, omitting duplicate primitive queries
+induced by common prefixes. This converted sequence has \cite{BDPV08}
+query cost at most
 \[
   \Ntot = N + \Nprim .
 \]
@@ -149,8 +152,8 @@ flat sponge construction, and by the definition of $N$ in
 granularity as the underlying \Keccakp{} calls. This includes
 plaintext-computing computations, verification computations whether they
 accept or reject, the per-user sum of construction calls in mu-ind, the
-deterministic challenger decryption or encryption checks actually performed in
-the committing games, and the hash games' challenger encryptions---the
+deterministic challenger decryption or encryption checks charged in the
+committing games, and the hash games' challenger encryptions---the
 collision game's $s$ submitted-input encryptions, the standard preimage
 game's source encryption and post-output check, and the
 everywhere-preimage game's post-output check.
@@ -180,9 +183,9 @@ call's at most $r$ requested output bits, so no separate squeezing
 queries arise. Prefixes shared across computations only reduce the
 count further, and each direct adversary query is already a single
 primitive query. The execution-uniform caps therefore bound the
-converted transcript's cost by $N+\Nprim=\Ntot$. If $\Ntot \geq 2^c$
-then $\Lift_c(\Ntot) \geq 1$ and the claimed bound holds trivially, so
-assume $\Ntot < 2^c$, satisfying the hypothesis of
+cost of the converted primitive-query sequence by $N+\Nprim=\Ntot$. If
+$\Ntot \geq 2^c$ then $\Lift_c(\Ntot) \geq 1$ and the claimed bound holds
+trivially, so assume $\Ntot < 2^c$, satisfying the hypothesis of
 \cite[Theorem~2]{BDPV08}. That theorem gives distinguishing or
 success-probability cost at most the random-permutation
 differentiating bound $f_P(\Ntot)$ of \cite[Lemma~5]{BDPV08}. The
