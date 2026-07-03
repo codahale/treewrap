@@ -9,7 +9,8 @@ data, built as a two-level tree of duplex objects over the
 \Keccakp{} permutation. A single \emph{root} duplex, initialized
 with the key $K$ and nonce $U$, absorbs the associated data $A$ when it
 is nonempty, emits
-keystream for the first plaintext chunk $M_0$ of at most $\beta$ bytes,
+keystream for the first plaintext chunk $M_0$, whose maximum size
+$\beta$ is defined in \Cref{tab:params},
 and absorbs the resulting ciphertext chunk $C_0$;
 when $A$ is empty the associated data phase is elided and the
 initialization call itself emits the initial $M_0$ keystream;
@@ -249,9 +250,9 @@ The root duplex's first absorbed string is
 $\prfxroot \concat K \concat U$, and the $j$-th leaf
 duplex's first absorbed string is $\prfxleaf \concat K
 \concat U \concat \langle j \rangle_8$. Together with the fixed
-$k$-bit and $\nu$-bit widths of $K$ and $U$, these prefixes separate
-root from leaf transcripts and distinguish leaves with different
-chunk indices.
+$k$-bit and $\nu$-bit widths of $K$ and $U$, these initialization
+strings separate root from leaf transcripts and distinguish leaves with
+different chunk indices.
 
 Second, every byte-aligned absorption carries a four-bit phase suffix.
 We identify each suffix with the four-bit string given by its
@@ -384,11 +385,10 @@ overwrite mechanism of \cite[\S6.2 and Algorithm~5]{BDPV11}: when the
 current rate prefix emitted as keystream is $Z$, XOR-absorbing
 $m \oplus Z$ has the same update on the message bytes as overwriting
 that prefix with $m$, with the phase tag still carried as part of the
-duplex input. The decryption helper \Call{StreamDec}{} is identical to
-\Call{StreamEnc}{} with the roles of the plaintext and ciphertext duplex
-blocks exchanged: it takes ciphertext duplex blocks $c_i$ as input,
-recovers each plaintext duplex block as $m_i = c_i \oplus Z$, absorbs the
-same $c_i$ under the same phase suffix, and returns
+duplex input. The decryption helper \Call{StreamDec}{} uses the same
+schedule as \Call{StreamEnc}{} with ciphertext duplex blocks $c_i$ as
+input: it recovers each plaintext duplex block as $m_i = c_i \oplus Z$,
+absorbs the same $c_i$ under the same phase suffix, and returns
 $(m_1 \concat \cdots \concat m_t, Z')$; we omit its pseudocode. In both
 streaming helpers, each duplex call absorbs a
 duplex block followed by its phase suffix---$\sigma^-$ for a non-final
