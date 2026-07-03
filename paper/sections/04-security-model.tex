@@ -198,8 +198,9 @@ a root tag:
 \end{align*}
 with advantage $\AdvColl_\TW(\mathcal{A}) = \Pr[\text{the game returns }
 1]$; no nonce uniqueness is imposed. The \cite{RS04} standard and
-everywhere second-preimage notions are obtained from this collision game by
-\cite[Proposition~6]{RS04}; no separate second-preimage game is needed.
+everywhere second-preimage notions are used on fixed input slices; in
+\Cref{cor:second-preimage-rs04} they are reduced explicitly to this
+two-way collision game.
 For fixed byte lengths $a,\mu$, the standard preimage game samples
 $X^* \sample \mathcal{X}_{a,\mu}$ independently of the primitive, computes
 $T^*=\HTW(X^*)$, gives $T^*$ to
@@ -460,9 +461,9 @@ computations contribute to each count.
   ciphertexts whether or not the $\WiC_\ell$ distinctness check would
   reject earlier. For the Sec and eSec games of
   \Cref{cor:second-preimage-rs04}, $N$ and $\Nprim$ are those of the
-  induced two-way collision adversary of \cite[Proposition~6]{RS04},
-  whose two deterministic encryptions are counted exactly as in the
-  $s = 2$ collision game.
+  explicit induced two-way collision adversary in that corollary, whose
+  source and candidate deterministic encryptions are counted exactly as
+  in the $s = 2$ collision game.
 \item[$\Nprim$:] the number of direct adversary queries to the
   primitive interface, the pair $(\pi, \pi^{-1})$ in
   public permutation games.

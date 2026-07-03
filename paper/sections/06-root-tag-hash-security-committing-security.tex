@@ -504,12 +504,30 @@ two-way collision bound of
 \end{corollary}
 
 \begin{proof}
-The Sec and eSec notions of \cite{RS04} are the slice-parameterized
-$\mathrm{Sec}[m]$ and $\mathrm{eSec}[m]$, and \cite[Proposition~6]{RS04}
-shows that collision resistance implies both on each fixed slice.
-Applying the implication on the slice $\mathcal{X}_{a,\mu}$ to the
-two-way collision bound of \Cref{cor:coll-rs04}, which does not depend
-on the slice, gives the stated bound for every $(a, \mu)$.
+We use \cite{RS04} to identify the standard and everywhere second-preimage
+notions with the fixed-slice notions
+$\mathrm{Sec}[m_{a,\mu}]$ and $\mathrm{eSec}[m_{a,\mu}]$ under the
+canonical encoding of $\mathcal{X}_{a,\mu}$; the quantitative reduction
+is explicit.
+
+For a standard Sec adversary $\mathcal{A}$, define a two-way collision
+adversary $\mathcal{C}$ as follows. It samples
+$X_0 \sample \mathcal{X}_{a,\mu}$, runs
+$\mathcal{A}^{\pi,\pi^{-1}}(X_0)$, receives $X_1$, and outputs
+$(X_0,X_1)$. Whenever $\mathcal{A}$ wins, $X_1$ is a valid input,
+$X_1 \neq X_0$, and $\HTW(X_1)=\HTW(X_0)$, so $\mathcal{C}$ wins the
+two-way collision game with exactly the same probability.
+
+For eSec, fix a source $X_0 \in \mathcal{X}_{a,\mu}$ and define
+$\mathcal{C}_{X_0}$ to run the eSec adversary on that source and output
+$(X_0,X_1)$. The same pointwise implication holds for every $X_0$; taking
+the maximum over sources gives the eSec bound.
+
+The induced collision adversary makes exactly the direct primitive queries
+made by $\mathcal{A}$. Its two deterministic challenger checks are the
+source and candidate checks, counted exactly as in the $s=2$ collision
+game. Applying \Cref{cor:coll-rs04} to the induced collision adversary
+gives the displayed bound.
 \end{proof}
 
 \begin{theorem}[Preimage Resistance of $\HTW$]
