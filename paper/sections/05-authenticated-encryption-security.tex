@@ -70,13 +70,17 @@ implementation of $H_{d-1}^\star$ and an all-reject game share all code
 except the return statement of a successful non-replay user-$d$
 verification comparison, which sets the flag $\forge$, while a direct
 $\ROflat$ query decoding to the hidden key $K_d$ sets the flag
-$\badkey$. The real pair agrees pointwise until $\forge$; the
-all-reject game agrees in distribution with $H_d^\star$ until
-$\badkey$, since by Encryption Transcript Marginal Uniformity
-(\Cref{lem:enc-transcript-marginal-uniformity}) each user-$d$
-encryption answer is fresh uniform given the visible transcript; and
-environment lookups for the other users decode to their own keys and
-touch neither flag (\Cref{lem:env-neutrality}). A first-occurrence
+$\badkey$. The real pair agrees pointwise until $\forge$. Claim~3 in
+the proof of \Cref{lem:mu-adjacent-hybrid} couples the all-reject game
+to $H_d^\star$ until $\badkey$: Encryption Transcript Marginal
+Uniformity (\Cref{lem:enc-transcript-marginal-uniformity}) supplies
+freshness and distinctness for newly generated user-$d$ encryption
+points, while the all-reject structure ensures that any reused
+user-$d$ root-tag entry was previously read only through constant
+reject answers and remains uniform conditioned on the visible
+transcript. Environment lookups for the other users decode to their own
+keys and touch neither flag (\Cref{lem:env-neutrality}). A
+first-occurrence
 decomposition of $\forge \vee \badkey$ in the all-reject game then
 yields the three terms: $\badkey$ is charged at most
 $\KeyGuess_k(\qRO(\mathcal{B}))$ by the foreign-key key-test claim of
@@ -214,11 +218,14 @@ and \Cref{lem:key-tests} gives
 
 For the leaf term, before $\badkey$ no direct query has pre-read a hidden-key
 final leaf tag point: such a query would decode under $\KeyedTWOut$ to $K$ and
-the corresponding $\Ltag(j)$ class. Encryption queries are
-nonce-respecting, and the visible view agrees with the
-all-reject continuation of \Cref{lem:int-rup-root-guess} until the
-first accepting non-replay submission, the event $\forge$. The
-same-slot case of \Cref{lem:leaf-collision}, applied to the enlarged
+the corresponding $\Ltag(j)$ class. Encryption queries are nonce-respecting.
+Couple the real \textsf{INT-RUP} execution to the all-reject continuation
+used in the proof of \Cref{lem:int-rup-root-guess}. Up to the first
+accepting non-replay submission, the construction computations and
+leaf-tag table accesses agree; the continuation differs only by
+deferring the relevant final root-tag value until comparison. Thus the
+internal event $\badleaf$ transfers to the all-reject continuation, where
+the same-slot case of \Cref{lem:leaf-collision}, applied to the enlarged
 set of construction computations, gives
 \[
   \Pr[\badleaf \text{ before } \badkey \cup \forge]
