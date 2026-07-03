@@ -149,7 +149,7 @@ committing object. The commitment uses the same permutation already used for
 confidentiality and integrity and the same tag already used for authentication,
 so no separate commitment primitive, key-derivation step, or auxiliary hash is
 invoked, and the multi-input full-commitment bound follows from a single root tag
-collision bound (\Cref{sec:cmtds3}). More strongly,
+collision bound (\Cref{sec:root-tag-hash-security}). More strongly,
 \Cref{thm:coll} shows that the root tag alone is a compact commitment
 string even when the ciphertext bodies used as openings differ, up to the
 additional leaf tag birthday term. This places \TW{} alongside the dedicated

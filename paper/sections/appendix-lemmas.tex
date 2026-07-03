@@ -33,7 +33,7 @@ encryption and verification accounting. The Adaptive Candidate node
 (\Cref{lem:adaptive-candidate}) is the generic probabilistic engine: it
 bounds the Leaf Tag Collision lemma (\Cref{lem:leaf-collision}) and,
 through the Root Tag Candidate Sequence and Root Tag Hash and Target-Hit Bound
-(\Cref{lem:root-candidate-seq,lem:root-tag-hash}) of \Cref{sec:cmtds3},
+(\Cref{lem:root-candidate-seq,lem:root-tag-hash}) of \Cref{sec:root-tag-hash-security},
 the root tag hash and committing proofs. The mu-ind proof reuses the
 same structural lemmas through the explicit hybrid game sequence of
 \Cref{def:adjacent-hybrid-games}, adding freshness, key-test,
@@ -460,7 +460,7 @@ $\badkey$.
 \end{proof}
 
 The bridge injectivity established here underlies Opening Triple
-Separation (\Cref{cor:triple-sep}, \Cref{sec:cmtds3}): distinct
+Separation (\Cref{cor:triple-sep}, \Cref{sec:root-tag-hash-security}): distinct
 $(K, U, A)$ triples yield distinct bridged final root transcripts.
 
 \begin{corollary}[Output-Point Separation]
@@ -527,10 +527,7 @@ fixed-width initialization field. It fixes the associated data $A$ only
 for root prefixes whose recovered phase order determines the complete AD
 string: a final AD prefix, or any later root message or aggregation
 prefix, with absence of AD calls determining $A=\varepsilon$. We use the
-key projection $(K,\mathcal{C})$ throughout. When a game hides a single
-context component $Z \in \{K,U,A\}$, write $\KeyedTWOut_Z(Y)$ for the
-decoded value of that component when it is determined, and $\bot$
-otherwise.
+key projection $(K,\mathcal{C})$ throughout.
 \end{definition}
 
 By \Cref{lem:bridge-decode,cor:output-sep}, $\KeyedTWOut$ is well
@@ -702,21 +699,18 @@ not enter the count.
 
 \begin{lemma}[Adaptive Key-Test Bound]
 \label{lem:key-tests}
-Consider a \TW{} random oracle model game with a single hidden context
-component $Z$ sampled uniformly from $\bits^w$ for some $w \geq k$---the
-standard case being the hidden key, $Z = K$ and $w = k$, used in the
-AE-style proofs---direct adversary access to
+Consider a \TW{} random oracle model game with a hidden key $K$ sampled
+uniformly from $\bits^k$, direct adversary access to
 $\ROflat$, and an immediate abort event $\badkey$ that fires on a
-direct query $(Y,\ell)$ exactly when $Y$ decodes to some counted
-output-point class $\mathcal{C}$ of \Cref{tab:keyed-twout} with
-$\KeyedTWOut_Z(Y) = Z$. Suppose that, before the
+direct query $(Y,\ell)$ exactly when $Y$ decodes under $\KeyedTWOut$ to
+the candidate key $K$ and a counted
+output-point class of \Cref{tab:keyed-twout}. Suppose that, before the
 abort, the following invariant holds for every direct query position
 $i$: after conditioning on the full visible execution prefix and on
-the set $S_i$ of distinct decoded candidate $Z$-values from earlier direct
-queries, the hidden $Z$ is uniform on $\bits^w \setminus S_i$. Then
+the set $S_i$ of distinct decoded candidate keys from earlier direct
+queries, the hidden $K$ is uniform on $\bits^k \setminus S_i$. Then
 \[
   \Pr[\badkey]
-  \leq \qRO / 2^w
   \leq \KeyGuess_k(\qRO)
   = \qRO / 2^k,
 \]
@@ -724,41 +718,42 @@ where $\qRO$ is the execution-uniform count of direct $\ROflat$ queries.
 \end{lemma}
 
 \begin{proof}
-If $\qRO \geq 2^w$ the right-hand side $\qRO/2^w$ is at least one, so the
-claim is trivial. Assume $\qRO < 2^w$.
+If $\qRO \geq 2^k$ the right-hand side $\qRO/2^k$ is at least one, so the
+claim is trivial. Assume $\qRO < 2^k$.
 
 Order the direct $\ROflat$ queries. By the definition of
-$\KeyedTWOut_Z$ and \Cref{lem:bridge-decode}, each query input either
-decodes to $\bot$ or decodes to a unique candidate $Z$-value and counted
+$\KeyedTWOut$ and \Cref{lem:bridge-decode}, each query input either
+decodes to $\bot$ or decodes to a unique candidate key and counted
 output-point class. Queries that decode to $\bot$, and repeated
-queries whose decoded $Z$-value already lies in the current set $S_i$, do
+queries whose decoded candidate key already lies in the current set
+$S_i$, do
 not change the set of possible first successful tests. Removing
 them can only shorten the sequence, so it suffices to analyze the
-subsequence of distinct fresh decoded candidate $Z$-values
-$Z'_1, \dots, Z'_m$, where $m \leq \qRO$.
+subsequence of distinct fresh decoded candidate keys
+$K'_1, \dots, K'_m$, where $m \leq \qRO$.
 
-Let $F_i$ be the event that the first $i$ fresh decoded candidate values
-all miss the hidden $Z$. The invariant says that, conditioned on the
+Let $F_i$ be the event that the first $i$ fresh decoded candidate keys
+all miss the hidden $K$. The invariant says that, conditioned on the
 visible prefix before the $(i+1)$-st fresh test and on $F_i$, the
-hidden $Z$ is uniform over the $2^w - i$ values not yet tested. The next
-fresh candidate value $Z'_{i+1}$ is one of those remaining values and is
+hidden $K$ is uniform over the $2^k - i$ values not yet tested. The next
+fresh candidate key $K'_{i+1}$ is one of those remaining values and is
 determined by the adversary's next direct query, so
 \[
-  \Pr[Z = Z'_{i+1} \mid F_i] = \frac{1}{2^w - i},
+  \Pr[K = K'_{i+1} \mid F_i] = \frac{1}{2^k - i},
   \qquad
-  \Pr[F_{i+1} \mid F_i] = 1 - \frac{1}{2^w - i}.
+  \Pr[F_{i+1} \mid F_i] = 1 - \frac{1}{2^k - i}.
 \]
 Multiplying the miss probabilities gives
 \[
   \Pr[F_m]
-  = \prod_{i=0}^{m-1} \left(1 - \frac{1}{2^w - i}\right)
-  = \prod_{i=0}^{m-1} \frac{2^w - i - 1}{2^w - i}
-  = \frac{2^w - m}{2^w}.
+  = \prod_{i=0}^{m-1} \left(1 - \frac{1}{2^k - i}\right)
+  = \prod_{i=0}^{m-1} \frac{2^k - i - 1}{2^k - i}
+  = \frac{2^k - m}{2^k}.
 \]
-Thus the probability that some fresh decoded candidate value equals the
-hidden $Z$ is $m / 2^w \leq \qRO / 2^w \leq \qRO/2^k$, the last step by
-$w \geq k$. This event is exactly the first $\badkey$ abort, because
-$\KeyedTWOut_Z$ returns either $\bot$ or a unique candidate $Z$-value.
+Thus the probability that some fresh decoded candidate key equals the
+hidden $K$ is $m / 2^k \leq \qRO / 2^k$. This event is exactly the
+first $\badkey$ abort, because
+$\KeyedTWOut$ returns either $\bot$ or a unique candidate key.
 \end{proof}
 
 \subsection{Leaf Tag Collision Bound}

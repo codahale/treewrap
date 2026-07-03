@@ -84,7 +84,9 @@ cycles-per-byte and throughput figures for a given measurement come from one
 interleaved run rather than two separately scheduled ones. Each sample reuses the
 same source and destination buffers, so the reported figures are warm-cache,
 steady-state rates. The single-threaded measurement leaves the SMT sibling of the
-\texttt{amd64} host idle. We report a sweep of seven message lengths from $1$\,B
+\texttt{amd64} host idle. All reported figures are single-threaded: they
+exercise the SIMD axis of \TW{}'s parallelism, and multicore scaling remains
+unmeasured. We report a sweep of seven message lengths from $1$\,B
 to $16$\,MiB.
 
 The cycle counters differ by architecture, and this affects how the
@@ -259,7 +261,7 @@ $32$\,KiB \TW{} is within a factor of two of its AVX-512 floor and close to its
 fills at $64$\,KiB. The root duplex also bounds the tail of a long
 message: the final tag cannot be produced until chunk~$0$ has been processed and
 every leaf tag has been absorbed into the aggregation transcript. That absorption
-is cheap---each rate block of the root absorbs five $32$-byte leaf tags, so a
+is cheap---each rate block of the root absorbs just over five $32$-byte leaf tags, so a
 $16$\,MiB message ($\approx 2000$ leaves) adds on the order of $400$ root
 permutations against roughly $10^5$ permutations of leaf work, under $0.5\%$
 overhead---so the serial root does not materially cap bulk throughput.

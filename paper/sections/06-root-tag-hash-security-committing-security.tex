@@ -1,5 +1,4 @@
 \section{Root Tag Hash Security and Committing Security}
-\label{sec:cmtds3}
 \label{sec:root-tag-hash-security}
 
 This section proves the digest claim for the root of the \TW{} tree. The
@@ -244,7 +243,8 @@ address. Together with predictability this gives~(2).
 
 \emph{Length.} Appends are triggered only by direct queries---at most
 $\qRO(\mathcal{B})$ of them---or by the $m$ root tag samplings;
-zero-length lookups never trigger an append. Hence the sequence has
+zero-length construction lookups never trigger an append. Hence the
+sequence has
 length at most $\qRO(\mathcal{B}) + m$, giving~(3).
 \end{proof}
 
