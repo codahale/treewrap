@@ -173,17 +173,25 @@ transcripts the win event constrains.
 
 \begin{lemma}[Root Tag Candidate Sequence]
 \label{lem:root-candidate-seq}
-Consider a random oracle game of \Cref{sec:ro-model} in which the adversary
-$\mathcal{B}$ makes direct $\ROflat$ queries and the challenger runs
-$m \geq 1$ deterministic encryption or decryption checks at fixed points in
-the game, the $i$-th reaching a final root transcript $R_i$ whose root tag is
-read by a single $\ROflat$ lookup at $\flatmap(R_i)$. Call an $\ROflat$
-input a \emph{root tag input} if it decodes under $\KeyedTWOut$ to a root
-tag output-point class---$\Rmsg^+$ (the final root message block, which
-carries the root tag only on the no-leaf path) or $\Rtag$ (the aggregated
-root tag); multi-chunk computations also reach $\Rmsg^+$ with zero
-requested output before aggregation, so this predicate over-approximates
-the root tag candidate set, which only loosens the count. Every execution
+Consider one of the hash or committing random oracle games of
+\Cref{sec:ro-model}. The adversary $\mathcal{B}$ makes direct
+$\ROflat$ queries and has no construction oracle. The only
+construction-internal positive-length lookups at root tag inputs are the
+root tag samplings of $h \geq 1$ deterministic challenger encryption or
+decryption checks at game-fixed points. Apart from the standard preimage
+game's designated sampled source check, all check inputs and keys are
+adversary supplied. In that preimage game the sampled source input,
+including its key, is private challenger state sampled before the source
+tag is revealed, and the source computation counts as one of the $h$
+checks. Let the $i$-th check reach a final root transcript $R_i$ whose
+root tag is read by a single $\ROflat$ lookup at $\flatmap(R_i)$. Call an
+$\ROflat$ input a \emph{root tag input} if it decodes under
+$\KeyedTWOut$ to a root tag output-point class---$\Rmsg^+$ (the final
+root message block, which carries the root tag only on the no-leaf path)
+or $\Rtag$ (the aggregated root tag); multi-chunk computations also reach
+$\Rmsg^+$ with zero requested output before aggregation, so this predicate
+over-approximates the root tag candidate set, which only loosens the
+count. Every execution
 then admits a chronological candidate sequence in which each root tag
 input is appended exactly once, immediately before the first event that is
 either a direct $\ROflat$ query at it or a positive-length $\ROflat$
@@ -195,16 +203,15 @@ appended. This sequence is such that
   sampling of the $i$-th root tag answer;
 \item it satisfies the predictability and unrevealed-value premises of
   \Cref{lem:adaptive-candidate}; and
-\item its length is at most $\qRO(\mathcal{B}) + m$.
+\item its length is at most $\qRO(\mathcal{B}) + h$.
 \end{enumerate}
 \end{lemma}
 
 \begin{proof}
-The committing and hash games have no persistent challenger-sampled key: all
-keys are adversary-supplied except for the hidden source in the standard
-preimage game. A direct query to a keyed transcript is therefore one of
-$\mathcal{B}$'s visible $\ROflat$ queries counted in $\qRO(\mathcal{B})$,
-not a separate construction query.
+A direct query to a keyed transcript is one of $\mathcal{B}$'s visible
+$\ROflat$ queries counted in $\qRO(\mathcal{B})$, not a separate
+construction query. The only construction computations in the game are
+the $h$ deterministic challenger checks named in the statement.
 
 \emph{Distinctness and coverage.} Each root tag input is appended at its
 first triggering event and never again, so the candidates are pairwise
@@ -245,35 +252,36 @@ when such a zero-length lookup lands at another check's future no-leaf
 final-root address. Together with predictability this gives~(2).
 
 \emph{Length.} Appends are triggered only by direct queries---at most
-$\qRO(\mathcal{B})$ of them---or by the $m$ root tag samplings;
+$\qRO(\mathcal{B})$ of them---or by the $h$ checks' root tag samplings;
 zero-length construction lookups never trigger an append. Hence the
 sequence has
-length at most $\qRO(\mathcal{B}) + m$, giving~(3).
+length at most $\qRO(\mathcal{B}) + h$, giving~(3).
 \end{proof}
 
 \begin{lemma}[Root Tag Hash and Target-Hit Bound]
 \label{lem:root-tag-hash}
-Consider a \TW{} random oracle game (\Cref{sec:ro-model}) with no
-persistent challenger-sampled key---all keys adversary-supplied except,
-in the standard preimage game, the hidden source
-(\Cref{lem:root-candidate-seq})---in
-which $\mathcal{B}$ makes direct $\ROflat$ queries and the challenger runs
-deterministic encryption or decryption checks reaching final root transcripts,
-with win event $\mathsf{W}$. By the Root Tag Candidate Sequence lemma
+Consider one of the hash or committing \TW{} random oracle games
+(\Cref{sec:ro-model}) for an adversary $\mathcal{B}$, satisfying the
+hypotheses of \Cref{lem:root-candidate-seq}, with win event
+$\mathsf{W}$. By the Root
+Tag Candidate Sequence lemma
 (\Cref{lem:root-candidate-seq}) the root tag inputs form a chronological
 candidate sequence meeting the premises of \Cref{lem:adaptive-candidate} with
 $\tau = \tauroot$. Writing
 $\qRO = \qRO(\mathcal{B})$:
 \begin{enumerate}
-\item if $\mathsf{W}$ forces $s$ checks to reach pairwise distinct bridged
-  final root transcripts carrying a common root tag, then, with $m = s$
-  checks, $\Pr[\mathsf{W}] \leq \RootColl_{\tauroot}(\qRO, s)$;
-\item if $\mathsf{W}$ forces a single check ($m = 1$) to carry a root tag
-  equal to a target fixed independently of $\ROflat$, then
+\item \emph{Root-collision case.} If $\mathsf{W}$ forces $s$ checks to
+  reach pairwise distinct bridged final root transcripts carrying a
+  common root tag, then, with $h = s$ checks,
+  $\Pr[\mathsf{W}] \leq \RootColl_{\tauroot}(\qRO, s)$;
+\item \emph{Fixed-target case.} If $\mathsf{W}$ forces a single check
+  ($h = 1$) to carry a root tag equal to a target fixed independently of
+  $\ROflat$, then
   $\Pr[\mathsf{W}] \leq \RootPre_{\tauroot}(\qRO)$;
-\item if the game first runs a designated source check, reveals its root tag,
-  and $\mathsf{W}$ forces one later check to reach a distinct bridged final
-  root transcript carrying that designated tag, then, with $m = 2$ checks,
+\item \emph{Sampled-source case.} If the game first runs a designated
+  source check, reveals its root tag, and $\mathsf{W}$ forces one later
+  check to reach a distinct bridged final root transcript carrying that
+  designated tag, then, with $h = 2$ checks,
   $\Pr[\mathsf{W}] \leq \RootPre_{\tauroot}(\qRO)$.
 \end{enumerate}
 \end{lemma}
@@ -289,9 +297,13 @@ $\binom{\qRO + s}{s} \cdot 2^{-\tauroot(s-1)}
 \emph{(2)} The candidate hitting the fixed target is a preimage; the
 preimage case with $L = \qRO + 1$ gives
 $(\qRO + 1) \cdot 2^{-\tauroot} = \RootPre_{\tauroot}(\qRO)$.
-\emph{(3)} Let $j_0$ be the position of the designated source check. The
-later check is required to be a distinct bridged final root transcript, so it
-is a candidate position $j \neq j_0$ with the same $\tauroot$-bit projection.
+\emph{(3)} Let $j_{\mathsf{src}}$ be the position of the designated
+source check. The later check is required to be a distinct bridged final
+root transcript, so it is a candidate position
+$j \neq j_{\mathsf{src}}$ with the same
+$\tauroot$-bit projection. This is an application of the second-preimage
+corollary, not the fixed-target case, because the designated source tag is
+sampled from $\ROflat$ rather than fixed independently of it.
 The candidate sequence has length at most $L = \qRO + 2$, and the
 second-preimage corollary of \Cref{lem:adaptive-candidate} gives
 $(L-1)2^{-\tauroot} = (\qRO+1)2^{-\tauroot}
@@ -384,9 +396,9 @@ final root transcripts: distinct contexts are separated by
 distinct ciphertexts, and then \Cref{prop:final-root-sep} applies. A win
 with $X \neq X^*$ therefore forces the later output check to hit the
 designated source tag $T^*$ at a distinct bridged final root transcript.
-The sampled-source case of \Cref{lem:root-tag-hash} bounds this probability
-by $\RootPre_{\tauroot}(\qRO(\mathcal{B}))$. Adding the source-guess and
-leaf-collision events gives the theorem.
+The sampled-source case, item~3, of \Cref{lem:root-tag-hash} bounds this
+probability by $\RootPre_{\tauroot}(\qRO(\mathcal{B}))$. Adding the
+source-guess and leaf-collision events gives the theorem.
 \end{proof}
 
 \begin{theorem}[Random Oracle Everywhere Preimage Resistance of $\HTW$]
@@ -408,8 +420,8 @@ output input $X = (K,U,A,M)$ is in the \TW{} domain, the challenger
 performs one encryption $\Enc_{K}^\RO(U,A,M)$, reaching a final root
 transcript $R$. A win means $\HTW(X) = T^*$, i.e.\ the root tag
 $\lfloor \ROflat(\flatmap(R)) \rfloor_{\tauroot}$ at $R$ equals the fixed
-target $T^*$. The Root Tag Hash and Target-Hit Bound (\Cref{lem:root-tag-hash}, part~2,
-with target $T^*$) gives
+target $T^*$. The fixed-target case, item~2, of
+\Cref{lem:root-tag-hash} gives
 $\AdvePre_\RO(\mathcal{B}) \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))$.
 \end{proof}
 
