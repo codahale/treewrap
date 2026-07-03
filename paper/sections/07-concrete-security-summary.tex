@@ -279,15 +279,22 @@ the mode tolerates.
   random-guess attack on a $k$-bit key matches the per-query success
   probability $1 / 2^k$. The multi-user bound's dominant term
   $D\,\KeyGuess_k(\Nprim) = D\Nprim / 2^k$ is likewise tight at the
-  leading constant in the theorem's free-parameter setting: the
-  adversary first obtains one encryption transcript per targeted
-  user---construction work charged to $N$, which does not enter the
-  term---then tests each direct guess against the collected
-  transcripts; each guess matches some targeted key with probability
-  $D / 2^k$, so $\Nprim$ guesses recover a user key---and
-  distinguish---with probability $\approx D\Nprim / 2^k$, matching the
-  bound. Under the joint cap the extreme corner is unreachable, as
-  noted in the concrete-cap paragraph above.
+  leading constant in the theorem's free-parameter setting, using the
+  per-user nonce discipline of \Cref{sec:mu-ind}, which permits one
+  nonce value across users. The adversary queries every targeted user
+  on the same nonce $U$, empty associated data, and a known nonempty
+  message---construction work charged to $N$, which does not enter the
+  term---so each user's first ciphertext block reveals the keystream
+  emitted by that user's root initialization call
+  (\Cref{tab:transcript-schedule}). Each direct guess is then a single
+  forward primitive query at the root initialization transcript
+  $\prfxroot \concat K' \concat U$ for a fresh candidate key $K'$,
+  whose output is compared against all $D$ collected keystream blocks
+  at once; it matches some targeted key with probability $D / 2^k$, so
+  $\Nprim$ guesses recover a user key---and distinguish---with
+  probability $\approx D\Nprim / 2^k$, matching the bound. Under the
+  joint cap the extreme corner is unreachable, as noted in the
+  concrete-cap paragraph above.
 \item \emph{$\RootColl_\tau(Q, s) = \binom{Q + s}{s} / 2^{\tau (s -
   1)}$.} Tight up to lower-order terms: it is the standard $s$-way
   multi-collision bound on a $\tau$-bit projection of $\ROflat$, and
