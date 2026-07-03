@@ -617,9 +617,9 @@ adversary $\mathcal{B}$ in the \TW{} random oracle model
 Run the random oracle CMTDs-4 game. After rejecting on any failed syntax,
 message-length, or pairwise-full-input check, the challenger performs $s$
 deterministic decryption checks $\Dec_{K_i}^\RO(U_i,A_i,C \concat T)$ on
-the one common body $C \concat T$, reaching $R_1,\dots,R_s$. On a winning
+the one common ciphertext $C \concat T$, reaching $R_1,\dots,R_s$. On a winning
 execution the tuples $(K_i,U_i,A_i,M_i)$ are pairwise distinct, and since
-all checks decrypt the common body, determinism of $\Dec$ makes the
+all checks decrypt the common ciphertext, determinism of $\Dec$ makes the
 triples $(K_i,U_i,A_i)$ pairwise distinct---equal triples would return
 equal messages, hence equal tuples. By Opening Triple Separation
 (\Cref{cor:triple-sep}) the candidates $\flatmap(R_1),\dots,\flatmap(R_s)$
