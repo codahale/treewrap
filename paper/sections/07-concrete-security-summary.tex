@@ -222,21 +222,23 @@ hybrid-induced
 term $D\,\KeyGuess_k(\Nprim)$ can reach $2^{-130}$ at the extreme cap
 $D=\Nprim=2^{63}$. That corner is a property of the bound, not of any
 admissible attack: the matching attack of the Tightness paragraph below
-needs
-one construction transcript per targeted user, charging $N \geq D'$ for
-$D'$ targeted users, so under the joint cap $\Ntot \leq 2^{63}$ the
-corner forces $N = 0$; the attack-feasible maximum of the term is
-$\approx 2^{-132}$, at $D' = \Nprim = 2^{62}$, and the remaining factor
-is hybrid slack from charging created-but-idle users. Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to
+needs one accepted nonempty encryption per targeted user, and even the
+empty-AD one-block case costs two duplex calls (root initialization and
+closing root message). With $t$ targeted users and $q=\Nprim$ direct
+guesses, the joint cap imposes $2t+q \leq 2^{63}$, so the feasible
+key-guessing attack scale is about $2^{-133}$, reached near
+$t=2^{61}$ and $q=2^{62}$. The remaining factor is hybrid slack from
+charging created-but-idle users. Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to
 at most $\rho \cdot 2^{63} = 167 \cdot 2^{63} < 2^{71}$ bytes of
 plaintext, associated data, ciphertext, and aggregation through the
 duplex (\Cref{sec:params}).
 
 \paragraph{Margin at the cap.}
 \Cref{cor:concrete-security} clears its target with a stated remainder:
-at the joint corner $D = \Nprim = 2^{63}$ the multi-user estimates total
-$5 \cdot 2^{-131} + 2^{-192} + 2^{-193}$---five eighths of the
-$2^{-128}$ budget---and the largest of the remaining bounds, the $s = 2$
+at the joint corner $D = \Nprim = 2^{63}$ the multi-user estimate has
+exact value $5 \cdot 2^{-131} + 2^{-194}$, since the corner forces
+$N=0$ and hence $\Qv=\Nleaf=0$; this is just over five eighths of the
+$2^{-128}$ budget. The largest of the remaining bounds, the $s = 2$
 collision bound, stays below $4 \cdot 2^{-131}$
 (\Cref{sec:concrete-claim}). The closeness at the corner is a proof
 artifact rather than a consequence of the design. The corner itself is
@@ -244,11 +246,12 @@ unoccupiable: it forces $N = 0$, as the previous paragraph records, and
 an adversary without construction computations receives identical
 answers in both worlds---the primitive interface is the same real
 permutation (\Cref{sec:games-pp})---so its advantage there is exactly
-$0$. At resource splits an adversary can occupy, the matching attacks of
-the Tightness paragraph below reach the $2^{-132}$ scale, four bits
-under the target; the intervening distance is consumed by the two
-flat-sponge composition terms and the hybrid slack recorded above, the
-overhead of the indifferentiability route. The margin also widens away
+$0$. At resource splits an adversary can occupy, the multi-user
+key-guessing witness reaches about the $2^{-133}$ scale, while the
+root-collision and flat-sponge tightness witnesses can still reach the
+$2^{-131}$ scale. The intervening distance to the proof bound is
+consumed by the two flat-sponge composition terms and the hybrid slack
+recorded above, the overhead of the indifferentiability route. The margin also widens away
 from the corner: at $D \leq 2^{32}$, the $D$-indexed terms drop below
 $2^{-160}$ and the multi-user bound falls to its two flat-sponge terms,
 below $2^{-130} + 2^{-159}$, two bits under the target. A direct
@@ -293,8 +296,9 @@ the mode tolerates.
   at once; it matches some targeted key with probability $D / 2^k$, so
   $\Nprim$ guesses recover a user key---and distinguish---with
   probability $\approx D\Nprim / 2^k$, matching the bound. Under the
-  joint cap the extreme corner is unreachable, as noted in the
-  concrete-cap paragraph above.
+  joint cap the construction work for those target encryptions lowers
+  the feasible scale to about $2^{-133}$, as noted in the concrete-cap
+  paragraph above.
 \item \emph{$\RootColl_\tau(Q, s) = \binom{Q + s}{s} / 2^{\tau (s -
   1)}$.} Tight up to lower-order terms: it is the standard $s$-way
   multi-collision bound on a $\tau$-bit projection of $\ROflat$, and
