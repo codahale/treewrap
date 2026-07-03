@@ -466,13 +466,14 @@ computations contribute to each count.
 \item[$\Nprim$:] the number of direct adversary queries to the
   primitive interface, the pair $(\pi, \pi^{-1})$ in
   public permutation games.
-\item[$\Ntot = N + \Nprim$:] the total converted primitive-query cost
+\item[$\Ntot = N + \Nprim$:] the total primitive-query cost
   used by the flat sponge lift. The lift of
   \Cref{app:flat-sponge-lift} is applied at $\Ntot$ because after the
-  conversion of \cite[Lemma~3]{BDPV08} and common-prefix deduplication,
-  the construction-internal sponge calls counted by $N$ and the
-  adversary's direct primitive-interface queries counted by $\Nprim$
-  form a primitive-query sequence of cost at most $N+\Nprim$.
+  operational duplex-trace accounting of
+  \Cref{lem:operational-duplex-trace}, the construction-internal duplex
+  calls counted by $N$ and the adversary's direct primitive-interface
+  queries counted by $\Nprim$ form a primitive-query sequence of cost at
+  most $N+\Nprim$.
 \item[$\qv(\mathcal{A})$, $\Qv$:] the number of verification queries
   with valid inputs that are not replay-table hits, and a cap on it.
   Used in the verification terms of the direct mu-ind, AE, and

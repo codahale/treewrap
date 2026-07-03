@@ -10,12 +10,13 @@ named once here.
 
 The lift has two steps in the win-event games and three in the
 real-vs-ideal games. First, the \cite{BDPV08} indifferentiability theorem
-replaces the construction interface by a flat random oracle and answers only
-direct public-permutation queries through a simulator over that oracle, at cost
-$\Lift_c(\Ntot)$, where $\Ntot = N + \Nprim$ bounds the converted
-\cite{BDPV08} primitive-query cost: construction-internal primitive calls
-induced by construction queries and deterministic challenger computations,
-after common-prefix deduplication, together with direct primitive queries.
+replaces the real permutation used by the \TW{} construction and by direct
+primitive queries with the simulator over a flat random oracle, at cost
+$\Lift_c(\Ntot)$, where $\Ntot = N + \Nprim$ bounds the operational primitive
+trace: construction-internal duplex calls induced by construction queries and
+deterministic challenger computations, together with direct primitive queries.
+The simulator-side construction trace is then identified with the flat-RO
+construction interface by the operational trace lemma below.
 Second, the simulator-world adversary is converted into a flat-RO
 adversary whose direct random oracle query count is at most $\Nprim$. Thus the
 random oracle bounds are instantiated at $\qRO \leq \Nprim$, while the public
@@ -120,6 +121,57 @@ random oracle. Under the \cite[Theorem~3]{BDPV11} bridge fixed in
 simulator-side $\ROflat$ call used throughout this appendix.
 \end{proof}
 
+\begin{lemma}[Operational Duplex Trace]
+\label{lem:operational-duplex-trace}
+In any execution of a single-stage \TW{} game
+(\Cref{def:single-stage-games}), the construction computations counted
+by $N$ admit an operational primitive trace of cost at most $N$:
+each root or leaf duplex call contributes one forward primitive query,
+and the requested output bits are the corresponding projection of the
+state returned by that query. When this trace is run against the
+\cite{BDPV08} simulator $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ in an
+execution whose combined primitive trace has cost less than $2^c$, the
+construction outputs are the flat-RO values
+$\RF(X)=\ROflat(\flatmap(X))$ at the same well-formed \TW{} transcript
+prefixes $X$.
+\end{lemma}
+
+\begin{proof}
+A \TW{} duplex call absorbs a single suffixed input block, padded by
+$\padtenone$, applies the permutation once, and returns at most $r$
+rate bits from the resulting state. Thus the public-permutation
+implementation of any root or leaf construction computation is already
+a primitive trace with one forward query per duplex call. The definition
+of $N$ in \Cref{sec:resources} counts exactly these root initialization,
+associated data, message, leaf initialization, leaf message, and
+aggregation duplex calls, including the deterministic challenger checks
+of the hash and committing games.
+
+\Cref{lem:duplex-flat} is the \cite[Lemma~3]{BDPV11} duplex-to-sponge
+identity specialized to \TW{}: the output of each duplex call is the
+output of the sponge after absorbing the accumulated flattened
+duplex-call transcript, and no additional permutation call is made after
+the current absorption block when the requested output length is at most
+$r$. The bridge of \Cref{lem:bridge-decode}, fixed in
+\Cref{app:simulator}, maps these $\padtenone$ transcript prefixes to the
+\cite{BDPV08} padded-sponge input domain without changing the output bits
+at $r=r_{\max}$.
+
+When the same operational trace is run against
+$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$, every construction-internal forward
+query lies on a rooted, paddable path determined by a well-formed \TW{}
+prefix. In an execution whose combined primitive trace has cost less
+than $2^c$, the simulator cannot have saturated: each primitive query
+adds at most one capacity value to the simulator's internal
+$\mathcal{R} \cup \mathcal{O}$ set, so fewer than $2^c$ queries cannot
+fill the $2^c$-element capacity space. The simulator's
+sponge-consistency invariant \cite[Lemma~2]{BDPV08} therefore makes the
+rate part returned at that node agree with the corresponding lazy value
+$\ROflat(\flatmap(X))$. Thus the simulator-side operational construction
+has the same construction-output law as the flat-RO construction
+interface used in \Cref{sec:ro-model}.
+\end{proof}
+
 \begin{lemma}[Flat Sponge Lift Bound]
 \label{lem:lift-bound}
 Let $\mathsf{G}$ be a single-stage \TW{} game
@@ -127,11 +179,11 @@ Let $\mathsf{G}$ be a single-stage \TW{} game
 $\mathcal{A}$ be a
 public permutation $\mathsf{G}$ adversary with construction interface
 cost at most $N$ and at most $\Nprim$ direct primitive-interface
-queries. In the \cite{BDPV08} single-stage replacement, convert the
-combined construction-and-primitive transcript to the primitive-query
-sequence of \cite[Lemma~3]{BDPV08}, omitting duplicate primitive queries
-induced by common prefixes. This converted sequence has \cite{BDPV08}
-query cost at most
+queries. In the \cite{BDPV08} single-stage replacement, implement the
+\TW{} construction computations by the operational duplex trace of
+\Cref{lem:operational-duplex-trace} and keep the adversary's direct
+primitive-interface queries as primitive queries. This primitive
+transcript has \cite{BDPV08} query cost at most
 \[
   \Ntot = N + \Nprim .
 \]
@@ -143,13 +195,11 @@ construction interface costs at most $\Lift_c(\Ntot)$.
 
 \begin{proof}
 The \cite{BDPV08} replacement is applied before the derived-adversary
-construction, so its transcript contains two kinds of public primitive activity.
-First, each construction interface computation contributes the \TW{} duplex
-calls it performs. By \Cref{lem:duplex-flat,lem:bridge-decode}, each such
-root or leaf output point is a typed restriction of the bridged
-flat sponge construction, and by the definition of $N$ in
-\Cref{sec:resources} these calls are counted at the same per-block
-granularity as the underlying \Keccakp{} calls. This includes
+construction. View the entire single-stage game, including its
+construction interface and deterministic challenger checks, as a
+primitive-only distinguisher that runs the \TW{} algorithms internally.
+By \Cref{lem:operational-duplex-trace}, the construction side contributes
+at most $N$ forward primitive queries: one per duplex call. This includes
 plaintext-computing computations, verification computations whether they
 accept or reject, the per-user sum of construction calls in mu-ind, the
 deterministic challenger decryption or encryption checks charged in the
@@ -158,35 +208,27 @@ collision game's $s$ submitted-input encryptions, the standard preimage
 game's source encryption and post-output check, and the
 everywhere-preimage game's post-output check.
 
-Second, each direct adversary query to $(\pi,\pi^{-1})$ contributes one
+Each direct adversary query to $(\pi,\pi^{-1})$ contributes one
 primitive-interface query and is counted in $\Nprim$. These two counts
 are disjoint in the public permutation experiment: $N$ counts
 construction-internal use of the primitive, while $\Nprim$ counts only
 the adversary's public primitive interface queries.
 
-The hypothesis and bound of \cite[Theorem~2]{BDPV08} are stated for the
-\emph{cost} of the query sequence: a direct primitive query costs one,
-and a construction query costs the number of primitive calls in its
-sponge evaluation. Under the flat sponge view each duplex output point
-is a construction lookup at its full flattened transcript prefix, so a
-$d$-call computation's lookups have quadratic total cost when counted
-in isolation. \cite[Lemma~3]{BDPV08} converts each construction lookup
-into the chain of primitive queries along its padded input blocks, and,
-as its proof notes, identical primitive queries arising from common
-prefixes coincide. Within one construction computation successive
-flattened lookups are nested prefixes, each extending the previous
-flattened-and-padded input by exactly one $r$-bit block
-(\Cref{lem:duplex-flat}), so after conversion and deduplication each
-duplex call contributes exactly one new primitive query---the call
-absorbing its single padded block, whose output also supplies the
-call's at most $r$ requested output bits, so no separate squeezing
-queries arise. Prefixes shared across computations only reduce the
-count further, and each direct adversary query is already a single
-primitive query. The execution-uniform caps therefore bound the
-cost of the converted primitive-query sequence by $N+\Nprim=\Ntot$. If
+Construction work is modeled by the operational duplex trace, rather
+than by a collection of standalone \cite{BDPV08} construction queries at
+every flattened duplex prefix. The standalone-query model would assign a
+nested-prefix transcript the sum of the individual sponge-evaluation
+costs, while the operational trace is the same stateful computation the
+construction actually performs, with the output of each call read from
+the state just returned by that call. Hence the execution-uniform caps
+bound the primitive-only query cost by $N+\Nprim=\Ntot$. If
 $\Ntot \geq 2^c$ then $\Lift_c(\Ntot) \geq 1$ and the claimed bound holds
 trivially, so assume $\Ntot < 2^c$, satisfying the hypothesis of
-\cite[Theorem~2]{BDPV08}. That theorem gives distinguishing or
+\cite[Theorem~2]{BDPV08}. Applying that theorem to this primitive-only
+distinguisher gives the real-to-simulator replacement, and
+\Cref{lem:operational-duplex-trace} identifies the simulator-side
+construction outputs with the flat-RO construction interface in this
+nontrivial case. The theorem gives distinguishing or
 success-probability cost at most the random-permutation
 differentiating bound $f_P(\Ntot)$ of \cite[Lemma~5]{BDPV08}. The
 \cite[Lemmas~4 and~5]{BDPV08} product bounds give the
