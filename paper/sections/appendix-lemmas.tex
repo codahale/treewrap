@@ -241,6 +241,24 @@ output-point class of a well-formed counted prefix is the class in
 suffix.
 \end{definition}
 
+\begin{remark}[Well-Formedness versus Realizability]
+\label{rem:wf-vs-realizable}
+The language of \Cref{def:wf-transcripts} is deliberately larger than
+the set of transcript prefixes that \TW{} computations realize. For
+example, it does not require an aggregation phase to follow a root
+message phase of exactly $\beta$ bytes, although every real computation
+with $n \geq 1$ absorbs a full $\beta$-byte root chunk (\Cref{alg:enc}).
+The inclusion runs in the safe direction everywhere: every
+construction-generated prefix is well formed, so the structural lemmas
+of this appendix and the separation propositions of
+\Cref{sec:root-tag-hash-security} apply to construction transcripts as
+restrictions of statements proved on the larger language, while the
+direct-query decoder of \Cref{def:keyed-twout} and the root tag
+candidate predicate of \Cref{lem:root-candidate-seq} accept the larger
+language and therefore only over-count adversary queries, which loosens
+no bound.
+\end{remark}
+
 Name the tag-emitting transcript families:
 \begin{align*}
   \Rtag   &= \text{root transcript prefix whose sponge output gives the final root tag}, \\
