@@ -216,30 +216,33 @@ trigger and appends nothing. Each $\flatmap(R_i)$ is appended no later
 than the sampling of the $i$-th root tag answer, since that sampling is a
 positive-length lookup at $\flatmap(R_i)$, giving~(1).
 
-\emph{Predictability.} The append predicate depends on the input string
-alone through the exact decoder of \Cref{lem:bridge-decode}, which ignores
-the requested output length, and by Output-Point Separation
-(\Cref{cor:output-sep}) each input decodes to at most one output-point
-class. The string itself is fixed in the state preceding the trigger: a
-direct query's input is chosen by $\mathcal{B}$ before its lookup, and a
-check's final root transcript is determined by the check's input and the
-prior oracle answers---including any private challenger state sampled
-before the candidate's unread value, which \Cref{lem:adaptive-candidate}
-expressly allows.
+\emph{Predictability.} The decoded root-tag-input predicate depends on
+the input string alone through the exact decoder of
+\Cref{lem:bridge-decode}, which ignores the requested output length; by
+Output-Point Separation (\Cref{cor:output-sep}) each input decodes to at
+most one output-point class. The append rule also uses the already fixed
+next event: a direct query triggers at the address, while a construction
+lookup triggers only when it requests positive output length. The string
+itself is fixed in the state preceding the trigger: a direct query's
+input is chosen by $\mathcal{B}$ before its lookup, and a check's final
+root transcript is determined by the check's input and the prior oracle
+answers---including any private challenger state sampled before the
+candidate's unread value, which \Cref{lem:adaptive-candidate} expressly
+allows.
 
 \emph{Unrevealed value.} The trigger is the first direct query or
 positive-length lookup at the address, so no earlier direct query at it
 exists, and it suffices that no earlier construction lookup has read a
-positive number of its bits. The only positive-length construction
-lookups at root tag inputs are the checks' root tag samplings, which are
-themselves triggers; every other intermediate construction lookup either
-lies at a stream output point---a different class and hence, by
-\Cref{cor:output-sep}, a different address---or is the
-zero-requested-output $\Rmsg^+$ lookup a multi-chunk computation makes
-before aggregation, which the unrevealed-value premise of
-\Cref{lem:adaptive-candidate} expressly permits, including when that
-zero-length lookup lands at another check's future no-leaf final-root
-address. Together with predictability this gives~(2).
+positive number of its bits. An earlier positive-length construction
+lookup is either a stream output point, a leaf-tag point $\Ltag(j)$, or a
+root-tag sampling. The first two are different output-point classes and
+hence, by \Cref{cor:output-sep}, have different addresses from root tag
+inputs; the last would itself have been the first trigger at this
+address. Zero-requested-output lookups, including the $\Rmsg^+$ lookup a
+multi-chunk computation makes before aggregation, are permitted by the
+unrevealed-value premise of \Cref{lem:adaptive-candidate}, including
+when such a zero-length lookup lands at another check's future no-leaf
+final-root address. Together with predictability this gives~(2).
 
 \emph{Length.} Appends are triggered only by direct queries---at most
 $\qRO(\mathcal{B})$ of them---or by the $m$ root tag samplings;
