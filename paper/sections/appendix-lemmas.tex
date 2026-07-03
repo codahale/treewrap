@@ -35,8 +35,9 @@ bounds the Leaf Tag Collision lemma (\Cref{lem:leaf-collision}) and,
 through the Root Tag Candidate Sequence and Root Tag Hash and Target-Hit Bound
 (\Cref{lem:root-candidate-seq,lem:root-tag-hash}) of \Cref{sec:cmtds3},
 the root tag hash and committing proofs. The mu-ind proof reuses the
-same structural lemmas, adding freshness, key-test, leaf-collision, and
-verification-first root guessing accounting.
+same structural lemmas through the explicit hybrid game sequence of
+\Cref{def:adjacent-hybrid-games}, adding freshness, key-test,
+leaf-collision, and verification-first root guessing accounting.
 
 \begin{figure}[H]
   \centering
@@ -759,8 +760,8 @@ $\nleaf(\mathcal{B})$ be the execution-uniform count of distinct
 construction-generated final leaf transcripts (\Cref{sec:resources}).
 The first bound applies the collision case ($s = 2$, $\tau = \tauleaf$)
 of \Cref{lem:adaptive-candidate} to a chronological leaf tag candidate
-sequence; the second is a same-slot freshness argument in the
-all-reject continuation.
+sequence; the second is a same-slot freshness argument in an all-reject
+game.
 \begin{enumerate}
 \item \emph{General count.} Unconditionally---in particular when some
   or all keys are adversary-supplied, so direct queries may themselves
@@ -770,11 +771,13 @@ all-reject continuation.
     \LeafColl_{\tauleaf}\bigl(\qRO(\mathcal{B})+\nleaf(\mathcal{B})\bigr)
     = \binom{\qRO(\mathcal{B})+\nleaf(\mathcal{B})}{2} \big/ 2^{\tauleaf}.
   \]
-\item \emph{Hidden key, same slot.} Suppose the game has a hidden key
-  and nonce-respecting encryption queries: work in the all-reject
-  continuation of the interaction, in which every non-replay
-  verification submission performs its construction computation but
-  returns reject. Say two final
+\item \emph{Hidden key, same slot.} Suppose the game has a hidden key,
+  nonce-respecting encryption queries, and \emph{all-reject}
+  verification: every non-replay verification submission performs its
+  construction computation and returns reject to the adversary. (The
+  game \Grej{} of \Cref{def:adjacent-hybrid-games} and the
+  \textsf{INT-RUP} continuation in the proof of
+  \Cref{lem:int-rup-root-guess} have this shape.) Say two final
   leaf transcripts \emph{share a slot} if they recover the same key,
   nonce, and leaf index $(K, U, j)$ (\Cref{cor:output-sep}). Let
   $\badleaf$ be the event that some construction-generated final leaf
@@ -783,7 +786,7 @@ all-reject continuation.
   encryption computation, and let $\mathsf{hit}_{\mathsf{leaf}}$ be the
   event that a direct adversary query hits the bridged input of a
   construction-generated hidden-key final leaf transcript before that
-  transcript is first created. Then, in the continuation,
+  transcript is first created. Then, in such a game,
   \[
     \Pr[\badleaf \text{ before } \mathsf{hit}_{\mathsf{leaf}}]
     \;\leq\; \frac{\nleaf(\mathcal{B})}{2^{\tauleaf}}.
@@ -979,15 +982,129 @@ output is a fresh lazy-table sample; in the reuse case, it is the same
 uniform sample drawn when the bridged input was first generated.
 \end{proof}
 
-\subsection{Mu-Ind Verification Coupling}
+\subsection{Mu-Ind Hybrid Games and Verification Accounting}
 \label{app:mu-verification-coupling}
 
-The direct mu-ind adjacent-hybrid proof uses the generic key-test and
-leaf-collision accounting lemmas together with the verification-specific
-facts below. We use the root tag output point and final root transcript
-classes of \Cref{def:root-tag-output-point}; in particular, computations
-on a common ciphertext share the same root tag output point because
-$\leaves(C)$ is fixed by $\|C\|$.
+The direct mu-ind adjacent-hybrid proof bounds one user-replacement step
+of the hybrid through an explicit game sequence, defined next, using the
+generic key-test and leaf-collision accounting lemmas together with the
+verification-specific facts below. We use the root tag output point and
+final root transcript classes of \Cref{def:root-tag-output-point}; in
+particular, computations on a common ciphertext share the same root tag
+output point because $\leaves(C)$ is fixed by $\|C\|$.
+
+\begin{definition}[Adjacent-Hybrid Games]
+\label{def:adjacent-hybrid-games}
+Fix a flat-RO mu-ind adversary $\mathcal{B}$, the pre-sampled keys
+$K_1, \dots, K_D$ of \Cref{sec:mu-setting}, and a user index
+$d \in \{1, \dots, D\}$. On the branch where two sampled keys collide,
+every game below outputs the same fixed bit; the remaining clauses
+describe the branch with pairwise distinct keys. Every game maintains
+one lazy table $\Theta$ implementing $\ROflat$: $\Theta[Y]$ samples a
+fresh uniform infinite string at the first access to $Y$ and returns
+the stored string afterwards---equivalently, $\Theta$ is sampled in
+full at the outset and read on demand. Direct adversary queries
+$(Y, \ell)$ are answered by $\lfloor \Theta[Y] \rfloor_\ell$; the
+\emph{environment} answers users $e < d$ by $(\Rand, \Replay)$ and
+users $e > d$ by $(\Enc_{K_e}^\RO, \Ver_{K_e}^\RO)$, reading
+construction outputs from $\Theta$; and the $\mathsf{New}$ interface
+and the validity and nonce-respecting checks of \Cref{sec:mu-setting}
+are common to every game. Every game maintains the flags $\badkey$,
+$\badleaf$, and $\forge$, initialized false; no oracle answer or branch
+depends on a flag, and $\badkey$ is set whenever a direct query input
+decodes under $\KeyedTWOut$ to $K_d$ and a counted output-point class
+of \Cref{tab:keyed-twout}.
+\begin{itemize}
+\item Games \Greal{} and \Grej{} answer user $d$ by the shared oracle
+  code of \Cref{alg:adjacent-hybrid-games} and differ exactly in the
+  marked return statement: a non-replay verification whose comparison
+  succeeds sets $\forge$ and returns accept in \Greal{} and reject in
+  \Grej{}.
+\item Game \Gideal{} answers user-$d$ encryption queries with fresh
+  uniform byte strings of length $\|M\| + \tauroot/8$, recorded in
+  $W$, and user-$d$ verification by the replay check alone; it performs
+  no user-$d$ construction computation and sets neither $\badleaf$ nor
+  $\forge$. \Gideal{} is the hybrid $H_d^\star$ of
+  \Cref{lem:mu-adjacent-hybrid}, instrumented with $\badkey$.
+\end{itemize}
+The flag $\badleaf$ is set, in \Greal{} and \Grej{}, when a user-$d$
+construction computation first creates a final leaf transcript whose
+$\tauleaf$-bit projection equals that of a distinct, already created
+final leaf transcript sharing its $(K_d, U, j)$ slot, at least one of
+the two generated by an encryption computation---the same-slot event of
+\Cref{lem:leaf-collision}, part~2, for user $d$. It guards no code
+difference and is used only in the accounting.
+\end{definition}
+
+\begin{algorithm}[t]
+  \caption{Shared user-$d$ oracle code of the games \Greal{} and
+    \Grej{} (\Cref{def:adjacent-hybrid-games}). $\Theta$ is the shared
+    lazy $\ROflat$ table, read at bridged transcript prefixes, and $W$
+    the user-$d$ replay record. Inputs failing the validity or
+    nonce-respecting checks of \Cref{sec:mu-setting} are rejected
+    beforehand, as in every game. The two games differ exactly in the
+    marked lines~\ref{line:ret-real} and~\ref{line:ret-rej}.}
+  \label{alg:adjacent-hybrid-games}
+  \begin{algorithmic}[1]
+    \Procedure{RO}{$Y$, $\ell$} \Comment{direct adversary query}
+      \State set $\badkey$ if $\KeyedTWOut(Y) = (K_d, \mathcal{C})$ for
+        a counted class $\mathcal{C}$ (\Cref{tab:keyed-twout})
+      \State \Return $\lfloor \Theta[Y] \rfloor_{\ell}$
+    \EndProcedure
+    \Statex
+    \Procedure{Enc}{$U$, $A$, $M$}
+      \State run $\Enc_{K_d}^{\RO}(U, A, M)$, reading each requested
+        duplex output as the corresponding projection of $\Theta$ at
+        its bridged transcript prefix (\Cref{sec:ro-model}); let the
+        result be $C \concat T$
+      \State set $\badleaf$ if a final leaf transcript first created
+        here completes a same-slot collision
+        (\Cref{def:adjacent-hybrid-games})
+      \State record $(U, A, C \concat T)$ in $W$; \Return $C \concat T$
+    \EndProcedure
+    \Statex
+    \Procedure{Vf}{$U$, $A$, $C \concat T$}
+      \If{$(U, A, C \concat T) \in W$} \Return accept \EndIf
+      \State determine the verification transcript of $(K_d, U, A, C)$;
+        read from $\Theta$ the $\tauleaf$-bit leaf tags at its final
+        leaf transcripts, setting $\badleaf$ as in \textsc{Enc}, and
+        nothing at its stream output points
+      \State $T' \gets \lfloor \Theta[\flatmap(R)] \rfloor_{\tauroot}$
+        at the root tag output point $R$ of the computation
+        (\Cref{def:root-tag-output-point})
+      \If{$T' = T$}
+        \State $\forge \gets \mathsf{true}$
+        \State \Return accept \Comment{in \Greal{} only}
+          \label{line:ret-real}
+        \State \Return reject \Comment{in \Grej{} only}
+          \label{line:ret-rej}
+      \EndIf
+      \State \Return reject
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{lemma}[Environment Neutrality]
+\label{lem:env-neutrality}
+In each game of \Cref{def:adjacent-hybrid-games}, on the branch with
+pairwise distinct keys, the environment's construction-internal
+$\ROflat$ lookups---made while simulating $\Enc_{K_e}^\RO$ and
+$\Ver_{K_e}^\RO$ for users $e > d$---neither set a user-$d$ flag nor
+generate the bridged input of a user-$d$ counted transcript point.
+\end{lemma}
+
+\begin{proof}
+Whenever such a lookup lies in a counted keyed transcript class,
+\Cref{lem:bridge-decode} decodes its candidate key as $K_e$, which on
+the distinct-keys branch differs from $K_d$; a lookup outside the
+counted keyed language is irrelevant to the flags. By the key-field
+disjointness of \Cref{lem:key-renaming}, the environment's addresses
+are disjoint from user $d$'s. The flags are set only by direct
+adversary queries decoding to $K_d$ ($\badkey$), by user-$d$ final leaf
+transcript creations ($\badleaf$), and by user-$d$ verification
+comparisons ($\forge$), none of which the environment performs. Ideal
+users $e < d$ perform no construction lookups at all.
+\end{proof}
 
 \begin{lemma}[Verification Visible-Prefix Key Uniformity]
 \label{lem:ver-key-uniformity}
@@ -1064,14 +1181,11 @@ $S_i$, all keys in $\bits^k \setminus S_i$ remain equally likely.
 \end{proof}
 
 \paragraph{Foreign-key key-test claim.}
-In the pre-sampled-key mu-ind environment of
-\Cref{lem:mu-adjacent-hybrid}, fix user $d$ and work in the original
+In each game of \Cref{def:adjacent-hybrid-games}, work in the original
 experiment, where the key-collision branch outputs a fixed bit rather
-than conditioning on pairwise distinct keys. Let $\badkey^{(d)}$ be the
-event that a direct $\ROflat$ query decodes under $\KeyedTWOut$ to
-$K_d$ and a counted output-point class. Then
+than conditioning on pairwise distinct keys. Then
 \[
-  \Pr[\badkey^{(d)}] \leq \KeyGuess_k(\qRO(\mathcal{B})).
+  \Pr[\badkey] \leq \KeyGuess_k(\qRO(\mathcal{B})).
 \]
 Fix the foreign keys and leave their transcript addresses unchanged.
 Before the first user-$d$ key hit, the visible prefix is invariant under
@@ -1084,107 +1198,88 @@ contained in $\{K_d \text{ equals that candidate}\}$ and costs at most
 $2^{-k}$ in the original pre-sampled-key experiment; a candidate equal
 to a fixed foreign key contributes only on the fixed-output
 key-collision branch and therefore contributes nothing to
-$\badkey^{(d)}$. A union bound over at most $\qRO(\mathcal{B})$ direct
+$\badkey$. A union bound over at most $\qRO(\mathcal{B})$ direct
 queries gives the claim.
 
 \begin{lemma}[Verification-First Root Guessing]
 \label{lem:ver-first-root-guess}
-In the stopped single-key \TW{} random oracle encryption/verification
-interaction before $\badkey \cup \badleaf$---with $\badleaf$ the
-same-slot event of \Cref{lem:leaf-collision}, part~2---let
-$\mathsf{win}_{\mathsf{vf}}$ be the event that some accepting
-non-replay verification submission belongs to a verification-first
-final root transcript class. Then
+In the game \Grej{} of \Cref{def:adjacent-hybrid-games}, stopped at the
+first occurrence of $\badkey \cup \badleaf$---with $\badleaf$ the
+same-slot event of \Cref{lem:leaf-collision}, part~2, for user
+$d$---let $\mathsf{win}_{\mathsf{vf}}$ be the event that some
+non-replay user-$d$ verification comparison succeeds within a
+verification-first final root transcript class. Then
 \[
   \Pr[\mathsf{win}_{\mathsf{vf}}]
-  \leq \qv(\mathcal{B}) / 2^{\tauroot}.
+  \leq \qv^{(d)} / 2^{\tauroot},
 \]
+where $\qv^{(d)}$ is the user-$d$ non-replay verification cap of
+\Cref{sec:mu-setting}.
 \end{lemma}
 
 \begin{proof}
 Throughout, a \emph{non-replay verification submission} means a valid
-non-replay verification query; by the validity convention, an invalid
-verification query returns $0$ and performs no construction computation,
-so it realizes no bridged final root input, belongs to no final root
-transcript class, and contributes to no $G_{\mathcal{C}}$.
+non-replay user-$d$ verification query; by the validity convention, an
+invalid verification query returns $0$ and performs no construction
+computation, so it realizes no bridged final root input, belongs to no
+final root transcript class, and contributes to no $G_{\mathcal{C}}$
+below.
 
-Work in the game stopped at the first occurrence of
-$\badkey$ or $\badleaf$. For
-accounting, define an all-reject continuation: encryption queries are
-answered normally, replay verification queries accept normally, and
-every non-replay verification submission performs the same construction
-computation but returns reject to the adversary. Lazy sampling is
-deferred for each verification-first class's final root tag value: the
-continuation records the class address and the submitted tag, but while
-the class remains verification-first it does not expose that root tag
-value to the adversary. The execution-uniform count $\qv(\mathcal{B})$
-applies to this continuation.
+In \Grej{}, every non-replay submission performs its construction
+computation and returns reject (\Cref{alg:adjacent-hybrid-games}), so
+no comparison outcome is visible to the adversary, and each class's
+root tag value is read from the lazy table only by the class's own
+comparisons and by any later encryption computation reaching the class.
 
 Fix a verification-first final root transcript class $\mathcal{C}$ and
-follow the all-reject path until the first later encryption query
-generating the same class, if any. Let $G_{\mathcal{C}}$ be the set of
-distinct candidate tags submitted by non-replay verification queries in
-class $\mathcal{C}$ before that cutoff. Repeated tags only shrink this
-set. The class's correct root tag $U_{\mathcal{C}}$ is the
-$\tauroot$-bit projection of $\ROflat$ at the class's bridged root tag
-input. Before the stop, no direct query has hit this hidden-key input:
-such a query would be decoded by $\KeyedTWOut$ to the hidden key and
-would trigger $\badkey$. Before the cutoff, no encryption query has
-revealed $U_{\mathcal{C}}$ as an encryption tag. (When the class's root
-tag point is $\Rmsg^+$, i.e.\ $n = 0$, an
-encryption query on a longer message that shares chunk $0$ may touch
-this same address while closing its chunk-$0$ message phase, but it
-requests zero output there and continues into its aggregation phase, so
-it does not reveal $U_{\mathcal{C}}$; its own tag is emitted at a later
-$\Rtag$ point.) The all-reject path and the set $G_{\mathcal{C}}$ are
-therefore functions only of the adversary's coins, visible oracle
-replies, and lazy-table values at inputs other than this class's root
-tag address. By lazy sampling, conditioned on those values and on the
-fixed path, $U_{\mathcal{C}}$ may be sampled after $G_{\mathcal{C}}$ is
-fixed and is uniform independently of $G_{\mathcal{C}}$.
-
-After the cutoff, if it exists, class $\mathcal{C}$ contributes no accepting
-non-replay submission. Let the cutoff encryption query return
-$(U_e,A_e,C_e,T_e)$. Any later verification submission in the same
-final root transcript class has, by the final-root determinacy of
-\Cref{lem:transcript-inj} and Leaf-Transcript Recovery
-(\Cref{lem:leaf-recovery}) under the absence of
-$\badleaf$---which supplies the recovery hypothesis because the cutoff
-computation is an encryption computation---the same $(U,A,C)$ as that
-encryption computation. If the submitted tag is $T_e$, the tuple is a recorded
-encryption tuple and the verification is a replay; if the submitted tag
-is not $T_e$, the final tag comparison fails.
-
-The same argument excludes accepting submissions in encryption-first
-classes: such a class is first generated by an encryption computation,
-so by the final-root determinacy of \Cref{lem:transcript-inj} and
-Leaf-Transcript Recovery (\Cref{lem:leaf-recovery})---whose hypothesis
-$\neg\badleaf$ supplies because the comparand is that encryption
-computation---any non-replay submission in the class carries the same
-$(U,A,C)$ and either replays the recorded tuple or fails the tag
-comparison. On $\mathsf{win}_{\mathsf{vf}}$ the first accepting
-non-replay submission is therefore itself verification-first.
-
-Consider the event that the first accepting non-replay verification
-submission in the stopped game belongs to class $\mathcal{C}$. Up to
-that global first accept, the adversary's visible answers match the all-reject
-continuation: every earlier non-replay submission rejects, replay
-queries accept in both executions, and encryption answers are
-unchanged. The construction computations also agree at every address
-except that the all-reject continuation defers the final root tag value
-for class $\mathcal{C}$ until the comparison is needed. Therefore the
-first accepting non-replay submission can belong to class $\mathcal{C}$
-only before the cutoff, and only if
-$U_{\mathcal{C}} \in G_{\mathcal{C}}$, which has probability at most
+follow the stopped execution until the first encryption query
+generating the same class, if any (the cutoff). Let $G_{\mathcal{C}}$
+be the set of distinct candidate tags submitted by non-replay
+verification queries in class $\mathcal{C}$ before that cutoff;
+repeated tags only shrink this set. The class's correct root tag
+$U_{\mathcal{C}}$ is the $\tauroot$-bit projection of $\ROflat$ at the
+class's bridged root tag input. Before the stop, no direct query has
+read this hidden-key input: such a query would be decoded by
+$\KeyedTWOut$ to the hidden key and would set $\badkey$; the
+environment reads no user-$d$ address (\Cref{lem:env-neutrality}).
+Before the cutoff, no encryption query has revealed $U_{\mathcal{C}}$
+as an encryption tag. (When the class's root tag point is $\Rmsg^+$,
+i.e.\ $n = 0$, an encryption query on a longer message that shares
+chunk $0$ may touch this same address while closing its chunk-$0$
+message phase, but it requests zero output there and continues into its
+aggregation phase, so it does not reveal $U_{\mathcal{C}}$; its own tag
+is emitted at a later $\Rtag$ point.) The comparisons against
+$U_{\mathcal{C}}$ return the constant reject, so the visible execution
+and the set $G_{\mathcal{C}}$ are functions only of the adversary's
+coins, visible oracle replies, and lazy-table values at inputs other
+than this class's root tag address. By the lazy-sampling order
+exchange, conditioned on those values, $U_{\mathcal{C}}$ may
+equivalently be sampled after $G_{\mathcal{C}}$ is fixed, and is
+uniform independently of $G_{\mathcal{C}}$. The probability that some
+pre-cutoff comparison in class $\mathcal{C}$ succeeds---that
+$U_{\mathcal{C}} \in G_{\mathcal{C}}$---is therefore at most
 $|G_{\mathcal{C}}|/2^{\tauroot}$.
 
+After the cutoff, if it exists, class $\mathcal{C}$ admits no
+successful non-replay comparison. Let the cutoff encryption query
+return $(U_e,A_e,C_e,T_e)$. Any later verification submission in the
+same final root transcript class has, by the final-root determinacy of
+\Cref{lem:transcript-inj} and Leaf-Transcript Recovery
+(\Cref{lem:leaf-recovery}) under the absence of $\badleaf$---which
+supplies the recovery hypothesis because the cutoff computation is an
+encryption computation---the same $(U,A,C)$ as that encryption
+computation. If the submitted tag is $T_e$, the tuple is a recorded
+encryption tuple and the query is answered by the replay check before
+any comparison; if the submitted tag is not $T_e$, the comparison
+fails.
+
 Each non-replay verification submission deterministically reconstructs
-one final root transcript at the root tag output point. If the class is
-verification-first and the submission occurs before that class's
-encryption cutoff, the submitted tag contributes to at most one set
-$G_{\mathcal{C}}$; otherwise it contributes to none. Thus
-$\sum_{\mathcal{C}} |G_{\mathcal{C}}| \leq \qv(\mathcal{B})$, and a
-union bound over the verification-first classes gives the claim.
+one final root transcript at the root tag output point, so it
+contributes its submitted tag to at most one set $G_{\mathcal{C}}$, and
+only when its class is verification-first and the submission precedes
+that class's cutoff. Thus
+$\sum_{\mathcal{C}} |G_{\mathcal{C}}| \leq \qv^{(d)}$, and a union
+bound over the verification-first classes gives the claim.
 \end{proof}
 
 \begin{lemma}[\textsf{INT-RUP} Root Guessing]
@@ -1289,10 +1384,11 @@ claim.
 The multi-user indistinguishability theorem (\Cref{thm:mu-ind}) telescopes a
 hybrid over the $D$ users, replacing one real user by its ideal
 $(\Rand,\Replay)$ interface at each step. The following lemma bounds one such
-step directly inside the shared random oracle environment. It couples the
-real and ideal user-$d$ interfaces until one of three local events occurs:
-a direct hidden-key transcript hit, a hidden leaf tag collision, or an
-accepting non-replay verification query.
+step through the game sequence of \Cref{def:adjacent-hybrid-games}: the
+instrumented real game \Greal{}, the all-reject game \Grej{} differing from
+it in a single return statement, and the ideal game \Gideal{}, with the
+divergence events set as the flags $\badkey$, $\badleaf$, and $\forge$ by
+game code.
 
 \begin{lemma}[Mu-Ind Adjacent-Hybrid Bound]
 \label{lem:mu-adjacent-hybrid}
@@ -1320,145 +1416,158 @@ are the user-$d$ resource caps, then
 
 \begin{proof}
 The fixed-output branch on a key collision is identical in
-$H_{d-1}^\star$ and $H_d^\star$, so only the branch with pairwise
-distinct keys contributes. On that branch, the two hybrids differ only
-in user $d$: users $e < d$ are ideal in both hybrids, users
-$e > d$ are real in both hybrids, and user $d$ is answered by
-$(\Enc_{K_d}^\RO,\Ver_{K_d}^\RO)$ in $H_{d-1}^\star$ and by
-$(\Rand,\Replay)$ in $H_d^\star$.
+$H_{d-1}^\star$, $H_d^\star$, and the games of
+\Cref{def:adjacent-hybrid-games}, so only the branch with pairwise
+distinct keys contributes; work on that branch, with the keys fixed,
+throughout. The proof identifies $H_{d-1}^\star$ with \Greal{}
+(Claim~1), relates \Greal{} to \Grej{} pointwise (Claim~2) and \Grej{}
+to $H_d^\star = \Gideal{}$ in distribution (Claim~3), and assembles the
+bound by a single first-occurrence decomposition in \Grej{} (Claim~4).
 
-Let $\mathcal{E}_d$ denote the common surrounding environment. It runs
-$\mathcal{B}$, answers users $e < d$ by their $(\Rand,\Replay)$
-interfaces, answers users $e > d$ by
-$\Enc_{K_e}^\RO,\Ver_{K_e}^\RO$, forwards $\mathcal{B}$'s direct
-$\ROflat$ queries unchanged, and shares one lazy $\ROflat$ table with
-user $d$. The coupling treats user $d$'s encryption and verification
-interfaces together. Direct $\ROflat$ queries that decode to $K_d$ can
-affect both interfaces, so the local key-test event is charged once in
-the adjacent-hybrid bound.
+\paragraph{Claim 1: \Greal{} realizes $H_{d-1}^\star$.}
+The user-$d$ oracles of \Cref{alg:adjacent-hybrid-games} implement
+$(\Enc_{K_d}^\RO, \Ver_{K_d}^\RO)$ with three distribution-preserving
+refactors. First, reading every construction output as a projection of
+the shared table $\Theta$ at its bridged transcript prefix is the lazy
+implementation of $\ROflat$ (\Cref{sec:ro-model}); whether $\Theta$ is
+sampled in full at the outset or entry by entry on first access is
+immaterial. Second, \textsc{Vf} reads $\Theta$ only at leaf tag and
+root tag output points. This is sound because decryption absorbs the
+submitted ciphertext, so the verification transcript is determined by
+$(K_d, U, A, C)$ independently of any stream output
+(\Cref{lem:duplex-flat}, \Cref{sec:dec}), and verification discards the
+recovered plaintext, so the keystream projections a real
+$\Ver_{K_d}^\RO$ computation reads influence neither a visible answer
+nor the value of any other table entry; leaving those entries unread
+until some later computation first accesses them leaves the joint
+distribution of all oracle answers unchanged. Third, the flags are
+instrumentation: no oracle answer or branch depends on them. Hence
+$\Pr[\mathcal{B}^{\Greal} \Rightarrow 1]
+= \Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]$.
 
-\paragraph{Coupling until divergence.} Run the two hybrids on shared
-adversary coins and one shared lazy $\ROflat$ table. Introduce the
-user-$d$ local events $\badkey^{(d)}$, that a direct
-$\ROflat$ query decodes under $\KeyedTWOut$ to $K_d$ and a counted
-output-point class; $\badleaf^{(d)}$, that some user-$d$
-construction-generated final leaf transcript receives the same
-$\tauleaf$-bit projection as a distinct user-$d$ final leaf transcript
-that shares its key, nonce, and leaf index and is generated by a
-user-$d$ encryption computation (the same-slot event of
-\Cref{lem:leaf-collision}); and $\forge^{(d)}$, that a non-replay
-user-$d$ verification query is accepted by $\Ver_{K_d}^\RO$.
+\paragraph{Claim 2: \Greal{} and \Grej{} agree until $\forge$.}
+Run the two games on the same adversary coins, environment coins, and
+table realization $\Theta$. The games share all code, including the
+comparison that sets $\forge$, and differ in exactly one statement, the
+marked return line of \Cref{alg:adjacent-hybrid-games}, which executes
+only when $\forge$ has just been set. The two executions are therefore
+identical---every oracle answer, table access, record in $W$, and flag
+update---up to and including the query at which $\forge$ is first set,
+and the first differing value is that query's returned bit. In
+particular, on executions in which \Grej{} never sets $\forge$, the two
+runs coincide, outputs included, and the flags $\badkey$ and $\badleaf$
+are set at the same queries in both games up to the first $\forge$.
 
-Couple the two hybrids on shared adversary coins and one shared lazy
-$\ROflat$ table, with user $d$'s $\Rand$ answers in $H_d^\star$ set equal
-to user $d$'s real encryption answers in $H_{d-1}^\star$. We show the two
-hybrids' visible transcripts agree until $\badkey^{(d)} \cup \forge^{(d)}$.
+\paragraph{Claim 3: \Grej{} agrees with $H_d^\star$ until $\badkey$.}
+Couple $H_d^\star = \Gideal{}$ to \Grej{} as follows: run \Grej{} on
+the same adversary and environment coins, give the \Gideal{} coordinate
+the same visible oracle answers for every query answered while
+$\badkey$ is unset, and let the \Gideal{} coordinate continue
+independently according to its own law from the query that sets
+$\badkey$ onward. We claim the resulting \Gideal{} coordinate is distributed
+exactly as \Gideal{}. The answer rules coincide query by query except
+for user-$d$ encryption: non-replay user-$d$ verification returns
+reject in \Grej{} and under $\Replay$ alike, and replay queries are
+answered from the record $W$, which the coupling keeps equal in both
+coordinates; the environment runs identical code in both games; and
+direct queries read table entries that agree in both games before
+$\badkey$---an entry written by a user-$d$ construction computation is
+read by a direct query only if that query decodes under $\KeyedTWOut$
+to $K_d$ and a counted class (\Cref{lem:key-renaming}), which sets
+$\badkey$, while entries written by the environment are produced
+identically in both games (\Cref{lem:env-neutrality}).
 
-\paragraph{Claim 1: the coupled ideal coordinate has the true law.}
-Each real user-$d$ encryption output is a projection of $\ROflat$ at
-transcript points that are distinct within its computation and, by
-encryption nonce-uniqueness and Transcript Injectivity
-(\Cref{lem:transcript-inj}), across distinct encryptions. By
-\Cref{lem:enc-transcript-marginal-uniformity}, a point first generated
-by an encryption query receives a fresh lazy-table sample, while a point
-first generated by an earlier construction computation is later reused
-with the same sampled value. Before $\badkey^{(d)}$ the lemma's
-hypothesis $\neg\mathsf{hit}_{\mathsf{fresh}}$ holds for every user-$d$
-encryption query: a direct query pre-reading the bridged input of a
-user-$d$ hidden-key counted point would decode under $\KeyedTWOut$ to
-$K_d$ and a counted class (\Cref{lem:key-renaming}) and would itself be
-$\badkey^{(d)}$. The present environment adds a real
-user-$d$ verification oracle,
-absent from a pure encryption-replacement game. Because only encryption
-queries are nonce-unique, a non-replay verification may reuse an encryption nonce
-and lazily read a keystream or root tag point the same-nonce encryption
-later reaches; but lazy sampling draws each point uniformly when first
-read, so its value is unchanged and stays marginally uniform. In
-$H_d^\star$ the user-$d$
-verification oracle is $\Replay$, which answers from the recorded
-ciphertexts without reading $\ROflat$. Hence the coupled $H_d^\star$
-transcript has the law of the true $H_d^\star$ until $\badkey^{(d)}$: its
-encryption answers are the marginally uniform strings of $\Rand$ and its
-verification answers are the replay decisions, with no further $\ROflat$
-dependence. (Conditioning on a particular $H_{d-1}^\star$ verification
-outcome can constrain a coupled tag, but that is a property of the joint
-coupling; the coupled $H_d^\star$ marginal is what must match the true
-$H_d^\star$, and it does.)
+It remains to show that, before $\badkey$, each user-$d$ encryption
+answer of \Grej{} is, conditioned on the entire prior visible
+transcript, a fresh uniform byte string of length $\|M\| +
+\tauroot/8$---the law of $\Rand$. Fix such a query $(U, A, M)$. Before
+$\badkey$, no direct query has read the bridged input of a user-$d$
+hidden-key counted point, so the hypothesis
+$\neg\mathsf{hit}_{\mathsf{fresh}}$ of Encryption Transcript Marginal
+Uniformity (\Cref{lem:enc-transcript-marginal-uniformity}) holds, and
+every counted output point first generated by this query is pairwise
+distinct and receives a fresh uniform sample. The stream output points
+are always first generated by this query: user-$d$ verification
+computations read no stream points (\Cref{alg:adjacent-hybrid-games}),
+nonce-respecting encryption and Transcript Injectivity
+(\Cref{lem:transcript-inj}) separate them from every earlier user-$d$
+encryption computation, and the environment writes only foreign-key
+addresses (\Cref{lem:env-neutrality}). The ciphertext body $C$ is
+therefore a fresh uniform string. The internal leaf tags are either
+fresh samples or reuse entries written by user-$d$ verification
+computations; they are never returned and influence the answer only
+through the root tag address. The root tag $T$ is read at the
+computation's root tag output point (\Cref{def:root-tag-output-point}),
+an address distinct from every stream point of the same query by
+Output-Point Separation (\Cref{cor:output-sep}). If that entry is first
+generated here, $T$ is a fresh uniform sample. Otherwise the entry was
+written by an earlier user-$d$ verification computation---before
+$\badkey$, the only other writer of user-$d$ addresses---whose reads of
+it produced only the constant reject answers of \Grej{}; since no
+oracle answer or branch depends on the flags, the visible transcript is
+a function of the coins and of table entries other than this one, and
+conditioned on the visible transcript the entry remains uniform. In
+either case $(C, T)$ has the $\Rand$ law, and at most one user-$d$
+encryption reaches any root tag address, since two would share the
+nonce $U$, contradicting nonce-respecting encryption. By induction over
+the query sequence, the coupled \Gideal{} coordinate has exactly the
+law of $H_d^\star$, and its visible transcript agrees with \Grej{}'s
+while $\badkey$ is unset.
 
-\paragraph{Claim 2: agreement until divergence.}
-Encryption answers are equal by construction. A verification query whose tuple is
-recorded returns accept in both hybrids through the shared replay-table
-membership check, which precedes the real-versus-ideal decryption branch
-(\Cref{sec:mu-setting}), so real decryption is never run on a recorded
-tuple. A non-replay query returns reject in $H_d^\star$ and the bit
-$[\,\Ver_{K_d}^\RO\text{ accepts}\,]$ in $H_{d-1}^\star$; the two agree
-unless that bit is accept, the event $\forge^{(d)}$. A real verification
-reads hidden-key points but exposes only this bit, which is independent
-of the keystream values it reads---decryption absorbs the submitted
-ciphertext, not the recovered plaintext (\Cref{lem:duplex-flat})---and
-depends on an encryption output only through the root tag it recomputes.
-In the reused-nonce case above this correlates the $H_{d-1}^\star$ bit
-with that encryption's tag, but the $H_d^\star$ verification is $\Replay$
-and the coupled encryption answers coincide, so the two coordinates still
-agree on such a query unless it accepts. Direct-query answers are read
-from the shared table and agree until a direct query reads a user-$d$
-hidden-key point ($\badkey^{(d)}$). Therefore the visible transcripts
-agree until $\badkey^{(d)} \cup \forge^{(d)}$, and a union bound ordered
-by first occurrence---splitting
-$\Pr[\forge^{(d)} \text{ before } \badkey^{(d)}]$ at the first
-occurrence of the leaf abort into
-$\Pr[\badleaf^{(d)} \text{ before } \badkey^{(d)} \cup \forge^{(d)}]
-+ \Pr[\forge^{(d)} \text{ before } \badkey^{(d)} \cup
-\badleaf^{(d)}]$---gives
+\paragraph{Claim 4: assembly.}
+Place the three games on one probability space: shared adversary and
+environment coins and one table realization $\Theta$ drive \Greal{} and
+\Grej{} pointwise, and the $H_d^\star$ coordinate is coupled to \Grej{}
+as in Claim~3. Until the first occurrence of $\forge \vee \badkey$ in
+\Grej{}, the three visible transcripts coincide: \Greal{}'s by Claim~2,
+since $\forge$ has not yet been set, and $H_d^\star$'s by Claim~3,
+since $\badkey$ has not. When neither flag is ever set, the final
+outputs of $\mathcal{B}$ coincide as well, so the outputs can differ
+only on the event $\forge \vee \badkey$. With Claim~1 identifying
+$\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1] =
+\Pr[\mathcal{B}^{\Greal} \Rightarrow 1]$ and Claim~3 identifying
+$\Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]$ with the coupled
+coordinate's output probability,
+\[
+  \bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
+       - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr|
+  \;\leq\;
+  \Pr_{\Grej}[\forge \vee \badkey].
+\]
+Decompose by first occurrence, inserting $\badleaf$---which guards no
+code difference and enters only this accounting:
 \[
 \begin{aligned}
-  &\bigl|\Pr[\mathcal{B}^{H_{d-1}^\star} \Rightarrow 1]
-       - \Pr[\mathcal{B}^{H_d^\star} \Rightarrow 1]\bigr| \\
-  &\leq
-  \Pr[\badkey^{(d)}]
-  + \Pr[\badleaf^{(d)} \text{ before } \badkey^{(d)} \cup \forge^{(d)}] \\
-  &\qquad
-  + \Pr[\forge^{(d)} \text{ before } \badkey^{(d)} \cup \badleaf^{(d)}].
+  \Pr_{\Grej}[\forge \vee \badkey]
+  \;\leq\;
+  \Pr[\badkey]
+  &+ \Pr[\badleaf \text{ before } \badkey \vee \forge] \\
+  &+ \Pr[\forge \text{ before } \badkey \vee \badleaf].
 \end{aligned}
 \]
-
-\paragraph{Claim 3: the environment does not enlarge the user-$d$ events.}
-The real users $e > d$ perform construction-internal $\ROflat$ lookups while
-simulating $\Enc_{K_e}^\RO$ and $\Ver_{K_e}^\RO$. Whenever such a lookup
-lies in a counted keyed transcript class, \Cref{lem:bridge-decode}
-decodes its candidate key as $K_e$, which on the non-collision branch
-differs from $K_d$; a lookup outside the counted keyed language is
-irrelevant to $\badkey^{(d)}$. Foreign-user lookups therefore neither
-trigger user $d$'s key-test event nor pre-read a user-$d$ hidden
-transcript point, and they create no user-$d$ leaf tag collision or
-user-$d$ non-replay verification submission, which are counted by
-$\nleaf^{(d)}$ and $\qv^{(d)}$. The three accounting events are thus
-local to user $d$'s keyed transcript language.
-
-\paragraph{Claim 4: bounding the three terms.}
-For $\Pr[\badkey^{(d)}]$, the foreign-key key-test claim above gives
-$\Pr[\badkey^{(d)}] \leq \KeyGuess_k(\qRO(\mathcal{B}))$.
-For the leaf term, before $\badkey^{(d)}$ no direct query has pre-read
-the bridged input of a user-$d$ hidden-key final leaf transcript---such
-a query would decode under $\KeyedTWOut$ to $K_d$ and its $\Ltag(j)$
-class and would itself be $\badkey^{(d)}$. User-$d$ encryption is
-nonce-respecting on the distinct-keys branch, and the visible view
-agrees with the all-reject continuation until the first accepting
-non-replay submission ($\forge^{(d)}$), so the same-slot case of
+The three terms are bounded in \Grej{}. For the first, the foreign-key
+key-test claim above gives
+$\Pr[\badkey] \leq \KeyGuess_k(\qRO(\mathcal{B}))$. For the second,
+\Grej{} restricted to user $d$ is a hidden-key game with
+nonce-respecting encryption and all-reject verification; before
+$\badkey$ no direct query has read a user-$d$ hidden final leaf
+point---such a query would decode to $K_d$ and its $\Ltag(j)$ class and
+set $\badkey$---and the environment creates no user-$d$ leaf transcript
+(\Cref{lem:env-neutrality}), so the same-slot case of
 \Cref{lem:leaf-collision} gives
-$\Pr[\badleaf^{(d)} \text{ before } \badkey^{(d)} \cup \forge^{(d)}]
-\leq \nleaf^{(d)}/2^{\tauleaf}$.
-For the forgery term, before $\badkey^{(d)} \cup \badleaf^{(d)}$ every
-encryption-first final root transcript class admits no accepting
-non-replay submission---by the final-root determinacy of
-\Cref{lem:transcript-inj} and Leaf-Transcript Recovery
-(\Cref{lem:leaf-recovery}), whose hypothesis $\neg\badleaf^{(d)}$
-supplies because the comparand is the class's encryption computation, a
-non-replay submission in such a class
-reaches the already-returned root tag and fails the tag comparison---so
-every accepting non-replay submission is verification-first, and
-\Cref{lem:ver-first-root-guess} gives
-$\Pr[\forge^{(d)} \text{ before } \badkey^{(d)} \cup \badleaf^{(d)}]
+$\Pr[\badleaf \text{ before } \badkey \vee \forge]
+\leq \nleaf^{(d)}/2^{\tauleaf}$. For the third, before
+$\badkey \vee \badleaf$ every successful comparison lies in a
+verification-first class: a class first generated by a user-$d$
+encryption computation admits none, since by the final-root determinacy
+of \Cref{lem:transcript-inj} and Leaf-Transcript Recovery
+(\Cref{lem:leaf-recovery})---whose hypothesis $\neg\badleaf$ supplies
+because the comparand is the class's encryption computation---any
+non-replay submission in the class carries the same $(U,A,C)$ as that
+encryption and either matches the recorded tuple, in which case the
+replay check answers it before any comparison, or fails the comparison.
+\Cref{lem:ver-first-root-guess} then gives
+$\Pr[\forge \text{ before } \badkey \vee \badleaf]
 \leq \qv^{(d)}/2^{\tauroot}$.
 
 Summing the three bounds gives
@@ -1470,6 +1579,6 @@ Summing the three bounds gives
   + \frac{\nleaf^{(d)}}{2^{\tauleaf}}
   + \frac{\qv^{(d)}}{2^{\tauroot}},
 \]
-with the user-$d$ key-test event $\badkey^{(d)}$ charged a single time
-for the adjacent hybrid.
+with the user-$d$ key-test event $\badkey$ charged a single time for
+the adjacent hybrid.
 \end{proof}
