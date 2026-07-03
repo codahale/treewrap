@@ -200,13 +200,14 @@ bounds and the tag collision terms in the hash and committing bounds
 (\Cref{sec:concrete}) are dominated
 by the capacity birthday rather than the tag length.
 
-\item $k = 256$. Matching the capacity ensures that the per-user key
-guess
+\item $k = 256$. Matching the capacity gives the per-user key-guess
+term
 \[
   \KeyGuess_k(\Nprim) = \Nprim/2^k
 \]
-remains below the capacity birthday at the target $D$ of
-\Cref{sec:concrete-claim}.
+the same 256-bit exponent as the flat-sponge capacity and tag terms.
+The multi-user aggregate is accounted for in the concrete bounds of
+\Cref{sec:concrete}.
 
 \item $\beta = 8183$. The chunk size is set to $49\rho = 49 \cdot 167$
 bytes, the largest multiple of the per-call absorption bound $\rho$ not
