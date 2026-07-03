@@ -203,9 +203,10 @@ CMTDs-4 \cite{BH22} & $\Lift_c$ and $\RootColl$ & $\leq 2^{-128}$ \\
 \label{sec:bound-discussion}
 
 The bounds of \Cref{sec:concrete} aggregate the loss terms of
-\Cref{sec:loss-terms}, whose sizes at the work cap
-\Cref{tab:concrete-security} records and whose dominance
-\Cref{sec:concrete-claim} proves.
+\Cref{sec:loss-terms}. \Cref{tab:concrete-security} records the
+dominant terms and aggregate cap bounds; the proof of
+\Cref{sec:concrete-claim} supplies the individual term sizes at the
+work cap.
 
 \paragraph{At the concrete cap.}
 At $\Ntot \leq 2^{63}$, the hash bounds other than ePre and the
@@ -269,9 +270,12 @@ cap, not a statement that security is exhausted there. The closed forms of
 $2^{63}$, and their dominant terms are birthday-type in $\Ntot$ on the
 $256$-bit capacity, so the guarantees degrade quadratically rather than
 abruptly: at $\Ntot = 2^{100}$, for example, the $s = 2$ collision bound is
-still below $2^{-55}$. The bounds become vacuous only as $\Ntot$ approaches
-$2^{c/2} = 2^{128}$, where $\Lift_c(\Ntot)$ exceeds $1/2$
-(\Cref{sec:loss-terms}). The cap $\Ntot \leq 2^{63}$ is therefore a
+still below $2^{-55}$. Once $\Ntot$ reaches
+$2^{c/2} = 2^{128}$, the flat sponge loss exceeds $1/2$ and no longer
+gives meaningful security (\Cref{sec:loss-terms}); the displayed
+closed form itself becomes a trivial advantage bound only when it
+reaches $1$, near $\Ntot = 2^{(c+1)/2}$. The cap
+$\Ntot \leq 2^{63}$ is therefore a
 data-scale choice: a single work bound at which every notion's advantage
 lies below the $2^{-128}$ target simultaneously, not the largest workload
 the mode tolerates.
