@@ -8,7 +8,8 @@ by the AEAD security bounds of \Cref{sec:aead-security}, the root tag bounds of
 \Cref{cor:committing-combined}. The machinery applies uniformly to the games
 named once here.
 
-The lift has two steps. First, the \cite{BDPV08} indifferentiability theorem
+The lift has two steps in the win-event games and three in the
+real-vs-ideal games. First, the \cite{BDPV08} indifferentiability theorem
 replaces the construction interface by a flat random oracle and answers only
 direct public-permutation queries through a simulator over that oracle, at cost
 $\Lift_c(\Ntot)$, where $\Ntot = N + \Nprim$ counts construction-internal
@@ -17,16 +18,26 @@ challenger computations---together with direct primitive
 queries. Second, the simulator-world adversary is converted into a flat-RO
 adversary whose direct random oracle query count is at most $\Nprim$. Thus the
 random oracle bounds are instantiated at $\qRO \leq \Nprim$, while the public
-permutation lift pays $\Lift_c(N+\Nprim)$.
+permutation lift pays $\Lift_c(N+\Nprim)$. Third, in the real-vs-ideal games,
+whose ideal world exposes the real permutation rather than the simulator
+(\Cref{sec:games-pp}), the ideal-side simulator introduced by the first step
+is exchanged back for $(\pi,\pi^{-1})$ at cost $\Lift_c(\Nprim)$
+(\Cref{lem:sim-perm-proximity}); the exchange is possible because the ideal
+construction oracles are independent of the primitive.
 
 \begin{definition}[Single-Stage \TW{} Games]
 \label{def:single-stage-games}
 The \emph{single-stage \TW{} games} are the games of
-\Cref{sec:games-pp,sec:mu-setting} whose entire public-permutation transcript is
-handled by one \cite{BDPV08} replacement, including deterministic challenger
-checks after the adversary's final output. They are all-in-one AE, mu-ind,
-\textsf{INT-RUP}, CMTDs-4, the $\HTW$ collision and preimage
-games (standard and everywhere), and CMTs-$\ell$ for $\ell \in \{1,3,4\}$.
+\Cref{sec:games-pp,sec:mu-setting} in which one adversary interacts with the
+challenger in a single stage, so that a \cite{BDPV08} replacement applies to
+an entire world's public-permutation transcript at once, including
+deterministic challenger checks after the adversary's final output. They are
+all-in-one AE, mu-ind, \textsf{INT-RUP}, CMTDs-4, the $\HTW$ collision and
+preimage games (standard and everywhere), and CMTs-$\ell$ for
+$\ell \in \{1,3,4\}$. The win-event games among these have one world; the
+real-vs-ideal games---all-in-one AE and mu-ind---have two, and the lift below
+treats their real world by the full replacement and their ideal world by the
+simulator--permutation exchange of \Cref{lem:sim-perm-proximity}.
 \end{definition}
 
 The derived adversary forwards the following game data to the corresponding
@@ -56,17 +67,16 @@ padded sponge over a random permutation --- after applying the
 $\padtenone$ transcript inputs. The superscript records that both
 simulator directions share the same internal lazy $\ROflat$ table.
 
-This is the simulator referenced by the \Cref{sec:games-pp,sec:mu-setting}
-definitions of $\Advae_\TW$ and $\Advmuind_\TW$: the ideal side of each
-AE-style experiment exposes the construction interface specified by the
-game ($(\Rand,\Replay)$, instantiated per user in mu-ind) together with
-$(\Sim^{\ROflat}, \Sim^{-1,\ROflat})$ as the public primitive
-interface. The $\ROflat$ table in this notation is internal to the
-ideal system and is not an extra interface exposed to the application
-adversary; the committing security advantages remain the real
-public permutation success probabilities of \Cref{sec:games-pp}, with
-the simulator appearing only inside the reduction to the corresponding
-random oracle model adversary.
+The simulator is a proof device: each game of
+\Cref{sec:games-pp,sec:mu-setting} states its advantage over the real
+permutation, and the reduction to the corresponding random oracle model
+adversary passes through intermediate simulator worlds. In those worlds,
+the construction interface is the one specified by the game
+($(\Rand,\Replay)$, instantiated per user in mu-ind, on the ideal side)
+and the public primitive interface is
+$(\Sim^{\ROflat}, \Sim^{-1,\ROflat})$. The $\ROflat$ table in this
+notation is internal to that system and is not an extra interface
+exposed to the application adversary.
 
 \begin{lemma}[At Most One Simulator RO Call]
 \label{lem:sim-ro-call-filter}
@@ -194,6 +204,37 @@ the second inequality by the Weierstrass product inequality
 $\prod_i (1 - x_i) \geq 1 - \sum_i x_i$ for $x_i \in [0, 1]$.
 \end{proof}
 
+\begin{lemma}[Simulator--Permutation Proximity]
+\label{lem:sim-perm-proximity}
+Let $\mathcal{D}$ be a distinguisher with access only to a two-directional
+primitive interface, making at most $q$ queries. Then
+\[
+  \bigl|
+    \Pr[\mathcal{D}^{\Sim^{\ROflat},\, \Sim^{-1,\ROflat}} \Rightarrow 1]
+    - \Pr[\mathcal{D}^{\pi,\, \pi^{-1}} \Rightarrow 1]
+  \bigr|
+  \;\leq\; \Lift_c(q),
+\]
+where $\pi \sample \Perm(\bits^{1600})$ and $\ROflat$ is the lazily
+sampled random oracle internal to the simulator.
+\end{lemma}
+
+\begin{proof}
+Consider the indifferentiability distinguisher $\mathcal{D}'$ that runs
+$\mathcal{D}$, forwards its primitive-interface queries, and never queries
+the construction interface. The \cite{BDPV08} query cost of $\mathcal{D}'$
+is at most $q$: each forwarded query costs one, and no construction queries
+arise. Because $\mathcal{D}'$ ignores the construction interface, its two
+views are exactly $\mathcal{D}^{\pi,\pi^{-1}}$ in the real pair and
+$\mathcal{D}^{\Sim^{\ROflat},\Sim^{-1,\ROflat}}$ in the ideal pair of
+\cite[Theorem~2]{BDPV08}, applied under the \cite[Theorem~3]{BDPV11}
+bridge fixed in \Cref{app:simulator}. If $q \geq 2^c$ then
+$\Lift_c(q) \geq 1$ and the claim is trivial; otherwise that theorem
+bounds the displayed difference by the random-permutation differentiating
+bound $f_P(q)$ of \cite[Lemma~5]{BDPV08}, and the derivation in the proof
+of \Cref{lem:lift-bound} gives $f_P(q) \leq \Lift_c(q)$.
+\end{proof}
+
 \begin{lemma}[Derived-Adversary Execution Contract]
 \label{lem:derived-adversary}
 Let $\mathsf{G}$ be a single-stage \TW{} game
@@ -306,12 +347,14 @@ $\mathsf{New}$ calls and these caps user by user.
 \subsection{Lift Application}
 \label{app:lift-corollaries}
 
-The lift bound of \Cref{lem:lift-bound} and the derived-adversary
-construction of \Cref{lem:derived-adversary} combine into a single
-template, stated once and then instantiated by the bounds of
+The lift bound of \Cref{lem:lift-bound}, the simulator--permutation
+proximity bound of \Cref{lem:sim-perm-proximity}, and the
+derived-adversary construction of \Cref{lem:derived-adversary} combine
+into a single template, stated once and then instantiated by the bounds of
 \Cref{sec:aead-security,sec:root-tag-hash-security} and by the
 committing-notion bounds of \Cref{cor:committing-combined}. Every
-public-permutation bound is obtained by adding $\Lift_c(\Ntot)$ and
+public-permutation bound is obtained by adding $\Lift_c(\Ntot)$---plus
+$\Lift_c(\Nprim)$ in the real-vs-ideal games---and
 substituting $\qRO \leq \Nprim$ in the corresponding random oracle theorem.
 
 \begin{corollary}[Lift Application]
@@ -324,20 +367,24 @@ $\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ of
 \Cref{lem:derived-adversary} is a random oracle $\mathsf{G}$-adversary
 with $\qRO(\mathcal{B}) \leq \Nprim$ and the construction-side caps of
 \Cref{lem:derived-adversary}---in particular $\qv(\mathcal{B}) \leq \Qv$
-and $\nleaf(\mathcal{B}) \leq \Nleaf$, where these apply---such that
+and $\nleaf(\mathcal{B}) \leq \Nleaf$, where these apply---such that,
+when $\mathsf{G}$ is a win-event game,
 \[
   \Adv^{\mathsf{G}}_\TW(\mathcal{A})
   \;\leq\;
-  \Lift_c(\Ntot) + \Adv^{\mathsf{G}}_{\RO}(\mathcal{B}).
+  \Lift_c(\Ntot) + \Adv^{\mathsf{G}}_{\RO}(\mathcal{B}),
+\]
+and, when $\mathsf{G}$ is a real-vs-ideal game (all-in-one AE or mu-ind),
+\[
+  \Adv^{\mathsf{G}}_\TW(\mathcal{A})
+  \;\leq\;
+  \Lift_c(\Ntot) + \Adv^{\mathsf{G}}_{\RO}(\mathcal{B}) + \Lift_c(\Nprim).
 \]
 If moreover $\Adv^{\mathsf{G}}_{\RO}(\mathcal{B}) \leq
 \varepsilon_{\mathsf{G}}(\qRO(\mathcal{B}), \nleaf(\mathcal{B}))$ for some
 $\varepsilon_{\mathsf{G}}$ nondecreasing in each argument, then
-\[
-  \Adv^{\mathsf{G}}_\TW(\mathcal{A})
-  \;\leq\;
-  \Lift_c(\Ntot) + \varepsilon_{\mathsf{G}}(\Nprim, \Nleaf).
-\]
+$\varepsilon_{\mathsf{G}}(\Nprim, \Nleaf)$ may replace
+$\Adv^{\mathsf{G}}_{\RO}(\mathcal{B})$ in the corresponding bound.
 \end{corollary}
 
 \begin{proof}
@@ -355,7 +402,32 @@ $\Nprim$ direct primitive queries. The derived-adversary contract
 execution as the identically distributed random oracle execution of
 $\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$, with
 $\qRO(\mathcal{B}) \leq \Nprim$ and the stated construction-side
-inheritances, giving the first bound. The second follows by the
+inheritances. For a win-event game this gives the first bound.
+
+For a real-vs-ideal game, chain four worlds:
+$\mathsf{W}_1$, the real construction interface with $(\pi,\pi^{-1})$;
+$\mathsf{W}_2$, the flat-RO real construction interface with the
+simulator; $\mathsf{W}_3$, the ideal construction interface with the
+simulator; and $\mathsf{W}_4$, the ideal construction interface with
+$(\pi,\pi^{-1})$. The game of \Cref{sec:games-pp,sec:mu-setting}
+compares $\mathsf{W}_1$ with $\mathsf{W}_4$. The step from
+$\mathsf{W}_1$ to $\mathsf{W}_2$ costs at most $\Lift_c(\Ntot)$ as
+above, and under the coupling of \Cref{lem:derived-adversary} the pair
+$(\mathsf{W}_2, \mathsf{W}_3)$ is precisely the real/ideal pair of the
+random oracle game for $\mathcal{B}$, so
+$|\Pr[\mathcal{A}^{\mathsf{W}_2} \Rightarrow 1] -
+\Pr[\mathcal{A}^{\mathsf{W}_3} \Rightarrow 1]| \leq
+\Adv^{\mathsf{G}}_{\RO}(\mathcal{B})$. For the step from $\mathsf{W}_3$
+to $\mathsf{W}_4$, the ideal construction oracles---$(\Rand,\Replay)$,
+instantiated per user in mu-ind, together with the $\mathsf{New}$
+interface and the validity checks---are independent of the primitive, so
+a distinguisher can answer them from its own coins, run $\mathcal{A}$,
+and forward the at most $\Nprim$ primitive-interface queries;
+\Cref{lem:sim-perm-proximity} bounds this step by $\Lift_c(\Nprim)$.
+The triangle inequality combines the three estimates into the second
+bound.
+
+The final claim follows by the
 monotonicity of $\varepsilon_{\mathsf{G}}$. When $\mathsf{G}$ is
 parameterized by a challenge fixed before $\mathcal{A}$ runs---the
 everywhere-preimage target tag, or the standard preimage source $X^*$,

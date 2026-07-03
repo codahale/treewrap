@@ -23,6 +23,7 @@ gives the following closed-form bounds.
   \Advae_\TW(\mathcal{A})
   \;\leq\;
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\Nprim(\Nprim + 1)}{2^{257}}
   + \frac{\Nprim + \Qv + \Nleaf}{2^{256}}.
 \]
 
@@ -31,6 +32,7 @@ gives the following closed-form bounds.
   \Advmuind_\TW(\mathcal{A})
   \;\leq\;
   \frac{\Ntot(\Ntot + 1)}{2^{257}}
+  + \frac{\Nprim(\Nprim + 1)}{2^{257}}
   + \frac{D \Nprim + \Qv + \Nleaf}{2^{256}}
   + \frac{D(D - 1)}{2^{257}}.
 \]
@@ -142,27 +144,33 @@ $\Nprim \leq \Ntot$, $\Qv \leq \Ntot$, $\Nleaf \leq \Ntot$, and
 $\Nprim+\Nleaf \leq \Ntot$. The user cap $D$ remains independent, since
 created-but-idle users need not contribute to $N$.
 
-At $\Ntot \leq 2^{63}$, the flat-sponge term and each birthday-scale
-root or leaf term at $s=2$ is at most a $2^{-131}$-scale term, while each
+At $\Ntot \leq 2^{63}$, each flat-sponge term---at $\Ntot$ or at
+$\Nprim$---and each birthday-scale root or leaf term at $s=2$ is at most
+$2^{-131} + 2^{-192}$, while each
 linear root-preimage, key-guessing, verification, or leaf tag term with no
 factor $D$ is at most a $2^{-193}$-scale term.
 The fixed-slice Pre degradation is at most $2^{-256}$, since
 $m_{a,\mu} \geq k+\nu = 512$.
 Thus the largest non-multi-user bound is the $s=2$ collision bound, which is below
 $4 \cdot 2^{-131} = 2^{-129}$; larger $s$ only decreases the
-root-collision term. The all-in-one AE and \textsf{INT-RUP} bounds carry
-$\Lift_c(\Ntot)$ as their only birthday-scale term. In the multi-user
-case,
+root-collision term. The all-in-one AE bound carries its two flat-sponge
+terms as its only birthday-scale terms and lies below $2^{-129}$, and the
+\textsf{INT-RUP} bound carries $\Lift_c(\Ntot)$ alone. In the multi-user
+case, using $D \leq 2^{63}$,
 \[
   \Advmuind_\TW(\mathcal{A})
-  < 2^{-130} + 2^{-129} + 2^{-131}
-  < 2^{-128},
+  < \bigl(2^{-130} + 2^{-193}\bigr) + 2^{-130} + 2^{-192} + 2^{-131}
+  < 2^{-128}:
 \]
-using $D \leq 2^{63}$: the flat-sponge term is below $2^{-130}$, the
-linear terms sum to
-$(D \Nprim + \Qv + \Nleaf)/2^{256} \leq (2^{126} + 2^{64})/2^{256}
-< 2^{-129}$, and $D(D-1)/2^{257} < 2^{-131}$. These estimates instantiate every closed form in
-\Cref{sec:concrete}.
+the two flat-sponge terms sum to at most
+$2 \cdot (2^{-131} + 2^{-194}) = 2^{-130} + 2^{-193}$, the key-guessing
+term satisfies $D \Nprim / 2^{256} \leq 2^{126}/2^{256} = 2^{-130}$, the
+remaining linear terms satisfy
+$(\Qv + \Nleaf)/2^{256} \leq 2^{64}/2^{256} = 2^{-192}$, and
+$D(D-1)/2^{257} < 2^{-131}$; the total is below
+$5 \cdot 2^{-131} + 2^{-192} + 2^{-193} < 2^{-128}$. These estimates
+instantiate every closed form in \Cref{sec:concrete};
+\Cref{sec:bound-discussion} examines the margin they leave.
 \end{proof}
 
 \begin{table}[t]
@@ -202,9 +210,11 @@ The bounds of \Cref{sec:concrete} aggregate the loss terms of
 \paragraph{At the concrete cap.}
 At $\Ntot \leq 2^{63}$, the hash bounds other than ePre and the
 CMTDs-4 bound have flat-sponge
-and root or leaf birthday terms on the same $2^{-131}$ scale, while the
-ePre, single-user AE, and \textsf{INT-RUP} bounds retain the flat sponge loss
-as their only birthday-scale term. Thus the flat sponge loss is not always the largest
+and root or leaf birthday terms on the same $2^{-131}$ scale; the
+ePre and \textsf{INT-RUP} bounds retain the flat sponge loss
+as their only birthday-scale term, and the single-user AE bound carries
+its two flat-sponge terms, at $\Ntot$ and $\Nprim$, as its only
+birthday-scale terms. Thus the flat sponge loss is not always the largest
 summand: under the loose per-term cap, the $s=2$ root-collision term
 $\binom{\Nprim+2}{2}/2^{256}$ is on the same scale as $\Lift_c(\Ntot)$.
 The multi-user bound is the exception: its
@@ -221,6 +231,33 @@ is hybrid slack from charging created-but-idle users. Expressed in bytes, $\Ntot
 at most $\rho \cdot 2^{63} = 167 \cdot 2^{63} < 2^{71}$ bytes of
 plaintext, associated data, ciphertext, and aggregation through the
 duplex (\Cref{sec:params}).
+
+\paragraph{Margin at the cap.}
+\Cref{cor:concrete-security} clears its target with a stated remainder:
+at the joint corner $D = \Nprim = 2^{63}$ the multi-user estimates total
+$5 \cdot 2^{-131} + 2^{-192} + 2^{-193}$---five eighths of the
+$2^{-128}$ budget---and the largest of the remaining bounds, the $s = 2$
+collision bound, stays below $4 \cdot 2^{-131}$
+(\Cref{sec:concrete-claim}). The closeness at the corner is a proof
+artifact rather than a consequence of the design. The corner itself is
+unoccupiable: it forces $N = 0$, as the previous paragraph records, and
+an adversary without construction computations receives identical
+answers in both worlds---the primitive interface is the same real
+permutation (\Cref{sec:games-pp})---so its advantage there is exactly
+$0$. At resource splits an adversary can occupy, the matching attacks of
+the Tightness paragraph below reach the $2^{-132}$ scale, four bits
+under the target; the intervening distance is consumed by the two
+flat-sponge composition terms and the hybrid slack recorded above, the
+overhead of the indifferentiability route. The margin also widens away
+from the corner: at $D \leq 2^{32}$, the $D$-indexed terms drop below
+$2^{-160}$ and the multi-user bound falls to its two flat-sponge terms,
+below $2^{-130} + 2^{-159}$, two bits under the target. A direct
+keyed-duplex analysis would be expected to replace the quadratic
+$\Lift_c$ terms by finer construction--primitive cross terms, much as
+the keyed-duplex bounds synthesized by \cite{Men23} improve on the
+sponge-indifferentiability bound underlying the original SpongeWrap
+analysis of \cite{BDPV11}; \Cref{sec:limitations} discusses that route
+and the gaps it would need to close.
 
 \paragraph{Reading the work cap.}
 \Cref{cor:concrete-security} is a success-probability statement at a fixed
@@ -295,7 +332,11 @@ the mode tolerates.
   interface is the random oracle regardless of simulator strategy; any
   residual conservatism in $\Lift_c(\Ntot)$ lies in composing
   indifferentiability into the specific keyed games, not in an
-  improvable simulator bound, and is not specific to \TW{}.
+  improvable simulator bound, and is not specific to \TW{}. The
+  real-vs-ideal games pay the same differentiating bound once more, at
+  $\Nprim$, to exchange the ideal-side simulator for the real
+  permutation (\Cref{lem:sim-perm-proximity}); since
+  $\Nprim \leq \Ntot$, that term never dominates the $\Ntot$ term.
 \end{itemize}
 
 Cross-scheme bound-level comparisons against prior sponge AEADs and

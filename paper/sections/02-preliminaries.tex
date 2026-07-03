@@ -232,13 +232,11 @@ value of the user counter $v$ in the game below. A challenge bit $b
 real construction interface (real ciphertexts, real verification) and
 an ideal interface (uniform strings of matching length, verification
 that accepts only previously-issued encryption tuples). The adversary
-also accesses a public primitive interface: the real permutation
-$(\pi,\pi^{-1})$ in the real world and the simulator
-$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ in the ideal world; this
-world-dependent primitive interface is our modification---\cite{BT16}
-work in the ideal-cipher model and give both worlds the same
-ideal-cipher oracles---using the same ideal-side simulator convention
-as the single-user AE-style games. The adversary
+also accesses the public primitive interface $(\pi,\pi^{-1})$, exposed
+identically in both worlds. This follows the same-oracle convention of
+\cite{BT16}, who work in the ideal-cipher model and give both worlds
+the same ideal-cipher oracles; here the shared primitive is the random
+permutation. The adversary
 outputs a guess $b'$ and wins if $b' = b$.
 
 \paragraph{Game and advantage.}
@@ -247,9 +245,9 @@ The game $\mathsf{G}^{\mathsf{mu\text{-}ind}}_\SE(\mathcal{A})$ of
 counter $v$, a set $V$ of $(d, U)$ pairs already used by encryption,
 and a set $W$ of recorded encryption tuples; its $\mathsf{New}$,
 $\mathsf{Enc}$, and $\mathsf{Vf}$ oracles are instantiated for \TW{} in
-\Cref{sec:mu-setting}, together with the added public
-primitive interface---the real permutation when $b = 1$ and the
-simulator when $b = 0$. We write the user index as $d$ and the
+\Cref{sec:mu-setting}, together with the public primitive interface
+$(\pi,\pi^{-1})$, which does not depend on the challenge bit. We write
+the user index as $d$ and the
 associated data input as $A$, where \cite{BT16} writes $i$ and $H$, and
 take the absolute value of their signed advantage so that
 \[
@@ -268,8 +266,7 @@ $\Advmuind_\SE$ is the two-game distinguishing advantage between the
 real $(\Enc, \Ver)$ pair and the ideal $(\Rand, \Replay)$ pair
 instantiated per user. The single-user case $u = 1$ recovers the
 all-in-one AE notion of \Cref{sec:ae-defs}, augmented with the public
-primitive interface (the real permutation in the real world and the
-simulator in the ideal world).
+primitive interface (the real permutation in both worlds).
 
 \paragraph{Per-user nonce uniqueness.}
 Nonce uniqueness is enforced per user via the set $V$: the same nonce

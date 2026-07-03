@@ -99,18 +99,16 @@ below.
 \label{sec:games-pp}
 
 \paragraph{Primitive convention.}
-In the real public permutation world, the challenger samples
+In every public permutation game below, the challenger samples
 $\pi \sample \Perm(\bits^{1600})$ and exposes the direct primitive
-interface $(\pi,\pi^{-1})$. The real-vs-ideal AE-style games compare this
-world to a simulator-ideal world, where the construction interface is the
-ideal interface specified by the game and the public primitive interface is
-$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$. The simulator
-$\Sim^{\ROflat}$ together with its inverse $\Sim^{-1,\ROflat}$ is fixed in
-\Cref{app:flat-sponge-lift}; both directions share an internal lazy table
-for the random oracle $\ROflat$ of \Cref{sec:ro-model}. The hash and committing
-games below are one-world success probabilities in the real public permutation
-world. For them, the simulator appears only in the later lift from the
-intermediate random oracle model.
+interface $(\pi,\pi^{-1})$ to the adversary. The real-vs-ideal AE-style
+games compare the real construction interface with the ideal interface
+specified by the game over this shared primitive, following the
+same-oracle convention of \cite{BT16}; the hash and committing games
+below are one-world success probabilities over the same sampled
+permutation. The simulator $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ of
+\Cref{app:flat-sponge-lift} is a proof device, entering through the
+lift from the intermediate random oracle model.
 
 \paragraph{Validity convention.}
 All construction interface inputs are checked against \TW{}'s public
@@ -150,10 +148,10 @@ nonce-respecting on encryption queries.
   \Advae_\TW(\mathcal{A}) =
   \bigl|
     \Pr[\mathcal{A}^{\Enc_K[\pi],\, \Ver_K[\pi],\, \pi,\, \pi^{-1}} \Rightarrow 1]
-    - \Pr[\mathcal{A}^{\Rand,\, \Replay,\, \Sim^{\ROflat},\, \Sim^{-1,\ROflat}} \Rightarrow 1]
+    - \Pr[\mathcal{A}^{\Rand,\, \Replay,\, \pi,\, \pi^{-1}} \Rightarrow 1]
   \bigr|.
 \]
-This lifted all-in-one AE advantage is the single-user case of the
+This all-in-one AE advantage is the single-user case of the
 multi-user real-vs-ideal notion of \Cref{sec:mu-ind}; \Cref{cor:ae}
 therefore derives it from the direct mu-ind bound of \Cref{thm:mu-ind}.
 
@@ -233,13 +231,11 @@ $\Advcmts{\ell}_\TW(\mathcal{A})$.
 \label{sec:mu-setting}
 
 This subsection instantiates the mu-ind game of \cite{BT16}
-(\Cref{sec:mu-ind}) for \TW{} in the lifted public permutation model,
-using the same ideal-side simulator convention as the single-user
-AE-style games of \Cref{sec:games-pp}. The challenger samples a
-challenge bit $b \sample \bits$. If $b = 1$, it samples a permutation
-$\pi \sample \Perm(\bits^{1600})$ and exposes $(\pi,\pi^{-1})$ as the
-primitive interface; if $b = 0$, it exposes
-$(\Sim^{\ROflat},\Sim^{-1,\ROflat})$ as the primitive interface. The
+(\Cref{sec:mu-ind}) for \TW{} in the public permutation model, under
+the primitive convention of \Cref{sec:games-pp}. The challenger
+samples a challenge bit $b \sample \bits$ and a permutation
+$\pi \sample \Perm(\bits^{1600})$, and exposes $(\pi,\pi^{-1})$ as the
+primitive interface in both worlds. The
 adversary $\mathcal{A}$ creates users on demand via $\mathsf{New}$, and
 the game maintains an active-user counter $v$. We write $D$ for an
 execution-uniform cap on the number of $\mathsf{New}$ calls. Equivalently,
@@ -339,7 +335,8 @@ replaced by direct adversary access to $\ROflat$, and each construction
 oracle uses the corresponding ${}^\RO$ algorithm, the ideal oracles
 $(\Rand,\Replay)$ being unchanged. Under this substitution
 $\Adv^{\mathsf{ae}}_{\RO}$ is the all-in-one advantage of
-\Cref{sec:games-pp} with no simulator on the ideal side; the keyless hash advantages
+\Cref{sec:games-pp} with direct $\ROflat$ access as the primitive
+interface in both worlds; the keyless hash advantages
 $\AdvColl_{\RO}(\mathcal{B})$,
 $\AdvPreSlice{a}{\mu}_{\RO}(\mathcal{B})$, and
 $\AdvePre_{\RO}(\mathcal{B})$ of $\HTW$, the committing
@@ -465,9 +462,8 @@ computations contribute to each count.
   whose two deterministic encryptions are counted exactly as in the
   $s = 2$ collision game.
 \item[$\Nprim$:] the number of direct adversary queries to the
-  primitive interface (the pair $(\pi, \pi^{-1})$ in
-  public permutation games; the simulator's $\ROflat$ table is internal
-  and is not exposed to the application adversary in those games).
+  primitive interface, the pair $(\pi, \pi^{-1})$ in
+  public permutation games.
 \item[$\Ntot = N + \Nprim$:] the total query-sequence cost. The
   flat sponge lift of \Cref{app:flat-sponge-lift} is applied at
   $\Ntot$ because the indifferentiability replacement sees both the

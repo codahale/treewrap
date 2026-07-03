@@ -230,12 +230,15 @@ unverified stream plaintext can reveal keystream information. Application
 behavior on unverified plaintext is likewise outside the provable model.
 
 \paragraph{Conservative lift.}
-Per-term tightness is itemized in \Cref{sec:bound-discussion}; one term is
-conservative because our proof follows the unkeyed sponge/hash line. The flat
+Per-term tightness is itemized in \Cref{sec:bound-discussion}; the
+flat-sponge terms are conservative because our proof follows the unkeyed
+sponge/hash line. The flat
 sponge differentiating loss
 $\Lift_c(\Ntot) = \Ntot(\Ntot+1)/2^{c+1}$ bounds the indifferentiability
 loss of \cite{BDPV08}, used here to lift the random oracle analysis to the
-public permutation model. This proof route matches the role of the root tag:
+public permutation model; the real-vs-ideal games pay it twice, at
+$\Ntot$ on the real side and at $\Nprim$ on the ideal side
+(\Cref{cor:lift-application}). This proof route matches the role of the root tag:
 \TW{}'s hash and committing claims are consequences of hash security, and sponge
 hash security is supported by a mature literature.
 

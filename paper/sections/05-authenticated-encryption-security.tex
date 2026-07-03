@@ -4,7 +4,8 @@
 This section proves the AEAD security of \TW{}. The first theorem is a
 random oracle multi-user indistinguishability bound. The public-permutation
 theorem then follows by the flat sponge lift of \Cref{app:flat-sponge-lift},
-and the all-in-one AE bound is the single-user corollary. The section then
+whose real-vs-ideal form adds the ideal-side proximity term
+$\Lift_c(\Nprim)$, and the all-in-one AE bound is the single-user corollary. The section then
 proves \textsf{INT-RUP} integrity in the separated-interface model of
 \cite{ABLMMY14}. The root tag hash and committing results are proved separately in
 \Cref{sec:root-tag-hash-security}; all concrete instantiations are summarized in
@@ -115,6 +116,7 @@ execution-uniform user cap $D$ and the global resources of
   \Advmuind_\TW(\mathcal{A})
   \;\leq\;
   \Lift_c(\Ntot)
+  + \Lift_c(\Nprim)
   + \frac{D(D - 1)}{2^{k + 1}}
   + D \cdot \KeyGuess_k(\Nprim)
   + \frac{\Nleaf}{2^{\tauleaf}}
@@ -124,7 +126,8 @@ execution-uniform user cap $D$ and the global resources of
 
 \begin{proof}
 By the Lift Application corollary (\Cref{cor:lift-application}) for the
-mu-ind game, there is a random oracle mu-ind adversary
+mu-ind game---a real-vs-ideal game, so the ideal-side proximity term
+applies---there is a random oracle mu-ind adversary
 $\mathcal{B} = \mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ with
 $\qRO(\mathcal{B}) \leq \Nprim$, $\nleaf(\mathcal{B}) \leq \Nleaf$,
 $\qv(\mathcal{B}) \leq \Qv$, and the per-user construction-side caps of
@@ -132,7 +135,8 @@ $\qv(\mathcal{B}) \leq \Qv$, and the per-user construction-side caps of
 \[
   \Advmuind_\TW(\mathcal{A})
   \;\leq\;
-  \Lift_c(\Ntot) + \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B}).
+  \Lift_c(\Ntot) + \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})
+  + \Lift_c(\Nprim).
 \]
 \Cref{thm:mu-ind-ro} bounds the random oracle term. Substituting
 $\qRO(\mathcal{B}) \leq \Nprim$,
@@ -148,6 +152,7 @@ with the resources of \Cref{sec:resources},
   \Advae_\TW(\mathcal{A})
   \;\leq\;
   \Lift_c(\Ntot)
+  + \Lift_c(\Nprim)
   + \KeyGuess_k(\Nprim)
   + \frac{\Nleaf}{2^{\tauleaf}}
   + \frac{\Qv}{2^{\tauroot}}.
