@@ -673,8 +673,11 @@ CMTDs-4 is bounded directly by \Cref{cor:cmtds4}. For the remaining
 D-notions, the $s$-way hierarchy of \cite[\S3, Fig.~5 and
 App.~A]{BH22} gives, for $\ell \in \{1,3\}$,
 $\Advcmtds{\ell}_\TW(\mathcal{A}) \leq
-\Advcmtds{4}_\TW(\mathcal{A})$ for the same output distribution, so the
-resource counts are unchanged.
+\Advcmtds{4}_\TW(\mathcal{A})$ for the same output distribution. By the
+conservative committing-game accounting of \Cref{sec:resources}, the
+CMTDs-$\ell$ and CMTDs-4 resource caps charge the same deterministic
+decryption checks after syntax, domain, and message-length validation,
+independently of their distinctness gates.
 
 For CMTs-$\ell$, the challenger performs $s$ deterministic encryption
 checks, which supply the candidate final-root transcripts

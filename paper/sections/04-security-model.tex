@@ -451,12 +451,15 @@ computations contribute to each count.
   encryption computing $T^* = \HTW(X^*)$ and the one deterministic
   encryption on the submitted input; for the everywhere-preimage game,
   the one deterministic encryption on the submitted input; for
-  CMTDs-$\ell$, $N$ counts only the deterministic decryption checks
-  performed by the challenger on the common ciphertext; while for the
-  CMTs-$\ell$ source games of
-  \Cref{cor:committing-combined}, $N$ counts only the deterministic
-  encryption checks actually used by the challenger to compare the $s$
-  ciphertexts. For the Sec and eSec games of
+  CMTDs-$\ell$, $N$ uses conservative committing-game accounting: after
+  the syntax, domain, and message-length checks, it charges the
+  deterministic decryption checks on the common ciphertext whether or not
+  the particular $\WiC_\ell$ distinctness check would reject before those
+  checks. Likewise, for the CMTs-$\ell$ source games of
+  \Cref{cor:committing-combined}, after syntax and domain checks $N$
+  charges the deterministic encryptions that would be used to compare the $s$
+  ciphertexts whether or not the $\WiC_\ell$ distinctness check would
+  reject earlier. For the Sec and eSec games of
   \Cref{cor:second-preimage-rs04}, $N$ and $\Nprim$ are those of the
   induced two-way collision adversary of \cite[Proposition~6]{RS04},
   whose two deterministic encryptions are counted exactly as in the
