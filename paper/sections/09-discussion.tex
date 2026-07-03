@@ -8,8 +8,9 @@
 encryption schemes along the axes that distinguish it: the underlying primitive,
 whether the mode is parallelizable, the key, nonce, and tag sizes, associated data
 support, nonce-misuse resistance, and committing security (CMT). The rows are
-representative rather than exhaustive: sponge/duplex relatives, AES baselines, a
-misuse-resistant AES baseline, and a generic committing transform.
+representative rather than exhaustive: sponge/duplex relatives, a
+Farfalle-based parallel design, AES baselines, a misuse-resistant AES
+baseline, and a generic committing transform.
 The comparison is structural, not a total security ranking; \TW{}'s own
 concrete bounds and the regimes in which each term dominates are treated in
 \Cref{sec:bound-discussion}, and its measured throughput against
@@ -29,11 +30,14 @@ schemes.
 \centering
 \footnotesize
 \caption{Structural comparison of \TW{} with representative AEADs. Sizes are in
-bytes; AES-GCM-SIV also admits a $32$-byte key. ``Misuse'' is nonce-misuse
+bytes; AES-GCM-SIV also admits a $32$-byte key, and Kravatte-SAE's key and
+nonce lengths are parameters (keys of up to $40$ bytes, arbitrary-length
+nonces). ``Misuse'' is nonce-misuse
 resistance in the sense of \cite{RS06}; CMT records a published committing
 result or attack in the relevant committing notion, with ``broken'' denoting a
-published low-cost committing attack and ``hash CR'' denoting the
-collision-resistance level of the hash used by the transform. A dash means the
+published low-cost committing attack, ``hash CR'' denoting the
+collision-resistance level of the hash used by the transform, and ``open''
+marking a scheme with no published committing analysis. A dash means the
 entry depends on the base scheme. These entries are notion-specific summaries,
 not broad AE security claims. \TW{}'s concrete bounds appear in
 \Cref{sec:bound-discussion}.}
@@ -45,6 +49,7 @@ Scheme & Primitive & Par. & K/U/T & AD & Misuse & CMT \\
 \TW{}                        & \Keccakp   & yes & $32/32/32$ & yes & no  & $128$ b \\
 Ascon-128a \cite{DEMS21}     & Ascon-$p$ ($320$ b) & no  & $16/16/16$ & yes & no  & $\approx64$ b \\
 Xoodyak \cite{DHPVV20}       & Xoodoo ($384$ b)   & no  & $16/16/16$ & yes & no  & $2^{17}$ atk. \\
+Kravatte-SAE \cite{BDHPVV17} & \Keccak[1600, 6]   & yes & $\leq 40$/var./$16$ & yes & no & open \\
 AES-GCM \cite{Dwo07}         & AES                & yes & $16/12/16$ & yes & no  & broken \\
 AES-GCM-SIV \cite{GLL17}     & AES                & yes & $16/12/16$ & yes & yes & broken \\
 nAE $+$ \textsf{CTX} \cite{CR22} & any nAE        & ---  & ---        & yes & --- & hash CR \\
@@ -92,9 +97,33 @@ wire-visible, encryptor-and-decryptor-shared degree of parallelism with \TW{}'s
 run-time leaf choice.
 Strobe \cite{Ham17} is a serial sponge framework aimed at whole protocols rather
 than at a standalone AEAD, and like Ascon and Xoodyak it does not parallelize.
+
+Farfalle \cite{BDHPVV17} leaves the duplex setting altogether: it is a
+parallel pseudorandom function whose compression layer sums
+masked-and-permuted input blocks into an accumulator and whose expansion
+layer generates output from a rolling state, with authenticated
+encryption supplied by the Farfalle-SAE and Farfalle-SIV modes on top
+(\Cref{sec:related}). Its Kravatte instance runs \Keccak[1600, 6], and
+the parallelism available to an implementation is arbitrary, as in
+\TW{}. The two designs price their permutations for different
+adversaries. Farfalle takes its aggressive round counts from the premise
+that an adversary never sees both the input and the output of a
+permutation call, and the accumulator-collision analysis behind
+Kravatte's six-round compression layer randomizes the inputs by secret
+masks \cite{BDHPVV17}. \TW{}'s root tag claims are known-key claims: the
+hash and committing games hand the adversary the key, so the mode needs
+the hash-grade round count and margin of
+\Cref{sec:permutation-cryptanalysis} and a proof toolkit that covers
+adversarial initialization---the sponge indifferentiability line of
+\Cref{app:flat-sponge-lift}. \TW{} therefore keeps the strict duplex
+object and takes its parallelism from the tree topology, paying more
+permutation rounds per byte than a Farfalle instance in exchange for a
+tag that is a proved digest.
+
 Committing security is not unique to \TW{} in this family: a dedicated analysis
 of the sponge-based NIST lightweight finalists proves Ascon committing while
-breaking others \cite{KSW23}, and some constructions, such as Strobe, have not
+breaking others \cite{KSW23}, and some constructions, such as Strobe and the
+Farfalle modes, have not
 been examined in that setting at all. What distinguishes \TW{} is that it makes
 the root tag a secure compact commitment to the full input---collision-,
 second-preimage-, and preimage-resistant as a hash, which in particular yields

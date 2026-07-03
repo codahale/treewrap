@@ -155,7 +155,17 @@ parallelism lives. Keyak fixes the degree of parallelism as a mode parameter,
 while Ascon and Xoodyak expose no mode-level parallelism. In \TW{}, the
 decomposition into indexed leaves is fixed by the transcript, but the number of
 leaves evaluated at once is chosen by the implementation and is invisible to the
-wire format (\Cref{sec:compare-sponge}).
+wire format (\Cref{sec:compare-sponge}). Farfalle \cite{BDHPVV17} reaches
+implementation-chosen, wire-invisible parallelism by a different route: it
+builds a pseudorandom function whose compression and expansion layers apply
+the permutation in parallel under rolling masks, instantiates it over
+\Keccak{} as Kravatte with concrete security claims, and obtains
+authenticated encryption through the session mode Farfalle-SAE and the
+synthetic-IV mode Farfalle-SIV on top of the PRF. \TW{} instead retains the
+strict \cite{BDPV11} duplex object and the permutation-model analysis that
+comes with it, drawing its parallelism from the tree topology rather than
+from the primitive construction; the committing behavior of the Farfalle
+modes has not been analyzed.
 
 \paragraph{Release of unverified plaintext.}
 Andreeva et al.~\cite{ABLMMY14} formalized authenticated encryption in the
