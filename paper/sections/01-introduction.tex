@@ -30,7 +30,9 @@ Those are AEAD-facing notions over ciphertexts. The object applications often
 treat as the commitment, however, is the tag itself. This paper therefore takes
 the tag as the primary security object: we analyze the root tag with standard
 hash-function notions, then recover the AEAD committing games as consequences of
-the same root tag analysis.
+the same root tag analysis. These are opening-based statements: the candidate
+opening includes the key, nonce, associated data, and message, so the tag is not
+claimed to be a public digest of the visible AEAD inputs alone.
 
 \TW{} (\emph{TreeWrap}, with $128$ denoting the $128$-bit security target) is
 designed around that tag-centric requirement. It adapts the KangarooTwelve

@@ -655,7 +655,9 @@ hash of the full encryption context $(K, U, A, M)$ in the sense of
 parameters and work cap $\Ntot \leq 2^{63}$, these advantages are at most
 $2^{-128}$ (\Cref{cor:concrete-security}). These hash bounds make the
 single $\tauroot$-bit tag a binding compact commitment to $(K, U, A, M)$, with
-standard and everywhere preimage resistance, native to the mode.
+standard and everywhere preimage resistance, native to the mode. The commitment
+is to an opening supplied for the tag: it includes the key and does not make the
+tag an independently verifiable public digest of $(U,A,M)$.
 \end{corollary}
 
 \begin{proof}

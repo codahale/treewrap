@@ -18,8 +18,9 @@
   context, but standard deployed modes such as AES-GCM and
   ChaCha20-Poly1305 do not provide this property. We present \TW{}, a
   nonce-based authenticated encryption mode with associated data designed around
-  the stronger tag-centric requirement: the authentication tag should itself
-  behave like a digest of the full $(K, U, A, M)$ context.
+  the stronger tag-centric requirement: given a candidate opening, the
+  authentication tag should itself behave like a digest of the full
+  $(K, U, A, M)$ context, including the key.
 
   \TW{} adapts the KangarooTwelve tree-hashing pattern to keyed duplex
   encryption over \Keccakp{}. A serial root duplex binds the key, nonce,
