@@ -86,7 +86,10 @@ domain, if $d \notin \{1, \dots, v\}$, or if $(d, U) \in V$; otherwise
 it sets $C = \Enc_{K_d}[\pi](U, A, M)$ when $b = 1$, and samples a
 uniformly random byte string $C$ of length $\|M\| + \tauroot/8$ when
 $b = 0$. The game records
-$(d, U)$ in $V$ and $(d, U, A, C)$ in $W$, and returns $C$. The
+$(d, U)$ in $V$ and $(d, U, A, C)$ in $W$, and returns $C$. Here $C$ is
+the full ciphertext string: the message ciphertext concatenated with the
+root tag, written $C \concat T$ in the all-in-one AE game of
+\Cref{sec:aead-games}. The
 verification oracle on input $(d, U, A, C)$ rejects if $d \notin
 \{1, \dots, v\}$ or if $(U, A, C)$ is not a valid \TW{}
 verification/decryption input; if $(d, U, A, C) \in W$ it returns
@@ -261,7 +264,10 @@ with the resources of \Cref{sec:resources},
 Build a mu-ind adversary $\mathcal{A}^{\mu}$ that makes one
 $\mathsf{New}$ query, runs $\mathcal{A}$, and forwards each
 encryption and verification query of $\mathcal{A}$ to user $1$. The
-primitive interface is forwarded unchanged. The real and ideal views of
+mu-ind oracles use the combined ciphertext $C \concat T$ while the AE
+oracles split it into $(C, T)$, so $\mathcal{A}^{\mu}$ concatenates on the
+way in and re-splits on the way out; this repackaging is a bijection and
+changes no probability. The primitive interface is forwarded unchanged. The real and ideal views of
 $\mathcal{A}$ in the all-in-one AE experiment are exactly the real and
 ideal views of $\mathcal{A}^{\mu}$ in the mu-ind experiment with
 $D = 1$, and the resource counts are unchanged. On a replayed
