@@ -80,7 +80,7 @@ digest.
 
 \Cref{tab:params} lists the user-visible and derived scheme parameters.
 The implementation uses the same byte length for the root tag and each
-leaf tag, but the proofs of \Cref{sec:aead-security,sec:root-tag-hash-security} keep
+leaf tag, but the proofs of \Cref{sec:root-tag-hash-security,sec:aead-security} keep
 $\tauroot$ and $\tauleaf$ as separate symbols.
 
 \begin{table}[ht]
@@ -245,7 +245,7 @@ the phase, and the duplex-call position within that phase.
 \Cref{def:wf-transcripts} (Well-formed \TW{} transcript prefixes),
 \Cref{lem:transcript-inj} (Transcript Injectivity), and its structural
 corollaries formalize this parsing fact for the proofs of
-\Cref{sec:aead-security,sec:root-tag-hash-security} and
+\Cref{sec:root-tag-hash-security,sec:aead-security} and
 \Cref{cor:committing-combined}.
 
 \subsection{Encryption}
