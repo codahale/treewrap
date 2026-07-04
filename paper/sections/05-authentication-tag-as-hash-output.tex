@@ -23,6 +23,52 @@ The random oracle theorems are short instantiations; the flat sponge lift gives
 the public-permutation bounds; the \cite{BH22} committing notions reuse the
 same root-collision bound.
 
+\Cref{tab:proof-dependency-map} maps the final claims to the proof ingredients
+and loss terms they use. It is only a dependency guide; the formal games and
+resource accounting remain those of \Cref{sec:security-model}.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{0.22\linewidth}p{0.70\linewidth}@{}}
+\toprule
+Claim & Dependency summary \\
+\midrule
+Coll, \Cref{thm:coll}
+  & Terms: $\Lift_c$, $\LeafColl$, $\RootColl$. Ingredients: final-root input
+    separation under no leaf collision; adaptive root candidate collision
+    bound. \\
+Pre, \Cref{thm:pre}
+  & Terms: $\Lift_c$, $\LeafColl$, $\RootPre$, source-guess term.
+    Ingredients: source/output separation under no leaf collision;
+    sampled-source candidate hit bound. \\
+ePre, \Cref{thm:epre}
+  & Terms: $\Lift_c$, $\RootPre$. Ingredient: fixed-target root candidate hit
+    bound. \\
+CMTDs-4, \Cref{cor:cmtds4}
+  & Terms: $\Lift_c$, $\RootColl$. Ingredients: \TW{} tidiness; common
+    ciphertext body; opening-triple separation. \\
+CMT/CMTD, \Cref{cor:committing-combined}
+  & Terms: $\Lift_c$, $\RootColl$. Ingredients: \cite{BH22} hierarchy for
+    D-notions; direct encryption-source root collision argument for CMTs. \\
+mu-ind and AE, \Cref{thm:mu-ind,cor:ae}
+  & Terms: $\Lift_c$, $\Lift_c(\Nprim)$, $\KeyGuess$, leaf tag, root tag.
+    Ingredients: adjacent-user hybrid; hidden-key leaf collision and
+    verification-first root guessing. \\
+\textsf{INT-RUP}, \Cref{thm:int-rup}
+  & Terms: $\Lift_c$, $\KeyGuess$, leaf tag, root tag. Ingredients:
+    plaintext-computing work charged to transcript resources; hidden-key leaf
+    collision and \textsf{INT-RUP} root guessing. \\
+\bottomrule
+\end{tabular}
+\caption{Proof dependency map for the final \TW{} bounds. ``Leaf tag'' denotes
+the linear hidden-key leaf term in the AE-facing bounds and $\LeafColl$ where
+shown explicitly; ``root tag'' denotes the verification or root-preimage
+guessing term for the relevant game.}
+\label{tab:proof-dependency-map}
+\end{table}
+
 \subsection{Tag Hash and Committing Games}
 \label{sec:root-tag-games}
 
