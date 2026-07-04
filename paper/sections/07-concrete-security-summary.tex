@@ -62,6 +62,18 @@ instantiate every closed form in \Cref{sec:concrete};
 \Cref{sec:bound-discussion} discusses the margin they leave.
 \end{proof}
 
+\paragraph{Reading the cap.}
+The cap $\Ntot \leq 2^{63}$ is a global work point for the whole experiment,
+not a per-user or per-theorem allowance. In a single-user execution with no
+direct primitive queries, it means up to $2^{63}$ construction-internal
+\Keccakp{} calls, on the order of $2^{71}$ processed bytes at the rate
+$\rho=167$. In the multi-user theorem the separate cap $D \leq 2^{63}$ bounds
+created users, while only construction computations and direct primitive
+queries consume $\Ntot$; the extreme proof corner $D=\Nprim=2^{63}$ therefore
+has no construction work. Beyond this cap the explicit formulas of
+\Cref{sec:concrete} still apply, but \Cref{cor:concrete-security} no longer
+asserts that every notion is simultaneously below the $2^{-128}$ target.
+
 \begin{table}[t]
 \centering
 \caption{Concrete \TW{} security at the work cap $\Ntot \leq 2^{63}$
