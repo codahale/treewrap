@@ -1,13 +1,94 @@
-\section{Concrete Security Summary}
+\section{Concrete Bounds and Work Cap}
 \label{sec:concrete-security}
 
-\Cref{sec:aead-security,sec:root-tag-hash-security} separate the security
-analysis into AEAD bounds and root tag hash and committing bounds. This section
-instantiates those bounds at the
-implemented \TW{} parameters and records the single concrete work cap used
-throughout the paper.
+The preceding sections prove two families of bounds: the tag-centric hash and
+committing bounds of \Cref{sec:root-tag-hash-security}, and the AEAD-facing
+bounds of \Cref{sec:aead-security}. This section instantiates all of them at
+the implemented \TW{} parameters and records the common work cap used for the
+paper's concrete security claim.
 
-\subsection{Concrete TW128 Bounds}
+\subsection{Concrete Security Claim}
+\label{sec:concrete-claim}
+
+\begin{corollary}[Concrete \TW{} Security]
+\label{cor:concrete-security}
+Under the implemented parameters $k = c = \nu = \tauroot = \tauleaf = 256$, every
+adversary with work cap $\Ntot \leq 2^{63}$---and, in the multi-user case,
+user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
+\TW{}'s notions: multi-user indistinguishability (\Cref{thm:mu-ind}),
+all-in-one AE (\Cref{cor:ae}), \textsf{INT-RUP} integrity
+(\Cref{thm:int-rup}), the hash security of
+$\HTW$---$s$-way collision resistance for every $s \geq 2$ in the sense
+of \cite{BH22}, with the \cite{RS04} notions of standard and everywhere
+second-preimage resistance inherited from collision resistance on every
+fixed input slice, standard preimage resistance on every fixed input
+slice, and everywhere preimage resistance
+(\Cref{thm:coll,cor:second-preimage-rs04,thm:pre,thm:epre})---and the \cite{BH22}
+CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}).
+\end{corollary}
+
+\begin{proof}
+The resource consequences of \Cref{sec:resources} give
+$\Nprim \leq \Ntot$, $\Qv \leq \Ntot$, $\Nleaf \leq \Ntot$, and
+$\Nprim+\Nleaf \leq \Ntot$. The user cap $D$ remains independent, since
+created-but-idle users need not contribute to $N$.
+
+At $\Ntot \leq 2^{63}$, each flat-sponge term---at $\Ntot$ or at
+$\Nprim$---and each birthday-scale root or leaf term at $s=2$ is at most
+$2^{-131} + 2^{-192}$, while each
+linear root-preimage, key-guessing, verification, or leaf tag term with no
+factor $D$ is at most a $2^{-193}$-scale term.
+The fixed-slice Pre degradation is at most $2^{-256}$, since
+$m_{a,\mu} \geq k+\nu = 512$.
+Thus the largest non-multi-user bound is the $s=2$ collision bound, which is
+below $4 \cdot 2^{-131} = 2^{-129}$; larger $s$ only decreases the
+root-collision term. The all-in-one AE bound carries its two flat-sponge
+terms as its only birthday-scale terms and lies below $2^{-129}$, and the
+\textsf{INT-RUP} bound carries $\Lift_c(\Ntot)$ alone. In the multi-user
+case, using $D \leq 2^{63}$,
+\[
+  \Advmuind_\TW(\mathcal{A})
+  < \bigl(2^{-130} + 2^{-193}\bigr) + 2^{-130} + 2^{-192} + 2^{-131}
+  < 2^{-128}:
+\]
+the two flat-sponge terms sum to at most
+$2 \cdot (2^{-131} + 2^{-194}) = 2^{-130} + 2^{-193}$, the key-guessing
+term satisfies $D \Nprim / 2^{256} \leq 2^{126}/2^{256} = 2^{-130}$, the
+remaining linear terms satisfy
+$(\Qv + \Nleaf)/2^{256} \leq 2^{64}/2^{256} = 2^{-192}$, and
+$D(D-1)/2^{257} < 2^{-131}$; the total is below
+$5 \cdot 2^{-131} + 2^{-192} + 2^{-193} < 2^{-128}$. These estimates
+instantiate every closed form in \Cref{sec:concrete};
+\Cref{sec:bound-discussion} discusses the margin they leave.
+\end{proof}
+
+\begin{table}[t]
+\centering
+\caption{Concrete \TW{} security at the work cap $\Ntot \leq 2^{63}$
+(with $D \leq 2^{63}$ for mu-ind), under
+$k = c = \nu = \tauroot = \tauleaf = 256$ and the resource consequences
+$\Nprim, \Qv, \Nleaf \leq \Ntot$ and $\Nprim + \Nleaf \leq \Ntot$ of
+\Cref{sec:resources}. The Coll and
+CMTDs-4 rows hold for every $s \geq 2$; larger $s$ only shrinks the
+root-collision term.}
+\label{tab:concrete-security}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Notion & Dominant scale & At the cap \\
+\midrule
+All-in-one AE & $\Lift_c$ & $\leq 2^{-128}$ \\
+Multi-user ind. & $D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
+\textsf{INT-RUP} & $\Lift_c$ & $\leq 2^{-128}$ \\
+$\HTW$ collision (Coll) & $\Lift_c$, $\LeafColl$, $\RootColl$ & $\leq 2^{-128}$ \\
+$\HTW$ second-preimage (Sec/eSec) & inherited from Coll & $\leq 2^{-128}$ \\
+$\HTW$ preimage (Pre) & $\Lift_c$, $\LeafColl$ & $\leq 2^{-128}$ \\
+$\HTW$ everywhere preimage (ePre) & $\Lift_c$ & $\leq 2^{-128}$ \\
+CMTDs-4 \cite{BH22} & $\Lift_c$ and $\RootColl$ & $\leq 2^{-128}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Instantiated Bounds}
 \label{sec:concrete}
 
 The implemented parameters of \Cref{sec:params} fix
@@ -118,241 +199,72 @@ CMTDs-4 statement of \cite{BH22}:
   + \frac{\Nprim + 1}{2^{256}}.
 \]
 
-\subsection{Concrete Security Claim}
-\label{sec:concrete-claim}
-
-\begin{corollary}[Concrete \TW{} Security]
-\label{cor:concrete-security}
-Under the implemented parameters $k = c = \nu = \tauroot = \tauleaf = 256$, every
-adversary with work cap $\Ntot \leq 2^{63}$---and, in the multi-user case,
-user cap $D \leq 2^{63}$---has advantage at most $2^{-128}$ in each of
-\TW{}'s notions: multi-user indistinguishability (\Cref{thm:mu-ind}),
-all-in-one AE (\Cref{cor:ae}), \textsf{INT-RUP} integrity
-(\Cref{thm:int-rup}), the hash security of
-$\HTW$---$s$-way collision resistance for every $s \geq 2$ in the sense
-of \cite{BH22}, with the \cite{RS04} notions of standard and everywhere
-second-preimage resistance inherited from collision resistance on every
-fixed input slice, standard preimage resistance on every fixed input
-slice, and everywhere preimage resistance
-(\Cref{thm:coll,cor:second-preimage-rs04,thm:pre,thm:epre})---and the \cite{BH22}
-CMTDs-4 committing bound it yields (\Cref{cor:cmtds4}).
-\end{corollary}
-
-\begin{proof}
-The resource consequences of \Cref{sec:resources} give
-$\Nprim \leq \Ntot$, $\Qv \leq \Ntot$, $\Nleaf \leq \Ntot$, and
-$\Nprim+\Nleaf \leq \Ntot$. The user cap $D$ remains independent, since
-created-but-idle users need not contribute to $N$.
-
-At $\Ntot \leq 2^{63}$, each flat-sponge term---at $\Ntot$ or at
-$\Nprim$---and each birthday-scale root or leaf term at $s=2$ is at most
-$2^{-131} + 2^{-192}$, while each
-linear root-preimage, key-guessing, verification, or leaf tag term with no
-factor $D$ is at most a $2^{-193}$-scale term.
-The fixed-slice Pre degradation is at most $2^{-256}$, since
-$m_{a,\mu} \geq k+\nu = 512$.
-Thus the largest non-multi-user bound is the $s=2$ collision bound, which is below
-$4 \cdot 2^{-131} = 2^{-129}$; larger $s$ only decreases the
-root-collision term. The all-in-one AE bound carries its two flat-sponge
-terms as its only birthday-scale terms and lies below $2^{-129}$, and the
-\textsf{INT-RUP} bound carries $\Lift_c(\Ntot)$ alone. In the multi-user
-case, using $D \leq 2^{63}$,
-\[
-  \Advmuind_\TW(\mathcal{A})
-  < \bigl(2^{-130} + 2^{-193}\bigr) + 2^{-130} + 2^{-192} + 2^{-131}
-  < 2^{-128}:
-\]
-the two flat-sponge terms sum to at most
-$2 \cdot (2^{-131} + 2^{-194}) = 2^{-130} + 2^{-193}$, the key-guessing
-term satisfies $D \Nprim / 2^{256} \leq 2^{126}/2^{256} = 2^{-130}$, the
-remaining linear terms satisfy
-$(\Qv + \Nleaf)/2^{256} \leq 2^{64}/2^{256} = 2^{-192}$, and
-$D(D-1)/2^{257} < 2^{-131}$; the total is below
-$5 \cdot 2^{-131} + 2^{-192} + 2^{-193} < 2^{-128}$. These estimates
-instantiate every closed form in \Cref{sec:concrete};
-\Cref{sec:bound-discussion} examines the margin they leave.
-\end{proof}
-
-\begin{table}[t]
-\centering
-\caption{Concrete \TW{} security at the work cap $\Ntot \leq 2^{63}$
-(with $D \leq 2^{63}$ for mu-ind), under
-$k = c = \nu = \tauroot = \tauleaf = 256$ and the resource consequences
-$\Nprim, \Qv, \Nleaf \leq \Ntot$ and $\Nprim + \Nleaf \leq \Ntot$ of
-\Cref{sec:resources}. The Coll and
-CMTDs-4 rows hold for every $s \geq 2$; larger $s$ only shrinks the
-root-collision term.}
-\label{tab:concrete-security}
-\begin{tabular}{@{}lcc@{}}
-\toprule
-Notion & Dominant scale & At the cap \\
-\midrule
-All-in-one AE & $\Lift_c$ & $\leq 2^{-128}$ \\
-Multi-user ind. & $D\,\KeyGuess_k(\Nprim)$ & $\leq 2^{-128}$ \\
-\textsf{INT-RUP} & $\Lift_c$ & $\leq 2^{-128}$ \\
-$\HTW$ collision (Coll) & $\Lift_c$, $\LeafColl$, $\RootColl$ & $\leq 2^{-128}$ \\
-$\HTW$ second-preimage (Sec/eSec) & inherited from Coll & $\leq 2^{-128}$ \\
-$\HTW$ preimage (Pre) & $\Lift_c$, $\LeafColl$ & $\leq 2^{-128}$ \\
-$\HTW$ everywhere preimage (ePre) & $\Lift_c$ & $\leq 2^{-128}$ \\
-CMTDs-4 \cite{BH22} & $\Lift_c$ and $\RootColl$ & $\leq 2^{-128}$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Discussion of the Bounds}
+\subsection{Interpreting the Work Cap}
 \label{sec:bound-discussion}
 
 The bounds of \Cref{sec:concrete} aggregate the loss terms of
-\Cref{sec:loss-terms}. \Cref{tab:concrete-security} records the
-dominant terms and aggregate cap bounds; the proof of
-\Cref{sec:concrete-claim} supplies the individual term sizes at the
-work cap.
+\Cref{sec:loss-terms}. The cap $\Ntot \leq 2^{63}$ is a simultaneous
+work point for all notions, not a separate parameter choice per theorem.
+\Cref{tab:concrete-security} records the dominant terms and aggregate cap
+bounds; \Cref{cor:concrete-security} supplies the individual term sizes at
+the cap.
 
-\paragraph{At the concrete cap.}
+\paragraph{Dominant terms and margin.}
 At $\Ntot \leq 2^{63}$, the hash bounds other than ePre and the
-CMTDs-4 bound have flat-sponge
-and root or leaf birthday terms on the same $2^{-131}$ scale; the
-ePre and \textsf{INT-RUP} bounds retain the flat sponge loss
-as their only birthday-scale term, and the single-user AE bound carries
-its two flat-sponge terms, at $\Ntot$ and $\Nprim$, as its only
-birthday-scale terms. Thus the flat sponge loss is not always the largest
-summand: under the loose per-term cap, the $s=2$ root-collision term
+CMTDs-4 bound have flat-sponge and root or leaf birthday terms on the same
+$2^{-131}$ scale. The ePre and \textsf{INT-RUP} bounds retain the flat sponge
+loss as their only birthday-scale term, and the single-user AE bound carries
+its two flat-sponge terms, at $\Ntot$ and $\Nprim$, as its only birthday-scale
+terms. Thus the flat sponge loss is not always the largest summand: under the
+loose per-term cap, the $s=2$ root-collision term
 $\binom{\Nprim+2}{2}/2^{256}$ is on the same scale as $\Lift_c(\Ntot)$.
-The multi-user bound is the exception: its
-hybrid-induced
-term $D\,\KeyGuess_k(\Nprim)$ can reach $2^{-130}$ at the extreme cap
-$D=\Nprim=2^{63}$. That corner is a property of the bound, not of any
-admissible attack: the matching attack of the Tightness paragraph below
-needs one accepted nonempty encryption per targeted user, and even the
-empty-AD one-block case costs two duplex calls (root initialization and
-closing root message). With $t$ targeted users and $q=\Nprim$ direct
-guesses, the joint cap imposes $2t+q \leq 2^{63}$, so the feasible
-key-guessing attack scale is about $2^{-133}$, reached near
-$t=2^{61}$ and $q=2^{62}$. The remaining factor is hybrid slack from
-charging created-but-idle users. Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to
-at most $\rho \cdot 2^{63} = 167 \cdot 2^{63} < 2^{71}$ bytes of
-plaintext, associated data, ciphertext, and aggregation through the
-duplex (\Cref{sec:params}).
 
-\paragraph{Margin at the cap.}
-\Cref{cor:concrete-security} clears its target with a stated remainder:
-at the joint corner $D = \Nprim = 2^{63}$ the multi-user estimate has
-exact value $5 \cdot 2^{-131} + 2^{-194}$, since the corner forces
-$N=0$ and hence $\Qv=\Nleaf=0$; this is just over five eighths of the
-$2^{-128}$ budget. The largest of the remaining bounds, the $s = 2$
-collision bound, stays below $4 \cdot 2^{-131}$
-(\Cref{sec:concrete-claim}). The closeness at the corner is a proof
-artifact rather than a consequence of the design. The corner itself is
-unoccupiable: it forces $N = 0$, as the previous paragraph records, and
-an adversary without construction computations receives identical
-answers in both worlds---the primitive interface is the same real
-permutation (\Cref{sec:games-pp})---so its advantage there is exactly
-$0$. At resource splits an adversary can occupy, the multi-user
-key-guessing witness reaches about the $2^{-133}$ scale, while the
-root-collision and flat-sponge tightness witnesses can still reach the
-$2^{-131}$ scale. The intervening distance to the proof bound is
-consumed by the two flat-sponge composition terms and the hybrid slack
-recorded above, the overhead of the indifferentiability route. The margin also widens away
-from the corner: at $D \leq 2^{32}$, the $D$-indexed terms drop below
-$2^{-160}$ and the multi-user bound falls to its two flat-sponge terms,
-below $2^{-130} + 2^{-159}$, two bits under the target. A direct
-keyed-duplex analysis would be expected to replace the quadratic
-$\Lift_c$ terms by finer construction--primitive cross terms, much as
-the keyed-duplex bounds synthesized by \cite{Men23} improve on the
-sponge-indifferentiability bound underlying the original SpongeWrap
-analysis of \cite{BDPV11}; \Cref{sec:limitations} discusses that route
-and the gaps it would need to close.
+The multi-user bound is the exception. Its hybrid-induced term
+$D\,\KeyGuess_k(\Nprim)$ can reach $2^{-130}$ at the extreme cap
+$D=\Nprim=2^{63}$, and the displayed estimate then has value
+$5 \cdot 2^{-131} + 2^{-194}$ because that corner forces $N=0$ and hence
+$\Qv=\Nleaf=0$. The corner is a proof artifact rather than an attack point:
+an adversary without construction computations receives identical primitive
+answers in both worlds (\Cref{sec:games-pp}). At feasible resource splits,
+the multi-user key-guessing witness needs one accepted nonempty encryption per
+targeted user; with $t$ targeted users and $q=\Nprim$ direct guesses, the
+joint cap imposes $2t+q \leq 2^{63}$, so the feasible key-guessing scale is
+about $2^{-133}$, reached near $t=2^{61}$ and $q=2^{62}$
+(\Cref{sec:loss-terms}). The remaining distance to the proof bound is
+hybrid slack from charging created-but-idle users plus the two flat-sponge
+composition terms.
+
+Expressed in bytes, $\Ntot \leq 2^{63}$ corresponds to at most
+$\rho \cdot 2^{63} = 167 \cdot 2^{63} < 2^{71}$ bytes of plaintext,
+associated data, ciphertext, and aggregation through the duplex
+(\Cref{sec:params}). The margin widens away from the multi-user corner: at
+$D \leq 2^{32}$, the $D$-indexed terms drop below $2^{-160}$ and the
+multi-user bound falls to its two flat-sponge terms, below
+$2^{-130} + 2^{-159}$.
 
 \paragraph{Reading the work cap.}
 \Cref{cor:concrete-security} is a success-probability statement at a fixed
 cap, not a statement that security is exhausted there. The closed forms of
 \Cref{sec:concrete} remain explicit functions of the resources beyond
 $2^{63}$, and their dominant terms are birthday-type in $\Ntot$ on the
-$256$-bit capacity, so the guarantees degrade quadratically rather than
+$256$-bit capacity, so the bounds degrade quadratically rather than
 abruptly: at $\Ntot = 2^{100}$, for example, the $s = 2$ collision bound is
 still below $2^{-55}$. Once $\Ntot$ reaches
 $2^{c/2} = 2^{128}$, the flat sponge loss exceeds $1/2$ and no longer
 gives meaningful security (\Cref{sec:loss-terms}); the displayed
 closed form itself becomes a trivial advantage bound only when it
 reaches $1$, near $\Ntot = 2^{(c+1)/2}$. The cap
-$\Ntot \leq 2^{63}$ is therefore a
-data-scale choice: a single work bound at which every notion's advantage
-lies below the $2^{-128}$ target simultaneously, not the largest workload
-the mode tolerates.
+$\Ntot \leq 2^{63}$ is therefore a data-scale choice: a single work bound at
+which every notion's advantage lies below the $2^{-128}$ target
+simultaneously, not the largest workload the mode tolerates.
 
-\paragraph{Tightness.}
-\begin{itemize}
-\item \emph{$\KeyGuess_k(Q) = Q / 2^k$.} Tight at constants: a direct
-  random-guess attack on a $k$-bit key matches the per-query success
-  probability $1 / 2^k$. The multi-user bound's dominant term
-  $D\,\KeyGuess_k(\Nprim) = D\Nprim / 2^k$ is likewise tight at the
-  leading constant in the theorem's free-parameter setting, using the
-  per-user nonce discipline of \Cref{sec:mu-ind}, which permits one
-  nonce value across users. The adversary queries every targeted user
-  on the same nonce $U$, empty associated data, and a known nonempty
-  message---construction work charged to $N$, which does not enter the
-  term---so each user's first ciphertext block reveals the keystream
-  emitted by that user's root initialization call
-  (\Cref{tab:transcript-schedule}). Each direct guess is then a single
-  forward primitive query at the root initialization transcript
-  $\prfxroot \concat K' \concat U$ for a fresh candidate key $K'$,
-  whose output is compared against all $D$ collected keystream blocks
-  at once; it matches some targeted key with probability $D / 2^k$, so
-  $\Nprim$ guesses recover a user key---and distinguish---with
-  probability $\approx D\Nprim / 2^k$, matching the bound. Under the
-  joint cap the construction work for those target encryptions lowers
-  the feasible scale to about $2^{-133}$, as noted in the concrete-cap
-  paragraph above.
-\item \emph{$\RootColl_\tau(Q, s) = \binom{Q + s}{s} / 2^{\tau (s -
-  1)}$.} Tight up to lower-order terms: it is the standard $s$-way
-  multi-collision bound on a $\tau$-bit projection of $\ROflat$, and
-  a generic birthday-style adversary against the random oracle
-  matches the leading-order term. It is the root term of the collision
-  bound ($\HTW$ Coll, \Cref{thm:coll}). Its $\Nprim$ counts every
-  primitive query, though by Output-Point Separation
-  (\Cref{cor:output-sep}) only those whose induced $\ROflat$ call lands at
-  a root tag output point ($\Rtag$, or $\Rmsg^+$ for single-chunk
-  ciphertexts) can enter the candidate sequence; a class-filtered count
-  would be no larger, and potentially smaller, but the displayed bound keeps the
-  $\Nprim$ form for uniformity with \Cref{cor:ae,thm:mu-ind}, the birthday
-  threshold at $\tauroot = 256$ being unaffected.
-\item \emph{$\RootPre_\tau(Q) = (Q + 1) / 2^\tau$.} Tight at constants: a
-  generic preimage search against a fixed $\tau$-bit target matches the
-  per-query $2^{-\tau}$ rate. It is the root term of the standard and
-  everywhere preimage bounds, where a single target tag yields a linear term.
-\item \emph{Leaf tag term $\Nleaf / 2^{\tauleaf}$.} Tight at constants
-  by a nonce-respecting attack: encrypt a single two-chunk message
-  under nonce $U$, obtaining ciphertext with one leaf chunk and root
-  tag $T$, then submit non-replay verification queries that each
-  replace the leaf chunk by fresh bytes of the same length, keeping
-  $T$. Each query recomputes the leaf tag at the hidden slot
-  $(K, U, 1)$ and accepts whenever that fresh tag equals the
-  encryption's hidden leaf tag $T_1$, since the aggregation
-  string---and hence the recomputed root tag---is then unchanged. Each
-  verification-side final leaf transcript therefore forges with
-  probability $2^{-\tauleaf}$, matching the bound's per-transcript
-  rate.
-\item \emph{Known-key leaf collision $\LeafColl_\tau(Q)$.} Genuinely
-  birthday-tight: when keys are adversary-supplied, direct queries can
-  target leaf tag points, and a birthday search over chosen leaf bodies
-  yields two distinct $\HTW$ inputs sharing a leaf tag and hence
-  colliding openings; the collision proof uses $Q=\Nprim+\Nleaf$.
-\item \emph{Flat sponge lift.} The term
-  $\Lift_c(\Ntot) = \Ntot(\Ntot + 1) / 2^{c + 1}$ dominates the
-  random-permutation differentiating bound $f_P(\Ntot)$ of
-  \cite[Lemma~5]{BDPV08} via \Cref{lem:lift-bound}. The
-  differentiating bound $f_P(\Ntot)$ is itself matched at leading order
-  by the standard inner-collision differentiator, which succeeds
-  against every simulator because the ideal-world construction
-  interface is the random oracle regardless of simulator strategy; any
-  residual conservatism in $\Lift_c(\Ntot)$ lies in composing
-  indifferentiability into the specific keyed games, not in an
-  improvable simulator bound, and is not specific to \TW{}. The
-  real-vs-ideal games pay the same differentiating bound once more, at
-  $\Nprim$, to exchange the ideal-side simulator for the real
-  permutation (\Cref{lem:sim-perm-proximity}); since
-  $\Nprim \leq \Ntot$, that term never dominates the $\Ntot$ term.
-\end{itemize}
+The residual conservatism in the cap comes from the indifferentiability route
+and, for mu-ind, the hybrid accounting above. A direct keyed-duplex analysis
+would be expected to replace the quadratic $\Lift_c$ terms by finer
+construction--primitive cross terms, but it would also need to handle the
+adversarial-initialization hash and committing games used here.
+\Cref{sec:limitations} discusses that route and the gaps it would need to
+close.
 
 Cross-scheme bound-level comparisons against prior sponge AEADs and
 the committing AEAD line of \cite{BH22} are deferred to

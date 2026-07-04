@@ -3,10 +3,10 @@
 
 This appendix supplies the flat sponge lift machinery
 (\Cref{lem:lift-bound,lem:derived-adversary,cor:lift-application}) invoked
-by the AEAD security bounds of \Cref{sec:aead-security}, the root tag bounds of
-\Cref{sec:root-tag-hash-security}, and the committing-notion bound of
-\Cref{cor:committing-combined}. The machinery applies uniformly to the games
-named once here.
+by the tag hash bounds of \Cref{sec:root-tag-hash-security}, the committing
+consequences of \Cref{cor:committing-combined}, and the baseline AEAD bounds of
+\Cref{sec:aead-security}. The machinery applies uniformly to the games named
+once here.
 
 The lift has two steps in the win-event games and three in the
 real-vs-ideal games. First, the \cite{BDPV08} indifferentiability theorem
@@ -34,12 +34,13 @@ The \emph{single-stage \TW{} games} are the games of
 challenger in a single stage, so that a \cite{BDPV08} replacement applies to
 an entire world's public-permutation transcript at once, including
 deterministic challenger checks after the adversary's final output. They are
-all-in-one AE, mu-ind, \textsf{INT-RUP}, CMTDs-4, the $\HTW$ collision and
-preimage games (standard and everywhere), and CMTs-$\ell$ for
-$\ell \in \{1,3,4\}$. The win-event games among these have one world; the
-real-vs-ideal games---all-in-one AE and mu-ind---have two, and the lift below
-treats their real world by the full replacement and their ideal world by the
-simulator--permutation exchange of \Cref{lem:sim-perm-proximity}.
+the $\HTW$ tag hash games (collision and preimage games, standard and
+everywhere), CMTDs-4, CMTs-$\ell$ for $\ell \in \{1,3,4\}$,
+\textsf{INT-RUP}, all-in-one AE, and mu-ind. The win-event games among these
+have one world; the real-vs-ideal games---all-in-one AE and mu-ind---have two,
+and the lift below treats their real world by the full replacement and their
+ideal world by the simulator--permutation exchange of
+\Cref{lem:sim-perm-proximity}.
 \end{definition}
 
 The derived adversary forwards the following game data to the corresponding
@@ -50,10 +51,10 @@ flat-RO experiment.
   \toprule
   Game family & Forwarded data \\
   \midrule
+  $\HTW$ tag hash games & final structured hash game output \\
+  CMTDs / CMTs & final openings and deterministic challenger checks \\
   AE / mu-ind / \textsf{INT-RUP}
     & construction queries, including $\mathsf{New}$ where present and replay state \\
-  $\HTW$ hash games & final structured hash game output \\
-  CMTDs / CMTs & final openings and deterministic challenger checks \\
   \bottomrule
 \end{tabular}
 \end{center}
@@ -145,7 +146,7 @@ a primitive trace with one forward query per duplex call. The definition
 of $N$ in \Cref{sec:resources} counts exactly these root initialization,
 associated data, message, leaf initialization, leaf message, and
 aggregation duplex calls, including the deterministic challenger checks
-of the hash and committing games.
+of the tag hash and committing games.
 
 \Cref{lem:duplex-flat} is the \cite[Lemma~3]{BDPV11} duplex-to-sponge
 identity specialized to \TW{}: the output of each duplex call is the
@@ -203,7 +204,7 @@ at most $N$ forward primitive queries: one per duplex call. This includes
 plaintext-computing computations, verification computations whether they
 accept or reject, the per-user sum of construction calls in mu-ind, the
 deterministic challenger decryption or encryption checks charged in the
-committing games, and the hash games' challenger encryptions---the
+committing games, and the tag hash games' challenger encryptions---the
 collision game's $s$ submitted-input encryptions, the standard preimage
 game's source encryption and post-output check, and the
 everywhere-preimage game's post-output check.
@@ -294,7 +295,7 @@ internally, answer each primitive-interface query by running the
 same simulator against direct finite-output queries to its own
 $\ROflat$ oracle, forward construction interface queries unchanged in games
 with construction oracles, and forward the adversary's final structured output
-unchanged in the output-checked $\HTW$ hash and committing games. Then the
+unchanged in the output-checked $\HTW$ tag hash and committing games. Then the
 simulator-world execution of $\mathcal{A}$ and the random oracle execution of
 $\mathcal{B}_{\mathrm{derived}}(\mathcal{A})$ have identical joint
 distributions, and
@@ -330,7 +331,7 @@ random oracle execution, $\mathcal{B}_{\mathrm{derived}}$ runs the
 same $\mathcal{A}$, forwards construction interface queries or the final
 structured output required by the selected game unchanged, and answers
 primitive-interface queries by invoking the same simulator code with the same
-lazy $\ROflat$ table. The construction interface, hash challenger, or
+lazy $\ROflat$ table. The construction interface, tag hash challenger, or
 committing challenger therefore receives the same forwarded queries or final
 output, the simulator receives the same primitive queries in the same order, and
 the lazy table supplies the same values.
@@ -372,7 +373,7 @@ $\badkey$ accounting used by the direct random oracle mu-ind proof. The
 derivation step itself does not
 prove a key-guessing statement; it only supplies the derived
 adversary and the query bound at which the random oracle bounds of
-\Cref{sec:aead-security,sec:root-tag-hash-security} are instantiated.
+\Cref{sec:root-tag-hash-security,sec:aead-security} are instantiated.
 
 Finally, the execution-uniform caps of \Cref{sec:resources} hold
 along every oracle-answer trace of $\mathcal{A}$, including traces
@@ -395,9 +396,10 @@ $\mathsf{New}$ calls and these caps user by user.
 The lift bound of \Cref{lem:lift-bound}, the simulator--permutation
 proximity bound of \Cref{lem:sim-perm-proximity}, and the
 derived-adversary construction of \Cref{lem:derived-adversary} combine
-into a single template, stated once and then instantiated by the bounds of
-\Cref{sec:aead-security,sec:root-tag-hash-security} and by the
-committing-notion bounds of \Cref{cor:committing-combined}. Every
+into a single template, stated once and then instantiated by the tag hash
+bounds of \Cref{sec:root-tag-hash-security}, the committing consequences of
+\Cref{cor:committing-combined}, and the baseline AEAD bounds of
+\Cref{sec:aead-security}. Every
 public-permutation bound is obtained by adding $\Lift_c(\Ntot)$---plus
 $\Lift_c(\Nprim)$ in the real-vs-ideal games---and
 substituting $\qRO \leq \Nprim$ in the corresponding random oracle theorem.

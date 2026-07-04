@@ -79,8 +79,8 @@ PAPER_VECTORS = [
     ),
     (
         "ad-2rho+3-pt-16b",
-        "Multi-block associated data with a short message: the associated data "
-        "blocks dominate the cost.",
+        "Associated data spanning multiple blocks with a short message: "
+        "exercises associated data absorption before message encryption.",
     ),
     (
         "keys-ff",
@@ -360,7 +360,7 @@ def _render_appendix_block(vectors_by_name):
         vector = vectors_by_name[name]
         rows = [
             ("$K$", bytes.fromhex(vector["key"])),
-            ("$N$", bytes.fromhex(vector["nonce"])),
+            ("$U$", bytes.fromhex(vector["nonce"])),
             ("$A$", bytes.fromhex(vector["ad"])),
             ("$M$", bytes.fromhex(vector["plaintext"])),
             ("$C$", bytes.fromhex(vector["ciphertext"])),

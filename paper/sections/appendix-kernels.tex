@@ -3,7 +3,7 @@
 
 This appendix details the optimized cores summarized in \Cref{sec:impl}:
 their shared batching structure, chunk~$0$ fusion, instruction selection,
-register layout, remainder handling, and constant-time addressing.
+register layout, remainder handling, and data-independent addressing.
 
 The optimized paths share the same logical decomposition but differ in their
 batch widths, remainder strategy, and state writeback points:
@@ -127,7 +127,7 @@ block---the $\times 8$ kernel for its first pair, the $2$-wide kernel for both
 instances---which is the writeback that permits the root duplex to occupy
 lane~$0$.
 
-\paragraph{Constant-time addressing.}
+\paragraph{Data-independent addressing.}
 The optimized kernels contain no secret-dependent branches and no
 secret-dependent memory or vector indices. The only indexed table is the
 round-constant array, addressed by the public round number. The AVX-512

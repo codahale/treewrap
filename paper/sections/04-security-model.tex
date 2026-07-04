@@ -1,38 +1,36 @@
 \section{Security Model}
 \label{sec:security-model}
 
-This section sets up the two proof views used throughout the paper. For
-confidentiality and authenticity, \TW{} is treated as a nonce-based AEAD in the
-lifted public permutation model: real encryption and verification interfaces are
-compared with ideal random and replay interfaces, first in the multi-user
-setting and then in the single-user all-in-one AE setting. For the digest-like
-tag claim, the same construction is viewed through the root tag wrapper
-$\HTW$: adversaries supply full inputs or candidate openings, and the games ask
-whether the root tag collides or can be hit as a preimage. We instantiate these
-games for \TW{} (\Cref{sec:games-pp,sec:mu-setting}), define the intermediate
-random oracle world through which every bound is first proved
-(\Cref{sec:ro-model}), and fix the resource accounting that all later bounds
-reference (\Cref{sec:resources}).
+This section instantiates the security claims for \TW{}. The root tag is first
+treated as the output of the wrapper $\HTW$: adversaries supply full inputs or
+candidate openings, and the games ask whether the tag collides or can be hit as
+a preimage. The same construction is also treated as a nonce-based AEAD: the
+\textsf{INT-RUP} game gives integrity even when a plaintext-computing interface
+is exposed, while all-in-one AE and mu-ind record the baseline
+confidentiality and authenticity notions.
 
 \Cref{tab:security-notions} summarizes the proof obligations before the formal
 games. The loss terms named there are defined in \Cref{sec:loss-terms}, and the
 implemented-parameter instantiations appear in \Cref{sec:concrete-security}.
 
+\paragraph{Proof worlds.}
+All final statements are public-permutation claims for \TW{} with \Keccakp{}
+modeled as a uniformly random permutation. The proofs first establish random
+oracle bounds for the flat duplex interface of \Cref{sec:ro-model}; the flat
+sponge lift of \Cref{app:flat-sponge-lift} then transfers those bounds to the
+public-permutation games of \Cref{sec:games-pp,sec:mu-setting}.
+
 \paragraph{Scope of the security claims.}
-All results below are public-permutation claims for \TW{} with the
-\Keccakp{} permutation modeled as a uniformly random permutation, obtained by
-first proving random oracle bounds for the flat duplex interface of
-\Cref{sec:ro-model} and then applying the flat sponge lift. In the AE-style
-distinguishing games, encryption queries are nonce-respecting and the
-verification oracle returns only acceptance or rejection. The separate
-\textsf{INT-RUP} game below gives integrity under a plaintext-computing oracle,
-but it does not give privacy under release of unverified plaintext or
-plaintext-awareness security. The claims also do not provide nonce-misuse
+In the AE-style distinguishing games, encryption queries are nonce-respecting
+and the verification oracle returns only acceptance or rejection. The
+\textsf{INT-RUP} game gives integrity under a plaintext-computing oracle, but it
+does not give privacy under release of unverified plaintext or
+plaintext-awareness security. None of the AE-style games gives nonce-misuse
 resistance. The hash and committing games are adversarial-initialization games
-over the submitted inputs $(K,U,A,M)$ or ciphertext openings and impose no
-nonce uniqueness condition. Across all games, the stated bounds are
-birthday-type, single-stage, and leakage-free: beyond-birthday and side-channel
-security are outside the model.
+over submitted inputs $(K, U, A, M)$ or ciphertext openings and impose no nonce
+uniqueness condition. Across all games, the stated bounds are birthday-type,
+single-stage, and leakage-free: beyond-birthday and side-channel security are
+outside the model.
 \Cref{sec:limitations} discusses the consequences of these exclusions and the
 corresponding open problems, and \Cref{sec:permutation-cryptanalysis} reviews
 the third-party cryptanalysis supporting the random-permutation modeling of
@@ -46,18 +44,8 @@ the third-party cryptanalysis supporting the random-permutation modeling of
     \toprule
     Notion & Adversary goal & Main result & Loss shape \\
     \midrule
-    AE / mu-ind
-      & Distinguish real encryption and verification from random ciphertexts
-        and replay-only verification, with nonce-respecting encryption queries.
-      & \Cref{thm:mu-ind,cor:ae}
-      & Capacity lift, key guess, leaf collision, tag guess \\
-    \textsf{INT-RUP}
-      & Produce a fresh accepting ciphertext after encryption and
-        plaintext-computing queries.
-      & \Cref{thm:int-rup}
-      & Capacity lift, key guess, leaf collision, tag guess \\
     $\HTW$ collision
-      & Find distinct full inputs $(K,U,A,M)$ with the same root tag.
+      & Find distinct full inputs $(K, U, A, M)$ with the same root tag.
       & \Cref{thm:coll}
       & Capacity lift, root collision, leaf collision \\
     $\HTW$ preimage
@@ -74,6 +62,16 @@ the third-party cryptanalysis supporting the random-permutation modeling of
         distinct committed inputs.
       & \Cref{cor:cmtds4,cor:committing-combined}
       & Capacity lift, root collision \\
+    \textsf{INT-RUP}
+      & Produce a fresh accepting ciphertext after encryption and
+        plaintext-computing queries.
+      & \Cref{thm:int-rup}
+      & Capacity lift, key guess, leaf collision, tag guess \\
+    AE / mu-ind
+      & Distinguish real encryption and verification from random ciphertexts
+        and replay-only verification, with nonce-respecting encryption queries.
+      & \Cref{thm:mu-ind,cor:ae}
+      & Capacity lift, key guess, leaf collision, tag guess \\
     \bottomrule
   \end{tabular}
   \caption{Proof obligations and the dominant loss shapes used for \TW{}.
@@ -82,18 +80,16 @@ the third-party cryptanalysis supporting the random-permutation modeling of
   \label{tab:security-notions}
 \end{table}
 
-The proof dependency spine is as follows. \Cref{app:lemmas} first establishes
+The proof dependency spine is as follows. \Cref{app:lemmas} establishes
 transcript decoding, bridge injectivity, output-point separation, and the local
 probabilistic accounting lemmas for key tests, leaf tag collisions, and root tag
-guesses. \Cref{sec:aead-security} uses those facts directly for the random
-oracle mu-ind and \textsf{INT-RUP} bounds.
-\Cref{sec:root-tag-hash-security} then uses the same structural facts to build
+guesses. \Cref{sec:root-tag-hash-security} uses those structural facts to build
 a chronological sequence of final root candidates and apply a single root tag
 hash bound; the hash and committing theorems differ only in which collision or
-preimage event is reduced to that candidate sequence.
-Finally, \Cref{app:flat-sponge-lift}
-transfers the random oracle bounds to the public permutation games defined
-below.
+preimage event is reduced to that candidate sequence. \Cref{sec:aead-security}
+uses the same facts for the random oracle mu-ind and \textsf{INT-RUP} bounds.
+\Cref{app:flat-sponge-lift} transfers both branches to the public permutation
+games defined below.
 
 \subsection{Public Permutation Games}
 \label{sec:games-pp}
@@ -101,7 +97,7 @@ below.
 \paragraph{Primitive convention.}
 In every public permutation game below, the challenger samples
 $\pi \sample \Perm(\bits^{1600})$ and exposes the direct primitive
-interface $(\pi,\pi^{-1})$ to the adversary. The real-vs-ideal AE-style
+interface $(\pi, \pi^{-1})$ to the adversary. The real-vs-ideal AE-style
 games compare the real construction interface with the ideal interface
 specified by the game over this shared primitive, following the
 same-oracle convention of \cite{BT16}; the hash and committing games
@@ -130,58 +126,14 @@ construction cost and create no construction transcripts. Throughout, an
 \emph{accepted} encryption query is one that passes this validity check and any
 game-specific nonce or user check.
 
-\paragraph{All-in-one AE.}
-The real all-in-one AE game additionally samples
-$K \sample \bits^k$ and exposes the construction oracles $\Enc_K[\pi]$
-(the \TW{} encryption algorithm of \Cref{alg:enc} with the sampled
-$\pi$) and $\Ver_K[\pi]$, defined by $\Ver_K[\pi](U, A, C, T) = 1$ if
-$\Dec_K[\pi](U, A, C \concat T) \neq \bot$ and $0$ otherwise.
-The all-in-one authenticated encryption game~\cite{RS06} replaces the
-construction interface by the ideal pair $(\Rand, \Replay)$. On each
-accepted encryption query $(U,A,M)$, $\Rand$ samples a uniformly
-random byte string of length $\|M\| + \tauroot/8$, parses it as
-$C \concat T$ with $T \in \bits^{\tauroot}$, records $(U,A,C,T)$, and
-returns $C \concat T$. The oracle $\Replay$ returns $1$ exactly on
-recorded tuples $(U,A,C,T)$ and $0$ otherwise. The adversary is
-nonce-respecting on encryption queries.
-\[
-  \Advae_\TW(\mathcal{A}) =
-  \bigl|
-    \Pr[\mathcal{A}^{\Enc_K[\pi],\, \Ver_K[\pi],\, \pi,\, \pi^{-1}} \Rightarrow 1]
-    - \Pr[\mathcal{A}^{\Rand,\, \Replay,\, \pi,\, \pi^{-1}} \Rightarrow 1]
-  \bigr|.
-\]
-This all-in-one AE advantage is the single-user case of the
-multi-user real-vs-ideal notion of \Cref{sec:mu-ind}; \Cref{cor:ae}
-therefore derives it from the direct mu-ind bound of \Cref{thm:mu-ind}.
-
-\paragraph{RUP integrity.}
-Following the separated AE syntax of \cite{ABLMMY14}, define
-$\PDec_K[\pi]$ as the plaintext-computing oracle that maps $(U,A,C,T)$ to
-the candidate plaintext computed by $\Dec_K[\pi](U,A,C \concat T)$ before the
-final root tag comparison is applied. The computation follows the same
-decryption transcript as \Cref{alg:dec}, but returns the recovered plaintext
-and never returns the recomputed tag or the verification bit.
-
-The \textsf{INT-RUP} game samples
-$K \sample \bits^k$ and $\pi \sample \Perm(\bits^{1600})$, exposes
-$\Enc_K[\pi]$, $\PDec_K[\pi]$, $\Ver_K[\pi]$, and $(\pi,\pi^{-1})$, and
-maintains the replay table $W$ of encryption outputs. Accepted encryption
-queries are nonce-respecting: an encryption query is rejected if its nonce has
-appeared in a previous accepted encryption query. Plaintext-computing and
-verification queries may use arbitrary nonces. On an accepted encryption query
-$(U,A,M)$ the game returns $\Enc_K[\pi](U,A,M)$, parsed and recorded as
-$(U,A,C,T)$ in $W$.
-On a valid plaintext-computing query $(U,A,C,T)$ it returns
-$\PDec_K[\pi](U,A,C,T)$, and on an invalid query it returns $\bot$. On a valid
-verification query $(U,A,C,T)$ it returns $\Ver_K[\pi](U,A,C,T)$; if this bit
-is $1$ and $(U,A,C,T) \notin W$ when the query is asked, the game records a
-forgery. Invalid verification queries return $0$. The game returns $1$ iff a
-forgery is recorded, and
-\[
-  \AdvintRUP_\TW(\mathcal{A}) =
-  \Pr[\mathsf{G}^{\mathsf{INT\text{-}RUP}}_\TW(\mathcal{A}) \Rightarrow 1].
-\]
+\paragraph{Construction oracles.}
+Whenever a game uses a secret key $K$ and permutation $\pi$, $\Enc_K[\pi]$
+and $\Dec_K[\pi]$ are the algorithms of \Cref{alg:enc,alg:dec} with that
+permutation. The verification oracle is
+$\Ver_K[\pi](U, A, C, T) = [\Dec_K[\pi](U, A, C \concat T) \neq \bot]$.
+For \textsf{INT-RUP}, $\PDec_K[\pi](U, A, C, T)$ is the plaintext recovered by
+the decryption transcript before the final root-tag comparison; it returns
+neither the recomputed tag nor the verification bit.
 
 \paragraph{Hash games.}
 The hash games for the wrapper $\HTW$ (\Cref{def:htw}) have no
@@ -191,10 +143,10 @@ returns $1$ iff they are pairwise distinct, in the \TW{} domain, and share
 a root tag:
 \begin{align*}
   &\pi \sample \Perm(\bits^{1600}), \quad
-   (K_i,U_i,A_i,M_i)_{i=1}^s \sample \mathcal{A}^{\pi,\, \pi^{-1}}, \\
+   (K_i, U_i, A_i, M_i)_{i=1}^s \sample \mathcal{A}^{\pi,\, \pi^{-1}}, \\
   &\text{return $0$ unless the inputs are pairwise distinct and in the \TW{} domain}, \\
-  &\text{return } \bigl[\HTW(K_1,U_1,A_1,M_1) = \cdots =
-     \HTW(K_s,U_s,A_s,M_s)\bigr],
+  &\text{return } \bigl[\HTW(K_1, U_1, A_1, M_1) = \cdots =
+     \HTW(K_s, U_s, A_s, M_s)\bigr],
 \end{align*}
 with advantage $\AdvColl_\TW(\mathcal{A}) = \Pr[\text{the game returns }
 1]$; no nonce uniqueness is imposed. The \cite{RS04} standard and
@@ -203,9 +155,9 @@ everywhere second-preimage notions are used on fixed input slices; in
 two-way collision game.
 For fixed byte lengths $a,\mu$, the standard preimage game samples
 $X^* \sample \mathcal{X}_{a,\mu}$ independently of the primitive, computes
-$T^*=\HTW(X^*)$, gives $T^*$ to
-$\mathcal{A}^{\pi,\pi^{-1}}$, and returns $1$ iff $\mathcal{A}$ outputs a
-valid input $X$ in the \TW{} domain with $\HTW(X)=T^*$; the advantage is
+$T^* = \HTW(X^*)$, gives $T^*$ to
+$\mathcal{A}^{\pi,\, \pi^{-1}}$, and returns $1$ iff $\mathcal{A}$ outputs a
+valid input $X$ in the \TW{} domain with $\HTW(X) = T^*$; the advantage is
 $\AdvPreSlice{a}{\mu}_\TW(\mathcal{A})$. The
 everywhere preimage game fixes a target tag
 $T^* \in \bits^{\tauroot}$ before the primitive sampling and returns $1$
@@ -217,16 +169,56 @@ query-independent targets.
 The \cite{BH22} committing games are instantiated as in
 \Cref{sec:commit-defs}, with no challenger-sampled key. The $s$-way
 CMTDs-$\ell$ (decryption) game has the adversary output a ciphertext
-$C \concat T$ and $s$ tuples $(K_i,U_i,A_i,M_i)$ with pairwise distinct
+$C \concat T$ and $s$ tuples $(K_i, U_i, A_i, M_i)$ with pairwise distinct
 $\WiC_\ell$-images, and returns $1$ iff
-$\Dec_{K_i}[\pi](U_i,A_i,C \concat T) = M_i$ for every $i$, with the eager
+$\Dec_{K_i}[\pi](U_i, A_i, C \concat T) = M_i$ for every $i$, with the eager
 length rejection justified by \Cref{alg:dec}
-($\Dec_K(U,A,C \concat T)$ returns $\bot$ or a message of length $\|C\|$);
+($\Dec_K(U, A, C \concat T)$ returns $\bot$ or a message of length $\|C\|$);
 its advantage is
 $\Advcmtds{\ell}_\TW(\mathcal{A})$. The CMTs-$\ell$ (encryption) game has
 the adversary output the $s$ tuples alone and returns $1$ iff the
-encryptions $\Enc_{K_i}[\pi](U_i,A_i,M_i)$ are all equal; its advantage is
+encryptions $\Enc_{K_i}[\pi](U_i, A_i, M_i)$ are all equal; its advantage is
 $\Advcmts{\ell}_\TW(\mathcal{A})$.
+
+\paragraph{RUP integrity.}
+The \textsf{INT-RUP} game samples $K \sample \bits^k$ and
+$\pi \sample \Perm(\bits^{1600})$, exposes $\Enc_K[\pi]$,
+$\PDec_K[\pi]$, $\Ver_K[\pi]$, and $(\pi, \pi^{-1})$, and maintains the replay
+table $W$ of encryption outputs. Accepted encryption queries are
+nonce-respecting: an encryption query is rejected if its nonce has appeared in a
+previous accepted encryption query. Plaintext-computing and verification
+queries may use arbitrary nonces. On an accepted encryption query $(U, A, M)$ the
+game returns $\Enc_K[\pi](U, A, M)$, parsed and recorded as $(U, A, C, T)$ in $W$.
+On a valid plaintext-computing query $(U, A, C, T)$ it returns
+$\PDec_K[\pi](U, A, C, T)$, and on an invalid query it returns $\bot$. On a valid
+verification query $(U, A, C, T)$ it returns $\Ver_K[\pi](U, A, C, T)$; if this bit
+is $1$ and $(U, A, C, T) \notin W$ when the query is asked, the game records a
+forgery. Invalid verification queries return $0$. The game returns $1$ iff a
+forgery is recorded, and
+\[
+  \AdvintRUP_\TW(\mathcal{A}) =
+  \Pr[\mathsf{G}^{\mathsf{INT\text{-}RUP}}_\TW(\mathcal{A}) \Rightarrow 1].
+\]
+
+\paragraph{All-in-one AE.}
+The all-in-one authenticated encryption game~\cite{RS06} samples
+$K \sample \bits^k$ and compares the real pair
+$(\Enc_K[\pi], \Ver_K[\pi])$ with the ideal pair $(\Rand, \Replay)$.
+On each accepted encryption query $(U, A, M)$, $\Rand$ samples a uniformly
+random byte string of length $\|M\| + \tauroot/8$, parses it as
+$C \concat T$ with $T \in \bits^{\tauroot}$, records $(U, A, C, T)$, and
+returns $C \concat T$; $\Replay$ accepts exactly recorded tuples. Encryption
+queries are nonce-respecting, and
+\[
+  \Advae_\TW(\mathcal{A}) =
+  \bigl|
+    \Pr[\mathcal{A}^{\Enc_K[\pi],\, \Ver_K[\pi],\, \pi,\, \pi^{-1}} \Rightarrow 1]
+    - \Pr[\mathcal{A}^{\Rand,\, \Replay,\, \pi,\, \pi^{-1}} \Rightarrow 1]
+  \bigr|.
+\]
+This all-in-one AE advantage is the single-user case of the multi-user
+real-vs-ideal notion of \Cref{sec:mu-ind}; \Cref{cor:ae} derives it from
+\Cref{thm:mu-ind}.
 
 \subsection{Multi-User Setting}
 \label{sec:mu-setting}
@@ -235,7 +227,7 @@ This subsection instantiates the mu-ind game of \cite{BT16}
 (\Cref{sec:mu-ind}) for \TW{} in the public permutation model, under
 the primitive convention of \Cref{sec:games-pp}. The challenger
 samples a challenge bit $b \sample \bits$ and a permutation
-$\pi \sample \Perm(\bits^{1600})$, and exposes $(\pi,\pi^{-1})$ as the
+$\pi \sample \Perm(\bits^{1600})$, and exposes $(\pi, \pi^{-1})$ as the
 primitive interface in both worlds. The
 adversary $\mathcal{A}$ creates users on demand via $\mathsf{New}$, and
 the game maintains an active-user counter $v$. We write $D$ for an
@@ -246,14 +238,14 @@ indices are never valid users.
 
 The mu-ind construction oracles inherit the validity convention of
 \Cref{sec:games-pp}. The encryption oracle on input $(d, U, A, M)$
-rejects, without recording, if $(U,A,M)$ is outside the \TW{} encryption
+rejects, without recording, if $(U, A, M)$ is outside the \TW{} encryption
 domain, if $d \notin \{1, \dots, v\}$, or if $(d, U) \in V$; otherwise
 it sets $C = \Enc_{K_d}[\pi](U, A, M)$ when $b = 1$, and samples a
 uniformly random byte string $C$ of length $\|M\| + \tauroot/8$ when
 $b = 0$. The game records
 $(d, U)$ in $V$ and $(d, U, A, C)$ in $W$, and returns $C$. The
 verification oracle on input $(d, U, A, C)$ rejects if $d \notin
-\{1, \dots, v\}$ or if $(U,A,C)$ is not a valid \TW{}
+\{1, \dots, v\}$ or if $(U, A, C)$ is not a valid \TW{}
 verification/decryption input; if $(d, U, A, C) \in W$ it returns
 $\mathsf{true}$; if $b = 0$ it returns $\mathsf{false}$; otherwise it
 returns $[\Dec_{K_d}[\pi](U, A, C) \neq \bot]$. Nonce uniqueness is
@@ -288,12 +280,11 @@ and need no separate $\mathsf{mu\text{-}cmt}$ notion.
 \label{sec:ro-model}
 
 The proofs of \Cref{sec:aead-security,sec:root-tag-hash-security} and
-\Cref{cor:committing-combined} are
-carried out through an intermediate
-random oracle model whose construction interfaces use the \cite{BDPV11}
-bridge of \Cref{sec:sponge} to address a single random oracle. The
-flat sponge lift of \Cref{app:flat-sponge-lift} then converts the
-resulting bounds to the public permutation form.
+\Cref{cor:committing-combined} use an intermediate random oracle model. This
+model keeps the same construction-level games but replaces every duplex output
+by a lookup to a single random oracle through the \cite{BDPV11} bridge of
+\Cref{sec:sponge}. The flat sponge lift of \Cref{app:flat-sponge-lift} then
+converts the resulting bounds to the public-permutation form.
 
 The model has a single random oracle $\ROflat : \bits^* \to
 \bits^\infty$ over the unpadded $H$-input domain of the \cite{BDPV08}
@@ -330,27 +321,25 @@ typed-restriction convention are formalized in
 the adversary's requested output length and is formalized as
 $\KeyedTWOut$ in \Cref{lem:bridge-decode}.
 
-The random oracle model games are the construction interface variants
-of \Cref{sec:games-pp,sec:mu-setting}: the primitive interface is
-replaced by direct adversary access to $\ROflat$, and each construction
-oracle uses the corresponding ${}^\RO$ algorithm, the ideal oracles
-$(\Rand,\Replay)$ being unchanged. Under this substitution
-$\Adv^{\mathsf{ae}}_{\RO}$ is the all-in-one advantage of
-\Cref{sec:games-pp} with direct $\ROflat$ access as the primitive
-interface in both worlds; the keyless hash advantages
-$\AdvColl_{\RO}(\mathcal{B})$,
-$\AdvPreSlice{a}{\mu}_{\RO}(\mathcal{B})$, and
-$\AdvePre_{\RO}(\mathcal{B})$ of $\HTW$, the committing
-$\Advcmtds{4}_{\RO}(\mathcal{B})$, and, for $\ell \in \{1,3,4\}$,
-$\Advcmts{\ell}_{\RO}(\mathcal{B})$ are the probabilities that the
-corresponding random oracle hash and committing games return $1$, the CMTs
-challenger computing its deterministic encryption checks with
-$\Enc^\RO$. For mu-ind, $\Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})$
-denotes the \Cref{sec:mu-setting} game with the same $\mathsf{New}$
-interface and per-user nonce discipline---user $d$ using
-$(\Enc_{K_d}^{\RO}, \Ver_{K_d}^{\RO})$ when $b = 1$ and
-$(\Rand,\Replay)$ when $b = 0$---equivalently, in the two-game
-notation of \Cref{sec:mu-ind},
+The random oracle games are obtained from
+\Cref{sec:games-pp,sec:mu-setting} by this mechanical substitution: direct
+primitive access $(\pi, \pi^{-1})$ becomes finite-output access to $\ROflat$,
+real construction or deterministic challenger checks use the corresponding
+${}^\RO$ algorithm, and the ideal oracles $(\Rand,\Replay)$ are unchanged.
+We use the same advantage names with subscript $\RO$: $\AdvColl_{\RO}$,
+$\AdvPreSlice{a}{\mu}_{\RO}$, $\AdvePre_{\RO}$,
+$\Advcmtds{\ell}_{\RO}$, $\Advcmts{\ell}_{\RO}$, and
+$\AdvintRUP_{\RO}$ are the win probabilities of the corresponding random
+oracle games, with CMTs challengers comparing deterministic encryptions via
+$\Enc^\RO$. The all-in-one AE advantage $\Adv^{\mathsf{ae}}_{\RO}$ is the
+corresponding real-vs-ideal distinguishing advantage with direct $\ROflat$
+access in both worlds.
+
+For mu-ind, $\Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B})$ denotes the
+\Cref{sec:mu-setting} game with the same $\mathsf{New}$ interface and per-user
+nonce discipline: user $d$ uses
+$(\Enc_{K_d}^{\RO}, \Ver_{K_d}^{\RO})$ when $b = 1$ and $(\Rand,\Replay)$ when
+$b = 0$. Equivalently, in the two-game notation of \Cref{sec:mu-ind},
 \[
   \Adv^{\mathsf{mu\text{-}ind}}_{\RO}(\mathcal{B}) =
   \bigl|
@@ -360,15 +349,10 @@ notation of \Cref{sec:mu-ind},
 \]
 where the superscripts name the entire multi-user construction
 interface in the corresponding world.
-The random oracle \textsf{INT-RUP} game is the same win-event game as above,
-with $\Enc_K^\RO$, $\PDec_K^\RO$, and $\Ver_K^\RO$ replacing the
-public-permutation construction oracles and with direct adversary access to
-$\ROflat$ replacing $(\pi,\pi^{-1})$; its advantage is
-$\AdvintRUP_{\RO}(\mathcal{B})$.
 Adversary queries to $\ROflat$ are finite-output and counted in
 $\qRO(\mathcal{B})$ of \Cref{sec:resources}. Construction-internal
-$\RF(\cdot)$ lookups --- those made by $\Enc_K^\RO$, $\Dec_K^\RO$,
-$\PDec_K^\RO$, $\Ver_K^\RO$, or a committing challenger --- are not.
+$\RF(\cdot)$ lookups (those made by $\Enc_K^\RO$, $\Dec_K^\RO$,
+$\PDec_K^\RO$, $\Ver_K^\RO$, or a hash or committing challenger) are not.
 
 \subsection{Resources}
 \label{sec:resources}
@@ -384,10 +368,11 @@ fixed query bounds, but they are not listed as headline resource parameters
 unless they affect the final bound.
 
 \Cref{tab:resource-accounting} gives the compact notation summary used in later
-theorems. Lowercase quantities are realized counts in a random oracle
+theorems. Lowercase resource quantities are realized counts in a random oracle
 experiment, while uppercase quantities are execution-uniform caps used in the
 public-permutation bounds. The detailed definitions below fix exactly which
-computations contribute to each count.
+computations contribute to each count, and \Cref{sec:loss-terms} defines the
+closed-form loss terms.
 
 \begin{table}[t]
   \centering
@@ -395,7 +380,7 @@ computations contribute to each count.
   \setlength{\tabcolsep}{3pt}
   \begin{tabular}{@{}p{0.18\linewidth}p{0.42\linewidth}p{0.32\linewidth}@{}}
     \toprule
-    Symbol & Counted objects & Primary use \\
+    Symbol & Meaning & Primary use / definition \\
     \midrule
     $N$
       & Construction-internal \Keccakp{} calls induced by valid construction
@@ -421,49 +406,67 @@ computations contribute to each count.
     $D$
       & Execution-uniform cap on users activated in the mu-ind game.
       & Multi-user key-collision and key-guess terms. \\
+    \midrule
+    $\Lift_c(\Ntot)$
+      & \cite{BDPV08} flat sponge differentiating loss.
+      & Defined in \cref{sec:loss-terms}. \\
+    $\KeyGuess_k(Q)$
+      & Ideal-system key-guessing term.
+      & Defined in \cref{sec:loss-terms}. \\
+    $\RootColl_\tau(Q, s)$
+      & $s$-way root-tag collision term.
+      & Defined in \cref{sec:loss-terms}. \\
+    $\RootPre_\tau(Q)$
+      & Root-tag preimage term.
+      & Defined in \cref{sec:loss-terms}. \\
+    $\LeafColl_\tau(Q)$
+      & Known-key leaf-tag collision term.
+      & Defined in \cref{sec:loss-terms}. \\
     \bottomrule
   \end{tabular}
-  \caption{Resource-accounting notation. Uppercase symbols are the caps that
-    appear in public-permutation theorems; lowercase symbols are realized counts
-    in random oracle executions or source games.}
+  \caption{Resource caps and recurring loss terms. Uppercase resource symbols
+    are the caps that appear in public-permutation theorems; lowercase symbols
+    are realized counts in random oracle executions or source games.}
   \label{tab:resource-accounting}
+  \label{tab:notation}
 \end{table}
 
 \begin{description}
 \item[$N$:] the construction interface cost, measured as the number of
-  \Keccakp{} calls that the adversary's construction interface
-  queries induce in the real \TW{} computation after the validity
-  convention above has been applied. In ideal games, the same accounting
-  applies to the corresponding real \TW{} computation on the valid
-  query, even when an ideal oracle answers by table lookup or without
-  running the construction. $N$ counts at per-duplex-call granularity,
-  summing each root initialization, associated data duplex block, root
-  message duplex block, leaf initialization, leaf message duplex block,
-  and aggregation duplex block across the entire query
-  sequence. Valid plaintext-computing computations and valid AE-style
-  non-replay verification computations are counted whether they accept or
-  reject; replay-table verification hits are transcript-consistency checks and
-  are not charged to $N$ or to the verification-tag terms. In the hash and
-  committing games there is no adversary
-  construction oracle: for the $\HTW$ collision game, $N$ counts the $s$
-  deterministic encryptions on the submitted inputs; for the standard
-  preimage game it counts both challenger encryptions: the source
-  encryption computing $T^* = \HTW(X^*)$ and the one deterministic
-  encryption on the submitted input; for the everywhere-preimage game,
-  the one deterministic encryption on the submitted input; for
-  CMTDs-$\ell$, $N$ uses conservative committing-game accounting: after
-  the syntax, domain, and message-length checks, it charges the
-  deterministic decryption checks on the common ciphertext whether or not
-  the particular $\WiC_\ell$ distinctness check would reject before those
-  checks. Likewise, for the CMTs-$\ell$ source games of
-  \Cref{cor:committing-combined}, after syntax and domain checks $N$
-  charges the deterministic encryptions that would be used to compare the $s$
-  ciphertexts whether or not the $\WiC_\ell$ distinctness check would
-  reject earlier. For the Sec and eSec games of
-  \Cref{cor:second-preimage-rs04}, $N$ and $\Nprim$ are those of the
-  explicit induced two-way collision adversary in that corollary, whose
-  source and candidate deterministic encryptions are counted exactly as
-  in the $s = 2$ collision game.
+  \Keccakp{} calls induced after the validity convention has been applied.
+  It counts at per-duplex-call granularity, summing each root initialization,
+  associated data duplex block, root message duplex block, leaf initialization,
+  leaf message duplex block, and aggregation duplex block.
+
+  \emph{AE-style games.} In real games, $N$ counts the valid construction
+  computations actually run by the adversary's oracle queries. In ideal games,
+  the same accounting applies to the corresponding real \TW{} computation on
+  the valid query, even when the ideal oracle answers by table lookup or without
+  running the construction. Valid plaintext-computing computations and valid
+  AE-style non-replay verification computations are counted whether they accept
+  or reject; replay-table verification hits are transcript-consistency checks
+  and are not charged to $N$ or to the verification-tag terms.
+
+  \emph{Hash games.} There is no adversary construction oracle. For the $\HTW$
+  collision game, $N$ counts the $s$ deterministic encryptions on the submitted
+  inputs. For the standard preimage game it counts both challenger encryptions:
+  the source encryption computing $T^* = \HTW(X^*)$ and the deterministic
+  encryption on the submitted input. For the everywhere-preimage game it counts
+  the deterministic encryption on the submitted input. For the Sec and eSec
+  games of \Cref{cor:second-preimage-rs04}, $N$ and $\Nprim$ are those of the
+  explicit induced two-way collision adversary in that corollary, whose source
+  and candidate deterministic encryptions are counted exactly as in the
+  $s = 2$ collision game.
+
+  \emph{Committing games.} For CMTDs-$\ell$, $N$ uses conservative
+  committing-game accounting: after the syntax, domain, and message-length
+  checks, it charges the deterministic decryption checks on the common
+  ciphertext whether or not the particular $\WiC_\ell$ distinctness check would
+  reject before those checks. Likewise, for the CMTs-$\ell$ source games of
+  \Cref{cor:committing-combined}, after syntax and domain checks $N$ charges
+  the deterministic encryptions that would be used to compare the $s$
+  ciphertexts whether or not the $\WiC_\ell$ distinctness check would reject
+  earlier.
 \item[$\Nprim$:] the number of direct adversary queries to the
   primitive interface, the pair $(\pi, \pi^{-1})$ in
   public permutation games.
@@ -523,7 +526,7 @@ hold at the stated bounds.
 \subsection{Loss Terms}
 \label{sec:loss-terms}
 
-Five closed-form expressions recur across the security bounds---$\Lift_c$
+Five closed-form expressions recur across the security bounds: $\Lift_c$
 throughout, with $\KeyGuess_k$, $\RootColl_\tau$, $\RootPre_\tau$, and
 $\LeafColl_\tau$ in some. We define them here, after the resource caps that
 parameterize them.
@@ -590,3 +593,41 @@ candidate leaf tag points; after the flat sponge lift this gives
 $Q=\Nprim+\Nleaf$. The hidden-key AE-style bounds instead carry the
 linear same-slot term $\nleaf/2^{\tauleaf}$ of
 \Cref{lem:leaf-collision}, written inline.
+
+\paragraph{Tightness notes.}
+The loss terms above are mostly generic search or birthday terms, and their
+leading scales are tight in the usual random oracle sense. The key-guessing
+term is matched at constants by direct random guesses for a $k$-bit key. In
+the multi-user theorem's free-parameter setting, the term
+$D\,\KeyGuess_k(\Nprim)$ is also tight at leading scale: using the per-user
+nonce discipline of \Cref{sec:mu-ind}, which permits one nonce value across
+users, an adversary obtains one known nonempty encryption from each targeted
+user and compares each direct candidate-key query against all collected
+root-initialization keystream blocks at once. Each guess then matches some
+targeted user with probability $D/2^k$. The concrete joint cap charges the
+target encryptions to $N$, lowering the feasible scale as discussed in
+\Cref{sec:bound-discussion}.
+
+The root terms are the standard random oracle search terms: an $s$-way
+birthday search matches the leading scale of
+$\RootColl_\tau(Q,s)$, and fixed-target preimage search matches the per-query
+$2^{-\tau}$ rate of $\RootPre_\tau(Q)$. The hidden-key same-slot leaf term
+$\nleaf/2^{\tauleaf}$ is also tight at constants for nonce-respecting
+verification: after encrypting a two-chunk message under nonce $U$, an
+adversary can submit non-replay verification queries that replace the leaf
+ciphertext chunk by fresh strings of the same length while keeping the root
+tag. Each query recomputes the hidden leaf tag at the same slot $(K,U,1)$,
+and acceptance occurs when the fresh leaf tag equals the original hidden leaf
+tag, with probability $2^{-\tauleaf}$ per verification-side final leaf
+transcript.
+
+The flat sponge lift term
+$\Lift_c(\Ntot)=\Ntot(\Ntot+1)/2^{c+1}$ dominates the BDPV differentiating
+bound $f_P(\Ntot)$ of \cite[Lemma~5]{BDPV08} via \Cref{lem:lift-bound}. That
+differentiating bound is matched at leading order by the standard
+inner-collision distinguisher; the remaining conservatism is in composing
+indifferentiability into the keyed games, not in an obviously improvable
+simulator bound. Real-vs-ideal games pay the same differentiating bound once
+more, at $\Nprim$, to replace the ideal-side simulator by the real permutation
+(\Cref{lem:sim-perm-proximity}); since $\Nprim \leq \Ntot$, that term never
+dominates the $\Ntot$ term.

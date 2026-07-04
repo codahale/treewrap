@@ -1,6 +1,14 @@
 \section{Performance Evaluation}
 \label{sec:performance}
 
+\TW{} fixes the root/leaf transcript but leaves leaf scheduling to the
+implementation. This section evaluates that separation: the same ciphertext and
+tag are produced by scalar and vectorized implementations, while complete leaf
+chunks can be batched to recover practical long-message throughput. The
+comparison baseline is hardware-accelerated AES-128-GCM on the same hosts, so
+the measurements should be read as an implementation sanity check and
+same host reference point, not as a claim that \TW{} is faster than AES-GCM.
+
 \subsection{Optimized Implementations}
 \label{sec:impl}
 
@@ -11,8 +19,8 @@ compare three vectorized assembly paths: \texttt{amd64} AVX-512,
 \texttt{amd64} AVX2, and \texttt{arm64} NEON using the Armv8.2 SHA-3
 extension. The framing, domain separation, padding, tree bookkeeping, and
 dispatch remain in shared Go code. A pure Go path uses a scalar permutation
-and a scalar eight-instance loop, and serves both as a correctness oracle for
-the assembly cores and as a constant-time fallback on other architectures.
+and a scalar eight-instance loop, and serves both as a reference path for
+cross-checking the assembly cores and as a fallback on other architectures.
 
 The tree structure of \TW{} exposes two distinct permutation workloads. The
 root duplex---which absorbs the associated data, processes chunk~$0$, and
@@ -47,15 +55,16 @@ Both architecture-specific paths provide a single-duplex core and batched leaf
 kernels; the assembly stays below the mode boundary, so framing, domain
 separation, padding, and tree bookkeeping remain shared with the reference path.
 
-\paragraph{Constant time.}
-The scalar reference and all three vectorized implementations are constant time
-with respect to all inputs. The permutation and the XOR-based absorb/squeeze
-contain no secret-dependent branches and no secret-dependent memory or vector
-indices. The only indexed table is the round-constant array, addressed by the
-public round number; batched loads, stores, gathers, scatters, and
-inactive-lane handling are all controlled by public chunk counts and fixed
-chunk strides. \Cref{app:kernels} records the architecture-specific addressing
-details.
+\paragraph{Data-independent execution.}
+The scalar reference and all three vectorized implementations avoid
+secret-dependent branches and secret-dependent memory or vector indices for the
+key, nonce, associated-data contents, and plaintext or ciphertext contents. The
+permutation and the XOR-based absorb/squeeze loops are straight-line with
+respect to data values. The only indexed table is the round-constant array,
+addressed by the public round number; dispatch, batched loads, stores, gathers,
+scatters, and inactive-lane handling are controlled by public lengths, chunk
+counts, and fixed chunk strides. \Cref{app:kernels} records the
+architecture-specific addressing details.
 
 \subsection{Benchmark Methodology}
 \label{sec:bench-method}
@@ -77,17 +86,22 @@ frequency control.
 Measurements are collected by a standalone harness (\texttt{cmd/cpb}) that locks
 its goroutine to an OS thread and, for each algorithm, operation, and message
 length, first calibrates an iteration count that fills at least $100$\,ms, then
-records $100$ samples, from which it reports the median cycles per byte and
-median wall-clock throughput together with the interquartile range as a
-dispersion measure (\Cref{tab:dispersion}). Both metrics are read from the same timed loop, so the
-cycles-per-byte and throughput figures for a given measurement come from one
-interleaved run rather than two separately scheduled ones. Each sample reuses the
-same source and destination buffers, so the reported figures are warm-cache,
-steady-state rates. The single-threaded measurement leaves the SMT sibling of the
-\texttt{amd64} host idle. All reported figures are single-threaded: they
-exercise the SIMD axis of \TW{}'s parallelism, and multicore scaling remains
-unmeasured. We report a sweep of seven message lengths from $1$\,B
-to $16$\,MiB.
+records $100$ samples. It reports the median cycles per byte and median
+wall-clock throughput together with the interquartile range as a dispersion
+measure (\Cref{tab:dispersion}). Both metrics are read from the same timed
+loop, so the cycles-per-byte and throughput figures for a given measurement
+come from one interleaved run rather than two separately scheduled ones.
+
+Each timed call uses a fixed all-zero key and nonce, empty associated data, and
+preallocated source and destination buffers. Open measurements decrypt and
+verify a ciphertext prepared before timing; seal and open reset the destination
+slice length inside the timed loop but do not allocate per call. The reported
+figures are therefore warm-cache, steady-state rates for message processing
+under a fixed AEAD object. The single-threaded measurement leaves the SMT
+sibling of the \texttt{amd64} host idle. All reported figures are
+single-threaded: they exercise the SIMD axis of \TW{}'s parallelism, and
+multicore scaling remains unmeasured. We report a sweep of seven message
+lengths from $1$\,B to $16$\,MiB.
 
 The cycle counters differ by architecture, and this affects how the
 cycles-per-byte figures may be read. On \texttt{amd64} the harness reads
@@ -109,10 +123,9 @@ It uses AES-NI and \texttt{PCLMULQDQ} on \texttt{amd64}, and the AES
 and \texttt{PMULL} instructions on \texttt{arm64}.
 The AES block cipher, GCM wrapper, and \TW{} AEAD object are constructed once
 before timing, so the measurements exclude key schedule and GHASH key-power
-precomputation and compare steady-state \texttt{Seal}/\texttt{Open} calls under
-a fixed key. Each timed \TW{} call still performs the root duplex initialization
-inside the call. Both directions are measured for each scheme; the
-cycles-per-byte table reports both, and the throughput table reports the
+precomputation. Each timed \TW{} call still performs the root duplex
+initialization inside the call. Both directions are measured for each scheme;
+the cycles-per-byte table reports both, and the throughput table reports the
 encryption direction.
 
 \subsection{Throughput}
@@ -120,29 +133,22 @@ encryption direction.
 
 \Cref{tab:cpb} reports cycles per byte across the message-length sweep and
 \Cref{tab:throughput} the corresponding wall-clock throughput in the bulk
-regime. The dominant feature of the \TW{} rows is the descent produced by the
-tree-parallel leaf core: the per-byte cost falls as a message lengthens and its
-chunks occupy more SIMD lanes. A message of at most one chunk has no complete
-leaf chunk for chunk~$0$ to share a kernel with, so it runs entirely on the
+regime. The main pattern in the \TW{} rows is the descent produced by the
+tree-parallel leaf core. A message of at most one chunk has no complete leaf
+chunk for chunk~$0$ to share a kernel with, so it runs entirely on the
 single-duplex core, and the $8$\,KiB column sits at that core's rate. Past one
 chunk, chunk~$0$ fusion (\Cref{sec:impl}) keeps every complete chunk on the
-batched kernels, and the descent tracks lane occupancy: at $32$\,KiB, chunk~$0$
-and three complete leaves run four-wide in the \texttt{amd64} remainder kernels
-and as two full pairs on \texttt{arm64}, and $64$\,KiB is the first length
-whose eight complete chunks ($8\beta \approx 64$\,KiB) fill the eight-way
-($\times 8$) core. On the \texttt{amd64} AVX-512 path \TW{} encryption falls
-$1.81 \to 0.73 \to 0.39$ across the $8$, $32$, and $64$\,KiB columns and is
-already at its bulk rate at $64$\,KiB, holding at $0.38$--$0.39$ through
-$16$\,MiB. The AVX2 path follows the same shape at lower throughput
-($2.21 \to 1.15 \to 1.10$ over the same span, thereafter roughly $1.1$ cycles
-per byte); it runs the eight instances as two groups of four rather than in a
-single $8$-wide register, leaving the AVX-512 core about $2.9\times$ faster in
-bulk. The \texttt{arm64} curve flattens earliest
-($1.97 \to 0.92 \to 0.89 \to 0.89 \to 0.91$ cycles per byte from $8$\,KiB to
-$16$\,MiB): the eight-way core itself processes its batch as four two-instance
-pairs, so the fused $2$-wide kernel runs at essentially the same per-chunk rate,
-and a $32$\,KiB message---chunk~$0$ and three leaves as two full pairs---is
-already close to the long-message rate. In wall-clock terms \TW{} reaches
+batched kernels, and the descent tracks lane occupancy.
+
+On the \texttt{amd64} AVX-512 path, \TW{} encryption falls
+$1.81 \to 0.73 \to 0.39$ cycles per byte across the $8$, $32$, and $64$\,KiB
+columns and then holds at $0.38$--$0.39$ through $16$\,MiB. The AVX2 path has
+the same shape at lower throughput: it runs the eight instances as two groups
+of four rather than in a single $8$-wide register, leaving the AVX-512 core
+about $2.9\times$ faster in bulk. The \texttt{arm64} curve flattens earlier
+because the eight-way core processes its batch as four two-instance pairs; a
+$32$\,KiB message, chunk~$0$ and three leaves as two full pairs, is already
+close to the long-message rate. In wall-clock terms \TW{} reaches
 $6.00$\,GB/s on the \texttt{amd64} AVX-512 host and $4.93$\,GB/s on the M4 Pro
 for $16$\,MiB messages.
 
@@ -238,17 +244,18 @@ Apple M4 Pro        & $1.2\%$ & $1.9\%$ & $16.7\%$ \\
 \subsection{Latency}
 \label{sec:latency}
 
-For short messages the cost is set by the serial root duplex and is independent
-of the parallel leaf machinery. A message of at most $\rho = 167$ bytes occupies
-a single rate block and never enters leaf mode, so it costs exactly two
-permutations---one to initialize the root duplex and one to close the message
-block and extract the tag. The $1$\,B and $64$\,B columns of \Cref{tab:cpb} bear
-this out: per-message latency is nearly flat across them at roughly $571$
-reference cycles on \texttt{amd64} ($571$ at $1$\,B versus $9.04 \times 64
-\approx 578$ at $64$\,B) and $620$ core cycles on \texttt{arm64} ($620$ versus
-$9.88 \times 64 \approx 633$), i.e.\ about $285$ and $310$ cycles per
-\Keccakp{} respectively. Because such messages bypass the leaf
-core entirely, leaf-level parallelism imposes no latency penalty on them.
+For short messages in this benchmark, the cost is set by the serial root
+duplex and is independent of the parallel leaf machinery. With empty associated
+data, a message of at most $\rho = 167$ bytes occupies a single rate block and
+never enters leaf mode, so it costs exactly two permutations: one to initialize
+the root duplex and one to close the message block and extract the tag. The
+$1$\,B and $64$\,B columns of \Cref{tab:cpb} bear this out: per-message latency
+is nearly flat across them at roughly $571$ reference cycles on \texttt{amd64}
+($571$ at $1$\,B versus $9.04 \times 64 \approx 578$ at $64$\,B) and $620$
+core cycles on \texttt{arm64} ($620$ versus $9.88 \times 64 \approx 633$),
+i.e.\ about $285$ and $310$ cycles per \Keccakp{} respectively. Because such
+messages bypass the leaf core entirely, leaf-level parallelism imposes no
+latency penalty on them.
 
 The latency/throughput trade-off appears instead in the intermediate regime,
 which chunk~$0$ fusion has narrowed to roughly the one-to-eight-chunk band. The
@@ -266,7 +273,7 @@ $16$\,MiB message ($\approx 2000$ leaves) adds on the order of $400$ root
 permutations against roughly $10^5$ permutations of leaf work, under $0.5\%$
 overhead---so the serial root does not materially cap bulk throughput.
 
-\subsection{Comparison with Other AEADs}
+\subsection{AES-128-GCM Baseline}
 \label{sec:compare-perf}
 
 We compare against the one baseline measured under the same harness on the same
@@ -292,6 +299,6 @@ amortized outside the timed call. In the sub-bulk regime AES-128-GCM is several
 times faster at one chunk ($0.30$ versus $1.81$ cycles per byte at $8$\,KiB on
 \texttt{amd64}), but the gap narrows once the fused kernels engage: about
 $2.5\times$ at $32$\,KiB and the bulk ratio from $64$\,KiB on. \TW{}'s intended
-value relative to AES-128-GCM lies in the tree structure and committing security
-properties analyzed in \Cref{sec:aead-security,sec:root-tag-hash-security}
-rather than in raw speed.
+value relative to AES-128-GCM lies in the tag-centric hash and committing
+properties analyzed in \Cref{sec:root-tag-hash-security}, with the baseline
+AEAD bounds of \Cref{sec:aead-security}, rather than in raw speed.

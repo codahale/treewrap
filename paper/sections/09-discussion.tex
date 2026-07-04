@@ -7,21 +7,20 @@
 \Cref{tab:scheme-compare} situates \TW{} against representative authenticated
 encryption schemes along the axes that distinguish it: the underlying primitive,
 whether the mode is parallelizable, the key, nonce, and tag sizes, associated data
-support, nonce-misuse resistance, and committing security (CMT). The rows are
-representative rather than exhaustive: sponge/duplex relatives, a
-Farfalle-based parallel design, AES baselines, a misuse-resistant AES
-baseline, and a generic committing transform.
+support, nonce-misuse resistance, and the published committing result or attack
+most relevant to the scheme. The rows are representative rather than
+exhaustive: sponge/duplex relatives, a Farfalle-based parallel design, AES
+baselines, a misuse-resistant AES baseline, and a generic committing transform.
 The comparison is structural, not a total security ranking; \TW{}'s own
 concrete bounds and the regimes in which each term dominates are treated in
 \Cref{sec:bound-discussion}, and its measured throughput against
-hardware-accelerated AES-128-GCM in \Cref{sec:compare-perf}. The CMT column
-should be read within the named committing notions only, and a negative entry
-there does not assert a confidentiality or integrity break of the underlying
-AEAD. It records the published committing result or attack most relevant to the
-comparison: \TW{}'s $128$-bit \textsf{CMTDs-4} bound, Ascon's roughly $64$-bit
-committing bound \cite{KSW23}, published low-cost attacks where known
-\cite{KSW23,CR22,ADGKLS22}, and the hash-collision level inherited by
-\textsf{CTX}.
+hardware-accelerated AES-128-GCM in \Cref{sec:compare-perf}. The committing
+column should be read within the named notions only, and a negative entry there
+does not assert a confidentiality or integrity break of the underlying AEAD. It
+records \TW{}'s $128$-bit \textsf{CMTDs-4} bound derived from tag hash
+security, Ascon's roughly $64$-bit committing bound \cite{KSW23}, published
+low-cost attacks where known \cite{KSW23,CR22,ADGKLS22}, and the
+hash-collision level inherited by \textsf{CTX}.
 The table does not separately track compact (tag-only) commitment, since
 that property has not been systematically analyzed for the comparison
 schemes.
@@ -33,20 +32,20 @@ schemes.
 bytes; AES-GCM-SIV also admits a $32$-byte key, and Kravatte-SAE's key and
 nonce lengths are parameters (keys of up to $40$ bytes, arbitrary-length
 nonces). ``Misuse'' is nonce-misuse
-resistance in the sense of \cite{RS06}; CMT records a published committing
-result or attack in the relevant committing notion, with ``broken'' denoting a
-published low-cost committing attack, ``hash CR'' denoting the
+resistance in the sense of \cite{RS06}; ``Commit'' records a published
+committing result or attack in the relevant committing notion, with ``broken''
+denoting a published low-cost committing attack, ``hash CR'' denoting the
 collision-resistance level of the hash used by the transform, and ``open''
-marking a scheme with no published committing analysis. A dash means the
-entry depends on the base scheme. These entries are notion-specific summaries,
-not broad AE security claims. \TW{}'s concrete bounds appear in
+marking a scheme with no published committing analysis. A dash means the entry
+depends on the base scheme. These entries are notion-specific summaries, not
+broad AE security claims. \TW{}'s concrete bounds appear in
 \Cref{sec:bound-discussion}.}
 \label{tab:scheme-compare}
 \begin{tabular}{@{}llccccc@{}}
 \toprule
-Scheme & Primitive & Par. & K/U/T & AD & Misuse & CMT \\
+Scheme & Primitive & Par. & K/U/T & AD & Misuse & Commit \\
 \midrule
-\TW{}                        & \Keccakp   & yes & $32/32/32$ & yes & no  & $128$ b \\
+\TW{}                        & \Keccakp   & yes & $32/32/32$ & yes & no  & CMTDs-4 \\
 Ascon-128a \cite{DEMS21}     & Ascon-$p$ ($320$ b) & no  & $16/16/16$ & yes & no  & $\approx64$ b \\
 Xoodyak \cite{DHPVV20}       & Xoodoo ($384$ b)   & no  & $16/16/16$ & yes & no  & $2^{17}$ atk. \\
 Kravatte-SAE \cite{BDHPVV17} & \Keccak[1600, 6]   & yes & $\leq 40$/var./$16$ & yes & no & open \\
@@ -60,36 +59,30 @@ nAE $+$ \textsf{CTX} \cite{CR22} & any nAE        & ---  & ---        & yes & --
 \subsection{Comparison with Prior Sponge AEADs}
 \label{sec:compare-sponge}
 
-\TW{} belongs to the family of single-permutation duplex AEADs initiated by
-\cite{BDPV11}. The dedicated lightweight members of that family, Ascon
+\TW{} belongs to the single-permutation duplex AEAD family introduced in
+\cite{BDPV11}. Representative lightweight members of that family, Ascon
 \cite{DEMS21} and Xoodyak \cite{DHPVV20}, target $128$-bit security on small
 permutations ($320$ and $384$ bits) with a strictly serial duplex: each call
 depends on the previous one, so there is no mode-level parallelism to exploit.
 \TW{} instead pays for a larger permutation, \Keccakp, and a $256$-bit
 capacity---the same round count as KangarooTwelve \cite{BDPVVV16}---in exchange
 for a tree that processes leaf chunks in parallel and for the headroom that
-yields $128$-bit security with a comfortable margin. The cost of this choice is
+meets the $2^{-128}$ target at the stated work cap. The cost of this choice is
 visible in \Cref{sec:performance}: on short, single-leaf inputs \TW{} is slower
 per byte than a compact serial duplex would be, and its advantage appears only
 once a message spans enough leaves to fill the vector units.
 
 \TW{} reuses KangarooTwelve's final-node/leaf split but not its Sakura coding
-\cite{BDPV14}. In KangarooTwelve, Sakura makes the final node parseable as a
-message hop followed by a chaining hop: the first chunk, the sequence of leaf
-chaining values, the coded number of chaining values, and the final-node frame
-bits all have explicit roles \cite{BDPVVV16}. In \TW{}, the analogous chaining
-values are the leaf tags, but they are not anonymous strings waiting to be
-interpreted by the root. Each leaf duplex is initialized with a chunk-specific
-state containing the leaf prefix and leaf index, while the root absorbs the leaf
-tags in index order and then absorbs the leaf count $\langle n \rangle_8$
-(\Cref{sec:tw128,sec:domain-sep}). Sakura's structural job is therefore handled
-by mode initialization and domain separation rather than by a tree coding. The
-transcript separation lemmas make this explicit
-(\Cref{lem:transcript-inj,cor:output-sep}). The committing bounds do not depend
-on tree-coding soundness: distinct $(K,U,A)$ triples
-already diverge before leaf aggregation (\Cref{cor:triple-sep}), and the leaf
-encoding enters the hash collision bound only through the explicit leaf tag
-collision term of \Cref{thm:coll}.
+\cite{BDPV14}. KangarooTwelve uses Sakura to make the final node parseable as a
+tree-hash transcript \cite{BDPVVV16}. In \TW{}, the analogous chaining values
+are typed leaf tags: each leaf duplex is initialized with its leaf prefix and
+index, and the root absorbs leaf tags in index order followed by the leaf count
+(\Cref{sec:tw128,sec:domain-sep}). Sakura's structural role is therefore
+handled by mode initialization and domain separation rather than by a tree
+coding. The transcript separation lemmas make this explicit
+(\Cref{lem:transcript-inj,cor:output-sep}); the hash collision bound sees the
+leaf encoding only through the explicit leaf tag collision term of
+\Cref{thm:coll}.
 
 Keyak \cite{BDPVV16}, whose Motorist mode is already parallelizable, is the
 closest prior duplex AEAD in spirit; \Cref{sec:related} contrasts its
@@ -101,35 +94,29 @@ than at a standalone AEAD, and like Ascon and Xoodyak it does not parallelize.
 Farfalle \cite{BDHPVV17} leaves the duplex setting altogether: it is a
 parallel pseudorandom function whose compression layer sums
 masked-and-permuted input blocks into an accumulator and whose expansion
-layer generates output from a rolling state, with authenticated
-encryption supplied by the Farfalle-SAE and Farfalle-SIV modes on top
-(\Cref{sec:related}). Its Kravatte instance runs \Keccak[1600, 6], and
-the parallelism available to an implementation is arbitrary, as in
-\TW{}. The two designs price their permutations for different
-adversaries. Farfalle takes its aggressive round counts from the premise
-that an adversary never sees both the input and the output of a
-permutation call, and the accumulator-collision analysis behind
-Kravatte's six-round compression layer randomizes the inputs by secret
-masks \cite{BDHPVV17}. \TW{}'s root tag claims are known-key claims: the
-hash and committing games hand the adversary the key, so the mode needs
-the hash-grade round count and margin of
-\Cref{sec:permutation-cryptanalysis} and a proof toolkit that covers
-adversarial initialization---the sponge indifferentiability line of
-\Cref{app:flat-sponge-lift}. \TW{} therefore keeps the strict duplex
-object and takes its parallelism from the tree topology, paying more
-permutation rounds per byte than a Farfalle instance in exchange for a
-tag that is a proved digest.
+layer generates output from a rolling state, with authenticated encryption
+supplied by the Farfalle-SAE and Farfalle-SIV modes on top
+(\Cref{sec:related}). Its Kravatte instance runs \Keccak[1600, 6], and the
+parallelism available to an implementation is arbitrary, as in \TW{}. The two
+designs price their permutations for different adversary models. Farfalle's
+six-round compression layer is analyzed in a PRF setting where inputs are
+randomized by secret masks and an adversary does not see both the input and
+output of the same permutation call \cite{BDHPVV17}. \TW{}'s tag-hash claims
+are adversarial-initialization claims: in the hash and committing games, the
+adversary may choose the key as part of the input being hashed. \TW{} therefore
+keeps the strict duplex object, uses the hash-grade round count discussed in
+\Cref{sec:permutation-cryptanalysis}, and takes its parallelism from the tree
+topology rather than from a parallel PRF compression layer.
 
 Committing security is not unique to \TW{} in this family: a dedicated analysis
 of the sponge-based NIST lightweight finalists proves Ascon committing while
 breaking others \cite{KSW23}, and some constructions, such as Strobe and the
-Farfalle modes, have not
-been examined in that setting at all. What distinguishes \TW{} is that it makes
-the root tag a secure compact commitment to the full input---collision-,
-second-preimage-, and preimage-resistant as a hash, which in particular yields
-the $128$-bit full-input \textsf{CMTDs-4} bound---as a proven,
-designed property of the mode without leaving the single-permutation duplex
-setting.
+Farfalle modes, have not been examined in that setting at all. What
+distinguishes \TW{} is that the authentication tag is analyzed directly as a
+hash output for the full input. Collision, second-preimage, preimage, and
+everywhere preimage bounds for that tag then yield the compact commitment
+statements, including the $128$-bit full-input \textsf{CMTDs-4} bound, as
+mode-native consequences without leaving the single-permutation duplex setting.
 
 \subsection{Comparison with Committing AEAD Constructions}
 \label{sec:compare-commit}
@@ -141,23 +128,20 @@ AEAD, and \cite{CR22} give \textsf{CTX}, which makes any nonce-based AE scheme
 commit to its full context at the cost of a single hash over a short string and
 with no ciphertext expansion. These transforms are inexpensive and broadly
 applicable; \textsf{CTX} in particular is nearly free. It is nevertheless a
-committing-AE transform, not a compact-commitment transform: it binds the
-transformed ciphertext, but does not make the tag a standalone digest-like
-commitment to the full input. \TW{} differs not by undercutting their cost but by
-integration: it is committing as the mode itself, and its root tag is the compact
-committing object. The commitment uses the same permutation already used for
-confidentiality and integrity and the same tag already used for authentication,
-so no separate commitment primitive, key-derivation step, or auxiliary hash is
-invoked, and the multi-input full-commitment bound follows from a single root tag
-collision bound (\Cref{sec:root-tag-hash-security}). More strongly,
-\Cref{thm:coll} shows that the root tag alone is a compact commitment
-string even when the ciphertext bodies used as openings differ, up to the
-additional leaf tag birthday term. This places \TW{} alongside the dedicated
-committing primitives---the compactly committing AEAD of \cite{GLR17} and the
-encryptment of \cite{DGRW18}---which likewise build commitment in rather than
-bolt it on, but which were designed for message franking rather than as general
-nonce-based AEADs. The contrast with transformed conventional schemes is
-sharpened by the attacks of \Cref{sec:related}: base
+committing-AE transform, not a tag-hash transform: it binds the transformed
+ciphertext, but does not make the tag a standalone hash output for the full
+input. \TW{} differs not by undercutting their cost but by integration. The
+same permutation provides confidentiality, integrity, and the tag hash output;
+no separate commitment primitive, key-derivation step, or auxiliary hash is
+invoked. The multi-input full-commitment bound follows from the same root tag
+collision bound used for hash security (\Cref{sec:root-tag-hash-security}), and
+\Cref{thm:coll} applies even when the ciphertext bodies used as openings
+differ, up to the additional leaf tag birthday term. This places \TW{} alongside
+the dedicated committing primitives---the compactly committing AEAD of
+\cite{GLR17} and the encryptment of \cite{DGRW18}---which likewise build
+commitment in rather than bolt it on, but which were designed for message
+franking rather than as general nonce-based AEADs. The contrast with transformed
+conventional schemes is sharpened by the attacks of \Cref{sec:related}: base
 schemes such as GCM and OCB are not committing on their own \cite{CR22}, and a
 transform is the only way to make them so.
 
@@ -169,8 +153,9 @@ collision resistance of the underlying function rather than from a transform. Th
 two designs make different structural choices: \cite{DHMVV24} targets
 session-based communication, chaining a stream of messages through intermediate
 tags and generalizing the keyed duplex into a \emph{duplex cipher}, whereas \TW{}
-is a single two-level tree whose independent leaves expose run-time-selectable
-parallelism at constant memory (\Cref{sec:related,sec:impl}). Because a session
+is a single two-level tree whose independent leaves let the implementation
+choose parallelism at runtime with constant memory (\Cref{sec:related,sec:impl}).
+Because a session
 chain processes each message serially, \TW{}'s principal advantage is throughput
 on large messages (\Cref{sec:performance}): its parallel leaves fill vector units
 a serial duplex leaves idle, at the cost of the session support \cite{DHMVV24}
@@ -259,17 +244,14 @@ unverified stream plaintext can reveal keystream information. Application
 behavior on unverified plaintext is likewise outside the provable model.
 
 \paragraph{Conservative lift.}
-Per-term tightness is itemized in \Cref{sec:bound-discussion}; the
-flat-sponge terms are conservative because our proof follows the unkeyed
-sponge/hash line. The flat
-sponge differentiating loss
-$\Lift_c(\Ntot) = \Ntot(\Ntot+1)/2^{c+1}$ bounds the indifferentiability
-loss of \cite{BDPV08}, used here to lift the random oracle analysis to the
-public permutation model; the real-vs-ideal games pay it twice, at
-$\Ntot$ on the real side and at $\Nprim$ on the ideal side
-(\Cref{cor:lift-application}). This proof route matches the role of the root tag:
-\TW{}'s hash and committing claims are consequences of hash security, and sponge
-hash security is supported by a mature literature.
+Per-term tightness is itemized in \Cref{sec:loss-terms}; the flat-sponge terms
+are conservative because our proof follows the unkeyed sponge/hash line. This
+route matches the role of the authentication tag: \TW{}'s committing statements
+are consequences of tag hash security, and sponge hash security is supported by
+a mature literature. The price is the indifferentiability lift of
+\Cref{app:flat-sponge-lift}: one $\Lift_c(\Ntot)$ term on the real side, and in
+real-vs-ideal games a second proximity term at $\Nprim$
+(\Cref{cor:lift-application}).
 
 A direct keyed-duplex treatment would have to close two gaps. First, existing
 keyed-duplex bounds are hidden-key AE bounds: the game samples the key, and the
@@ -308,5 +290,5 @@ meets the $128$-bit target
 All bounds are birthday-type on the $256$-bit capacity, delivering the
 $128$-bit target but no more; a beyond-birthday analysis is open. The model is
 also single-stage and leakage-free: side-channel resistance is addressed only at
-the implementation level, through the constant-time properties of
+the implementation level, through the data-independent execution properties of
 \Cref{sec:impl}, and is not part of the provable-security claims.

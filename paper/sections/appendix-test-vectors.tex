@@ -1,15 +1,17 @@
 \section{Test Vectors}
 \label{app:test-vectors}
 
-The following are selected known-answer test vectors for TW128 encryption, as
-specified in \cref{sec:tw128}. The complete vector set, including full byte
-strings for the long cases and the regeneration harness, is maintained with the
-reference implementation at \url{https://github.com/codahale/treewrap}.
+The following selected known-answer test vectors exercise \TW{} encryption and
+are intended for implementation conformance checks against the construction in
+\Cref{sec:tw128}. The complete vector set, including full byte strings for the
+long cases and the regeneration harness, is maintained with the reference
+implementation at \url{https://github.com/codahale/treewrap}.
 
 All byte strings are written in hexadecimal. For each vector we list the key
-$K$, nonce $U$, associated data $A$, message $M$, ciphertext $C$, and tag $T$;
-the sealed output of encryption is $C \concat T$. The empty string is written
-$\varepsilon$. The parameters used below are $\rho = 167$ bytes,
+$K$, nonce $U$, associated data $A$, message $M$, ciphertext $C$, and
+authentication tag $T$; the sealed output of encryption is $C \concat T$. The
+empty string is written $\varepsilon$. The parameters used below are
+$\rho = 167$ bytes,
 $\beta = 8183$ bytes, and $32$-byte keys, nonces, and tags. The leaf index is
 encoded as a little-endian $64$-bit integer and the phase suffixes are appended
 least significant bit first.
@@ -143,7 +145,7 @@ result.
 {\footnotesize
 \begin{tabular}{@{}l p{0.88\textwidth}@{}}
 \toprule
-\multicolumn{2}{@{}p{0.94\textwidth}@{}}{\textbf{Vector 8.}~ Multi-block associated data with a short message: the associated data blocks dominate the cost.} \\
+\multicolumn{2}{@{}p{0.94\textwidth}@{}}{\textbf{Vector 8.}~ Associated data spanning multiple blocks with a short message: exercises associated data absorption before message encryption.} \\
 \midrule
   $K$ & \texttt{000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f} \\
   $U$ & \texttt{202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f} \\

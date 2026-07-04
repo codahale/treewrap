@@ -1,38 +1,33 @@
-\section{Root Tag Hash Security and Committing Security}
+\section{The Authentication Tag as a Hash Output}
 \label{sec:root-tag-hash-security}
 
-This section proves the digest claim for the root of the \TW{} tree. The
-construction adapts the KangarooTwelve final-node pattern to authenticated
-encryption: leaf tags play the role of chaining values, and the root emits the
-single tag returned by $\HTW$. The proof therefore tracks the final root inputs
-that can matter in the hash and committing games. The Root Tag Candidate
-Sequence lemma (\Cref{lem:root-candidate-seq}) collects those inputs into a
-chronological candidate sequence, and the Root Tag Hash and Target-Hit Bound
-(\Cref{lem:root-tag-hash}) turns a collision or target hit among the
-candidates into the matching adaptive bound of \Cref{app:lemmas}, controlling
-the chance that distinct inputs land on the same $\tauroot$-bit root tag
-projection.
+Externally, a \TW{} encryption returns a ciphertext body and one authentication
+tag. Internally, that tag is the final root-duplex output: leaf tags summarize
+leaf chunks, the root aggregates those summaries with the context and root
+ciphertext chunk, and the wrapper $\HTW$ returns the tag alone. This section
+proves that the visible tag is a hash output for the full opening
+$(K, U, A, M)$, not merely an AEAD verification value.
 
-The hash random oracle theorems---collision (\Cref{thm:coll-ro}) and
-preimage (\Cref{thm:pre-ro,thm:epre-ro})---are then short instantiations,
-differing only in which case of the bound they invoke, whether the target is
-external or sampled from a fixed input slice, and whether a leaf tag collision
-term is needed when distinct inputs may use different ciphertext bodies. CMTDs-4
-(\Cref{thm:cmtds4-ro}) and the remaining committing notions reuse the collision
-case.
-\Cref{app:flat-sponge-lift} transfers each instance to the public
-permutation setting, \Cref{sec:concrete-security} records the concrete bounds,
-and \Cref{cor:committing-combined} forwards the remaining \cite{BH22}
-committing notions to the same root-collision bound.
+The hash notions are the standard ones for $\HTW$: collision,
+preimage, second-preimage, and everywhere preimage resistance. The committing
+statements are consequences of that hash security: a successful compact opening
+must force distinct openings to agree on the same $\tauroot$-bit tag, the
+root-collision event bounded below.
 
-The instantiations rest on two structural separation facts, recorded
-first: distinct contexts $(K, U, A)$ reach distinct final root
-transcripts regardless of the leaf tags they aggregate (Opening Triple
-Separation, \Cref{cor:triple-sep}), and---absent a collision among those
-leaf tags---so do distinct full inputs (Final-Root Input Separation,
-\Cref{prop:final-root-sep}).
+The proof uses three ingredients. Transcript parsing separates final root
+inputs, except for the explicitly charged leaf-tag collision event.
+\Cref{lem:root-candidate-seq} orders every relevant final-root input into a
+chronological candidate sequence, and \Cref{lem:root-tag-hash} applies the
+adaptive collision and preimage bound of \Cref{app:lemmas} to that sequence.
+The random oracle theorems are short instantiations; the flat sponge lift gives
+the public-permutation bounds; the \cite{BH22} committing notions reuse the
+same root-collision bound.
 
-\subsection{Structural Separation}
+\subsection{Separating Final Tag Inputs}
+
+The tag value is read from a final root transcript input. The next two facts
+rule out structural collisions at that input, except for the explicitly charged
+possibility that two leaf tags collide before the root aggregates them.
 
 \begin{proposition}[Opening Triple Separation]
 \label{cor:triple-sep}
@@ -105,13 +100,14 @@ the same final leaf transcripts, hence the same leaf ciphertext bodies;
 with the common root ciphertext chunk this gives the same full $C$.
 \end{proof}
 
-\subsection{Root Tag Candidate Bound}
+\subsection{Candidate Bound for Tag Inputs}
 
-The candidate machinery rests on a single probabilistic engine, stated
-here and proved in full in \Cref{app:lem-candidate-collisions}:
-adaptively chosen distinct random oracle inputs whose values are still
-unread when they are chosen behave, for collision and target-hitting
-purposes, as fresh uniform draws.
+After separation, the probabilistic question is local: how likely is a collision
+or target hit among the final root inputs whose tag values matter to a game?
+The candidate machinery rests on one engine, stated here and proved in full in
+\Cref{app:lem-candidate-collisions}: adaptively chosen distinct random oracle
+inputs whose values are still unread when chosen behave, for collision and
+target-hitting purposes, as fresh uniform draws.
 
 \begin{lemma}[Adaptive Candidate Collision and Preimage]
 \label{lem:adaptive-candidate}
@@ -157,7 +153,7 @@ $\Pr[\mathsf{sec}_{\tau,j_0}] \leq (L-1) \cdot 2^{-\tau}$.
 \begin{proof}[Proof sketch]
 The premises license lazy sampling at the append step: predictability
 fixes the candidate string before its value is drawn, and the
-unrevealed-value premise guarantees that no bit of that value has been
+unrevealed-value premise states that no bit of that value has been
 exposed, so $\ROflat(Y_j)$ is uniform and independent of the entire prior
 transcript. Conditioning position by position, each fixed position set
 then contributes at most $2^{-\tau(s-1)}$ (each fixed position at most
@@ -310,7 +306,12 @@ $(L-1)2^{-\tauroot} = (\qRO+1)2^{-\tauroot}
 = \RootPre_{\tauroot}(\qRO)$.
 \end{proof}
 
-\subsection{Hash Random Oracle Bounds}
+\subsection{Random Oracle Tag-Hash Bounds}
+
+Each random oracle bound now matches a hash game to a case of
+\Cref{lem:root-tag-hash}. Collision and fixed-slice preimage resistance also
+carry a leaf-collision term, because distinct openings may have different
+ciphertext bodies before reaching the root.
 
 \begin{theorem}[Random Oracle Collision Resistance of $\HTW$]
 \label{thm:coll-ro}
@@ -333,10 +334,10 @@ $\Pr[\badleaf^\star] \leq \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal
 so it remains to bound the win under $\neg\badleaf^\star$. After rejecting
 unless the $s$ output inputs are pairwise distinct and in the \TW{}
 domain, the challenger performs $s$ deterministic encryptions
-$\Enc_{K_i}^{\RO}(U_i,A_i,M_i)$, reaching $R_1,\dots,R_s$, all carrying a
-common root tag $T$ on a win. Pairwise distinct tuples $(K_i,U_i,A_i,M_i)$
-have pairwise distinct $(K_i,U_i,A_i,C_i)$: two tuples differing in their
-context already differ in $(K,U,A)$, while two sharing a context but
+$\Enc_{K_i}^{\RO}(U_i, A_i, M_i)$, reaching $R_1,\dots,R_s$, all carrying a
+common root tag $T$ on a win. Pairwise distinct tuples $(K_i, U_i, A_i, M_i)$
+have pairwise distinct $(K_i, U_i, A_i, C_i)$: two tuples differing in their
+context already differ in $(K, U, A)$, while two sharing a context but
 differing in the message yield distinct ciphertexts, since for a fixed
 context encryption maps the message to the ciphertext bijectively. So on
 $\neg\badleaf^\star$ Final-Root Input Separation
@@ -416,8 +417,8 @@ random oracle model (\Cref{sec:ro-model}),
 \begin{proof}
 Run the random oracle preimage game for the query-independent target
 $T^*$, which is independent of $\ROflat$. After rejecting unless the
-output input $X = (K,U,A,M)$ is in the \TW{} domain, the challenger
-performs one encryption $\Enc_{K}^\RO(U,A,M)$, reaching a final root
+output input $X = (K, U, A, M)$ is in the \TW{} domain, the challenger
+performs one encryption $\Enc_{K}^\RO(U, A, M)$, reaching a final root
 transcript $R$. A win means $\HTW(X) = T^*$, i.e.\ the root tag
 $\lfloor \ROflat(\flatmap(R)) \rfloor_{\tauroot}$ at $R$ equals the fixed
 target $T^*$. The fixed-target case, item~2, of
@@ -425,10 +426,11 @@ target $T^*$. The fixed-target case, item~2, of
 $\AdvePre_\RO(\mathcal{B}) \leq \RootPre_{\tauroot}(\qRO(\mathcal{B}))$.
 \end{proof}
 
-\subsection{Public Permutation Hash Bounds}
+\subsection{Public Permutation Tag-Hash Bounds}
 \label{sec:root-tag-pp}
 
-The flat sponge lift transfers the preceding random oracle bounds to the public
+These are the public-permutation hash claims for the authentication tag. The
+flat sponge lift transfers the preceding random oracle bounds to the public
 permutation model. For these one-world hash games, the lift contributes
 $\Lift_c(\Ntot)$, and the derived random oracle adversary has
 $\qRO(\mathcal{B}) \leq \Nprim$; challenger construction
@@ -589,25 +591,26 @@ $s$-way root-collision term $\RootColl_{\tauroot}(\cdot, s)$ of
 $\tauroot(s-1)$ by $\tauroot$.
 \end{proof}
 
-\begin{corollary}[Root Tag as a Compact Commitment]
+\begin{corollary}[Tag Hash Security and Compact Commitment]
 \label{cor:tag-commitment}
-The wrapper $\HTW$ is a secure hash of the full encryption context
-$(K, U, A, M)$ in the sense of \cite{RS04}: collision-resistant
+The \TW{} authentication tag, represented by the wrapper $\HTW$, is a secure
+hash of the full encryption context $(K, U, A, M)$ in the sense of
+\cite{RS04}: collision-resistant
 (\Cref{thm:coll}), preimage-resistant on each fixed input slice
 (\Cref{thm:pre}), second-preimage-resistant
 (\Cref{cor:second-preimage-rs04}), and everywhere preimage-resistant
 (\Cref{thm:epre}). Under the implemented
 parameters and work cap $\Ntot \leq 2^{63}$, these advantages are at most
-$2^{-128}$ (\Cref{cor:concrete-security}), so the single $\tauroot$-bit
-root tag is a binding compact commitment to $(K, U, A, M)$ with standard and
-everywhere preimage resistance, native to the mode.
+$2^{-128}$ (\Cref{cor:concrete-security}). These hash bounds make the
+single $\tauroot$-bit tag a binding compact commitment to $(K, U, A, M)$, with
+standard and everywhere preimage resistance, native to the mode.
 \end{corollary}
 
 \begin{proof}
 Collision resistance is \Cref{thm:coll}; standard preimage resistance on
 fixed input slices is \Cref{thm:pre}; second-preimage resistance follows from
 collision resistance by \Cref{cor:second-preimage-rs04}; and everywhere
-preimage resistance is \Cref{thm:epre}. These guarantees quantify the
+preimage resistance is \Cref{thm:epre}. These bounds quantify the
 adversary's success at the same $\tauroot$-bit projection of the final root
 transcript, and \Cref{cor:concrete-security} evaluates them at the
 implemented parameters. Binding is the compact-commitment property supplied
@@ -618,7 +621,13 @@ resistance is the corresponding fixed-target property for tags chosen
 independently of the primitive.
 \end{proof}
 
-\subsection{Committing Consequences}
+\subsection{Committing Consequences of Tag Hash Security}
+
+The committing consequences use the same tag-collision analysis under the
+opening constraints of the \cite{BH22} games. CMTDs-4 is slightly tighter than
+general collision resistance: all openings share one ciphertext body, so
+distinct openings separate through their opening triples and no leaf-collision
+term is needed.
 
 \begin{theorem}[Random Oracle CMTDs-4]
 \label{thm:cmtds4-ro}
@@ -635,11 +644,11 @@ adversary $\mathcal{B}$ in the \TW{} random oracle model
 \begin{proof}
 Run the random oracle CMTDs-4 game. After rejecting on any failed syntax,
 message-length, or pairwise-full-input check, the challenger performs $s$
-deterministic decryption checks $\Dec_{K_i}^\RO(U_i,A_i,C \concat T)$ on
+deterministic decryption checks $\Dec_{K_i}^\RO(U_i, A_i, C \concat T)$ on
 the one common ciphertext $C \concat T$, reaching $R_1,\dots,R_s$. On a winning
-execution the tuples $(K_i,U_i,A_i,M_i)$ are pairwise distinct, and since
+execution the tuples $(K_i, U_i, A_i, M_i)$ are pairwise distinct, and since
 all checks decrypt the common ciphertext, determinism of $\Dec$ makes the
-triples $(K_i,U_i,A_i)$ pairwise distinct---equal triples would return
+triples $(K_i, U_i, A_i)$ pairwise distinct---equal triples would return
 equal messages, hence equal tuples. By Opening Triple Separation
 (\Cref{cor:triple-sep}) the candidates $\flatmap(R_1),\dots,\flatmap(R_s)$
 are pairwise distinct (leaf tag collisions cannot merge them), and every
@@ -664,14 +673,14 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
 
 \begin{proof}
 A CMTDs-4 winner gives one ciphertext $C \concat T$ and $s$ distinct inputs
-$(K_i,U_i,A_i,M_i)$ such that
-$\Dec_{K_i}(U_i,A_i,C \concat T) = M_i$ for every $i$. By \TW{} tidiness
+$(K_i, U_i, A_i, M_i)$ such that
+$\Dec_{K_i}(U_i, A_i, C \concat T) = M_i$ for every $i$. By \TW{} tidiness
 (\Cref{lem:tw-tidiness}), each opened input re-encrypts to the same ciphertext:
-$\Enc_{K_i}(U_i,A_i,M_i) = C \concat T$. In particular the opened inputs share
+$\Enc_{K_i}(U_i, A_i, M_i) = C \concat T$. In particular the opened inputs share
 the root tag $T$. For the displayed no-$\LeafColl$ bound, use the dedicated
 root-collision derivation of \Cref{thm:cmtds4-ro}, lifted by
 \Cref{cor:lift-application}: in this all-bodies-equal case, the single shared
-body $C$ forces the triples $(K_i,U_i,A_i)$ pairwise distinct; by Opening
+body $C$ forces the triples $(K_i, U_i, A_i)$ pairwise distinct; by Opening
 Triple Separation (\Cref{cor:triple-sep}), a leaf tag collision cannot merge
 two openings and no $\LeafColl$ term arises.
 \end{proof}
@@ -719,7 +728,7 @@ checks, which supply the candidate final-root transcripts
 encryption and decryption checks alike). On a winning execution all
 $s$ encryptions are equal, hence of equal length and with one common root
 tag $T$. Pairwise $\WiC_1$-distinctness gives pairwise distinct keys,
-pairwise $\WiC_3$-distinctness gives pairwise distinct $(K,U,A)$ triples,
+pairwise $\WiC_3$-distinctness gives pairwise distinct $(K, U, A)$ triples,
 and pairwise $\WiC_4$-distinctness gives pairwise distinct full inputs; in
 the last case, equal triples and equal ciphertexts would decrypt
 deterministically to equal messages, contradicting full-input

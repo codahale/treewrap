@@ -55,36 +55,6 @@ function of the resource caps introduced in
 \Cref{sec:resources}. We make no use of asymptotic or negligibility
 conventions.
 
-\paragraph{Reference summary.}
-\Cref{tab:notation} summarizes the resource caps and loss terms used
-throughout. The caps are defined formally in \Cref{sec:resources}, the
-loss terms in \Cref{sec:loss-terms}.
-
-\begin{table}[ht]
-  \centering
-  \small
-  \begin{tabular}{l l l}
-    \toprule
-    Symbol & Meaning & Defined \\
-    \midrule
-    $N$        & Construction interface cost (\Keccakp{} calls)       & \cref{sec:resources} \\
-    $\Nprim$   & Direct primitive-interface queries                   & \cref{sec:resources} \\
-    $\Ntot$    & $N + \Nprim$ (total query-sequence cost)             & \cref{sec:resources} \\
-    $\qv$, $\Qv$ & Valid verification queries / cap                   & \cref{sec:resources} \\
-    $\qRO$, $\QRO$ & Direct random oracle queries / cap (RO-model)    & \cref{sec:resources} \\
-    $\nleaf$, $\Nleaf$ & Distinct construction-generated final leaf transcripts / cap & \cref{sec:resources} \\
-    \midrule
-    $\Lift_c(\Ntot)$        & \cite{BDPV08} flat sponge loss   & \cref{sec:loss-terms} \\
-    $\KeyGuess_k(Q)$        & Ideal system key guess           & \cref{sec:loss-terms} \\
-    $\RootColl_\tau(Q, s)$  & $s$-way root-collision           & \cref{sec:loss-terms} \\
-    $\RootPre_\tau(Q)$      & Root-preimage                    & \cref{sec:loss-terms} \\
-    $\LeafColl_\tau(Q)$     & Known-key leaf-collision         & \cref{sec:loss-terms} \\
-    \bottomrule
-  \end{tabular}
-  \caption{Resource caps and loss terms.}
-  \label{tab:notation}
-\end{table}
-
 \subsection{Sponges and Duplexes over \texorpdfstring{\Keccak{}}{Keccak-p}}
 \label{sec:sponge}
 
@@ -167,7 +137,7 @@ count. \Cref{sec:ro-model} instantiates this bridge on typed \TW{} duplex
 transcript prefixes as the map $\flatmap(\cdot)$ used by the
 random oracle proofs throughout the paper.
 
-\subsection{Authenticated Encryption with Associated Data}
+\subsection{AEAD Syntax and Verification Interfaces}
 \label{sec:ae-defs}
 
 \paragraph{Syntax.}
@@ -208,7 +178,130 @@ $\Advae_\SE(\mathcal{A})$ is the distinguishing advantage between these
 two worlds over nonce-respecting adversaries. This all-in-one notion is
 instantiated for \TW{} in \Cref{sec:games-pp}.
 
-\paragraph{Integrity under release of unverified plaintext.}
+\subsection{Root Tag Hash Security}
+\label{sec:root-tag-defs}
+
+\begin{definition}[Root tag wrapper]
+\label{def:htw}
+For every \TW{} encryption input $X = (K,U,A,M)$ in the scheme domain,
+define the root tag wrapper by
+\[
+  \HTW(K,U,A,M) = T
+  \quad\text{where}\quad
+  \Enc_K(U,A,M) = C \concat T.
+\]
+We also write $\HTW(X)$ for $\HTW(K,U,A,M)$. Equivalently, \HTW{} runs
+\TW{} encryption and discards the ciphertext body.
+\end{definition}
+
+\paragraph{The root tag as a hash.}
+Many uses of commitment store, transmit, or compare a short tag rather
+than the full ciphertext, and ask that the short string alone be
+binding---the compactly committing AEAD goal introduced by \cite{GLR17}
+for message franking. \TW{} ciphertexts are written $C \concat T$ with
+$T$ the $\tauroot$-bit root tag, and we capture this goal directly by
+treating \Cref{def:htw} as a hash function. Keyed by the permutation,
+this is a hash family, and we ask that it satisfy the hash-function
+security notions of \cite{RS04}, over the \TW{} input domain, together
+with the local $s$-way multicollision extension used for the committing
+theorems. For fixed byte lengths $a$ and $\mu$, write
+\[
+  \mathcal{X}_{a,\mu}
+  =
+  \bits^k \times \bits^\nu \times (\bits^8)^a \times (\bits^8)^\mu
+\]
+for the fixed-length slice of valid inputs, with bit length
+$m_{a,\mu} = k + \nu + 8a + 8\mu$.
+\begin{description}
+  \item[Collision resistance (Coll).] No adversary finds distinct inputs
+    $X_1, \dots, X_s$ (any $s \geq 2$) with
+    $\HTW(X_1) = \cdots = \HTW(X_s)$. The case $s=2$ is the RS04 Coll
+    notion; larger $s$ is the corresponding multicollision extension.
+  \item[Preimage resistance (Pre).] For fixed $a,\mu$, given
+    $\HTW(X^*)$ for a uniform $X^* \sample \mathcal{X}_{a,\mu}$, no
+    adversary finds any valid input $X$ with $\HTW(X) = \HTW(X^*)$.
+  \item[Second-preimage resistance (Sec/eSec).] The standard and
+    everywhere forms of second-preimage resistance of \cite{RS04}, on
+    each fixed input slice $\mathcal{X}_{a,\mu}$, are reduced explicitly
+    to two-way collision resistance in \Cref{cor:second-preimage-rs04}.
+  \item[Everywhere preimage resistance (ePre).] For a target tag $T^*$ fixed in
+    advance, no adversary finds $X$ with $\HTW(X) = T^*$.
+\end{description}
+The advantages $\AdvColl_\TW$, $\AdvPreSlice{a}{\mu}_\TW$, and
+$\AdvePre_\TW$ are the respective success probabilities, instantiated for
+\TW{} in \Cref{sec:games-pp}. The Pre bound is proved directly in
+\Cref{thm:pre}, while the second-preimage bounds are inherited from Coll
+in \Cref{cor:second-preimage-rs04}. Coll is the binding property of the tag
+taken as a compact commitment to $(K, U, A, M)$, Pre is the random-opening
+preimage property on fixed input slices, and ePre is the fixed-target
+preimage property for query-independent tags.
+The \cite{BH22} committing notions are the collision-facing AEAD
+projection of the same tag analysis: a winning opening gives distinct
+inputs sharing a tag, while the dedicated CMTDs-4 proof uses the
+all-bodies-equal game structure to avoid the leaf-collision slack of the
+general hash collision theorem (\Cref{sec:root-tag-hash-security}).
+
+\subsection{AEAD Committing Notions}
+\label{sec:commit-defs}
+
+\cite{BH22} formalize a family of committing security notions for
+nonce-based AEAD schemes, parameterized by how much of the
+encryption input is committed and by whether commitment is
+established through decryption (the D-notions) or through encryption
+agreement (the E-notions). We recall their definitions and the
+$s$-way generalization because the root tag hash bounds of
+\Cref{sec:root-tag-hash-security} are later instantiated in this AEAD
+vocabulary.
+
+\paragraph{What-is-committed functions.}
+For $\ell \in \{1, 3, 4\}$, the \emph{what-is-committed} function
+$\WiC_\ell$ projects an encryption input $(K, U, A, M) \in \mathcal{K}
+\times \mathcal{U} \times \mathcal{A} \times \mathcal{M}$ to the
+portion it should commit:
+\[
+\begin{aligned}
+  \WiC_1(K, U, A, M) &= K, \\
+  \WiC_3(K, U, A, M) &= (K, U, A), \\
+  \WiC_4(K, U, A, M) &= (K, U, A, M).
+\end{aligned}
+\]
+
+\paragraph{CMTDs-$\ell$ and CMTs-$\ell$ games.}
+For $s \geq 2$, \cite[Fig.~5]{BH22} defines the $s$-way committing
+games on tuples $(K_i, U_i, A_i, M_i)_{i=1}^s$ with pairwise distinct
+$\WiC_\ell$-images, all entries in the scheme's syntactic domain and
+none equal to $\bot$. The $s$-way CMTDs-$\ell$ (decryption) game has
+the adversary output a ciphertext $C$ alongside the tuples and returns
+$1$ if $\Dec_{K_i}(U_i, A_i, C) = M_i$ for every $i$; the printed
+return line of \cite[Fig.~5]{BH22} writes $C_i$, but the game outputs a
+single ciphertext $C$. The $s$-way CMTs-$\ell$ (encryption) game has the
+adversary output the tuples alone and returns $1$ if all encryptions
+$\Enc_{K_i}(U_i, A_i, M_i)$ are equal. Advantages
+$\Advcmtds{\ell}_\SE(\mathcal{A})$ and
+$\Advcmts{\ell}_\SE(\mathcal{A})$ are the probabilities that the
+adversary wins the respective game; the parameter $s$ is suppressed
+from the notation when clear from context. The two-tuple case $s = 2$
+is the original CMTD-$\ell$/CMT-$\ell$ pair of \cite[Fig.~4]{BH22}.
+These definitions are instantiated for \TW{} in \Cref{sec:games-pp},
+with the public permutation lift deferred to that section.
+
+\paragraph{Relations.}
+\cite[Figs.~4 and~5]{BH22} record the implications among the notions.
+For the D-notions we use:
+\[
+  \mathsf{CMTDs}\text{-}4 \;\Rightarrow\;
+  \mathsf{CMTDs}\text{-}\ell \text{ for } \ell \in \{1, 3\}
+\]
+(both immediate: pairwise distinct keys ($\ell = 1$) or pairwise
+distinct $(K, U, A)$ triples ($\ell = 3$) are \emph{a fortiori} pairwise
+distinct full tuples, so every CMTDs-$\ell$ winner is a CMTDs-4 winner).
+The E-notions are bounded directly in \Cref{cor:committing-combined} by
+the same final-root candidate-collision argument, rather than through an
+encryption reduction.
+
+\subsection{Integrity under Release of Unverified Plaintext}
+\label{sec:rup-defs}
+
 For the RUP setting of \cite{ABLMMY14}, a conventional decryption algorithm is
 separated into a plaintext-computing algorithm and a verification algorithm.
 The integrity notion \textsf{INT-RUP} gives the adversary access to encryption,
@@ -273,122 +366,3 @@ Nonce uniqueness is enforced per user via the set $V$: the same nonce
 may appear under distinct users but not twice under the same user.
 This is strictly weaker than the global nonce-uniqueness requirement
 that would force each nonce value $U$ to appear under at most one user.
-
-\subsection{Committing Notions and Root Tag Hash Security}
-\label{sec:commit-defs}
-
-\cite{BH22} formalize a family of committing security notions for
-nonce-based AEAD schemes, parameterized by how much of the
-encryption input is committed and by whether commitment is
-established through decryption (the D-notions) or through encryption
-agreement (the E-notions). We recall their definitions and the
-$s$-way generalization, and then frame the root tag itself as a hash function
-whose \cite{RS04} security---collision, second-preimage, and preimage
-resistance---captures the binding and preimage properties expected of a compact
-commitment. The AEAD committing notions are then proved from the same tag
-analysis in \Cref{sec:root-tag-hash-security}.
-
-\paragraph{What-is-committed functions.}
-For $\ell \in \{1, 3, 4\}$, the \emph{what-is-committed} function
-$\WiC_\ell$ projects an encryption input $(K, U, A, M) \in \mathcal{K}
-\times \mathcal{U} \times \mathcal{A} \times \mathcal{M}$ to the
-portion it should commit:
-\[
-\begin{aligned}
-  \WiC_1(K, U, A, M) &= K, \\
-  \WiC_3(K, U, A, M) &= (K, U, A), \\
-  \WiC_4(K, U, A, M) &= (K, U, A, M).
-\end{aligned}
-\]
-
-\paragraph{CMTDs-$\ell$ and CMTs-$\ell$ games.}
-For $s \geq 2$, \cite[Fig.~5]{BH22} defines the $s$-way committing
-games on tuples $(K_i, U_i, A_i, M_i)_{i=1}^s$ with pairwise distinct
-$\WiC_\ell$-images, all entries in the scheme's syntactic domain and
-none equal to $\bot$. The $s$-way CMTDs-$\ell$ (decryption) game has
-the adversary output a ciphertext $C$ alongside the tuples and returns
-$1$ if $\Dec_{K_i}(U_i, A_i, C) = M_i$ for every $i$; the printed
-return line of \cite[Fig.~5]{BH22} writes $C_i$, but the game outputs a
-single ciphertext $C$. The $s$-way CMTs-$\ell$ (encryption) game has the
-adversary output the tuples alone and returns $1$ if all encryptions
-$\Enc_{K_i}(U_i, A_i, M_i)$ are equal. Advantages $\Advcmtds{\ell}_\SE(\mathcal{A})$ and
-$\Advcmts{\ell}_\SE(\mathcal{A})$ are the probabilities that the
-adversary wins the respective game; the parameter $s$ is suppressed
-from the notation when clear from context. The two-tuple case $s = 2$
-is the original CMTD-$\ell$/CMT-$\ell$ pair of \cite[Fig.~4]{BH22}.
-These definitions are instantiated for \TW{} in \Cref{sec:games-pp},
-with the public permutation lift deferred to that section.
-
-\begin{definition}[Root tag wrapper]
-\label{def:htw}
-For every \TW{} encryption input $X = (K,U,A,M)$ in the scheme domain,
-define the root tag wrapper by
-\[
-  \HTW(K,U,A,M) = T
-  \quad\text{where}\quad
-  \Enc_K(U,A,M) = C \concat T.
-\]
-We also write $\HTW(X)$ for $\HTW(K,U,A,M)$. Equivalently, \HTW{} runs
-\TW{} encryption and discards the ciphertext body.
-\end{definition}
-
-\paragraph{The root tag as a hash.}
-Many uses of commitment store, transmit, or compare a short tag rather
-than the full ciphertext, and ask that the short string alone be
-binding---the compactly committing AEAD goal introduced by \cite{GLR17}
-for message franking. \TW{} ciphertexts are written $C \concat T$ with
-$T$ the $\tauroot$-bit root tag, and we capture this goal directly by
-treating \Cref{def:htw} as a hash function. Keyed by the permutation,
-this is a hash family, and we ask that it satisfy the hash-function
-security notions of \cite{RS04}, over the \TW{} input domain, together
-with the local $s$-way multicollision extension used for the committing
-theorems. For fixed byte lengths $a$ and $\mu$, write
-\[
-  \mathcal{X}_{a,\mu}
-  =
-  \bits^k \times \bits^\nu \times (\bits^8)^a \times (\bits^8)^\mu
-\]
-for the fixed-length slice of valid inputs, with bit length
-$m_{a,\mu} = k + \nu + 8a + 8\mu$.
-\begin{description}
-  \item[Collision resistance (Coll).] No adversary finds distinct inputs
-    $X_1, \dots, X_s$ (any $s \geq 2$) with
-    $\HTW(X_1) = \cdots = \HTW(X_s)$. The case $s=2$ is the RS04 Coll
-    notion; larger $s$ is the corresponding multicollision extension.
-  \item[Preimage resistance (Pre).] For fixed $a,\mu$, given
-    $\HTW(X^*)$ for a uniform $X^* \sample \mathcal{X}_{a,\mu}$, no
-    adversary finds any valid input $X$ with $\HTW(X) = \HTW(X^*)$.
-  \item[Second-preimage resistance (Sec/eSec).] The standard and
-    everywhere forms of second-preimage resistance of \cite{RS04}, on
-    each fixed input slice $\mathcal{X}_{a,\mu}$, are reduced explicitly
-    to two-way collision resistance in \Cref{cor:second-preimage-rs04}.
-  \item[Everywhere preimage resistance (ePre).] For a target tag $T^*$ fixed in
-    advance, no adversary finds $X$ with $\HTW(X) = T^*$.
-\end{description}
-The advantages $\AdvColl_\TW$, $\AdvPreSlice{a}{\mu}_\TW$, and
-$\AdvePre_\TW$ are the respective success probabilities, instantiated for
-\TW{} in \Cref{sec:games-pp}. The Pre guarantee is proved directly in
-\Cref{thm:pre}, while the second-preimage guarantees are inherited from Coll
-in \Cref{cor:second-preimage-rs04}. Coll is the binding property of the tag
-taken as a compact commitment to $(K, U, A, M)$, Pre is the random-opening
-preimage property on fixed input slices, and ePre is the fixed-target
-preimage property for query-independent tags.
-The \cite{BH22} committing notions are the collision-facing AEAD
-projection of the same tag analysis: a winning opening gives distinct
-inputs sharing a tag, while the dedicated CMTDs-4 proof uses the
-all-bodies-equal game structure to avoid the leaf-collision slack of the
-general hash collision theorem (\Cref{sec:root-tag-hash-security}).
-
-\paragraph{Relations.}
-\cite[Figs.~4 and~5]{BH22} record the implications among the notions.
-For the D-notions we use:
-\[
-  \mathsf{CMTDs}\text{-}4 \;\Rightarrow\;
-  \mathsf{CMTDs}\text{-}\ell \text{ for } \ell \in \{1, 3\}
-\]
-(both immediate: pairwise distinct keys ($\ell = 1$) or pairwise
-distinct $(K, U, A)$ triples ($\ell = 3$) are \emph{a fortiori} pairwise
-distinct full tuples, so every CMTDs-$\ell$ winner is a CMTDs-4 winner).
-The E-notions are bounded directly in \Cref{cor:committing-combined} by
-the same final-root candidate-collision argument, rather than through an
-encryption reduction.

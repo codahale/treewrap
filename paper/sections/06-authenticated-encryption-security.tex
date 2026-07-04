@@ -1,14 +1,19 @@
-\section{Authenticated Encryption Security}
+\section{Baseline Authenticated Encryption Bounds}
 \label{sec:aead-security}
 
-This section proves the AEAD security of \TW{}. The first theorem is a
-random oracle multi-user indistinguishability bound. The public-permutation
-theorem then follows by the flat sponge lift of \Cref{app:flat-sponge-lift},
-whose real-vs-ideal form adds the ideal-side proximity term
-$\Lift_c(\Nprim)$, and the all-in-one AE bound is the single-user corollary. The section then
-proves \textsf{INT-RUP} integrity in the separated-interface model of
-\cite{ABLMMY14}. The root tag hash and committing results are proved separately in
-\Cref{sec:root-tag-hash-security}; all concrete instantiations are summarized in
+\Cref{sec:root-tag-hash-security} proves the tag-centric properties of \TW{}.
+Here we discharge the AEAD-facing obligations: multi-user indistinguishability,
+its single-user all-in-one AE corollary, and \textsf{INT-RUP} integrity. These
+bounds use the same hidden-key, leaf-collision, and tag-guessing accounting as
+the tag analysis, but their role is narrower: they show that the mode remains a
+conventional nonce-respecting AEAD.
+
+We first prove mu-ind in the flat random oracle model, lift the result to the
+public permutation model using \Cref{app:flat-sponge-lift}, and derive
+all-in-one AE as the $D = 1$ case. We then prove \textsf{INT-RUP} in the
+separated-interface model of \cite{ABLMMY14}, where plaintext-computing queries
+increase the construction work counts but do not change the non-replay
+verification count. All concrete instantiations are summarized in
 \Cref{sec:concrete-security}.
 
 All random oracle adversaries in this section are flat-RO adversaries
@@ -64,33 +69,21 @@ hybrid. For each $d$, \Cref{lem:mu-adjacent-hybrid} gives
   + \frac{\nleaf^{(d)}}{2^{\tauleaf}}
   + \frac{\qv^{(d)}}{2^{\tauroot}}.
 \]
-In outline, \Cref{lem:mu-adjacent-hybrid} proceeds through the explicit
-game sequence of \Cref{def:adjacent-hybrid-games}: an instrumented
-implementation of $H_{d-1}^\star$ and an all-reject game share all code
-except the return statement of a successful non-replay user-$d$
-verification comparison, which sets the flag $\forge$, while a direct
-$\ROflat$ query decoding to the hidden key $K_d$ sets the flag
-$\badkey$. The real pair agrees pointwise until $\forge$. Claim~3 in
-the proof of \Cref{lem:mu-adjacent-hybrid} couples the all-reject game
-to $H_d^\star$ until $\badkey$: Encryption Transcript Marginal
-Uniformity (\Cref{lem:enc-transcript-marginal-uniformity}) supplies
-freshness and distinctness for newly generated user-$d$ encryption
-points, while the all-reject structure ensures that any reused
-user-$d$ root-tag entry was previously read only through constant
-reject answers and remains uniform conditioned on the visible
-transcript. Environment lookups for the other users decode to their own
-keys and touch neither flag (\Cref{lem:env-neutrality}). A
-first-occurrence
-decomposition of $\forge \vee \badkey$ in the all-reject game then
-yields the three terms: $\badkey$ is charged at most
-$\KeyGuess_k(\qRO(\mathcal{B}))$ by the foreign-key key-test claim of
-\Cref{app:mu-verification-coupling}; a same-slot collision between two
-user-$d$ final leaf tags---at least one reached by an encryption
-computation---is charged at most $\nleaf^{(d)}/2^{\tauleaf}$ by the
-same-slot case of \Cref{lem:leaf-collision}; and a successful
-comparison before both events must lie in a verification-first
-transcript class and is charged at most $\qv^{(d)}/2^{\tauroot}$ by
-\Cref{lem:ver-first-root-guess}.
+\Cref{lem:mu-adjacent-hybrid} is the only construction-specific step in
+the baseline mu-ind proof. It couples the adjacent user-$d$ hybrids through
+the all-reject continuation of \Cref{def:adjacent-hybrid-games}. The
+coupling agrees until a direct random-oracle query tests the hidden key
+$K_d$ or a non-replay verification comparison succeeds. The resulting
+first-occurrence decomposition has exactly the three terms displayed above:
+the foreign-key test is bounded by
+$\KeyGuess_k(\qRO(\mathcal{B}))$; a same-slot collision between final leaf
+tags for user $d$ is bounded by
+$\nleaf^{(d)}/2^{\tauleaf}$ via \Cref{lem:leaf-collision}; and a successful
+verification-first root comparison is bounded by
+$\qv^{(d)}/2^{\tauroot}$ via \Cref{lem:ver-first-root-guess}. Encryption
+transcript marginal uniformity and environment neutrality
+(\Cref{lem:enc-transcript-marginal-uniformity,lem:env-neutrality}) are the
+facts that make this coupling independent of the other users.
 
 Summing across $d = 1,\dots,D$ gives
 $D \KeyGuess_k(\qRO(\mathcal{B}))$ for the key-test contribution. The
@@ -178,6 +171,13 @@ code. Applying
 gives the stated bound.
 \end{proof}
 
+The \textsf{INT-RUP} bound is AEAD-facing, but it is closer to the tag-hash
+analysis than to the mu-ind baseline: plaintext-computing queries expose
+unverified stream plaintext, and freshness must still reduce to hidden key
+tests, leaf-tag collisions, and root-tag guessing. The separated interface
+changes the accounting by adding plaintext-computing work to $N$ and
+$\nleaf$, while leaving the non-replay verification count $\qv$ unchanged.
+
 \begin{theorem}[Random Oracle \textsf{INT-RUP} Integrity]
 \label{thm:int-rup-ro}
 For every flat-RO \textsf{INT-RUP} adversary $\mathcal{B}$ against \TW{}
@@ -195,6 +195,8 @@ $\qv$.
 \end{theorem}
 
 \begin{proof}
+The proof uses the same hidden-tag accounting as the adjacent-hybrid bound, with
+the plaintext-computing interface included in the construction transcript.
 Work in the flat-RO \textsf{INT-RUP} game of \Cref{sec:ro-model}. Let
 $\forge$ be the event that a valid non-replay verification query accepts.
 Let $\badkey$ be the event that a direct $\ROflat$ query decodes under
@@ -207,26 +209,22 @@ and is reached by an encryption computation (the same-slot event of
 transcripts generated by encryption, plaintext-computing, and verification
 computations are all included in $\nleaf$.
 
-The key-test term is unchanged by the plaintext-computing oracle:
-\Cref{lem:ver-key-uniformity}, stated for the \textsf{INT-RUP}
-extension, shows that before $\badkey$ the hidden key
-remains uniform outside the candidate keys already tested by direct queries,
-and \Cref{lem:key-tests} gives
+The key-test term is unchanged by the plaintext-computing oracle. By
+\Cref{lem:ver-key-uniformity}, stated for the \textsf{INT-RUP} extension,
+the hidden key remains uniform before $\badkey$ outside the candidate keys
+already tested by direct queries, and \Cref{lem:key-tests} gives
 \[
   \Pr[\badkey] \leq \KeyGuess_k(\qRO(\mathcal{B})).
 \]
 
-For the leaf term, before $\badkey$ no direct query has pre-read a hidden-key
-final leaf tag point: such a query would decode under $\KeyedTWOut$ to $K$ and
-the corresponding $\Ltag(j)$ class. Encryption queries are nonce-respecting.
-Couple the real \textsf{INT-RUP} execution to the all-reject continuation
-used in the proof of \Cref{lem:int-rup-root-guess}. Up to the first
-accepting non-replay submission, the construction computations and
-leaf-tag table accesses agree; the continuation differs only by
-deferring the relevant final root-tag value until comparison. Thus the
-internal event $\badleaf$ transfers to the all-reject continuation, where
-the same-slot case of \Cref{lem:leaf-collision}, applied to the enlarged
-set of construction computations, gives
+For the leaf term, no direct query has pre-read a hidden-key final leaf tag
+point before $\badkey$: such a query would decode under $\KeyedTWOut$ to $K$
+and the corresponding $\Ltag(j)$ class. Coupling the real
+\textsf{INT-RUP} execution to the all-reject continuation used in
+\Cref{lem:int-rup-root-guess} preserves the construction computations and
+leaf-tag table accesses up to the first accepting non-replay submission.
+The same-slot case of \Cref{lem:leaf-collision}, applied to the enlarged set
+of construction computations, gives
 \[
   \Pr[\badleaf \text{ before } \badkey \cup \forge]
   \leq
