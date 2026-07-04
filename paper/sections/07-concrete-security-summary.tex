@@ -209,6 +209,43 @@ work point for all notions, not a separate parameter choice per theorem.
 bounds; \Cref{cor:concrete-security} supplies the individual term sizes at
 the cap.
 
+\paragraph{Term tightness.}
+The loss terms of \Cref{sec:loss-terms} are mostly generic search or birthday
+terms, and their leading scales are tight in the usual random oracle sense. The
+key-guessing term is matched at constants by direct random guesses for a
+$k$-bit key. In the multi-user theorem's free-parameter setting, the term
+$D\,\KeyGuess_k(\Nprim)$ is also tight at leading scale: using the per-user
+nonce discipline of \Cref{sec:mu-ind}, which permits one nonce value across
+users, an adversary obtains one known nonempty encryption from each targeted
+user and compares each direct candidate-key query against all collected
+root-initialization keystream blocks at once. Each guess then matches some
+targeted user with probability $D/2^k$. The concrete joint cap charges the
+target encryptions to $N$, lowering the feasible scale as discussed below.
+
+The root terms are the standard random oracle search terms: an $s$-way
+birthday search matches the leading scale of
+$\RootColl_\tau(Q,s)$, and fixed-target preimage search matches the per-query
+$2^{-\tau}$ rate of $\RootPre_\tau(Q)$. The hidden-key same-slot leaf term
+$\nleaf/2^{\tauleaf}$ is also tight at constants for nonce-respecting
+verification: after encrypting a two-chunk message under nonce $U$, an
+adversary can submit non-replay verification queries that replace the leaf
+ciphertext chunk by fresh strings of the same length while keeping the root
+tag. Each query recomputes the hidden leaf tag at the same slot $(K,U,1)$,
+and acceptance occurs when the fresh leaf tag equals the original hidden leaf
+tag, with probability $2^{-\tauleaf}$ per verification-side final leaf
+transcript.
+
+The flat sponge lift term
+$\Lift_c(\Ntot)=\Ntot(\Ntot+1)/2^{c+1}$ dominates the BDPV differentiating
+bound $f_P(\Ntot)$ of \cite[Lemma~5]{BDPV08} via \Cref{lem:lift-bound}. That
+differentiating bound is matched at leading order by the standard
+inner-collision distinguisher; the remaining conservatism is in composing
+indifferentiability into the keyed games, not in an obviously improvable
+simulator bound. Real-vs-ideal games pay the same differentiating bound once
+more, at $\Nprim$, to replace the ideal-side simulator by the real permutation
+(\Cref{lem:sim-perm-proximity}); since $\Nprim \leq \Ntot$, that term never
+dominates the $\Ntot$ term.
+
 \paragraph{Dominant terms and margin.}
 At $\Ntot \leq 2^{63}$, the hash bounds other than ePre and the
 CMTDs-4 bound have flat-sponge and root or leaf birthday terms on the same

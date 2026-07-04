@@ -23,6 +23,58 @@ The random oracle theorems are short instantiations; the flat sponge lift gives
 the public-permutation bounds; the \cite{BH22} committing notions reuse the
 same root-collision bound.
 
+\subsection{Tag Hash and Committing Games}
+\label{sec:root-tag-games}
+
+The public-permutation games in this section use the primitive, validity, and
+construction-oracle conventions of \Cref{sec:games-pp}. The random oracle
+versions are obtained by the mechanical substitution of \Cref{sec:ro-model}.
+
+\paragraph{Hash games.}
+The hash games for the wrapper $\HTW$ (\Cref{def:htw}) have no
+challenger-sampled key. In the $s$-way collision game, all inputs are
+adversary-supplied: the adversary outputs $s$ inputs, and the challenger
+returns $1$ iff they are pairwise distinct, in the \TW{} domain, and share
+a root tag:
+\begin{align*}
+  &\pi \sample \Perm(\bits^{1600}), \quad
+   (K_i, U_i, A_i, M_i)_{i=1}^s \sample \mathcal{A}^{\pi,\, \pi^{-1}}, \\
+  &\text{return $0$ unless the inputs are pairwise distinct and in the \TW{} domain}, \\
+  &\text{return } \bigl[\HTW(K_1, U_1, A_1, M_1) = \cdots =
+     \HTW(K_s, U_s, A_s, M_s)\bigr],
+\end{align*}
+with advantage $\AdvColl_\TW(\mathcal{A}) = \Pr[\text{the game returns }
+1]$; no nonce uniqueness is imposed. The \cite{RS04} standard and
+everywhere second-preimage notions are used on fixed input slices; in
+\Cref{cor:second-preimage-rs04} they are reduced explicitly to this
+two-way collision game.
+For fixed byte lengths $a,\mu$, the standard preimage game samples
+$X^* \sample \mathcal{X}_{a,\mu}$ independently of the primitive, computes
+$T^* = \HTW(X^*)$, gives $T^*$ to
+$\mathcal{A}^{\pi,\, \pi^{-1}}$, and returns $1$ iff $\mathcal{A}$ outputs a
+valid input $X$ in the \TW{} domain with $\HTW(X) = T^*$; the advantage is
+$\AdvPreSlice{a}{\mu}_\TW(\mathcal{A})$. The
+everywhere preimage game fixes a target tag
+$T^* \in \bits^{\tauroot}$ before the primitive sampling and returns $1$
+iff $\mathcal{A}(T^*)$ outputs an input $X$ in the domain with
+$\HTW(X) = T^*$, the advantage $\AdvePre_\TW$ taken as the worst case over
+query-independent targets.
+
+\paragraph{Committing games.}
+The \cite{BH22} committing games are instantiated as in
+\Cref{sec:commit-defs}, with no challenger-sampled key. The $s$-way
+CMTDs-$\ell$ (decryption) game has the adversary output a ciphertext
+$C \concat T$ and $s$ tuples $(K_i, U_i, A_i, M_i)$ with pairwise distinct
+$\WiC_\ell$-images, and returns $1$ iff
+$\Dec_{K_i}[\pi](U_i, A_i, C \concat T) = M_i$ for every $i$, with the eager
+length rejection justified by \Cref{alg:dec}
+($\Dec_K(U, A, C \concat T)$ returns $\bot$ or a message of length $\|C\|$);
+its advantage is
+$\Advcmtds{\ell}_\TW(\mathcal{A})$. The CMTs-$\ell$ (encryption) game has
+the adversary output the $s$ tuples alone and returns $1$ iff the
+encryptions $\Enc_{K_i}[\pi](U_i, A_i, M_i)$ are all equal; its advantage is
+$\Advcmts{\ell}_\TW(\mathcal{A})$.
+
 \subsection{Separating Final Tag Inputs}
 
 The tag value is read from a final root transcript input. The next two facts

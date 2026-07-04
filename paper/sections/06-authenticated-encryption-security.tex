@@ -16,6 +16,109 @@ increase the construction work counts but do not change the non-replay
 verification count. All concrete instantiations are summarized in
 \Cref{sec:concrete-security}.
 
+\subsection{AEAD Public Permutation Games}
+\label{sec:aead-games}
+
+The public-permutation games in this section use the primitive, validity, and
+construction-oracle conventions of \Cref{sec:games-pp}. The random oracle
+versions are obtained by the mechanical substitution of \Cref{sec:ro-model}.
+
+\paragraph{All-in-one AE.}
+The all-in-one authenticated encryption game~\cite{RS06} samples
+$K \sample \bits^k$ and compares the real pair
+$(\Enc_K[\pi], \Ver_K[\pi])$ with the ideal pair $(\Rand, \Replay)$.
+On each accepted encryption query $(U, A, M)$, $\Rand$ samples a uniformly
+random byte string of length $\|M\| + \tauroot/8$, parses it as
+$C \concat T$ with $T \in \bits^{\tauroot}$, records $(U, A, C, T)$, and
+returns $C \concat T$; $\Replay$ accepts exactly recorded tuples. Encryption
+queries are nonce-respecting, and
+\[
+  \Advae_\TW(\mathcal{A}) =
+  \bigl|
+    \Pr[\mathcal{A}^{\Enc_K[\pi],\, \Ver_K[\pi],\, \pi,\, \pi^{-1}} \Rightarrow 1]
+    - \Pr[\mathcal{A}^{\Rand,\, \Replay,\, \pi,\, \pi^{-1}} \Rightarrow 1]
+  \bigr|.
+\]
+This all-in-one AE advantage is the single-user case of the multi-user
+real-vs-ideal notion of \Cref{sec:mu-ind}; \Cref{cor:ae} derives it from
+\Cref{thm:mu-ind}.
+
+\paragraph{RUP integrity.}
+The \textsf{INT-RUP} game samples $K \sample \bits^k$ and
+$\pi \sample \Perm(\bits^{1600})$, exposes $\Enc_K[\pi]$,
+$\PDec_K[\pi]$, $\Ver_K[\pi]$, and $(\pi, \pi^{-1})$, and maintains the replay
+table $W$ of encryption outputs. Accepted encryption queries are
+nonce-respecting: an encryption query is rejected if its nonce has appeared in a
+previous accepted encryption query. Plaintext-computing and verification
+queries may use arbitrary nonces. On an accepted encryption query $(U, A, M)$ the
+game returns $\Enc_K[\pi](U, A, M)$, parsed and recorded as $(U, A, C, T)$ in $W$.
+On a valid plaintext-computing query $(U, A, C, T)$ it returns
+$\PDec_K[\pi](U, A, C, T)$, and on an invalid query it returns $\bot$. On a valid
+verification query $(U, A, C, T)$ it returns $\Ver_K[\pi](U, A, C, T)$; if this bit
+is $1$ and $(U, A, C, T) \notin W$ when the query is asked, the game records a
+forgery. Invalid verification queries return $0$. The game returns $1$ iff a
+forgery is recorded, and
+\[
+  \AdvintRUP_\TW(\mathcal{A}) =
+  \Pr[\mathsf{G}^{\mathsf{INT\text{-}RUP}}_\TW(\mathcal{A}) \Rightarrow 1].
+\]
+
+\subsection{Multi-User Setting}
+\label{sec:mu-setting}
+
+This subsection instantiates the mu-ind game of \cite{BT16}
+(\Cref{sec:mu-ind}) for \TW{} in the public permutation model, under
+the primitive convention of \Cref{sec:games-pp}. The challenger
+samples a challenge bit $b \sample \bits$ and a permutation
+$\pi \sample \Perm(\bits^{1600})$, and exposes $(\pi, \pi^{-1})$ as the
+primitive interface in both worlds. The
+adversary $\mathcal{A}$ creates users on demand via $\mathsf{New}$, and
+the game maintains an active-user counter $v$. We write $D$ for an
+execution-uniform cap on the number of $\mathsf{New}$ calls. Equivalently,
+the game may sample independent keys $K_1,\dots,K_D$ at the start of the
+experiment and let the $d$-th $\mathsf{New}$ call activate $K_d$; inactive
+indices are never valid users.
+
+The mu-ind construction oracles inherit the validity convention of
+\Cref{sec:games-pp}. The encryption oracle on input $(d, U, A, M)$
+rejects, without recording, if $(U, A, M)$ is outside the \TW{} encryption
+domain, if $d \notin \{1, \dots, v\}$, or if $(d, U) \in V$; otherwise
+it sets $C = \Enc_{K_d}[\pi](U, A, M)$ when $b = 1$, and samples a
+uniformly random byte string $C$ of length $\|M\| + \tauroot/8$ when
+$b = 0$. The game records
+$(d, U)$ in $V$ and $(d, U, A, C)$ in $W$, and returns $C$. The
+verification oracle on input $(d, U, A, C)$ rejects if $d \notin
+\{1, \dots, v\}$ or if $(U, A, C)$ is not a valid \TW{}
+verification/decryption input; if $(d, U, A, C) \in W$ it returns
+$\mathsf{true}$; if $b = 0$ it returns $\mathsf{false}$; otherwise it
+returns $[\Dec_{K_d}[\pi](U, A, C) \neq \bot]$. Nonce uniqueness is
+enforced per user by the set $V$.
+
+After querying these oracles, $\mathcal{A}$ outputs $b' \in \bits$.
+The mu-ind advantage of $\mathcal{A}$ against \TW{} is
+\[
+  \Advmuind_\TW(\mathcal{A})
+  = |2 \Pr[b' = b] - 1|.
+\]
+A valid verification query is \emph{non-replay} if its tuple is not in
+$W$ when the query is asked; replay hits are answered by the recorded
+transcript and are not counted in the verification-query resource below.
+
+Resource caps split per potential user $d \leq D$: $N^{(d)}$,
+$\qv^{(d)}$, $\nleaf^{(d)}$ are the per-user counts under
+\Cref{sec:resources}, with inactive users contributing zero. The global
+totals $N = \sum_{d=1}^D N^{(d)}$, $\qv = \sum_{d=1}^D \qv^{(d)}$,
+$\nleaf = \sum_{d=1}^D \nleaf^{(d)}$ appear in the final bound: $N$
+through the lift term $\Lift_c(\Ntot)$, and $\nleaf$ and $\qv$ through
+the leaf-collision and verification-tag terms. $\Nprim$
+remains a single shared count over the primitive interface.
+
+The mu-ind treatment applies only to indistinguishability. The
+committing security games already give the adversary control of all
+$s$ keys, so the $s$-way CMTDs-$\ell$ statements of
+\Cref{sec:root-tag-games} are themselves the multi-key committing statement
+and need no separate $\mathsf{mu\text{-}cmt}$ notion.
+
 All random oracle adversaries in this section are flat-RO adversaries
 (\Cref{sec:ro-model}) with the displayed resources, and the flat sponge lift
 transfers each random oracle bound using the derived-adversary cap

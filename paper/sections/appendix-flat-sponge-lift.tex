@@ -29,11 +29,12 @@ construction oracles are independent of the primitive.
 
 \begin{definition}[Single-Stage \TW{} Games]
 \label{def:single-stage-games}
-The \emph{single-stage \TW{} games} are the games of
-\Cref{sec:games-pp,sec:mu-setting} in which one adversary interacts with the
-challenger in a single stage, so that a \cite{BDPV08} replacement applies to
-an entire world's public-permutation transcript at once, including
-deterministic challenger checks after the adversary's final output. They are
+The \emph{single-stage \TW{} games} are the public-permutation games of
+\Cref{sec:root-tag-games,sec:aead-games,sec:mu-setting} in which one
+adversary interacts with the challenger in a single stage, so that a
+\cite{BDPV08} replacement applies to an entire world's public-permutation
+transcript at once, including deterministic challenger checks after the
+adversary's final output. They are
 the $\HTW$ tag hash games (collision and preimage games, standard and
 everywhere), CMTDs-4, CMTs-$\ell$ for $\ell \in \{1,3,4\}$,
 \textsf{INT-RUP}, all-in-one AE, and mu-ind. The win-event games among these
@@ -70,9 +71,9 @@ padded sponge over a random permutation --- after applying the
 $\padtenone$ transcript inputs. The superscript records that both
 simulator directions share the same internal lazy $\ROflat$ table.
 
-The simulator is a proof device: each game of
-\Cref{sec:games-pp,sec:mu-setting} states its advantage over the real
-permutation, and the reduction to the corresponding random oracle model
+The simulator is a proof device: each public-permutation game of
+\Cref{sec:root-tag-games,sec:aead-games,sec:mu-setting} states its advantage
+over the real permutation, and the reduction to the corresponding random oracle model
 adversary passes through intermediate simulator worlds. In those worlds,
 the construction interface is the one specified by the game
 ($(\Rand,\Replay)$, instantiated per user in mu-ind, on the ideal side)
@@ -456,7 +457,8 @@ $\mathsf{W}_1$, the real construction interface with $(\pi,\pi^{-1})$;
 $\mathsf{W}_2$, the flat-RO real construction interface with the
 simulator; $\mathsf{W}_3$, the ideal construction interface with the
 simulator; and $\mathsf{W}_4$, the ideal construction interface with
-$(\pi,\pi^{-1})$. The game of \Cref{sec:games-pp,sec:mu-setting}
+$(\pi,\pi^{-1})$. The real-vs-ideal games of
+\Cref{sec:aead-games,sec:mu-setting}
 compares $\mathsf{W}_1$ with $\mathsf{W}_4$. The step from
 $\mathsf{W}_1$ to $\mathsf{W}_2$ costs at most $\Lift_c(\Ntot)$ as
 above, and under the coupling of \Cref{lem:derived-adversary} the pair

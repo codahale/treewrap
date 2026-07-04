@@ -176,7 +176,7 @@ the ciphertext length on each encryption query and $\Replay$ accepts
 exactly the tuples $\Rand$ produced. The advantage
 $\Advae_\SE(\mathcal{A})$ is the distinguishing advantage between these
 two worlds over nonce-respecting adversaries. This all-in-one notion is
-instantiated for \TW{} in \Cref{sec:games-pp}.
+instantiated for \TW{} in \Cref{sec:aead-games}.
 
 \subsection{Root Tag Hash Security}
 \label{sec:root-tag-defs}
@@ -229,7 +229,7 @@ $m_{a,\mu} = k + \nu + 8a + 8\mu$.
 \end{description}
 The advantages $\AdvColl_\TW$, $\AdvPreSlice{a}{\mu}_\TW$, and
 $\AdvePre_\TW$ are the respective success probabilities, instantiated for
-\TW{} in \Cref{sec:games-pp}. The Pre bound is proved directly in
+\TW{} in \Cref{sec:root-tag-games}. The Pre bound is proved directly in
 \Cref{thm:pre}, while the second-preimage bounds are inherited from Coll
 in \Cref{cor:second-preimage-rs04}. Coll is the binding property of the tag
 taken as a compact commitment to $(K, U, A, M)$, Pre is the random-opening
@@ -282,8 +282,8 @@ $\Advcmts{\ell}_\SE(\mathcal{A})$ are the probabilities that the
 adversary wins the respective game; the parameter $s$ is suppressed
 from the notation when clear from context. The two-tuple case $s = 2$
 is the original CMTD-$\ell$/CMT-$\ell$ pair of \cite[Fig.~4]{BH22}.
-These definitions are instantiated for \TW{} in \Cref{sec:games-pp},
-with the public permutation lift deferred to that section.
+These definitions are instantiated for \TW{} in \Cref{sec:root-tag-games},
+with the public permutation lift supplied by \Cref{app:flat-sponge-lift}.
 
 \paragraph{Relations.}
 \cite[Figs.~4 and~5]{BH22} record the implications among the notions.
