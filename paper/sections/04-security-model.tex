@@ -35,7 +35,11 @@ outside the model.
 \Cref{sec:limitations} discusses the consequences of these exclusions and the
 corresponding open problems, and \Cref{sec:permutation-cryptanalysis} reviews
 the third-party cryptanalysis supporting the random-permutation modeling of
-\Keccakp{}.
+\Keccakp{}. The random-permutation model also abstracts from dedicated
+cryptanalysis of \TW{}'s tree topology, in particular the family of leaf
+initializations sharing $(K,U)$ and differing only by leaf index; that
+mode-level question is identified as future work in
+\Cref{sec:permutation-cryptanalysis}.
 
 \begin{table}[t]
   \centering
