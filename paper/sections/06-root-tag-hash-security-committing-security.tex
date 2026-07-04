@@ -342,7 +342,7 @@ context encryption maps the message to the ciphertext bijectively. So on
 $\neg\badleaf^\star$ Final-Root Input Separation
 (\Cref{prop:final-root-sep}) makes $\flatmap(R_1),\dots,\flatmap(R_s)$
 pairwise distinct. The Root Tag Hash and Target-Hit Bound (\Cref{lem:root-tag-hash},
-part~1) bounds the win under $\neg\badleaf^\star$ by
+item~1) bounds the win under $\neg\badleaf^\star$ by
 $\RootColl_{\tauroot}(\qRO(\mathcal{B}),s)$; adding $\Pr[\badleaf^\star]$
 gives the theorem.
 \end{proof}
@@ -644,7 +644,7 @@ equal messages, hence equal tuples. By Opening Triple Separation
 (\Cref{cor:triple-sep}) the candidates $\flatmap(R_1),\dots,\flatmap(R_s)$
 are pairwise distinct (leaf tag collisions cannot merge them), and every
 accepting check carries the common root tag $T$. The Root Tag Hash and Target-Hit Bound
-(\Cref{lem:root-tag-hash}, part~1) gives
+(\Cref{lem:root-tag-hash}, item~1) gives
 $\Advcmtds{4}_\RO(\mathcal{B}) \leq \RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$.
 \end{proof}
 
@@ -733,7 +733,7 @@ counted in $N$ by \Cref{sec:resources}.
 By the Lift Application corollary (\Cref{cor:lift-application}) for the
 CMTs-$\ell$ game, the derived random oracle adversary $\mathcal{B}$ has
 $\qRO(\mathcal{B}) \leq \Nprim$. The Root Tag Hash and Target-Hit Bound
-(\Cref{lem:root-tag-hash}, part~1) then bounds its win by
+(\Cref{lem:root-tag-hash}, item~1) then bounds its win by
 $\RootColl_{\tauroot}(\qRO(\mathcal{B}), s)$ in the random oracle model,
 which the lift transfers to the public permutation setting at $\Nprim$;
 the encryption checks are construction-internal work counted in $N$, not

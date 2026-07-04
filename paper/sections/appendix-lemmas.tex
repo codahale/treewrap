@@ -476,7 +476,7 @@ instance and the $4$-bit suffix of its final call:
 \item $\Rmsg^-$ / $\Rmsg^+$ (root duplex, suffix \sigmsgmore or \sigmsglast),
 \item $\Lmsg^-(j)$ (leaf-$j$ duplex, suffix \sigmsgmore),
 \item $\Ltag(j)$ (leaf-$j$ duplex, suffix \sigmsglast),
-\item \Ragg (suffix \sigaggmore),
+\item \Ragg (root duplex, suffix \sigaggmore),
 \item $\Rtag$ (root duplex, suffix \sigagglast).
 \end{itemize}
 For any two such prefixes whose bridged flattened inputs are equal, the
@@ -509,7 +509,8 @@ sequence length, hence in their flattened inputs.
 \label{def:keyed-twout}
 For a direct query to $\ROflat$ with input $Y$ and finite length
 $\ell$, define $\KeyedTWOut(Y)$ as a partial map from $\bits^*$ to
-$\bits^k \times \mathcal{C}_{\mathsf{out}}$. The map ignores
+$\bits^k \times \mathcal{C}_{\mathsf{out}}$, where $\mathcal{C}_{\mathsf{out}}$
+is the finite set of output-point classes of \Cref{tab:keyed-twout}. The map ignores
 $\ell$. It returns $(K,\mathcal{C})$ iff
 there exists a typed \TW{} duplex-call prefix $X$ such that
 $Y = \flatmap(X)$, the raw flattened prefix of $X$ parses as a
