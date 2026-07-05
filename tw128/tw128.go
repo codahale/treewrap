@@ -136,7 +136,7 @@ func crypt(key, nonce, ad, dst, src []byte, decrypt bool) [TagSize]byte {
 		return tag
 	}
 
-	g.processMultiChunk(dst, src)
+	g.processChunkedMessage(dst, src)
 
 	// Aggregation phase: leaf tags were absorbed in leaf order; append the
 	// little-endian leaf count and close with AGG_LAST. The closing block's
