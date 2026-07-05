@@ -136,50 +136,65 @@ func crypt(key, nonce, ad, dst, src []byte, decrypt bool) [TagSize]byte {
 		return tag
 	}
 
-	// Lane-0 fusion: chunk 0 has the same kernel-visible block schedule as a
-	// leaf chunk and is contiguous with leaves 1..k-1 in the message, so on
-	// platforms whose kernels hand the permutation state back, the trunk's
-	// chunk-0 phase rides lane 0 of the first kernel call alongside up to
-	// seven leaves, eliminating the serial chunk-0 pass. The fused call
-	// absorbs the leaf tags it produced and advances g.nLeaves, and reports
-	// how many chunks it consumed: k on amd64, 8 or 2 on arm64 (full x8
-	// batch or one NEON pair), and 0 on platforms without a fused path,
-	// where the trunk processes chunk 0 serially instead. processComplete
-	// then continues the cascade with g.nLeaves pre-advanced.
-	fusedChunks := 0
-	if nComplete := (len(src) - ChunkSize) / ChunkSize; nComplete >= 1 {
-		k := min(1+nComplete, 8)
+	// Partial lane-0 fusion: for a message with chunk 0 plus a ragged first leaf,
+	// process their shared full MSG_MORE body blocks together where the platform
+	// has a pair kernel, then finish their different final blocks separately.
+	processedAll := false
+	if len(src) < 2*ChunkSize {
+		tailLen := len(src) - ChunkSize
 		if decrypt {
-			fusedChunks = decryptChunk0Fused(&g, src[:k*ChunkSize], dst[:k*ChunkSize], k)
+			processedAll = decryptChunk0PartialFused(&g, src, dst, tailLen)
 		} else {
-			fusedChunks = encryptChunk0Fused(&g, src[:k*ChunkSize], dst[:k*ChunkSize], k)
+			processedAll = encryptChunk0PartialFused(&g, src, dst, tailLen)
 		}
-		src, dst = src[fusedChunks*ChunkSize:], dst[fusedChunks*ChunkSize:]
-	}
-	if fusedChunks == 0 {
-		// Chunk 0: the trunk message phase, closed with MSG_LAST.
-		g.trunk.bodyMore(dst[:ChunkSize], src[:ChunkSize], decrypt, msgMore)
-		g.trunk.closeBlock(msgLast)
-		src, dst = src[ChunkSize:], dst[ChunkSize:]
 	}
 
-	// Remaining complete leaf chunks, via the SIMD cascade.
-	if n := len(src) / ChunkSize; n > 0 {
-		g.processComplete(dst[:n*ChunkSize], src[:n*ChunkSize], n)
-		src, dst = src[n*ChunkSize:], dst[n*ChunkSize:]
-	}
-
-	// Ragged tail: a final partial leaf of 1..ChunkSize-1 bytes.
-	if len(src) > 0 {
-		var leaf duplex
-		if decrypt {
-			decryptX1(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &leaf)
-		} else {
-			encryptX1(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &leaf)
+	if !processedAll {
+		// Lane-0 fusion: chunk 0 has the same kernel-visible block schedule as a
+		// leaf chunk and is contiguous with leaves 1..k-1 in the message, so on
+		// platforms whose kernels hand the permutation state back, the trunk's
+		// chunk-0 phase rides lane 0 of the first kernel call alongside up to
+		// seven leaves, eliminating the serial chunk-0 pass. The fused call
+		// absorbs the leaf tags it produced and advances g.nLeaves, and reports
+		// how many chunks it consumed: k on amd64, 8 or 2 on arm64 (full x8
+		// batch or one NEON pair), and 0 on platforms without a fused path,
+		// where the trunk processes chunk 0 serially instead. processComplete
+		// then continues the cascade with g.nLeaves pre-advanced.
+		fusedChunks := 0
+		if nComplete := (len(src) - ChunkSize) / ChunkSize; nComplete >= 1 {
+			k := min(1+nComplete, 8)
+			if decrypt {
+				fusedChunks = decryptChunk0Fused(&g, src[:k*ChunkSize], dst[:k*ChunkSize], k)
+			} else {
+				fusedChunks = encryptChunk0Fused(&g, src[:k*ChunkSize], dst[:k*ChunkSize], k)
+			}
+			src, dst = src[fusedChunks*ChunkSize:], dst[fusedChunks*ChunkSize:]
 		}
-		t := leaf.tagBytes()
-		g.trunk.absorbMore(t[:], aggMore)
-		g.nLeaves++
+		if fusedChunks == 0 {
+			// Chunk 0: the trunk message phase, closed with MSG_LAST.
+			g.trunk.bodyMore(dst[:ChunkSize], src[:ChunkSize], decrypt, msgMore)
+			g.trunk.closeBlock(msgLast)
+			src, dst = src[ChunkSize:], dst[ChunkSize:]
+		}
+
+		// Remaining complete leaf chunks, via the SIMD cascade.
+		if n := len(src) / ChunkSize; n > 0 {
+			g.processComplete(dst[:n*ChunkSize], src[:n*ChunkSize], n)
+			src, dst = src[n*ChunkSize:], dst[n*ChunkSize:]
+		}
+
+		// Ragged tail: a final partial leaf of 1..ChunkSize-1 bytes.
+		if len(src) > 0 {
+			var leaf duplex
+			if decrypt {
+				decryptX1(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &leaf)
+			} else {
+				encryptX1(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &leaf)
+			}
+			t := leaf.tagBytes()
+			g.trunk.absorbMore(t[:], aggMore)
+			g.nLeaves++
+		}
 	}
 
 	// Aggregation phase: leaf tags were absorbed in leaf order; append the

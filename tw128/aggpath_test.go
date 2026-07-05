@@ -33,6 +33,7 @@ func TestAggPathAgainstReference(t *testing.T) {
 		// Sizes are k×ChunkSize (8183) ± ε, chosen to exercise the remainder
 		// kernels (7 leaves), full x8 (8 leaves), x8+x1, and multi-x8 (16/21
 		// leaves).
+		{16365, "40c4265bb293f3a0f454b41d0a02ad4f65567527a460a763180879fa00f5d6d8", "4ee67fb6cbfcf15affad0be7025e38da7d7937ab6242e452ab85776c2d9aba07"},
 		{65464, "d7c72a400e48b64e60d7fc7582b8bc71d74857f06e2622061e2c30a06f765b54", "624b7c9180e2be8029582540b9ab664de2a6f420ce74fd1c646bb954b2a9dcd2"},
 		{65465, "cff0c723e8040b6cc4d782995e19250e6db8a398eef4d5e2d3c141d390d1c50a", "6f76553462803d75ce54ccadc07035b798c364e5d188e380d6460829503148b8"},
 		{73647, "5d7d7ad1a33c52dc4b186aef4f5ffa41c639bad24032e994b693e07413651c86", "c251dec84c27cd01f00d1fff04b99ecfab233e20754bc96c477050df9b926892"},

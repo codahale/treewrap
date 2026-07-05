@@ -387,6 +387,60 @@ tw128_dec_arm64_pair_loop:
 	RET
 
 
+// func encryptChunkPairBodyARM64(s *state8, src0, src1, dst0, dst1 *byte, blocks uint64)
+//
+// Processes blocks full rho-byte MSG_MORE blocks for instances 0 and 1, then
+// stores the updated pair state back into s. Go finishes the variable final
+// block for each instance.
+TEXT ·encryptChunkPairBodyARM64(SB), NOSPLIT, $0-48
+	MOVD	s+0(FP), R8
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	src0+8(FP), R2
+	MOVD	src1+16(FP), R3
+	MOVD	dst0+24(FP), R5
+	MOVD	dst1+32(FP), R6
+	MOVD	blocks+40(FP), R4
+
+tw128_enc_arm64_pair_body_loop:
+	ENC_LANES20
+	ENC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_enc_arm64_pair_body_loop
+
+	MOVD	s+0(FP), R8
+	STORE25_STRIDE(R8, 64)
+
+	RET
+
+
+// func decryptChunkPairBodyARM64(s *state8, src0, src1, dst0, dst1 *byte, blocks uint64)
+TEXT ·decryptChunkPairBodyARM64(SB), NOSPLIT, $0-48
+	MOVD	s+0(FP), R8
+	LOAD25_STRIDE(R8, 64)
+
+	MOVD	src0+8(FP), R2
+	MOVD	src1+16(FP), R3
+	MOVD	dst0+24(FP), R5
+	MOVD	dst1+32(FP), R6
+	MOVD	blocks+40(FP), R4
+
+tw128_dec_arm64_pair_body_loop:
+	DEC_LANES20
+	DEC_PARTIAL7
+	MSGMORE_PERMUTE
+
+	SUBS	$1, R4
+	BNE	tw128_dec_arm64_pair_body_loop
+
+	MOVD	s+0(FP), R8
+	STORE25_STRIDE(R8, 64)
+
+	RET
+
+
 // func decryptChunksARM64(s *State8, src, dst *byte, cvs *byte)
 TEXT ·decryptChunksARM64(SB), NOSPLIT, $32-32
 	MOVD	s+0(FP), R0

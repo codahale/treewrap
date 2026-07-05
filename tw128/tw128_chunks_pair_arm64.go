@@ -8,6 +8,12 @@ func encryptChunksPairARM64(s *state8, src0, src1, dst0, dst1, tags *byte)
 //go:noescape
 func decryptChunksPairARM64(s *state8, src0, src1, dst0, dst1, tags *byte)
 
+//go:noescape
+func encryptChunkPairBodyARM64(s *state8, src0, src1, dst0, dst1 *byte, blocks uint64)
+
+//go:noescape
+func decryptChunkPairBodyARM64(s *state8, src0, src1, dst0, dst1 *byte, blocks uint64)
+
 // initChunkPairState initializes instances 0 and 1 of s with INIT_LAST for two
 // consecutive leaf indices, leaving each leaf's first keystream block in its
 // rate. It reuses the x1 init permute (one per leaf) and transposes the two

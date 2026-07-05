@@ -145,6 +145,7 @@ func TestRoundTrip(t *testing.T) {
 		{fmt.Sprintf("%d bytes (chunk-1)", ChunkSize-1), ChunkSize - 1},
 		{fmt.Sprintf("%d bytes (1 chunk)", ChunkSize), ChunkSize},
 		{fmt.Sprintf("%d bytes", ChunkSize+1), ChunkSize + 1},
+		{fmt.Sprintf("%d bytes", ChunkSize*2-1), ChunkSize*2 - 1},
 		{fmt.Sprintf("%d bytes (2 chunks)", ChunkSize*2), ChunkSize * 2},
 		{fmt.Sprintf("%d bytes", ChunkSize*2+1), ChunkSize*2 + 1},
 		{fmt.Sprintf("%d bytes (3 chunks)", ChunkSize*3), ChunkSize * 3},
@@ -275,6 +276,26 @@ func BenchmarkSeal(b *testing.B) {
 	}
 }
 
+func BenchmarkSealBoundaries(b *testing.B) {
+	key := seq(KeySize)
+	nonce := make([]byte, NonceSize)
+	a, err := New(key)
+	if err != nil {
+		b.Fatal(err)
+	}
+	for _, size := range BoundarySizes {
+		pt := make([]byte, size.N)
+		ct := make([]byte, 0, size.N+TagSize)
+		b.Run(size.Name, func(b *testing.B) {
+			b.SetBytes(int64(size.N))
+			b.ReportAllocs()
+			for b.Loop() {
+				ct = a.Seal(ct[:0], nonce, pt, nil)
+			}
+		})
+	}
+}
+
 func BenchmarkAESGCM(b *testing.B) {
 	key := seq(KeySize)
 	block, _ := aes.NewCipher(key[:])
@@ -306,6 +327,31 @@ func BenchmarkOpen(b *testing.B) {
 		// would otherwise shift out off 2 MiB alignment and cost it
 		// transparent-hugepage backing on Linux, slowing the measured
 		// streaming stores by up to a third at 16 MiB.
+		out := make([]byte, 0, size.N)
+		sealed := a.Seal(nil, nonce, pt, nil)
+		b.Run(size.Name, func(b *testing.B) {
+			b.SetBytes(int64(size.N))
+			b.ReportAllocs()
+			for b.Loop() {
+				var err error
+				out, err = a.Open(out[:0], nonce, sealed, nil)
+				if err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
+}
+
+func BenchmarkOpenBoundaries(b *testing.B) {
+	key := seq(KeySize)
+	nonce := make([]byte, NonceSize)
+	a, err := New(key)
+	if err != nil {
+		b.Fatal(err)
+	}
+	for _, size := range BoundarySizes {
+		pt := make([]byte, size.N)
 		out := make([]byte, 0, size.N)
 		sealed := a.Seal(nil, nonce, pt, nil)
 		b.Run(size.Name, func(b *testing.B) {
@@ -368,4 +414,22 @@ var Sizes = []size{
 	{"64KiB", 64 * 1024},
 	{"1MiB", 1024 * 1024},
 	{"16MiB", 16 * 1024 * 1024},
+}
+
+var BoundarySizes = []size{
+	{"0B", 0},
+	{"1B", 1},
+	{"Chunk-1", ChunkSize - 1},
+	{"Chunk", ChunkSize},
+	{"Chunk+1", ChunkSize + 1},
+	{"2Chunk-1", 2*ChunkSize - 1},
+	{"2Chunk", 2 * ChunkSize},
+	{"2Chunk+1", 2*ChunkSize + 1},
+	{"3Chunk-1", 3*ChunkSize - 1},
+	{"3Chunk", 3 * ChunkSize},
+	{"3Chunk+1", 3*ChunkSize + 1},
+	{"4Chunk", 4 * ChunkSize},
+	{"8Chunk", 8 * ChunkSize},
+	{"8Chunk+1", 8*ChunkSize + 1},
+	{"9Chunk", 9 * ChunkSize},
 }
