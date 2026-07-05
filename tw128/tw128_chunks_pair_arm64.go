@@ -24,10 +24,7 @@ func initChunkPairState(s *state8, key, nonce []byte, baseIndex uint64) {
 	d0.initWith(p0[:])
 	p1 := leafInit(key, nonce, baseIndex+1)
 	d1.initWith(p1[:])
-	for lane := range lanes {
-		s.a[lane][0] = d0.a[lane]
-		s.a[lane][1] = d1.a[lane]
-	}
+	initPairStateFromDuplexes(s, &d0, &d1)
 }
 
 // encryptChunkPair encrypts the two complete leaf chunks at indices g.nLeaves+1

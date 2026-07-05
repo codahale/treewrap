@@ -9,10 +9,7 @@ func initChunk0PartialState(s *state8, g *aggregator, leafIndex uint64) {
 	p := leafInit(g.key[:], g.nonce[:], leafIndex)
 	leaf.initWith(p[:])
 
-	for lane := range lanes {
-		s.a[lane][0] = g.trunk.a[lane]
-		s.a[lane][1] = leaf.a[lane]
-	}
+	initPairStateFromDuplexes(s, &g.trunk, &leaf)
 }
 
 func finishChunk0PartialEncrypt(g *aggregator, s *state8, src, dst []byte, tailLen, bodyBlocks int) {

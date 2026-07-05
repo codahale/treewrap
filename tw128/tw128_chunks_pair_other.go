@@ -3,8 +3,8 @@
 package tw128
 
 // encryptChunkPair / decryptChunkPair report false on platforms without a 2-wide
-// chunk kernel, leaving processComplete to fall back to its remainder-kernel and
-// x1 handling.
+// chunk kernel, leaving processCompleteLeaves to fall back to its
+// remainder-kernel and x1 handling.
 
 func encryptChunkPair(_ *aggregator, _, _ []byte) bool { return false }
 

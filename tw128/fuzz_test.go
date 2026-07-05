@@ -7,7 +7,7 @@ import (
 
 // fuzzMaxLen bounds fuzzed message lengths so a single execution stays cheap
 // while still spanning enough chunks to exercise the x8, remainder-kernel, and
-// x1 paths in processComplete (9 leaf chunks plus a ragged tail).
+// x1 paths in processCompleteLeaves (9 leaf chunks plus a ragged tail).
 const fuzzMaxLen = 9*ChunkSize + 4096
 
 // fixedSize returns a deterministic n-byte slice derived from seed (repeating
