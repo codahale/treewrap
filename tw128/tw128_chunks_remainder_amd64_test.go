@@ -9,10 +9,10 @@ import (
 	"github.com/codahale/treewrap/tw128/internal/cpuid"
 )
 
-// TestEncryptChunksRunAVX512 cross-checks the register-resident masked AVX-512
+// TestEncryptLeafRemainderAVX512 cross-checks the register-resident masked AVX-512
 // kernel plus finishEncryptChunksN against the generic 8-wide path for the low n
 // instances (leaf indices 1..n), for every supported remainder width n=2..7.
-func TestEncryptChunksRunAVX512(t *testing.T) {
+func TestEncryptLeafRemainderAVX512(t *testing.T) {
 	if !cpuid.HasAVX512 {
 		t.Skip("no AVX-512 on this host")
 	}
@@ -51,10 +51,10 @@ func TestEncryptChunksRunAVX512(t *testing.T) {
 	}
 }
 
-// TestEncryptChunksRunAVX2 cross-checks the dummy-lane x4 AVX2 kernel plus
+// TestEncryptLeafRemainderAVX2 cross-checks the dummy-lane x4 AVX2 kernel plus
 // finishEncryptChunksN against the generic 8-wide path for the low n instances
 // (leaf indices 1..n), for every supported remainder width n=2..7.
-func TestEncryptChunksRunAVX2(t *testing.T) {
+func TestEncryptLeafRemainderAVX2(t *testing.T) {
 	key := seq(KeySize)
 	nonce := testChunkNonce()
 
@@ -90,8 +90,8 @@ func TestEncryptChunksRunAVX2(t *testing.T) {
 	}
 }
 
-// TestDecryptChunksRunAVX2 is the decrypt counterpart.
-func TestDecryptChunksRunAVX2(t *testing.T) {
+// TestDecryptLeafRemainderAVX2 is the decrypt counterpart.
+func TestDecryptLeafRemainderAVX2(t *testing.T) {
 	key := seq(KeySize)
 	nonce := testChunkNonce()
 
@@ -125,8 +125,8 @@ func TestDecryptChunksRunAVX2(t *testing.T) {
 	}
 }
 
-// TestDecryptChunksRunAVX512 is the decrypt counterpart.
-func TestDecryptChunksRunAVX512(t *testing.T) {
+// TestDecryptLeafRemainderAVX512 is the decrypt counterpart.
+func TestDecryptLeafRemainderAVX512(t *testing.T) {
 	if !cpuid.HasAVX512 {
 		t.Skip("no AVX-512 on this host")
 	}

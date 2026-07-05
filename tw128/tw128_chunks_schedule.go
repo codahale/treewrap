@@ -142,9 +142,9 @@ func (g *aggregator) tryProcessLeafPair(dst, src []byte) bool {
 
 func (g *aggregator) tryProcessLeafRemainder(dst, src []byte, n int) bool {
 	if g.decrypt {
-		return decryptChunkRun(g, src, dst, n)
+		return decryptLeafRemainder(g, src, dst, n)
 	}
-	return encryptChunkRun(g, src, dst, n)
+	return encryptLeafRemainder(g, src, dst, n)
 }
 
 func (g *aggregator) processLeafSerial(dst, src []byte) {

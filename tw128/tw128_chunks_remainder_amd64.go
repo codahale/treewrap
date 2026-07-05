@@ -20,8 +20,8 @@ func encryptChunksBodyAVX2N(s *state8, src, dst *byte, n uint64)
 //go:noescape
 func decryptChunksBodyAVX2N(s *state8, src, dst *byte, n uint64)
 
-// finishEncryptChunksN completes an n-wide chunk encryption after the register-
-// resident AVX-512 body kernel has run the chunkBodyBlocks MSG_MORE rho-blocks:
+// finishEncryptChunksN completes an n-wide chunk encryption after the n-wide
+// body kernel has run the chunkBodyBlocks MSG_MORE rho-blocks:
 // it encrypts the final chunkLastLen-byte block for instances 0..n-1, closes it
 // with MSG_LAST, and extracts the n leaf tags. src and dst hold exactly n
 // chunks; closeBlock permutes all eight instances (n..7 are unused and ignored).
@@ -58,14 +58,14 @@ func finishDecryptChunksN(s *state8, src, dst []byte, tags *[256]byte, n int) {
 	}
 }
 
-// encryptChunkRun encrypts n complete leaf chunks (n in 2..7) at indices
-// g.nLeaves+1 .. g.nLeaves+n in a single pass — register-resident masked
-// gather/scatter on AVX-512, dummy-lane x4 on AVX2 — reading the chunks
+// encryptLeafRemainder encrypts n complete leaf chunks (n in 2..7) at indices
+// g.nLeaves+1 .. g.nLeaves+n in one backend pass: register-resident masked
+// gather/scatter on AVX-512, dummy-lane x4 on AVX2. It reads the chunks
 // directly from src with no scratch buffer, absorbs their leaf tags into the
 // trunk aggregation transcript, and advances the leaf counter. src and dst
 // must each be exactly n*ChunkSize bytes. It reports whether a kernel ran; on
 // amd64 one always does.
-func encryptChunkRun(g *aggregator, src, dst []byte, n int) bool {
+func encryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 	var s state8
 	initChunks(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags [256]byte
@@ -80,8 +80,8 @@ func encryptChunkRun(g *aggregator, src, dst []byte, n int) bool {
 	return true
 }
 
-// decryptChunkRun is the decrypt counterpart of encryptChunkRun.
-func decryptChunkRun(g *aggregator, src, dst []byte, n int) bool {
+// decryptLeafRemainder is the decrypt counterpart of encryptLeafRemainder.
+func decryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 	var s state8
 	initChunks(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags [256]byte

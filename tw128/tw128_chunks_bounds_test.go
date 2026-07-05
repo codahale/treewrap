@@ -29,9 +29,9 @@ func guardedTail(t *testing.T, n int) []byte {
 	return mem[total-page-n : total-page]
 }
 
-// TestChunkKernelsStayInBounds runs the fused chunk kernels with src and dst
-// ending flush against an unmapped page, so a kernel that touches any byte
-// past the chunks it was given faults the test process.
+// TestChunkKernelsStayInBounds runs the chunk backend kernels with src and dst
+// ending flush against an unmapped page, so a kernel that touches any byte past
+// the chunks it was given faults the test process.
 func TestChunkKernelsStayInBounds(t *testing.T) {
 	key := seq(KeySize)
 	nonce := seq(NonceSize)
@@ -58,7 +58,7 @@ func TestChunkKernelsStayInBounds(t *testing.T) {
 		decryptChunkPair(&g, src, dst)
 	})
 
-	t.Run("run", func(t *testing.T) {
+	t.Run("remainder", func(t *testing.T) {
 		for rem := 2; rem <= 7; rem++ {
 			n := rem * ChunkSize
 			src := guardedTail(t, n)
@@ -67,12 +67,12 @@ func TestChunkKernelsStayInBounds(t *testing.T) {
 			var g aggregator
 			copy(g.key[:], key)
 			copy(g.nonce[:], nonce)
-			encryptChunkRun(&g, src, dst, rem)
-			decryptChunkRun(&g, src, dst, rem)
+			encryptLeafRemainder(&g, src, dst, rem)
+			decryptLeafRemainder(&g, src, dst, rem)
 		}
 	})
 
-	t.Run("fused", func(t *testing.T) {
+	t.Run("chunk0", func(t *testing.T) {
 		for _, k := range []int{2, 8} {
 			n := k * ChunkSize
 			src := guardedTail(t, n)
