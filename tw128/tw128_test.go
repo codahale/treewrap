@@ -428,8 +428,11 @@ var BoundarySizes = []size{
 	{"3Chunk-1", 3*ChunkSize - 1},
 	{"3Chunk", 3 * ChunkSize},
 	{"3Chunk+1", 3*ChunkSize + 1},
+	{"4Chunk-1", 4*ChunkSize - 1},
 	{"4Chunk", 4 * ChunkSize},
+	{"6Chunk-1", 6*ChunkSize - 1},
 	{"8Chunk", 8 * ChunkSize},
 	{"8Chunk+1", 8*ChunkSize + 1},
 	{"9Chunk", 9 * ChunkSize},
+	{"10Chunk-1", 10*ChunkSize - 1},
 }

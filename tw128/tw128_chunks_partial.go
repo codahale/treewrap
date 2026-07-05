@@ -12,9 +12,19 @@ func initChunk0PartialState(s *state8, g *aggregator, leafIndex uint64) {
 	initPairStateFromDuplexes(s, &g.trunk, &leaf)
 }
 
+func initCompleteLeafPartialState(s *state8, g *aggregator) {
+	var full, partial duplex
+	p := leafInit(g.key[:], g.nonce[:], g.nLeaves+1)
+	full.initWith(p[:])
+	p = leafInit(g.key[:], g.nonce[:], g.nLeaves+2)
+	partial.initWith(p[:])
+
+	initPairStateFromDuplexes(s, &full, &partial)
+}
+
 func finishChunk0PartialEncrypt(g *aggregator, s *state8, src, dst []byte, tailLen, bodyBlocks int) {
 	var trunk, leaf duplex
-	extractChunk0PartialState(&trunk, &leaf, s)
+	extractPairState(&trunk, &leaf, s)
 
 	off := bodyBlocks * rhoBytes
 	trunk.bodyMore(dst[off:ChunkSize], src[off:ChunkSize], false, msgMore)
@@ -29,7 +39,7 @@ func finishChunk0PartialEncrypt(g *aggregator, s *state8, src, dst []byte, tailL
 
 func finishChunk0PartialDecrypt(g *aggregator, s *state8, src, dst []byte, tailLen, bodyBlocks int) {
 	var trunk, leaf duplex
-	extractChunk0PartialState(&trunk, &leaf, s)
+	extractPairState(&trunk, &leaf, s)
 
 	off := bodyBlocks * rhoBytes
 	trunk.bodyMore(dst[off:ChunkSize], src[off:ChunkSize], true, msgMore)
@@ -42,10 +52,40 @@ func finishChunk0PartialDecrypt(g *aggregator, s *state8, src, dst []byte, tailL
 	finishChunk0Partial(g, &trunk, &leaf)
 }
 
-func extractChunk0PartialState(trunk, leaf *duplex, s *state8) {
+func finishCompleteLeafPartialEncrypt(g *aggregator, s *state8, src, dst []byte, tailLen, bodyBlocks int) {
+	var full, partial duplex
+	extractPairState(&full, &partial, s)
+
+	off := bodyBlocks * rhoBytes
+	full.bodyMore(dst[off:ChunkSize], src[off:ChunkSize], false, msgMore)
+	full.closeBlock(msgLast)
+
+	tailOff := ChunkSize + off
+	partial.bodyMore(dst[tailOff:ChunkSize+tailLen], src[tailOff:ChunkSize+tailLen], false, msgMore)
+	partial.closeBlock(msgLast)
+
+	finishCompleteLeafPartial(g, &full, &partial)
+}
+
+func finishCompleteLeafPartialDecrypt(g *aggregator, s *state8, src, dst []byte, tailLen, bodyBlocks int) {
+	var full, partial duplex
+	extractPairState(&full, &partial, s)
+
+	off := bodyBlocks * rhoBytes
+	full.bodyMore(dst[off:ChunkSize], src[off:ChunkSize], true, msgMore)
+	full.closeBlock(msgLast)
+
+	tailOff := ChunkSize + off
+	partial.bodyMore(dst[tailOff:ChunkSize+tailLen], src[tailOff:ChunkSize+tailLen], true, msgMore)
+	partial.closeBlock(msgLast)
+
+	finishCompleteLeafPartial(g, &full, &partial)
+}
+
+func extractPairState(d0, d1 *duplex, s *state8) {
 	for lane := range lanes {
-		trunk.a[lane] = s.a[lane][0]
-		leaf.a[lane] = s.a[lane][1]
+		d0.a[lane] = s.a[lane][0]
+		d1.a[lane] = s.a[lane][1]
 	}
 }
 
@@ -54,4 +94,12 @@ func finishChunk0Partial(g *aggregator, trunk, leaf *duplex) {
 	tag := leaf.tagBytes()
 	g.trunk.absorbMore(tag[:], aggMore)
 	g.nLeaves++
+}
+
+func finishCompleteLeafPartial(g *aggregator, full, partial *duplex) {
+	tag := full.tagBytes()
+	g.trunk.absorbMore(tag[:], aggMore)
+	tag = partial.tagBytes()
+	g.trunk.absorbMore(tag[:], aggMore)
+	g.nLeaves += 2
 }

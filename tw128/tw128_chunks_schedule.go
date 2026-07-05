@@ -11,9 +11,22 @@ func (g *aggregator) processChunkedMessage(dst, src []byte) {
 	consumed := g.processChunk0AndCompleteLeaves(dst, src)
 	src, dst = src[consumed*ChunkSize:], dst[consumed*ChunkSize:]
 
-	if n := len(src) / ChunkSize; n > 0 {
-		g.processCompleteLeafChunks(dst[:n*ChunkSize], src[:n*ChunkSize], n)
-		src, dst = src[n*ChunkSize:], dst[n*ChunkSize:]
+	nComplete := len(src) / ChunkSize
+	tailLen := len(src) - nComplete*ChunkSize
+	if tailLen > 0 && nComplete > 0 && canFuseCompleteLeafWithPartialLeaf(tailLen) {
+		if n := nComplete - 1; n > 0 {
+			g.processCompleteLeafChunks(dst[:n*ChunkSize], src[:n*ChunkSize], n)
+			src, dst = src[n*ChunkSize:], dst[n*ChunkSize:]
+		}
+		if g.tryFuseCompleteLeafWithPartialLeaf(dst, src, tailLen) {
+			return
+		}
+		nComplete = 1
+	}
+
+	if nComplete > 0 {
+		g.processCompleteLeafChunks(dst[:nComplete*ChunkSize], src[:nComplete*ChunkSize], nComplete)
+		src, dst = src[nComplete*ChunkSize:], dst[nComplete*ChunkSize:]
 	}
 
 	if len(src) > 0 {
@@ -34,6 +47,13 @@ func (g *aggregator) tryFuseChunk0PartialLeaf(dst, src []byte) bool {
 		return decryptChunk0PartialFused(g, src, dst, tailLen)
 	}
 	return encryptChunk0PartialFused(g, src, dst, tailLen)
+}
+
+func (g *aggregator) tryFuseCompleteLeafWithPartialLeaf(dst, src []byte, tailLen int) bool {
+	if g.decrypt {
+		return decryptCompleteLeafPartialFused(g, src, dst, tailLen)
+	}
+	return encryptCompleteLeafPartialFused(g, src, dst, tailLen)
 }
 
 // processChunk0AndCompleteLeaves handles chunk 0 and any immediately following

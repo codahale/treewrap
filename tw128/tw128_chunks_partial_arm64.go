@@ -2,6 +2,10 @@
 
 package tw128
 
+func canFuseCompleteLeafWithPartialLeaf(tailLen int) bool {
+	return partialBodyBlocks(tailLen) != 0
+}
+
 func encryptChunk0PartialFused(g *aggregator, src, dst []byte, tailLen int) bool {
 	bodyBlocks := partialBodyBlocks(tailLen)
 	if bodyBlocks == 0 {
@@ -27,5 +31,33 @@ func decryptChunk0PartialFused(g *aggregator, src, dst []byte, tailLen int) bool
 	decryptChunkPairBodyARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], uint64(bodyBlocks))
 
 	finishChunk0PartialDecrypt(g, &s, src, dst, tailLen, bodyBlocks)
+	return true
+}
+
+func encryptCompleteLeafPartialFused(g *aggregator, src, dst []byte, tailLen int) bool {
+	bodyBlocks := partialBodyBlocks(tailLen)
+	if bodyBlocks == 0 {
+		return false
+	}
+
+	var s state8
+	initCompleteLeafPartialState(&s, g)
+	encryptChunkPairBodyARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], uint64(bodyBlocks))
+
+	finishCompleteLeafPartialEncrypt(g, &s, src, dst, tailLen, bodyBlocks)
+	return true
+}
+
+func decryptCompleteLeafPartialFused(g *aggregator, src, dst []byte, tailLen int) bool {
+	bodyBlocks := partialBodyBlocks(tailLen)
+	if bodyBlocks == 0 {
+		return false
+	}
+
+	var s state8
+	initCompleteLeafPartialState(&s, g)
+	decryptChunkPairBodyARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], uint64(bodyBlocks))
+
+	finishCompleteLeafPartialDecrypt(g, &s, src, dst, tailLen, bodyBlocks)
 	return true
 }
