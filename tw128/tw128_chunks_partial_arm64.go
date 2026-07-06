@@ -16,7 +16,7 @@ func encryptChunk0PartialFused(g *aggregator, src, dst []byte, tailLen int) bool
 	initChunk0PartialState(&s, g, 1)
 	encryptChunkPairBodyARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], uint64(bodyBlocks))
 
-	finishChunk0PartialEncrypt(g, &s, src, dst, tailLen, bodyBlocks)
+	finishChunk0PartialFused(g, &s, src, dst, tailLen, bodyBlocks, false)
 	return true
 }
 
@@ -30,7 +30,7 @@ func decryptChunk0PartialFused(g *aggregator, src, dst []byte, tailLen int) bool
 	initChunk0PartialState(&s, g, 1)
 	decryptChunkPairBodyARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], uint64(bodyBlocks))
 
-	finishChunk0PartialDecrypt(g, &s, src, dst, tailLen, bodyBlocks)
+	finishChunk0PartialFused(g, &s, src, dst, tailLen, bodyBlocks, true)
 	return true
 }
 
@@ -44,7 +44,7 @@ func encryptCompleteLeafPartialFused(g *aggregator, src, dst []byte, tailLen int
 	initCompleteLeafPartialState(&s, g)
 	encryptChunkPairBodyARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], uint64(bodyBlocks))
 
-	finishCompleteLeafPartialEncrypt(g, &s, src, dst, tailLen, bodyBlocks)
+	finishCompleteLeafPartialFused(g, &s, src, dst, tailLen, bodyBlocks, false)
 	return true
 }
 
@@ -58,6 +58,6 @@ func decryptCompleteLeafPartialFused(g *aggregator, src, dst []byte, tailLen int
 	initCompleteLeafPartialState(&s, g)
 	decryptChunkPairBodyARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], uint64(bodyBlocks))
 
-	finishCompleteLeafPartialDecrypt(g, &s, src, dst, tailLen, bodyBlocks)
+	finishCompleteLeafPartialFused(g, &s, src, dst, tailLen, bodyBlocks, true)
 	return true
 }

@@ -18,64 +18,30 @@ func initCompleteLeafPartialState(s *state8, g *aggregator) {
 	initPairStateFromDuplexes(s, &full, &partial)
 }
 
-func finishChunk0PartialEncrypt(g *aggregator, s *state8, src, dst []byte, tailLen, bodyBlocks int) {
+func finishChunk0PartialFused(g *aggregator, s *state8, src, dst []byte, tailLen, bodyBlocks int, decrypt bool) {
 	var trunk, leaf duplex
 	extractPairState(&trunk, &leaf, s)
 
-	off := bodyBlocks * rhoBytes
-	trunk.bodyMore(dst[off:ChunkSize], src[off:ChunkSize], false, msgMore)
-	trunk.closeBlock(msgLast)
-
-	tailOff := ChunkSize + off
-	leaf.bodyMore(dst[tailOff:ChunkSize+tailLen], src[tailOff:ChunkSize+tailLen], false, msgMore)
-	leaf.closeBlock(msgLast)
-
-	finishChunk0Partial(g, &trunk, &leaf)
+	finishPartialBodies(&trunk, &leaf, src, dst, tailLen, bodyBlocks, decrypt)
+	absorbChunk0Partial(g, &trunk, &leaf)
 }
 
-func finishChunk0PartialDecrypt(g *aggregator, s *state8, src, dst []byte, tailLen, bodyBlocks int) {
-	var trunk, leaf duplex
-	extractPairState(&trunk, &leaf, s)
-
-	off := bodyBlocks * rhoBytes
-	trunk.bodyMore(dst[off:ChunkSize], src[off:ChunkSize], true, msgMore)
-	trunk.closeBlock(msgLast)
-
-	tailOff := ChunkSize + off
-	leaf.bodyMore(dst[tailOff:ChunkSize+tailLen], src[tailOff:ChunkSize+tailLen], true, msgMore)
-	leaf.closeBlock(msgLast)
-
-	finishChunk0Partial(g, &trunk, &leaf)
-}
-
-func finishCompleteLeafPartialEncrypt(g *aggregator, s *state8, src, dst []byte, tailLen, bodyBlocks int) {
+func finishCompleteLeafPartialFused(g *aggregator, s *state8, src, dst []byte, tailLen, bodyBlocks int, decrypt bool) {
 	var full, partial duplex
 	extractPairState(&full, &partial, s)
 
-	off := bodyBlocks * rhoBytes
-	full.bodyMore(dst[off:ChunkSize], src[off:ChunkSize], false, msgMore)
-	full.closeBlock(msgLast)
-
-	tailOff := ChunkSize + off
-	partial.bodyMore(dst[tailOff:ChunkSize+tailLen], src[tailOff:ChunkSize+tailLen], false, msgMore)
-	partial.closeBlock(msgLast)
-
-	finishCompleteLeafPartial(g, &full, &partial)
+	finishPartialBodies(&full, &partial, src, dst, tailLen, bodyBlocks, decrypt)
+	absorbCompleteLeafPartial(g, &full, &partial)
 }
 
-func finishCompleteLeafPartialDecrypt(g *aggregator, s *state8, src, dst []byte, tailLen, bodyBlocks int) {
-	var full, partial duplex
-	extractPairState(&full, &partial, s)
-
+func finishPartialBodies(d0, d1 *duplex, src, dst []byte, tailLen, bodyBlocks int, decrypt bool) {
 	off := bodyBlocks * rhoBytes
-	full.bodyMore(dst[off:ChunkSize], src[off:ChunkSize], true, msgMore)
-	full.closeBlock(msgLast)
+	d0.bodyMore(dst[off:ChunkSize], src[off:ChunkSize], decrypt, msgMore)
+	d0.closeBlock(msgLast)
 
 	tailOff := ChunkSize + off
-	partial.bodyMore(dst[tailOff:ChunkSize+tailLen], src[tailOff:ChunkSize+tailLen], true, msgMore)
-	partial.closeBlock(msgLast)
-
-	finishCompleteLeafPartial(g, &full, &partial)
+	d1.bodyMore(dst[tailOff:ChunkSize+tailLen], src[tailOff:ChunkSize+tailLen], decrypt, msgMore)
+	d1.closeBlock(msgLast)
 }
 
 func extractPairState(d0, d1 *duplex, s *state8) {
@@ -85,13 +51,13 @@ func extractPairState(d0, d1 *duplex, s *state8) {
 	}
 }
 
-func finishChunk0Partial(g *aggregator, trunk, leaf *duplex) {
+func absorbChunk0Partial(g *aggregator, trunk, leaf *duplex) {
 	g.trunk = *trunk
 	tag := leaf.tagBytes()
 	g.absorbLeafTags(tag[:], 1)
 }
 
-func finishCompleteLeafPartial(g *aggregator, full, partial *duplex) {
+func absorbCompleteLeafPartial(g *aggregator, full, partial *duplex) {
 	tag := full.tagBytes()
 	g.absorbLeafTags(tag[:], 1)
 	tag = partial.tagBytes()
