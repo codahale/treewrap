@@ -10,8 +10,8 @@ import (
 )
 
 // TestEncryptLeafRemainderAVX512 cross-checks the register-resident masked AVX-512
-// kernel plus finishEncryptChunksN against the generic 8-wide path for the low n
-// instances (leaf indices 1..n), for every supported remainder width n=2..7.
+// kernel plus finishEncryptChunkLanes against the generic 8-wide path for the
+// low n instances (leaf indices 1..n), for every supported remainder width n=2..7.
 func TestEncryptLeafRemainderAVX512(t *testing.T) {
 	if !cpuid.HasAVX512 {
 		t.Skip("no AVX-512 on this host")
@@ -40,7 +40,7 @@ func TestEncryptLeafRemainderAVX512(t *testing.T) {
 		dst := make([]byte, n*chunkSize)
 		var tags leafTagBuffer
 		encryptChunksBodyAVX512N(&sq, &src[0], &dst[0], uint64(n))
-		finishEncryptChunksN(&sq, src, dst, &tags, n)
+		finishEncryptChunkLanes(&sq, src, dst, &tags, n)
 
 		if !bytes.Equal(dst, refDst[:n*chunkSize]) {
 			t.Errorf("n=%d: ciphertext mismatch at byte %d", n, firstMismatch(dst, refDst[:n*chunkSize]))
@@ -52,7 +52,7 @@ func TestEncryptLeafRemainderAVX512(t *testing.T) {
 }
 
 // TestEncryptLeafRemainderAVX2 cross-checks the dummy-lane x4 AVX2 kernel plus
-// finishEncryptChunksN against the generic 8-wide path for the low n instances
+// finishEncryptChunkLanes against the generic 8-wide path for the low n instances
 // (leaf indices 1..n), for every supported remainder width n=2..7.
 func TestEncryptLeafRemainderAVX2(t *testing.T) {
 	key := seq(KeySize)
@@ -79,7 +79,7 @@ func TestEncryptLeafRemainderAVX2(t *testing.T) {
 		dst := make([]byte, n*chunkSize)
 		var tags leafTagBuffer
 		encryptChunksBodyAVX2N(&sq, &src[0], &dst[0], uint64(n))
-		finishEncryptChunksN(&sq, src, dst, &tags, n)
+		finishEncryptChunkLanes(&sq, src, dst, &tags, n)
 
 		if !bytes.Equal(dst, refDst[:n*chunkSize]) {
 			t.Errorf("n=%d: ciphertext mismatch at byte %d", n, firstMismatch(dst, refDst[:n*chunkSize]))
@@ -114,7 +114,7 @@ func TestDecryptLeafRemainderAVX2(t *testing.T) {
 		dst := make([]byte, n*chunkSize)
 		var tags leafTagBuffer
 		decryptChunksBodyAVX2N(&sq, &src[0], &dst[0], uint64(n))
-		finishDecryptChunksN(&sq, src, dst, &tags, n)
+		finishDecryptChunkLanes(&sq, src, dst, &tags, n)
 
 		if !bytes.Equal(dst, refDst[:n*chunkSize]) {
 			t.Errorf("n=%d: plaintext mismatch at byte %d", n, firstMismatch(dst, refDst[:n*chunkSize]))
@@ -152,7 +152,7 @@ func TestDecryptLeafRemainderAVX512(t *testing.T) {
 		dst := make([]byte, n*chunkSize)
 		var tags leafTagBuffer
 		decryptChunksBodyAVX512N(&sq, &src[0], &dst[0], uint64(n))
-		finishDecryptChunksN(&sq, src, dst, &tags, n)
+		finishDecryptChunkLanes(&sq, src, dst, &tags, n)
 
 		if !bytes.Equal(dst, refDst[:n*chunkSize]) {
 			t.Errorf("n=%d: plaintext mismatch at byte %d", n, firstMismatch(dst, refDst[:n*chunkSize]))

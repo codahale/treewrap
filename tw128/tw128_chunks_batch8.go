@@ -106,32 +106,43 @@ func decryptLeafBatch8Generic(s *state8, src, dst []byte, tags *leafTagBuffer) {
 	finishDecryptLeafBatch8(s, src, dst, tags)
 }
 
-// finishEncryptLeafBatch8 completes the 8-way chunk encryption after the
+// finishEncryptLeafBatch8 completes the 8-way leaf batch encryption after the
+// chunkBodyBlocks MSG_MORE rho-blocks have been processed.
+func finishEncryptLeafBatch8(s *state8, src, dst []byte, tags *leafTagBuffer) {
+	finishEncryptChunkLanes(s, src, dst, tags, 8)
+}
+
+// finishDecryptLeafBatch8 is the decrypt counterpart of finishEncryptLeafBatch8.
+func finishDecryptLeafBatch8(s *state8, src, dst []byte, tags *leafTagBuffer) {
+	finishDecryptChunkLanes(s, src, dst, tags, 8)
+}
+
+// finishEncryptChunkLanes completes active chunk lanes after the
 // chunkBodyBlocks MSG_MORE rho-blocks have been processed (and the state stored
 // into s): it encrypts the final chunkLastLen-byte block, closes it with
-// MSG_LAST, and extracts the 8 leaf tags. The architecture body kernels delegate
-// this final block to this routine so its byte-granular handling stays in tested
-// Go. When ChunkSize is an exact multiple of rhoBytes the final block is a full
-// rho-block (chunkLastLen == rhoBytes).
-func finishEncryptLeafBatch8(s *state8, src, dst []byte, tags *leafTagBuffer) {
+// MSG_LAST, and extracts the active tags. The architecture body kernels
+// delegate this final block to this routine so its byte-granular handling stays
+// in tested Go. When ChunkSize is an exact multiple of rhoBytes the final block
+// is a full rho-block (chunkLastLen == rhoBytes).
+func finishEncryptChunkLanes(s *state8, src, dst []byte, tags *leafTagBuffer, n int) {
 	off := chunkBodyBlocks * rhoBytes
-	for inst := range 8 {
+	for inst := range n {
 		base := inst*ChunkSize + off
 		s.encryptBlock(inst, src[base:base+chunkLastLen], dst[base:base+chunkLastLen])
 	}
 	s.pos = chunkLastLen
 	s.closeBlock(msgLast)
-	extractLeafBatch8Tags(s, tags)
+	extractLeafTagsN(s, tags, n)
 }
 
-// finishDecryptLeafBatch8 is the decrypt counterpart of finishEncryptLeafBatch8.
-func finishDecryptLeafBatch8(s *state8, src, dst []byte, tags *leafTagBuffer) {
+// finishDecryptChunkLanes is the decrypt counterpart of finishEncryptChunkLanes.
+func finishDecryptChunkLanes(s *state8, src, dst []byte, tags *leafTagBuffer, n int) {
 	off := chunkBodyBlocks * rhoBytes
-	for inst := range 8 {
+	for inst := range n {
 		base := inst*ChunkSize + off
 		s.decryptBlock(inst, src[base:base+chunkLastLen], dst[base:base+chunkLastLen])
 	}
 	s.pos = chunkLastLen
 	s.closeBlock(msgLast)
-	extractLeafBatch8Tags(s, tags)
+	extractLeafTagsN(s, tags, n)
 }

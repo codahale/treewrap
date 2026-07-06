@@ -34,34 +34,6 @@ func decryptChunksBodyN(s *state8, src, dst []byte, n int) {
 	}
 }
 
-// finishEncryptChunksN completes an n-wide chunk encryption after the n-wide
-// body kernel has run the chunkBodyBlocks MSG_MORE rho-blocks:
-// it encrypts the final chunkLastLen-byte block for instances 0..n-1, closes it
-// with MSG_LAST, and extracts the n leaf tags. src and dst hold exactly n
-// chunks; closeBlock permutes all eight instances (n..7 are unused and ignored).
-func finishEncryptChunksN(s *state8, src, dst []byte, tags *leafTagBuffer, n int) {
-	off := chunkBodyBlocks * rhoBytes
-	for inst := range n {
-		base := inst*ChunkSize + off
-		s.encryptBlock(inst, src[base:base+chunkLastLen], dst[base:base+chunkLastLen])
-	}
-	s.pos = chunkLastLen
-	s.closeBlock(msgLast)
-	extractLeafTagsN(s, tags, n)
-}
-
-// finishDecryptChunksN is the decrypt counterpart of finishEncryptChunksN.
-func finishDecryptChunksN(s *state8, src, dst []byte, tags *leafTagBuffer, n int) {
-	off := chunkBodyBlocks * rhoBytes
-	for inst := range n {
-		base := inst*ChunkSize + off
-		s.decryptBlock(inst, src[base:base+chunkLastLen], dst[base:base+chunkLastLen])
-	}
-	s.pos = chunkLastLen
-	s.closeBlock(msgLast)
-	extractLeafTagsN(s, tags, n)
-}
-
 // encryptLeafRemainder encrypts n complete leaf chunks (n in 2..7) at indices
 // g.nLeaves+1 .. g.nLeaves+n in one backend pass: register-resident masked
 // gather/scatter on AVX-512, dummy-lane x4 on AVX2. It reads the chunks
@@ -74,7 +46,7 @@ func encryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 	initLeafBatch8(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags leafTagBuffer
 	encryptChunksBodyN(&s, src, dst, n)
-	finishEncryptChunksN(&s, src, dst, &tags, n)
+	finishEncryptChunkLanes(&s, src, dst, &tags, n)
 	g.absorbLeafTags(tags[:n*leafTagSize], n)
 	return true
 }
@@ -85,7 +57,7 @@ func decryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 	initLeafBatch8(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags leafTagBuffer
 	decryptChunksBodyN(&s, src, dst, n)
-	finishDecryptChunksN(&s, src, dst, &tags, n)
+	finishDecryptChunkLanes(&s, src, dst, &tags, n)
 	g.absorbLeafTags(tags[:n*leafTagSize], n)
 	return true
 }

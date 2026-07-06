@@ -28,7 +28,7 @@ func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 		encryptLeafBatch8Arch(&s, src, dst, &tags)
 	} else {
 		encryptChunksBodyN(&s, src, dst, k)
-		finishEncryptChunksN(&s, src, dst, &tags, k)
+		finishEncryptChunkLanes(&s, src, dst, &tags, k)
 	}
 
 	finishChunk0Lanes(g, &s, tags[:], k)
@@ -45,7 +45,7 @@ func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 		decryptLeafBatch8Arch(&s, src, dst, &tags)
 	} else {
 		decryptChunksBodyN(&s, src, dst, k)
-		finishDecryptChunksN(&s, src, dst, &tags, k)
+		finishDecryptChunkLanes(&s, src, dst, &tags, k)
 	}
 
 	finishChunk0Lanes(g, &s, tags[:], k)

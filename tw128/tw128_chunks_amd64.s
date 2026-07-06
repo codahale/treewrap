@@ -200,7 +200,7 @@
 // gathers/scatters only the low n lanes (mask K2), reading the n chunks
 // directly from src/dst with no scratch buffer. Lanes n..7 are independent
 // garbage instances and are never read or written. The tail block and tags
-// are completed by finishEncryptChunksN in Go.
+// are completed by finishEncryptChunkLanes in Go.
 //
 // Gathers are the right tool below full width: a masked variant of the
 // transposed kernel (per-chunk mask registers on the tile loads/stores) was
@@ -995,7 +995,7 @@ tw128_dec_avx2_final_b:
 // so inactive instances read and write only the dummy block — no memory access
 // past the remainder — and run as independent garbage instances, ignored. When
 // n <= 4 the upper half is skipped entirely: instances 4..7 keep their init
-// state in s, which finishEncryptChunksN permutes but never extracts.
+// state in s, which finishEncryptChunkLanes permutes but never extracts.
 //
 // Frame: encryptChunksBodyAVX2's layout plus 1680-1711 = 4 per-instance
 // strides, 1712-1879 = dummy block, 1880 = n.
