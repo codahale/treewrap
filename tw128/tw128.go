@@ -107,6 +107,16 @@ func crypt(key, nonce, ad, dst, src []byte, decrypt bool) [TagSize]byte {
 	checkSize("key", key, KeySize)
 	checkSize("nonce", nonce, NonceSize)
 
+	g := initAggregator(key, nonce, ad, decrypt)
+	if len(src) <= ChunkSize {
+		return g.processTrunkOnlyMessage(dst, src)
+	}
+
+	g.processChunkedMessage(dst, src)
+	return g.finishAggregation()
+}
+
+func initAggregator(key, nonce, ad []byte, decrypt bool) aggregator {
 	var g aggregator
 	copy(g.key[:], key)
 	copy(g.nonce[:], nonce)
@@ -123,21 +133,21 @@ func crypt(key, nonce, ad, dst, src []byte, decrypt bool) [TagSize]byte {
 		g.trunk.absorbMore(ad, adMore)
 		g.trunk.closeBlock(adLast)
 	}
+	return g
+}
 
-	// A message that fits in chunk 0 (including the empty message) is the
-	// trunk message phase alone, closed with MSG_LAST, and the aggregation
-	// phase is elided: the closing MSG_LAST block emits the root tag
-	// directly, mirroring a leaf.
-	if len(src) <= ChunkSize {
-		g.trunk.bodyMore(dst, src, decrypt, msgMore)
-		g.trunk.closeBlock(msgLast)
-		var tag [TagSize]byte
-		g.trunk.extractTag(&tag)
-		return tag
-	}
+// processTrunkOnlyMessage handles a message that fits in chunk 0, including
+// the empty message. It closes the trunk message phase with MSG_LAST and elides
+// aggregation; the closing block emits the root tag directly, mirroring a leaf.
+func (g *aggregator) processTrunkOnlyMessage(dst, src []byte) [TagSize]byte {
+	g.trunk.bodyMore(dst, src, g.decrypt, msgMore)
+	g.trunk.closeBlock(msgLast)
+	var tag [TagSize]byte
+	g.trunk.extractTag(&tag)
+	return tag
+}
 
-	g.processChunkedMessage(dst, src)
-
+func (g *aggregator) finishAggregation() [TagSize]byte {
 	// Aggregation phase: leaf tags were absorbed in leaf order; append the
 	// little-endian leaf count and close with AGG_LAST. The closing block's
 	// keystream prefix is the root tag.
