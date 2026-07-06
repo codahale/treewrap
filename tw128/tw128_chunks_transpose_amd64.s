@@ -7,7 +7,7 @@
 // friendly sequential access.
 //
 // The 12-round permutation and the tail block / tag extraction are shared with
-// the rest of the package (permute_amd64_avx512.h, finish{Encrypt,Decrypt}Chunks).
+// the rest of the package (permute_amd64_avx512.h, finish{Encrypt,Decrypt}LeafBatch8).
 
 //go:build !purego
 

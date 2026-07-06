@@ -47,7 +47,7 @@ func finishEncryptChunksN(s *state8, src, dst []byte, tags *[256]byte, n int) {
 	}
 	s.pos = chunkLastLen
 	s.closeBlock(msgLast)
-	extractChunkTagsN(s, tags, n)
+	extractLeafTagsN(s, tags, n)
 }
 
 // finishDecryptChunksN is the decrypt counterpart of finishEncryptChunksN.
@@ -59,7 +59,7 @@ func finishDecryptChunksN(s *state8, src, dst []byte, tags *[256]byte, n int) {
 	}
 	s.pos = chunkLastLen
 	s.closeBlock(msgLast)
-	extractChunkTagsN(s, tags, n)
+	extractLeafTagsN(s, tags, n)
 }
 
 // encryptLeafRemainder encrypts n complete leaf chunks (n in 2..7) at indices
@@ -71,7 +71,7 @@ func finishDecryptChunksN(s *state8, src, dst []byte, tags *[256]byte, n int) {
 // amd64 one always does.
 func encryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 	var s state8
-	initChunks(&s, g.key[:], g.nonce[:], g.nLeaves+1)
+	initLeafBatch8(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags [256]byte
 	encryptChunksBodyN(&s, src, dst, n)
 	finishEncryptChunksN(&s, src, dst, &tags, n)
@@ -82,7 +82,7 @@ func encryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 // decryptLeafRemainder is the decrypt counterpart of encryptLeafRemainder.
 func decryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 	var s state8
-	initChunks(&s, g.key[:], g.nonce[:], g.nLeaves+1)
+	initLeafBatch8(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags [256]byte
 	decryptChunksBodyN(&s, src, dst, n)
 	finishDecryptChunksN(&s, src, dst, &tags, n)

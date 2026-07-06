@@ -4,7 +4,7 @@ package tw128
 // Lanes 1..7 are leaves 1..7; lane 0's leaf-0 init is overwritten with the
 // trunk state because chunk ID 0 is never a real leaf.
 func initChunk0BatchState(s *state8, g *aggregator) {
-	initChunks(s, g.key[:], g.nonce[:], 0)
+	initLeafBatch8(s, g.key[:], g.nonce[:], 0)
 	for lane := range lanes {
 		s.a[lane][0] = g.trunk.a[lane]
 	}

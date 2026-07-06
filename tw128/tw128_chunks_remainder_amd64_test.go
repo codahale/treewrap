@@ -29,14 +29,14 @@ func TestEncryptLeafRemainderAVX512(t *testing.T) {
 		ref := make([]byte, 8*chunkSize)
 		copy(ref, src)
 		var sr state8
-		initChunks(&sr, key, nonce, 1)
+		initLeafBatch8(&sr, key, nonce, 1)
 		refDst := make([]byte, 8*chunkSize)
 		var refTags [256]byte
-		encryptChunksGeneric(&sr, ref, refDst, &refTags)
+		encryptLeafBatch8Generic(&sr, ref, refDst, &refTags)
 
 		// Masked kernel path.
 		var sq state8
-		initChunks(&sq, key, nonce, 1)
+		initLeafBatch8(&sq, key, nonce, 1)
 		dst := make([]byte, n*chunkSize)
 		var tags [256]byte
 		encryptChunksBodyAVX512N(&sq, &src[0], &dst[0], uint64(n))
@@ -68,14 +68,14 @@ func TestEncryptLeafRemainderAVX2(t *testing.T) {
 		ref := make([]byte, 8*chunkSize)
 		copy(ref, src)
 		var sr state8
-		initChunks(&sr, key, nonce, 1)
+		initLeafBatch8(&sr, key, nonce, 1)
 		refDst := make([]byte, 8*chunkSize)
 		var refTags [256]byte
-		encryptChunksGeneric(&sr, ref, refDst, &refTags)
+		encryptLeafBatch8Generic(&sr, ref, refDst, &refTags)
 
 		// Dummy-lane kernel path.
 		var sq state8
-		initChunks(&sq, key, nonce, 1)
+		initLeafBatch8(&sq, key, nonce, 1)
 		dst := make([]byte, n*chunkSize)
 		var tags [256]byte
 		encryptChunksBodyAVX2N(&sq, &src[0], &dst[0], uint64(n))
@@ -104,13 +104,13 @@ func TestDecryptLeafRemainderAVX2(t *testing.T) {
 		ref := make([]byte, 8*chunkSize)
 		copy(ref, src)
 		var sr state8
-		initChunks(&sr, key, nonce, 1)
+		initLeafBatch8(&sr, key, nonce, 1)
 		refDst := make([]byte, 8*chunkSize)
 		var refTags [256]byte
-		decryptChunksGeneric(&sr, ref, refDst, &refTags)
+		decryptLeafBatch8Generic(&sr, ref, refDst, &refTags)
 
 		var sq state8
-		initChunks(&sq, key, nonce, 1)
+		initLeafBatch8(&sq, key, nonce, 1)
 		dst := make([]byte, n*chunkSize)
 		var tags [256]byte
 		decryptChunksBodyAVX2N(&sq, &src[0], &dst[0], uint64(n))
@@ -142,13 +142,13 @@ func TestDecryptLeafRemainderAVX512(t *testing.T) {
 		ref := make([]byte, 8*chunkSize)
 		copy(ref, src)
 		var sr state8
-		initChunks(&sr, key, nonce, 1)
+		initLeafBatch8(&sr, key, nonce, 1)
 		refDst := make([]byte, 8*chunkSize)
 		var refTags [256]byte
-		decryptChunksGeneric(&sr, ref, refDst, &refTags)
+		decryptLeafBatch8Generic(&sr, ref, refDst, &refTags)
 
 		var sq state8
-		initChunks(&sq, key, nonce, 1)
+		initLeafBatch8(&sq, key, nonce, 1)
 		dst := make([]byte, n*chunkSize)
 		var tags [256]byte
 		decryptChunksBodyAVX512N(&sq, &src[0], &dst[0], uint64(n))

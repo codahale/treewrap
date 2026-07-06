@@ -14,35 +14,35 @@ const (
 	chunkLastLen    = ChunkSize - chunkBodyBlocks*rhoBytes
 )
 
-// encryptChunks encrypts 8 x 8183-byte chunks from src into dst,
+// encryptLeafBatch8 encrypts 8 x 8183-byte chunks from src into dst,
 // initializing 8 parallel leaf duplexes with key, nonce, and baseIndex+i,
 // and writing the 8×32-byte leaf tags to tags.
 // Src and dst must each be exactly 8 x 8183 = 65464 bytes.
-func encryptChunks(key, nonce []byte, baseIndex uint64, src, dst []byte, tags *[256]byte) {
+func encryptLeafBatch8(key, nonce []byte, baseIndex uint64, src, dst []byte, tags *[256]byte) {
 	var s state8
-	initChunks(&s, key, nonce, baseIndex)
-	if encryptChunksArch(&s, src, dst, tags) {
+	initLeafBatch8(&s, key, nonce, baseIndex)
+	if encryptLeafBatch8Arch(&s, src, dst, tags) {
 		return
 	}
-	encryptChunksGeneric(&s, src, dst, tags)
+	encryptLeafBatch8Generic(&s, src, dst, tags)
 }
 
-// decryptChunks decrypts 8 x 8183-byte chunks from src into dst,
+// decryptLeafBatch8 decrypts 8 x 8183-byte chunks from src into dst,
 // initializing 8 parallel leaf duplexes with key, nonce, and baseIndex+i,
 // and writing the 8×32-byte leaf tags to tags.
 // Src and dst must each be exactly 8 x 8183 = 65464 bytes.
-func decryptChunks(key, nonce []byte, baseIndex uint64, src, dst []byte, tags *[256]byte) {
+func decryptLeafBatch8(key, nonce []byte, baseIndex uint64, src, dst []byte, tags *[256]byte) {
 	var s state8
-	initChunks(&s, key, nonce, baseIndex)
-	if decryptChunksArch(&s, src, dst, tags) {
+	initLeafBatch8(&s, key, nonce, baseIndex)
+	if decryptLeafBatch8Arch(&s, src, dst, tags) {
 		return
 	}
-	decryptChunksGeneric(&s, src, dst, tags)
+	decryptLeafBatch8Generic(&s, src, dst, tags)
 }
 
-// initChunks initializes 8 parallel leaf duplexes with INIT_LAST, leaving the
+// initLeafBatch8 initializes 8 parallel leaf duplexes with INIT_LAST, leaving the
 // first keystream block of each leaf in its rate.
-func initChunks(s *state8, key, nonce []byte, baseIndex uint64) {
+func initLeafBatch8(s *state8, key, nonce []byte, baseIndex uint64) {
 	for lane := range lanes {
 		for inst := range 8 {
 			s.a[lane][inst] = 0
@@ -65,11 +65,11 @@ func initChunks(s *state8, key, nonce []byte, baseIndex uint64) {
 	s.closeBlock(initLast)
 }
 
-func extractChunkTags(s *state8, tags *[256]byte) {
-	extractChunkTagsN(s, tags, 8)
+func extractLeafBatch8Tags(s *state8, tags *[256]byte) {
+	extractLeafTagsN(s, tags, 8)
 }
 
-func extractChunkTagsN(s *state8, tags *[256]byte, n int) {
+func extractLeafTagsN(s *state8, tags *[256]byte, n int) {
 	for inst := range n {
 		binary.LittleEndian.PutUint64(tags[inst*32:], s.a[0][inst])
 		binary.LittleEndian.PutUint64(tags[inst*32+8:], s.a[1][inst])
@@ -78,7 +78,7 @@ func extractChunkTagsN(s *state8, tags *[256]byte, n int) {
 	}
 }
 
-func encryptChunksGeneric(s *state8, src, dst []byte, tags *[256]byte) {
+func encryptLeafBatch8Generic(s *state8, src, dst []byte, tags *[256]byte) {
 	for b := range chunkBodyBlocks {
 		off := b * rhoBytes
 		for inst := range 8 {
@@ -88,10 +88,10 @@ func encryptChunksGeneric(s *state8, src, dst []byte, tags *[256]byte) {
 		s.pos = rhoBytes
 		s.closeBlock(msgMore)
 	}
-	finishEncryptChunks(s, src, dst, tags)
+	finishEncryptLeafBatch8(s, src, dst, tags)
 }
 
-func decryptChunksGeneric(s *state8, src, dst []byte, tags *[256]byte) {
+func decryptLeafBatch8Generic(s *state8, src, dst []byte, tags *[256]byte) {
 	for b := range chunkBodyBlocks {
 		off := b * rhoBytes
 		for inst := range 8 {
@@ -101,17 +101,17 @@ func decryptChunksGeneric(s *state8, src, dst []byte, tags *[256]byte) {
 		s.pos = rhoBytes
 		s.closeBlock(msgMore)
 	}
-	finishDecryptChunks(s, src, dst, tags)
+	finishDecryptLeafBatch8(s, src, dst, tags)
 }
 
-// finishEncryptChunks completes the 8-way chunk encryption after the
+// finishEncryptLeafBatch8 completes the 8-way chunk encryption after the
 // chunkBodyBlocks MSG_MORE rho-blocks have been processed (and the state stored
 // into s): it encrypts the final chunkLastLen-byte block, closes it with
 // MSG_LAST, and extracts the 8 leaf tags. The architecture body kernels delegate
 // this final block to this routine so its byte-granular handling stays in tested
 // Go. When ChunkSize is an exact multiple of rhoBytes the final block is a full
 // rho-block (chunkLastLen == rhoBytes).
-func finishEncryptChunks(s *state8, src, dst []byte, tags *[256]byte) {
+func finishEncryptLeafBatch8(s *state8, src, dst []byte, tags *[256]byte) {
 	off := chunkBodyBlocks * rhoBytes
 	for inst := range 8 {
 		base := inst*ChunkSize + off
@@ -119,11 +119,11 @@ func finishEncryptChunks(s *state8, src, dst []byte, tags *[256]byte) {
 	}
 	s.pos = chunkLastLen
 	s.closeBlock(msgLast)
-	extractChunkTags(s, tags)
+	extractLeafBatch8Tags(s, tags)
 }
 
-// finishDecryptChunks is the decrypt counterpart of finishEncryptChunks.
-func finishDecryptChunks(s *state8, src, dst []byte, tags *[256]byte) {
+// finishDecryptLeafBatch8 is the decrypt counterpart of finishEncryptLeafBatch8.
+func finishDecryptLeafBatch8(s *state8, src, dst []byte, tags *[256]byte) {
 	off := chunkBodyBlocks * rhoBytes
 	for inst := range 8 {
 		base := inst*ChunkSize + off
@@ -131,5 +131,5 @@ func finishDecryptChunks(s *state8, src, dst []byte, tags *[256]byte) {
 	}
 	s.pos = chunkLastLen
 	s.closeBlock(msgLast)
-	extractChunkTags(s, tags)
+	extractLeafBatch8Tags(s, tags)
 }

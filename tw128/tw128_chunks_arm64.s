@@ -3,7 +3,7 @@
 // Each function processes 8 × 8183-byte chunks in a single call using 4× x2
 // pairs (two instances packed into the two D lanes of each V register).
 //
-// The duplex is initialized in Go (initChunks closes the INIT_LAST block), so
+// The duplex is initialized in Go (initLeafBatch8 closes the INIT_LAST block), so
 // on entry the state in s.a already holds each leaf's first keystream block.
 // Each chunk is then processed as exactly 49 full rho (167-byte) blocks: 48
 // closed with MSG_MORE and the last closed with MSG_LAST (no ragged tail, since

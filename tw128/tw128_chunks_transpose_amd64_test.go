@@ -27,17 +27,17 @@ func TestChunksTransposeKernel(t *testing.T) {
 	}
 
 	var sr state8
-	initChunks(&sr, key, nonce, 1)
+	initLeafBatch8(&sr, key, nonce, 1)
 	refDst := make([]byte, 8*chunkSize)
 	var refTags [256]byte
-	encryptChunksGeneric(&sr, src, refDst, &refTags)
+	encryptLeafBatch8Generic(&sr, src, refDst, &refTags)
 
 	var st state8
-	initChunks(&st, key, nonce, 1)
+	initLeafBatch8(&st, key, nonce, 1)
 	dst := make([]byte, 8*chunkSize)
 	var tags [256]byte
 	encryptChunksBodyAVX512T(&st, &src[0], &dst[0])
-	finishEncryptChunks(&st, src, dst, &tags)
+	finishEncryptLeafBatch8(&st, src, dst, &tags)
 
 	if !bytes.Equal(dst, refDst) {
 		t.Errorf("encrypt: ciphertext mismatch at byte %d", firstMismatch(dst, refDst))
@@ -47,17 +47,17 @@ func TestChunksTransposeKernel(t *testing.T) {
 	}
 
 	var dr state8
-	initChunks(&dr, key, nonce, 1)
+	initLeafBatch8(&dr, key, nonce, 1)
 	refPt := make([]byte, 8*chunkSize)
 	var refDTags [256]byte
-	decryptChunksGeneric(&dr, src, refPt, &refDTags)
+	decryptLeafBatch8Generic(&dr, src, refPt, &refDTags)
 
 	var dt state8
-	initChunks(&dt, key, nonce, 1)
+	initLeafBatch8(&dt, key, nonce, 1)
 	pt := make([]byte, 8*chunkSize)
 	var dtags [256]byte
 	decryptChunksBodyAVX512T(&dt, &src[0], &pt[0])
-	finishDecryptChunks(&dt, src, pt, &dtags)
+	finishDecryptLeafBatch8(&dt, src, pt, &dtags)
 
 	if !bytes.Equal(pt, refPt) {
 		t.Errorf("decrypt: plaintext mismatch at byte %d", firstMismatch(pt, refPt))

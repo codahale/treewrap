@@ -125,9 +125,9 @@ func (g *aggregator) processCompleteLeafChunks(dst, src []byte, nFlush int) {
 func (g *aggregator) processLeafBatch8(dst, src []byte) {
 	var tags [256]byte
 	if g.decrypt {
-		decryptChunks(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &tags)
+		decryptLeafBatch8(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &tags)
 	} else {
-		encryptChunks(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &tags)
+		encryptLeafBatch8(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &tags)
 	}
 	g.absorbLeafTags(tags[:], 8)
 }

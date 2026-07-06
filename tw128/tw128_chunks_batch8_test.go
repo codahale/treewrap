@@ -29,15 +29,15 @@ func TestEncryptChunks(t *testing.T) {
 
 	// Run generic path: init + encrypt + extract tags.
 	var s1 state8
-	initChunks(&s1, key, nonce, 1)
+	initLeafBatch8(&s1, key, nonce, 1)
 	dst1 := make([]byte, 8*chunkSize)
 	var tags1 [256]byte
-	encryptChunksGeneric(&s1, src, dst1, &tags1)
+	encryptLeafBatch8Generic(&s1, src, dst1, &tags1)
 
 	// Run arch-dispatched path.
 	dst2 := make([]byte, 8*chunkSize)
 	var tags2 [256]byte
-	encryptChunks(key, nonce, 1, src, dst2, &tags2)
+	encryptLeafBatch8(key, nonce, 1, src, dst2, &tags2)
 
 	if !bytes.Equal(dst1, dst2) {
 		t.Error("ciphertext mismatch between generic and arch paths")
@@ -67,15 +67,15 @@ func TestDecryptChunks(t *testing.T) {
 
 	// Run generic path.
 	var s1 state8
-	initChunks(&s1, key, nonce, 1)
+	initLeafBatch8(&s1, key, nonce, 1)
 	dst1 := make([]byte, 8*chunkSize)
 	var tags1 [256]byte
-	decryptChunksGeneric(&s1, src, dst1, &tags1)
+	decryptLeafBatch8Generic(&s1, src, dst1, &tags1)
 
 	// Run arch-dispatched path.
 	dst2 := make([]byte, 8*chunkSize)
 	var tags2 [256]byte
-	decryptChunks(key, nonce, 1, src, dst2, &tags2)
+	decryptLeafBatch8(key, nonce, 1, src, dst2, &tags2)
 
 	if !bytes.Equal(dst1, dst2) {
 		t.Error("plaintext mismatch between generic and arch paths")
@@ -104,7 +104,7 @@ func BenchmarkEncryptChunks(b *testing.B) {
 	var tags [256]byte
 	b.SetBytes(8 * chunkSize)
 	for b.Loop() {
-		encryptChunks(key, nonce, 1, src, dst, &tags)
+		encryptLeafBatch8(key, nonce, 1, src, dst, &tags)
 	}
 }
 
@@ -119,6 +119,6 @@ func BenchmarkDecryptChunks(b *testing.B) {
 	var tags [256]byte
 	b.SetBytes(8 * chunkSize)
 	for b.Loop() {
-		decryptChunks(key, nonce, 1, src, dst, &tags)
+		decryptLeafBatch8(key, nonce, 1, src, dst, &tags)
 	}
 }

@@ -72,14 +72,14 @@ func FuzzChunksGenericVsArch(f *testing.F) {
 
 		// Encrypt: generic reference vs arch dispatch.
 		var sgen state8
-		initChunks(&sgen, key, nonce, baseIndex)
+		initLeafBatch8(&sgen, key, nonce, baseIndex)
 		genDst := make([]byte, 8*ChunkSize)
 		var genTags [256]byte
-		encryptChunksGeneric(&sgen, src, genDst, &genTags)
+		encryptLeafBatch8Generic(&sgen, src, genDst, &genTags)
 
 		archDst := make([]byte, 8*ChunkSize)
 		var archTags [256]byte
-		encryptChunks(key, nonce, baseIndex, src, archDst, &archTags)
+		encryptLeafBatch8(key, nonce, baseIndex, src, archDst, &archTags)
 
 		if !bytes.Equal(genDst, archDst) {
 			t.Fatalf("encrypt ciphertext mismatch (baseIndex=%d)", baseIndex)
@@ -90,14 +90,14 @@ func FuzzChunksGenericVsArch(f *testing.F) {
 
 		// Decrypt: treat the same bytes as ciphertext.
 		var sgen2 state8
-		initChunks(&sgen2, key, nonce, baseIndex)
+		initLeafBatch8(&sgen2, key, nonce, baseIndex)
 		genPt := make([]byte, 8*ChunkSize)
 		var genTags2 [256]byte
-		decryptChunksGeneric(&sgen2, src, genPt, &genTags2)
+		decryptLeafBatch8Generic(&sgen2, src, genPt, &genTags2)
 
 		archPt := make([]byte, 8*ChunkSize)
 		var archTags2 [256]byte
-		decryptChunks(key, nonce, baseIndex, src, archPt, &archTags2)
+		decryptLeafBatch8(key, nonce, baseIndex, src, archPt, &archTags2)
 
 		if !bytes.Equal(genPt, archPt) {
 			t.Fatalf("decrypt plaintext mismatch (baseIndex=%d)", baseIndex)

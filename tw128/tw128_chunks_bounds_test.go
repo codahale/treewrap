@@ -42,8 +42,8 @@ func TestChunkKernelsStayInBounds(t *testing.T) {
 		dst := guardedTail(t, n)
 		copy(src, seq(n))
 		var tags [256]byte
-		encryptChunks(key, nonce, 1, src, dst, &tags)
-		decryptChunks(key, nonce, 1, src, dst, &tags)
+		encryptLeafBatch8(key, nonce, 1, src, dst, &tags)
+		decryptLeafBatch8(key, nonce, 1, src, dst, &tags)
 	})
 
 	t.Run("pair", func(t *testing.T) {
