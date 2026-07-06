@@ -3,8 +3,6 @@
 package tw128
 
 import (
-	"encoding/binary"
-
 	"github.com/codahale/treewrap/tw128/internal/cpuid"
 )
 
@@ -33,12 +31,7 @@ func finishEncryptChunksN(s *state8, src, dst []byte, tags *[256]byte, n int) {
 	}
 	s.pos = chunkLastLen
 	s.closeBlock(msgLast)
-	for inst := range n {
-		binary.LittleEndian.PutUint64(tags[inst*32:], s.a[0][inst])
-		binary.LittleEndian.PutUint64(tags[inst*32+8:], s.a[1][inst])
-		binary.LittleEndian.PutUint64(tags[inst*32+16:], s.a[2][inst])
-		binary.LittleEndian.PutUint64(tags[inst*32+24:], s.a[3][inst])
-	}
+	extractChunkTagsN(s, tags, n)
 }
 
 // finishDecryptChunksN is the decrypt counterpart of finishEncryptChunksN.
@@ -50,12 +43,7 @@ func finishDecryptChunksN(s *state8, src, dst []byte, tags *[256]byte, n int) {
 	}
 	s.pos = chunkLastLen
 	s.closeBlock(msgLast)
-	for inst := range n {
-		binary.LittleEndian.PutUint64(tags[inst*32:], s.a[0][inst])
-		binary.LittleEndian.PutUint64(tags[inst*32+8:], s.a[1][inst])
-		binary.LittleEndian.PutUint64(tags[inst*32+16:], s.a[2][inst])
-		binary.LittleEndian.PutUint64(tags[inst*32+24:], s.a[3][inst])
-	}
+	extractChunkTagsN(s, tags, n)
 }
 
 // encryptLeafRemainder encrypts n complete leaf chunks (n in 2..7) at indices

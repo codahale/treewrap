@@ -66,7 +66,11 @@ func initChunks(s *state8, key, nonce []byte, baseIndex uint64) {
 }
 
 func extractChunkTags(s *state8, tags *[256]byte) {
-	for inst := range 8 {
+	extractChunkTagsN(s, tags, 8)
+}
+
+func extractChunkTagsN(s *state8, tags *[256]byte, n int) {
+	for inst := range n {
 		binary.LittleEndian.PutUint64(tags[inst*32:], s.a[0][inst])
 		binary.LittleEndian.PutUint64(tags[inst*32+8:], s.a[1][inst])
 		binary.LittleEndian.PutUint64(tags[inst*32+16:], s.a[2][inst])
