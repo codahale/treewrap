@@ -2,10 +2,6 @@
 
 package tw128
 
-import (
-	"github.com/codahale/treewrap/tw128/internal/cpuid"
-)
-
 // Lane-0 fusion: the trunk's chunk-0 message phase has the same kernel-visible
 // schedule as a leaf chunk — 49 rho-blocks, 48 closed with MSG_MORE and the
 // last with MSG_LAST, SpongeWrap absorb in both directions — and differs only
@@ -31,11 +27,7 @@ func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	if k == 8 {
 		encryptChunksArch(&s, src, dst, &tags)
 	} else {
-		if cpuid.HasAVX512 {
-			encryptChunksBodyAVX512N(&s, &src[0], &dst[0], uint64(k))
-		} else {
-			encryptChunksBodyAVX2N(&s, &src[0], &dst[0], uint64(k))
-		}
+		encryptChunksBodyN(&s, src, dst, k)
 		finishEncryptChunksN(&s, src, dst, &tags, k)
 	}
 
@@ -52,11 +44,7 @@ func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	if k == 8 {
 		decryptChunksArch(&s, src, dst, &tags)
 	} else {
-		if cpuid.HasAVX512 {
-			decryptChunksBodyAVX512N(&s, &src[0], &dst[0], uint64(k))
-		} else {
-			decryptChunksBodyAVX2N(&s, &src[0], &dst[0], uint64(k))
-		}
+		decryptChunksBodyN(&s, src, dst, k)
 		finishDecryptChunksN(&s, src, dst, &tags, k)
 	}
 

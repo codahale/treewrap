@@ -18,6 +18,22 @@ func encryptChunksBodyAVX2N(s *state8, src, dst *byte, n uint64)
 //go:noescape
 func decryptChunksBodyAVX2N(s *state8, src, dst *byte, n uint64)
 
+func encryptChunksBodyN(s *state8, src, dst []byte, n int) {
+	if cpuid.HasAVX512 {
+		encryptChunksBodyAVX512N(s, &src[0], &dst[0], uint64(n))
+	} else {
+		encryptChunksBodyAVX2N(s, &src[0], &dst[0], uint64(n))
+	}
+}
+
+func decryptChunksBodyN(s *state8, src, dst []byte, n int) {
+	if cpuid.HasAVX512 {
+		decryptChunksBodyAVX512N(s, &src[0], &dst[0], uint64(n))
+	} else {
+		decryptChunksBodyAVX2N(s, &src[0], &dst[0], uint64(n))
+	}
+}
+
 // finishEncryptChunksN completes an n-wide chunk encryption after the n-wide
 // body kernel has run the chunkBodyBlocks MSG_MORE rho-blocks:
 // it encrypts the final chunkLastLen-byte block for instances 0..n-1, closes it
@@ -57,11 +73,7 @@ func encryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 	var s state8
 	initChunks(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags [256]byte
-	if cpuid.HasAVX512 {
-		encryptChunksBodyAVX512N(&s, &src[0], &dst[0], uint64(n))
-	} else {
-		encryptChunksBodyAVX2N(&s, &src[0], &dst[0], uint64(n))
-	}
+	encryptChunksBodyN(&s, src, dst, n)
 	finishEncryptChunksN(&s, src, dst, &tags, n)
 	g.absorbLeafTags(tags[:n*leafTagSize], n)
 	return true
@@ -72,11 +84,7 @@ func decryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 	var s state8
 	initChunks(&s, g.key[:], g.nonce[:], g.nLeaves+1)
 	var tags [256]byte
-	if cpuid.HasAVX512 {
-		decryptChunksBodyAVX512N(&s, &src[0], &dst[0], uint64(n))
-	} else {
-		decryptChunksBodyAVX2N(&s, &src[0], &dst[0], uint64(n))
-	}
+	decryptChunksBodyN(&s, src, dst, n)
 	finishDecryptChunksN(&s, src, dst, &tags, n)
 	g.absorbLeafTags(tags[:n*leafTagSize], n)
 	return true
