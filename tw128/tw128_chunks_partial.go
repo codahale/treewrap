@@ -92,14 +92,12 @@ func extractPairState(d0, d1 *duplex, s *state8) {
 func finishChunk0Partial(g *aggregator, trunk, leaf *duplex) {
 	g.trunk = *trunk
 	tag := leaf.tagBytes()
-	g.trunk.absorbMore(tag[:], aggMore)
-	g.nLeaves++
+	g.absorbLeafTags(tag[:], 1)
 }
 
 func finishCompleteLeafPartial(g *aggregator, full, partial *duplex) {
 	tag := full.tagBytes()
-	g.trunk.absorbMore(tag[:], aggMore)
+	g.absorbLeafTags(tag[:], 1)
 	tag = partial.tagBytes()
-	g.trunk.absorbMore(tag[:], aggMore)
-	g.nLeaves += 2
+	g.absorbLeafTags(tag[:], 1)
 }

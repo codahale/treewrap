@@ -129,8 +129,7 @@ func (g *aggregator) processLeafBatch8(dst, src []byte) {
 	} else {
 		encryptChunks(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &tags)
 	}
-	g.trunk.absorbMore(tags[:], aggMore)
-	g.nLeaves += 8
+	g.absorbLeafTags(tags[:], 8)
 }
 
 func (g *aggregator) tryProcessLeafPair(dst, src []byte) bool {
@@ -155,6 +154,10 @@ func (g *aggregator) processLeafSerial(dst, src []byte) {
 		encryptX1(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &leaf)
 	}
 	tag := leaf.tagBytes()
-	g.trunk.absorbMore(tag[:], aggMore)
-	g.nLeaves++
+	g.absorbLeafTags(tag[:], 1)
+}
+
+func (g *aggregator) absorbLeafTags(tags []byte, n int) {
+	g.trunk.absorbMore(tags[:n*leafTagSize], aggMore)
+	g.nLeaves += uint64(n)
 }

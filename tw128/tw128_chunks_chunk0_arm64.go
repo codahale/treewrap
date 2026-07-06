@@ -36,8 +36,7 @@ func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 		for lane := range lanes {
 			g.trunk.a[lane] = s.a[lane][0]
 		}
-		g.trunk.absorbMore(tags[leafTagSize:8*leafTagSize], aggMore)
-		g.nLeaves += 7
+		g.absorbLeafTags(tags[leafTagSize:8*leafTagSize], 7)
 		return 8
 	}
 
@@ -53,8 +52,7 @@ func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	for lane := range lanes {
 		g.trunk.a[lane] = s.a[lane][0]
 	}
-	g.trunk.absorbMore(tags[leafTagSize:2*leafTagSize], aggMore)
-	g.nLeaves++
+	g.absorbLeafTags(tags[leafTagSize:2*leafTagSize], 1)
 	return 2
 }
 
@@ -72,8 +70,7 @@ func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 		for lane := range lanes {
 			g.trunk.a[lane] = s.a[lane][0]
 		}
-		g.trunk.absorbMore(tags[leafTagSize:8*leafTagSize], aggMore)
-		g.nLeaves += 7
+		g.absorbLeafTags(tags[leafTagSize:8*leafTagSize], 7)
 		return 8
 	}
 
@@ -88,7 +85,6 @@ func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	for lane := range lanes {
 		g.trunk.a[lane] = s.a[lane][0]
 	}
-	g.trunk.absorbMore(tags[leafTagSize:2*leafTagSize], aggMore)
-	g.nLeaves++
+	g.absorbLeafTags(tags[leafTagSize:2*leafTagSize], 1)
 	return 2
 }

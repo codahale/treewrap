@@ -75,8 +75,7 @@ func encryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 		encryptChunksBodyAVX2N(&s, &src[0], &dst[0], uint64(n))
 	}
 	finishEncryptChunksN(&s, src, dst, &tags, n)
-	g.trunk.absorbMore(tags[:n*leafTagSize], aggMore)
-	g.nLeaves += uint64(n)
+	g.absorbLeafTags(tags[:n*leafTagSize], n)
 	return true
 }
 
@@ -91,7 +90,6 @@ func decryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 		decryptChunksBodyAVX2N(&s, &src[0], &dst[0], uint64(n))
 	}
 	finishDecryptChunksN(&s, src, dst, &tags, n)
-	g.trunk.absorbMore(tags[:n*leafTagSize], aggMore)
-	g.nLeaves += uint64(n)
+	g.absorbLeafTags(tags[:n*leafTagSize], n)
 	return true
 }
