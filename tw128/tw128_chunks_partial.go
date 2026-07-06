@@ -5,11 +5,7 @@ func partialBodyBlocks(n int) int {
 }
 
 func initChunk0PartialState(s *state8, g *aggregator, leafIndex uint64) {
-	var leaf duplex
-	p := leafInit(g.key[:], g.nonce[:], leafIndex)
-	leaf.initWith(p[:])
-
-	initPairStateFromDuplexes(s, &g.trunk, &leaf)
+	initChunk0PairState(s, g, leafIndex)
 }
 
 func initCompleteLeafPartialState(s *state8, g *aggregator) {

@@ -21,38 +21,16 @@ func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	var tags [256]byte
 
 	if k == 8 {
-		// Lanes 1..7 are leaves 1..7. Lane 0's "leaf 0" init is discarded
-		// below: chunk ID 0 is never used by the construction (leaf IDs
-		// start at 1).
-		initChunks(&s, g.key[:], g.nonce[:], 0)
-		for lane := range lanes {
-			s.a[lane][0] = g.trunk.a[lane]
-		}
+		initChunk0BatchState(&s, g)
 		encryptChunksARM64(&s, &src[0], &dst[0], &tags[0])
-		// Instance 0 is now the trunk just after its chunk-0 MSG_LAST close;
-		// the fused path never touches trunk.pos, which stays 0 throughout.
-		// tags[0:32] is instance 0's keystream prefix, not a leaf tag, and is
-		// unused.
-		for lane := range lanes {
-			g.trunk.a[lane] = s.a[lane][0]
-		}
-		g.absorbLeafTags(tags[leafTagSize:8*leafTagSize], 7)
+		finishChunk0Lanes(g, &s, tags[:], 8)
 		return 8
 	}
 
 	// 2-wide: the trunk in instance 0, leaf 1 in instance 1.
-	var d1 duplex
-	p := leafInit(g.key[:], g.nonce[:], 1)
-	d1.initWith(p[:])
-	for lane := range lanes {
-		s.a[lane][0] = g.trunk.a[lane]
-		s.a[lane][1] = d1.a[lane]
-	}
+	initChunk0PairState(&s, g, 1)
 	encryptChunksPairARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], &tags[0])
-	for lane := range lanes {
-		g.trunk.a[lane] = s.a[lane][0]
-	}
-	g.absorbLeafTags(tags[leafTagSize:2*leafTagSize], 1)
+	finishChunk0Lanes(g, &s, tags[:], 2)
 	return 2
 }
 
@@ -62,29 +40,14 @@ func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	var tags [256]byte
 
 	if k == 8 {
-		initChunks(&s, g.key[:], g.nonce[:], 0)
-		for lane := range lanes {
-			s.a[lane][0] = g.trunk.a[lane]
-		}
+		initChunk0BatchState(&s, g)
 		decryptChunksARM64(&s, &src[0], &dst[0], &tags[0])
-		for lane := range lanes {
-			g.trunk.a[lane] = s.a[lane][0]
-		}
-		g.absorbLeafTags(tags[leafTagSize:8*leafTagSize], 7)
+		finishChunk0Lanes(g, &s, tags[:], 8)
 		return 8
 	}
 
-	var d1 duplex
-	p := leafInit(g.key[:], g.nonce[:], 1)
-	d1.initWith(p[:])
-	for lane := range lanes {
-		s.a[lane][0] = g.trunk.a[lane]
-		s.a[lane][1] = d1.a[lane]
-	}
+	initChunk0PairState(&s, g, 1)
 	decryptChunksPairARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], &tags[0])
-	for lane := range lanes {
-		g.trunk.a[lane] = s.a[lane][0]
-	}
-	g.absorbLeafTags(tags[leafTagSize:2*leafTagSize], 1)
+	finishChunk0Lanes(g, &s, tags[:], 2)
 	return 2
 }

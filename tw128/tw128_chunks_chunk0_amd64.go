@@ -24,13 +24,8 @@ import (
 // (g.nLeaves == 0, trunk block open at pos 0). It returns the number of
 // chunks consumed; on amd64 that is always k.
 func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
-	// Lanes 1..7 are leaves 1..7. Lane 0's "leaf 0" init is discarded below:
-	// chunk ID 0 is never used by the construction (leaf IDs start at 1).
 	var s state8
-	initChunks(&s, g.key[:], g.nonce[:], 0)
-	for lane := range lanes {
-		s.a[lane][0] = g.trunk.a[lane]
-	}
+	initChunk0BatchState(&s, g)
 
 	var tags [256]byte
 	if k == 8 {
@@ -44,23 +39,14 @@ func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 		finishEncryptChunksN(&s, src, dst, &tags, k)
 	}
 
-	// Lane 0 is now the trunk just after its chunk-0 MSG_LAST close; the fused
-	// path never touches trunk.pos, which stays 0 throughout. tags[0:32] is
-	// lane 0's keystream prefix, not a leaf tag, and is unused.
-	for lane := range lanes {
-		g.trunk.a[lane] = s.a[lane][0]
-	}
-	g.absorbLeafTags(tags[leafTagSize:k*leafTagSize], k-1)
+	finishChunk0Lanes(g, &s, tags[:], k)
 	return k
 }
 
 // decryptChunk0Fused is the decrypt counterpart of encryptChunk0Fused.
 func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	var s state8
-	initChunks(&s, g.key[:], g.nonce[:], 0)
-	for lane := range lanes {
-		s.a[lane][0] = g.trunk.a[lane]
-	}
+	initChunk0BatchState(&s, g)
 
 	var tags [256]byte
 	if k == 8 {
@@ -74,9 +60,6 @@ func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 		finishDecryptChunksN(&s, src, dst, &tags, k)
 	}
 
-	for lane := range lanes {
-		g.trunk.a[lane] = s.a[lane][0]
-	}
-	g.absorbLeafTags(tags[leafTagSize:k*leafTagSize], k-1)
+	finishChunk0Lanes(g, &s, tags[:], k)
 	return k
 }
