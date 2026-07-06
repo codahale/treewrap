@@ -31,14 +31,14 @@ func TestEncryptLeafRemainderAVX512(t *testing.T) {
 		var sr state8
 		initLeafBatch8(&sr, key, nonce, 1)
 		refDst := make([]byte, 8*chunkSize)
-		var refTags [256]byte
+		var refTags leafTagBuffer
 		encryptLeafBatch8Generic(&sr, ref, refDst, &refTags)
 
 		// Masked kernel path.
 		var sq state8
 		initLeafBatch8(&sq, key, nonce, 1)
 		dst := make([]byte, n*chunkSize)
-		var tags [256]byte
+		var tags leafTagBuffer
 		encryptChunksBodyAVX512N(&sq, &src[0], &dst[0], uint64(n))
 		finishEncryptChunksN(&sq, src, dst, &tags, n)
 
@@ -70,14 +70,14 @@ func TestEncryptLeafRemainderAVX2(t *testing.T) {
 		var sr state8
 		initLeafBatch8(&sr, key, nonce, 1)
 		refDst := make([]byte, 8*chunkSize)
-		var refTags [256]byte
+		var refTags leafTagBuffer
 		encryptLeafBatch8Generic(&sr, ref, refDst, &refTags)
 
 		// Dummy-lane kernel path.
 		var sq state8
 		initLeafBatch8(&sq, key, nonce, 1)
 		dst := make([]byte, n*chunkSize)
-		var tags [256]byte
+		var tags leafTagBuffer
 		encryptChunksBodyAVX2N(&sq, &src[0], &dst[0], uint64(n))
 		finishEncryptChunksN(&sq, src, dst, &tags, n)
 
@@ -106,13 +106,13 @@ func TestDecryptLeafRemainderAVX2(t *testing.T) {
 		var sr state8
 		initLeafBatch8(&sr, key, nonce, 1)
 		refDst := make([]byte, 8*chunkSize)
-		var refTags [256]byte
+		var refTags leafTagBuffer
 		decryptLeafBatch8Generic(&sr, ref, refDst, &refTags)
 
 		var sq state8
 		initLeafBatch8(&sq, key, nonce, 1)
 		dst := make([]byte, n*chunkSize)
-		var tags [256]byte
+		var tags leafTagBuffer
 		decryptChunksBodyAVX2N(&sq, &src[0], &dst[0], uint64(n))
 		finishDecryptChunksN(&sq, src, dst, &tags, n)
 
@@ -144,13 +144,13 @@ func TestDecryptLeafRemainderAVX512(t *testing.T) {
 		var sr state8
 		initLeafBatch8(&sr, key, nonce, 1)
 		refDst := make([]byte, 8*chunkSize)
-		var refTags [256]byte
+		var refTags leafTagBuffer
 		decryptLeafBatch8Generic(&sr, ref, refDst, &refTags)
 
 		var sq state8
 		initLeafBatch8(&sq, key, nonce, 1)
 		dst := make([]byte, n*chunkSize)
-		var tags [256]byte
+		var tags leafTagBuffer
 		decryptChunksBodyAVX512N(&sq, &src[0], &dst[0], uint64(n))
 		finishDecryptChunksN(&sq, src, dst, &tags, n)
 

@@ -29,7 +29,7 @@ func encryptChunksBodyAVX512T(s *state8, src, dst *byte)
 //go:noescape
 func decryptChunksBodyAVX512T(s *state8, src, dst *byte)
 
-func encryptLeafBatch8Arch(s *state8, src, dst []byte, tags *[256]byte) bool {
+func encryptLeafBatch8Arch(s *state8, src, dst []byte, tags *leafTagBuffer) bool {
 	if cpuid.HasAVX512 {
 		encryptChunksBodyAVX512T(s, unsafe.SliceData(src), unsafe.SliceData(dst))
 	} else {
@@ -39,7 +39,7 @@ func encryptLeafBatch8Arch(s *state8, src, dst []byte, tags *[256]byte) bool {
 	return true
 }
 
-func decryptLeafBatch8Arch(s *state8, src, dst []byte, tags *[256]byte) bool {
+func decryptLeafBatch8Arch(s *state8, src, dst []byte, tags *leafTagBuffer) bool {
 	if cpuid.HasAVX512 {
 		decryptChunksBodyAVX512T(s, unsafe.SliceData(src), unsafe.SliceData(dst))
 	} else {

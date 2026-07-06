@@ -39,7 +39,7 @@ func decryptChunksBodyN(s *state8, src, dst []byte, n int) {
 // it encrypts the final chunkLastLen-byte block for instances 0..n-1, closes it
 // with MSG_LAST, and extracts the n leaf tags. src and dst hold exactly n
 // chunks; closeBlock permutes all eight instances (n..7 are unused and ignored).
-func finishEncryptChunksN(s *state8, src, dst []byte, tags *[256]byte, n int) {
+func finishEncryptChunksN(s *state8, src, dst []byte, tags *leafTagBuffer, n int) {
 	off := chunkBodyBlocks * rhoBytes
 	for inst := range n {
 		base := inst*ChunkSize + off
@@ -51,7 +51,7 @@ func finishEncryptChunksN(s *state8, src, dst []byte, tags *[256]byte, n int) {
 }
 
 // finishDecryptChunksN is the decrypt counterpart of finishEncryptChunksN.
-func finishDecryptChunksN(s *state8, src, dst []byte, tags *[256]byte, n int) {
+func finishDecryptChunksN(s *state8, src, dst []byte, tags *leafTagBuffer, n int) {
 	off := chunkBodyBlocks * rhoBytes
 	for inst := range n {
 		base := inst*ChunkSize + off
@@ -72,7 +72,7 @@ func finishDecryptChunksN(s *state8, src, dst []byte, tags *[256]byte, n int) {
 func encryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 	var s state8
 	initLeafBatch8(&s, g.key[:], g.nonce[:], g.nLeaves+1)
-	var tags [256]byte
+	var tags leafTagBuffer
 	encryptChunksBodyN(&s, src, dst, n)
 	finishEncryptChunksN(&s, src, dst, &tags, n)
 	g.absorbLeafTags(tags[:n*leafTagSize], n)
@@ -83,7 +83,7 @@ func encryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 func decryptLeafRemainder(g *aggregator, src, dst []byte, n int) bool {
 	var s state8
 	initLeafBatch8(&s, g.key[:], g.nonce[:], g.nLeaves+1)
-	var tags [256]byte
+	var tags leafTagBuffer
 	decryptChunksBodyN(&s, src, dst, n)
 	finishDecryptChunksN(&s, src, dst, &tags, n)
 	g.absorbLeafTags(tags[:n*leafTagSize], n)

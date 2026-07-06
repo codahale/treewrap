@@ -31,12 +31,12 @@ func TestEncryptChunks(t *testing.T) {
 	var s1 state8
 	initLeafBatch8(&s1, key, nonce, 1)
 	dst1 := make([]byte, 8*chunkSize)
-	var tags1 [256]byte
+	var tags1 leafTagBuffer
 	encryptLeafBatch8Generic(&s1, src, dst1, &tags1)
 
 	// Run arch-dispatched path.
 	dst2 := make([]byte, 8*chunkSize)
-	var tags2 [256]byte
+	var tags2 leafTagBuffer
 	encryptLeafBatch8(key, nonce, 1, src, dst2, &tags2)
 
 	if !bytes.Equal(dst1, dst2) {
@@ -69,12 +69,12 @@ func TestDecryptChunks(t *testing.T) {
 	var s1 state8
 	initLeafBatch8(&s1, key, nonce, 1)
 	dst1 := make([]byte, 8*chunkSize)
-	var tags1 [256]byte
+	var tags1 leafTagBuffer
 	decryptLeafBatch8Generic(&s1, src, dst1, &tags1)
 
 	// Run arch-dispatched path.
 	dst2 := make([]byte, 8*chunkSize)
-	var tags2 [256]byte
+	var tags2 leafTagBuffer
 	decryptLeafBatch8(key, nonce, 1, src, dst2, &tags2)
 
 	if !bytes.Equal(dst1, dst2) {
@@ -101,7 +101,7 @@ func BenchmarkEncryptChunks(b *testing.B) {
 	for i := range src {
 		src[i] = byte(i)
 	}
-	var tags [256]byte
+	var tags leafTagBuffer
 	b.SetBytes(8 * chunkSize)
 	for b.Loop() {
 		encryptLeafBatch8(key, nonce, 1, src, dst, &tags)
@@ -116,7 +116,7 @@ func BenchmarkDecryptChunks(b *testing.B) {
 	for i := range src {
 		src[i] = byte(i)
 	}
-	var tags [256]byte
+	var tags leafTagBuffer
 	b.SetBytes(8 * chunkSize)
 	for b.Loop() {
 		decryptLeafBatch8(key, nonce, 1, src, dst, &tags)

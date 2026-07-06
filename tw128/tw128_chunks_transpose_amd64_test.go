@@ -29,13 +29,13 @@ func TestChunksTransposeKernel(t *testing.T) {
 	var sr state8
 	initLeafBatch8(&sr, key, nonce, 1)
 	refDst := make([]byte, 8*chunkSize)
-	var refTags [256]byte
+	var refTags leafTagBuffer
 	encryptLeafBatch8Generic(&sr, src, refDst, &refTags)
 
 	var st state8
 	initLeafBatch8(&st, key, nonce, 1)
 	dst := make([]byte, 8*chunkSize)
-	var tags [256]byte
+	var tags leafTagBuffer
 	encryptChunksBodyAVX512T(&st, &src[0], &dst[0])
 	finishEncryptLeafBatch8(&st, src, dst, &tags)
 
@@ -49,13 +49,13 @@ func TestChunksTransposeKernel(t *testing.T) {
 	var dr state8
 	initLeafBatch8(&dr, key, nonce, 1)
 	refPt := make([]byte, 8*chunkSize)
-	var refDTags [256]byte
+	var refDTags leafTagBuffer
 	decryptLeafBatch8Generic(&dr, src, refPt, &refDTags)
 
 	var dt state8
 	initLeafBatch8(&dt, key, nonce, 1)
 	pt := make([]byte, 8*chunkSize)
-	var dtags [256]byte
+	var dtags leafTagBuffer
 	decryptChunksBodyAVX512T(&dt, &src[0], &pt[0])
 	finishDecryptLeafBatch8(&dt, src, pt, &dtags)
 

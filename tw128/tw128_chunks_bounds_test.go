@@ -41,7 +41,7 @@ func TestChunkKernelsStayInBounds(t *testing.T) {
 		src := guardedTail(t, n)
 		dst := guardedTail(t, n)
 		copy(src, seq(n))
-		var tags [256]byte
+		var tags leafTagBuffer
 		encryptLeafBatch8(key, nonce, 1, src, dst, &tags)
 		decryptLeafBatch8(key, nonce, 1, src, dst, &tags)
 	})

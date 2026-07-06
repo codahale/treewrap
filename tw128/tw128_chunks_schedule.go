@@ -123,7 +123,7 @@ func (g *aggregator) processCompleteLeafChunks(dst, src []byte, nFlush int) {
 }
 
 func (g *aggregator) processLeafBatch8(dst, src []byte) {
-	var tags [256]byte
+	var tags leafTagBuffer
 	if g.decrypt {
 		decryptLeafBatch8(g.key[:], g.nonce[:], g.nLeaves+1, src, dst, &tags)
 	} else {

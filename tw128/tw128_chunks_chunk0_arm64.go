@@ -18,7 +18,7 @@ package tw128
 // start of the cascade (g.nLeaves == 0, trunk block open at pos 0).
 func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	var s state8
-	var tags [256]byte
+	var tags leafTagBuffer
 
 	if k == 8 {
 		initChunk0BatchState(&s, g)
@@ -37,7 +37,7 @@ func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 // decryptChunk0Fused is the decrypt counterpart of encryptChunk0Fused.
 func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	var s state8
-	var tags [256]byte
+	var tags leafTagBuffer
 
 	if k == 8 {
 		initChunk0BatchState(&s, g)

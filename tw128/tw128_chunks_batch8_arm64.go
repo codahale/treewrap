@@ -10,12 +10,12 @@ func encryptChunksARM64(s *state8, src, dst *byte, cvs *byte)
 //go:noescape
 func decryptChunksARM64(s *state8, src, dst *byte, cvs *byte)
 
-func encryptLeafBatch8Arch(s *state8, src, dst []byte, cvs *[256]byte) bool {
-	encryptChunksARM64(s, unsafe.SliceData(src), unsafe.SliceData(dst), &cvs[0])
+func encryptLeafBatch8Arch(s *state8, src, dst []byte, tags *leafTagBuffer) bool {
+	encryptChunksARM64(s, unsafe.SliceData(src), unsafe.SliceData(dst), &tags[0])
 	return true
 }
 
-func decryptLeafBatch8Arch(s *state8, src, dst []byte, cvs *[256]byte) bool {
-	decryptChunksARM64(s, unsafe.SliceData(src), unsafe.SliceData(dst), &cvs[0])
+func decryptLeafBatch8Arch(s *state8, src, dst []byte, tags *leafTagBuffer) bool {
+	decryptChunksARM64(s, unsafe.SliceData(src), unsafe.SliceData(dst), &tags[0])
 	return true
 }

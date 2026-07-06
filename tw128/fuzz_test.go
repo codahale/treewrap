@@ -74,11 +74,11 @@ func FuzzChunksGenericVsArch(f *testing.F) {
 		var sgen state8
 		initLeafBatch8(&sgen, key, nonce, baseIndex)
 		genDst := make([]byte, 8*ChunkSize)
-		var genTags [256]byte
+		var genTags leafTagBuffer
 		encryptLeafBatch8Generic(&sgen, src, genDst, &genTags)
 
 		archDst := make([]byte, 8*ChunkSize)
-		var archTags [256]byte
+		var archTags leafTagBuffer
 		encryptLeafBatch8(key, nonce, baseIndex, src, archDst, &archTags)
 
 		if !bytes.Equal(genDst, archDst) {
@@ -92,11 +92,11 @@ func FuzzChunksGenericVsArch(f *testing.F) {
 		var sgen2 state8
 		initLeafBatch8(&sgen2, key, nonce, baseIndex)
 		genPt := make([]byte, 8*ChunkSize)
-		var genTags2 [256]byte
+		var genTags2 leafTagBuffer
 		decryptLeafBatch8Generic(&sgen2, src, genPt, &genTags2)
 
 		archPt := make([]byte, 8*ChunkSize)
-		var archTags2 [256]byte
+		var archTags2 leafTagBuffer
 		decryptLeafBatch8(key, nonce, baseIndex, src, archPt, &archTags2)
 
 		if !bytes.Equal(genPt, archPt) {

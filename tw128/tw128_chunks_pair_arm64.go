@@ -34,7 +34,7 @@ func initChunkPairState(s *state8, key, nonce []byte, baseIndex uint64) {
 func encryptChunkPair(g *aggregator, src, dst []byte) bool {
 	var s state8
 	initChunkPairState(&s, g.key[:], g.nonce[:], g.nLeaves+1)
-	var tags [256]byte
+	var tags leafTagBuffer
 	encryptChunksPairARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], &tags[0])
 	g.absorbLeafTags(tags[:2*leafTagSize], 2)
 	return true
@@ -44,7 +44,7 @@ func encryptChunkPair(g *aggregator, src, dst []byte) bool {
 func decryptChunkPair(g *aggregator, src, dst []byte) bool {
 	var s state8
 	initChunkPairState(&s, g.key[:], g.nonce[:], g.nLeaves+1)
-	var tags [256]byte
+	var tags leafTagBuffer
 	decryptChunksPairARM64(&s, &src[0], &src[ChunkSize], &dst[0], &dst[ChunkSize], &tags[0])
 	g.absorbLeafTags(tags[:2*leafTagSize], 2)
 	return true

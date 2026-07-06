@@ -23,7 +23,7 @@ func encryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	var s state8
 	initChunk0BatchState(&s, g)
 
-	var tags [256]byte
+	var tags leafTagBuffer
 	if k == 8 {
 		encryptLeafBatch8Arch(&s, src, dst, &tags)
 	} else {
@@ -40,7 +40,7 @@ func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	var s state8
 	initChunk0BatchState(&s, g)
 
-	var tags [256]byte
+	var tags leafTagBuffer
 	if k == 8 {
 		decryptLeafBatch8Arch(&s, src, dst, &tags)
 	} else {

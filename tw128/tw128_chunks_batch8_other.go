@@ -2,6 +2,6 @@
 
 package tw128
 
-func encryptLeafBatch8Arch(_ *state8, _, _ []byte, _ *[256]byte) bool { return false }
+func encryptLeafBatch8Arch(_ *state8, _, _ []byte, _ *leafTagBuffer) bool { return false }
 
-func decryptLeafBatch8Arch(_ *state8, _, _ []byte, _ *[256]byte) bool { return false }
+func decryptLeafBatch8Arch(_ *state8, _, _ []byte, _ *leafTagBuffer) bool { return false }
