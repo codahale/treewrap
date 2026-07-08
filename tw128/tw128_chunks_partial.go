@@ -35,8 +35,11 @@ func finishCompleteLeafPartialFused(g *aggregator, s *state8, src, dst []byte, t
 }
 
 func finishPartialBodies(d0, d1 *duplex, src, dst []byte, tailLen, bodyBlocks int, decrypt bool) {
+	// The complete chunk in d0 may have many full blocks left when the fused
+	// pass was short (a small ragged tail); drain them in-register first.
 	off := bodyBlocks * rhoBytes
-	d0.bodyMore(dst[off:ChunkSize], src[off:ChunkSize], decrypt, msgMore)
+	consumed := off + d0.bodyBlocksArch(dst[off:ChunkSize], src[off:ChunkSize], decrypt)
+	d0.bodyMore(dst[consumed:ChunkSize], src[consumed:ChunkSize], decrypt, msgMore)
 	d0.closeBlock(msgLast)
 
 	tailOff := ChunkSize + off

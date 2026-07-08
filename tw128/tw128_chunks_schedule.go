@@ -79,7 +79,8 @@ func (g *aggregator) tryFuseChunk0CompleteLeaves(dst, src []byte, k int) int {
 }
 
 func (g *aggregator) processChunk0InTrunk(dst, src []byte) {
-	g.trunk.bodyMore(dst, src, g.decrypt, msgMore)
+	consumed := g.trunk.bodyBlocksArch(dst, src, g.decrypt)
+	g.trunk.bodyMore(dst[consumed:], src[consumed:], g.decrypt, msgMore)
 	g.trunk.closeBlock(msgLast)
 }
 

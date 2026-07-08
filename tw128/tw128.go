@@ -140,7 +140,8 @@ func initAggregator(key, nonce, ad []byte, decrypt bool) aggregator {
 // the empty message. It closes the trunk message phase with MSG_LAST and elides
 // aggregation; the closing block emits the root tag directly, mirroring a leaf.
 func (g *aggregator) processTrunkOnlyMessage(dst, src []byte) [TagSize]byte {
-	g.trunk.bodyMore(dst, src, g.decrypt, msgMore)
+	consumed := g.trunk.bodyBlocksArch(dst, src, g.decrypt)
+	g.trunk.bodyMore(dst[consumed:], src[consumed:], g.decrypt, msgMore)
 	g.trunk.closeBlock(msgLast)
 	var tag [TagSize]byte
 	g.trunk.extractTag(&tag)
@@ -164,14 +165,16 @@ func (g *aggregator) finishAggregation() [TagSize]byte {
 func decryptX1(key, nonce []byte, index uint64, ct, pt []byte, d *duplex) {
 	p := leafInit(key, nonce, index)
 	d.initWith(p[:])
-	d.bodyMore(pt, ct, true, msgMore)
+	consumed := d.bodyBlocksArch(pt, ct, true)
+	d.bodyMore(pt[consumed:], ct[consumed:], true, msgMore)
 	d.closeBlock(msgLast)
 }
 
 func encryptX1(key, nonce []byte, index uint64, pt, ct []byte, d *duplex) {
 	p := leafInit(key, nonce, index)
 	d.initWith(p[:])
-	d.bodyMore(ct, pt, false, msgMore)
+	consumed := d.bodyBlocksArch(ct, pt, false)
+	d.bodyMore(ct[consumed:], pt[consumed:], false, msgMore)
 	d.closeBlock(msgLast)
 }
 
