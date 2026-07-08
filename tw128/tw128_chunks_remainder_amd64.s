@@ -1,10 +1,12 @@
 // TW128 remainder chunk processing — AMD64 n-wide body kernels.
 //
-// These kernels process the first 48 full rho (167-byte) blocks of a 2..7 chunk
-// remainder under the strict BDPV11 framing and store the resulting state back
-// into state8. The final (49th) full rho-block — closed with MSG_LAST — and the
-// active tag extraction are completed in Go (finish{Encrypt,Decrypt}ChunkLanes).
-// 8183 = 49 × 167, so there is no ragged tail.
+// These kernels process full rho (167-byte) blocks of a 2..7 chunk remainder
+// under the strict BDPV11 framing and store the resulting state back into
+// state8. The AVX-512 kernels take the block count as a parameter (48 for a
+// complete chunk body) so a ragged-tail lane can share a batch for its full
+// blocks; the final full rho-block — closed with MSG_LAST — and the active
+// tag extraction are completed in Go (finish{Encrypt,Decrypt}ChunkLanes).
+// 8183 = 49 × 167, so a complete chunk has no ragged tail.
 //
 // Per full block: 20 whole lanes (160 bytes) + a 7-byte partial lane 20, then
 // MSG_MORE (0x1A) | pad (0x80) = 0x9A XORed at byte 167 (lane 20, byte 7), then
@@ -174,7 +176,7 @@
 	VPXORQ	Z25, Zlane, Zlane
 
 
-// func encryptChunksBodyAVX512N(s *state8, src, dst *byte, n uint64)
+// func encryptChunksBodyAVX512N(s *state8, src, dst *byte, n, blocks uint64)
 //
 // Register-resident AVX-512 kernel for a 2..7 chunk remainder: it
 // gathers/scatters only the low n lanes (mask K2), reading the n chunks
@@ -187,7 +189,7 @@
 // measured slower at every n in 2..7 on Emerald Rapids — the transpose's
 // shuffle work is constant regardless of n, so it only amortizes at the full
 // 8-chunk width, where encryptChunksBodyAVX512T already runs.
-TEXT ·encryptChunksBodyAVX512N(SB), $64-32
+TEXT ·encryptChunksBodyAVX512N(SB), $64-40
 	MOVQ	s+0(FP), AX
 	MOVQ	src+8(FP), BX
 	MOVQ	dst+16(FP), R14
@@ -236,7 +238,7 @@ TEXT ·encryptChunksBodyAVX512N(SB), $64-32
 	MOVQ	$0x00FFFFFFFFFFFFFF, R13
 	MOVQ	$0x9A00000000000000, DI
 
-	MOVQ	$48, R12
+	MOVQ	blocks+32(FP), R12
 
 tw128_enc_avx512n_loop:
 	VMOVDQU64	0(SP), Z28
@@ -319,10 +321,10 @@ tw128_enc_avx512n_loop:
 	RET
 
 
-// func decryptChunksBodyAVX512N(s *state8, src, dst *byte, n uint64)
+// func decryptChunksBodyAVX512N(s *state8, src, dst *byte, n, blocks uint64)
 //
 // Decrypt counterpart of encryptChunksBodyAVX512N.
-TEXT ·decryptChunksBodyAVX512N(SB), $64-32
+TEXT ·decryptChunksBodyAVX512N(SB), $64-40
 	MOVQ	s+0(FP), AX
 	MOVQ	src+8(FP), BX
 	MOVQ	dst+16(FP), R14
@@ -371,7 +373,7 @@ TEXT ·decryptChunksBodyAVX512N(SB), $64-32
 	MOVQ	$0x00FFFFFFFFFFFFFF, R13
 	MOVQ	$0x9A00000000000000, DI
 
-	MOVQ	$48, R12
+	MOVQ	blocks+32(FP), R12
 
 tw128_dec_avx512n_loop:
 	VMOVDQU64	0(SP), Z28

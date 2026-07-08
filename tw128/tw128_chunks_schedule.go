@@ -1,11 +1,30 @@
 package tw128
 
+// partialBodyBlocks returns the number of full MSG_MORE rho-blocks in a
+// ragged tail of n bytes: every block except the final (possibly partial)
+// one.
+func partialBodyBlocks(n int) int {
+	return (n+rhoBytes-1)/rhoBytes - 1
+}
+
 // processChunkedMessage handles messages too large for the trunk-only path. It
 // processes chunk 0, complete leaf chunks, and an optional final ragged leaf,
 // absorbing leaf tags into the trunk in transcript order.
 func (g *aggregator) processChunkedMessage(dst, src []byte) {
 	if g.tryFuseChunk0PartialLeaf(dst, src) {
 		return
+	}
+
+	// Whole-message fusion: when chunk 0, the complete leaves, and a ragged
+	// tail together fit the n-wide kernel's lane budget, run them as a
+	// single batch (amd64) instead of leaving the tail for a serial pass.
+	if hasWholeMessageTailFusion {
+		nAll := (len(src) - ChunkSize) / ChunkSize
+		if tailLen := len(src) - (1+nAll)*ChunkSize; tailLen > 0 && nAll+2 <= 8 {
+			if g.tryFuseWholeMessageWithTail(dst, src, nAll, tailLen) {
+				return
+			}
+		}
 	}
 
 	consumed := g.processChunk0AndCompleteLeaves(dst, src)

@@ -7,10 +7,10 @@ import (
 )
 
 //go:noescape
-func encryptChunksBodyAVX512N(s *state8, src, dst *byte, n uint64)
+func encryptChunksBodyAVX512N(s *state8, src, dst *byte, n, blocks uint64)
 
 //go:noescape
-func decryptChunksBodyAVX512N(s *state8, src, dst *byte, n uint64)
+func decryptChunksBodyAVX512N(s *state8, src, dst *byte, n, blocks uint64)
 
 //go:noescape
 func encryptChunksBodyAVX2N(s *state8, src, dst *byte, n uint64)
@@ -20,7 +20,7 @@ func decryptChunksBodyAVX2N(s *state8, src, dst *byte, n uint64)
 
 func encryptChunksBodyN(s *state8, src, dst []byte, n int) {
 	if cpuid.HasAVX512 {
-		encryptChunksBodyAVX512N(s, &src[0], &dst[0], uint64(n))
+		encryptChunksBodyAVX512N(s, &src[0], &dst[0], uint64(n), chunkBodyBlocks)
 	} else {
 		encryptChunksBodyAVX2N(s, &src[0], &dst[0], uint64(n))
 	}
@@ -28,7 +28,7 @@ func encryptChunksBodyN(s *state8, src, dst []byte, n int) {
 
 func decryptChunksBodyN(s *state8, src, dst []byte, n int) {
 	if cpuid.HasAVX512 {
-		decryptChunksBodyAVX512N(s, &src[0], &dst[0], uint64(n))
+		decryptChunksBodyAVX512N(s, &src[0], &dst[0], uint64(n), chunkBodyBlocks)
 	} else {
 		decryptChunksBodyAVX2N(s, &src[0], &dst[0], uint64(n))
 	}

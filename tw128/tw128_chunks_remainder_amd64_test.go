@@ -39,7 +39,7 @@ func TestEncryptLeafRemainderAVX512(t *testing.T) {
 		initLeafBatch8(&sq, key, nonce, 1)
 		dst := make([]byte, n*chunkSize)
 		var tags leafTagBuffer
-		encryptChunksBodyAVX512N(&sq, &src[0], &dst[0], uint64(n))
+		encryptChunksBodyAVX512N(&sq, &src[0], &dst[0], uint64(n), chunkBodyBlocks)
 		finishEncryptChunkLanes(&sq, src, dst, &tags, n)
 
 		if !bytes.Equal(dst, refDst[:n*chunkSize]) {
@@ -151,7 +151,7 @@ func TestDecryptLeafRemainderAVX512(t *testing.T) {
 		initLeafBatch8(&sq, key, nonce, 1)
 		dst := make([]byte, n*chunkSize)
 		var tags leafTagBuffer
-		decryptChunksBodyAVX512N(&sq, &src[0], &dst[0], uint64(n))
+		decryptChunksBodyAVX512N(&sq, &src[0], &dst[0], uint64(n), chunkBodyBlocks)
 		finishDecryptChunkLanes(&sq, src, dst, &tags, n)
 
 		if !bytes.Equal(dst, refDst[:n*chunkSize]) {

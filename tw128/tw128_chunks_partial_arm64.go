@@ -62,10 +62,6 @@ func decryptCompleteLeafPartialFused(g *aggregator, src, dst []byte, tailLen int
 	return true
 }
 
-func partialBodyBlocks(n int) int {
-	return (n+rhoBytes-1)/rhoBytes - 1
-}
-
 func initChunk0PartialState(s *state8, g *aggregator, leafIndex uint64) {
 	initChunk0PairState(s, g, leafIndex)
 }
