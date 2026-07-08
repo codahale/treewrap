@@ -458,8 +458,10 @@ prefixes have distinct
 $\mathsf{raw\_flat}(\cdot)$ images, and the bridge is injective on
 that image. Direct adversary queries on inputs outside the bridged
 \TW{} well-formed transcript language still count in $\qRO(\mathcal{B})$
-(\Cref{sec:resources}) but cannot trigger
-$\badkey$.
+(\Cref{sec:resources}) but decode to $\bot$ under the keyed
+direct-query decoder of \Cref{def:keyed-twout}, so they cannot trigger
+the key-hit abort events that later game analyses define from its
+counted classes.
 \end{proof}
 
 The bridge injectivity established here underlies Opening Triple
@@ -785,7 +787,7 @@ $\mathcal{B}$ that has direct access to $\ROflat$ and construction
 computations that may generate final leaf transcripts---by encryption,
 plaintext-computing, or verification computations, whether they accept or
 reject. Let
-$\badleaf$ be the event that two distinct construction-generated final
+$\badleaf^\star$ be the event that two distinct construction-generated final
 leaf transcript prefixes $X \neq X'$ in leaf tag output-point classes
 receive the same $\tauleaf$-bit projection from $\RF(\cdot)$, and let
 $\nleaf(\mathcal{B})$ be the execution-uniform count of distinct
@@ -799,7 +801,7 @@ game.
   or all keys are adversary-supplied, so direct queries may themselves
   land on leaf tag output points---
   \[
-    \Pr[\badleaf] \;\leq\;
+    \Pr[\badleaf^\star] \;\leq\;
     \LeafColl_{\tauleaf}\bigl(\qRO(\mathcal{B})+\nleaf(\mathcal{B})\bigr)
     = \binom{\qRO(\mathcal{B})+\nleaf(\mathcal{B})}{2} \big/ 2^{\tauleaf}.
   \]
@@ -841,14 +843,14 @@ unrevealed-value premises of \Cref{lem:adaptive-candidate}, whose
 collision case with $s = 2$ and $\tau = \tauleaf$ bounds the probability
 that two candidates share a $\tauleaf$-bit projection by
 $\binom{L}{2} \cdot 2^{-\tauleaf}$ for a length-$L$ sequence. Every
-$\badleaf$ pair is a pair of construction-generated candidates.
+$\badleaf^\star$ pair is a pair of construction-generated candidates.
 
 \emph{(1) General count.} Direct queries may decode to a leaf
 tag class $\Ltag(j)$ and are appended as candidates; together with the
 $\nleaf(\mathcal{B})$ construction-generated transcripts the sequence has
 length at most $\qRO(\mathcal{B}) + \nleaf(\mathcal{B})$, so the case
 with $L = \qRO(\mathcal{B}) + \nleaf(\mathcal{B})$ gives
-$\Pr[\badleaf] \leq
+$\Pr[\badleaf^\star] \leq
 \binom{\qRO(\mathcal{B})+\nleaf(\mathcal{B})}{2} \cdot 2^{-\tauleaf}
 = \LeafColl_{\tauleaf}(\qRO(\mathcal{B})+\nleaf(\mathcal{B}))$. The
 count charges every direct query and every construction-generated final
