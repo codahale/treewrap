@@ -88,6 +88,17 @@ func (g *aggregator) processChunk0InTrunk(dst, src []byte) {
 func (g *aggregator) processCompleteLeafChunks(dst, src []byte, nFlush int) {
 	idx := 0
 
+	// Hybrid pass: drain complete chunks five at a time where a hybrid
+	// scalar/NEON kernel is available (arm64). It covers four chunks at
+	// 2-wide NEON throughput and hides the fifth on the scalar pipes.
+	if hasLeafBatch5 {
+		for idx+5 <= nFlush {
+			off := idx * ChunkSize
+			g.processLeafBatch5(dst[off:off+5*ChunkSize], src[off:off+5*ChunkSize])
+			idx += 5
+		}
+	}
+
 	for idx+8 <= nFlush {
 		off := idx * ChunkSize
 		g.processLeafBatch8(dst[off:off+8*ChunkSize], src[off:off+8*ChunkSize])
