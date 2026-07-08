@@ -262,8 +262,8 @@ no bound.
 
 Name the tag-emitting transcript families:
 \begin{align*}
-  \Rtag   &= \text{root transcript prefix whose sponge output gives the final root tag}, \\
-  \Ltag(j)   &= \text{leaf-$j$ transcript prefix whose sponge output gives the leaf tag}.
+  \Rtag   &= \text{root transcript prefix whose final call is a \sigagglast{} aggregation call}, \\
+  \Ltag(j)   &= \text{leaf-$j$ transcript prefix whose final call is a \sigmsglast{} message call}.
 \end{align*}
 The final root tag is emitted by the $\sigagglast$ aggregation call (the
 $\Rtag$ family) when $n \geq 1$, and by the closing $\sigmsglast$
@@ -271,10 +271,12 @@ message call (an $\Rmsg^+$ prefix, in the notation of
 \Cref{cor:output-sep}) when $n = 0$ and the aggregation phase is elided.
 Since $n = \leaves(C)$ is fixed by $\|C\|$, every computation on a given
 ciphertext emits its tag at the output point selected by $\|C\|$.
-Intermediate construction transcript lookup points (init, non-final
-AD, non-final message, and non-final aggregation) are also typed
-prefixes covered by \Cref{lem:bridge-decode}; the exact keyed
-direct-query decoder names them in \Cref{tab:keyed-twout}.
+Intermediate construction transcript lookup points (initialization, AD,
+non-final message, non-final aggregation, and the final root message
+call that every $n \geq 1$ computation reaches with zero requested
+output) are also typed prefixes covered by \Cref{lem:bridge-decode};
+the exact keyed direct-query decoder names them in
+\Cref{tab:keyed-twout}.
 
 \begin{definition}[Root Tag Output Point and Final Root Transcript Class]
 \label{def:root-tag-output-point}
