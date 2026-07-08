@@ -7,6 +7,12 @@ package tw128
 // fusion or serial paths instead.
 const hasWholeMessageTailFusion = false
 
+func canFuseTailBatch(nFull, tailLen int) bool { return false }
+
 func (g *aggregator) tryFuseWholeMessageWithTail(dst, src []byte, nComplete, tailLen int) bool {
 	panic("tw128: no whole-message tail fusion on this platform")
+}
+
+func (g *aggregator) fuseLeafRemainderWithTail(dst, src []byte, nComplete, tailLen int) {
+	panic("tw128: no tail-batch fusion on this platform")
 }

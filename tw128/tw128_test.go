@@ -157,6 +157,9 @@ func TestRoundTrip(t *testing.T) {
 		{fmt.Sprintf("%d bytes (8 chunks)", ChunkSize*8), ChunkSize * 8},
 		{fmt.Sprintf("%d bytes (9 chunks)", ChunkSize*9), ChunkSize * 9},
 		{fmt.Sprintf("%d bytes", ChunkSize*11+7), ChunkSize*11 + 7},
+		{fmt.Sprintf("%d bytes (10 chunks - 1)", ChunkSize*10-1), ChunkSize*10 - 1},
+		{fmt.Sprintf("%d bytes", ChunkSize*12+999), ChunkSize*12 + 999},
+		{fmt.Sprintf("%d bytes (15 chunks - 1)", ChunkSize*15-1), ChunkSize*15 - 1},
 	}
 
 	for _, sz := range sizes {

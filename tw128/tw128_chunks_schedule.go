@@ -32,6 +32,19 @@ func (g *aggregator) processChunkedMessage(dst, src []byte) {
 
 	nComplete := len(src) / ChunkSize
 	tailLen := len(src) - nComplete*ChunkSize
+
+	// Batch-tail fusion (amd64): drain complete leaves in eights, then fold
+	// the trailing 1..7 completes and the ragged tail into one masked batch,
+	// so the tail never runs serial when a non-full batch can host it.
+	if l := nComplete % 8; hasWholeMessageTailFusion && tailLen > 0 && canFuseTailBatch(l, tailLen) {
+		if n := nComplete - l; n > 0 {
+			g.processCompleteLeafChunks(dst[:n*ChunkSize], src[:n*ChunkSize], n)
+			src, dst = src[n*ChunkSize:], dst[n*ChunkSize:]
+		}
+		g.fuseLeafRemainderWithTail(dst, src, l, tailLen)
+		return
+	}
+
 	if tailLen > 0 && nComplete > 0 && canFuseCompleteLeafWithPartialLeaf(tailLen) {
 		if n := nComplete - 1; n > 0 {
 			g.processCompleteLeafChunks(dst[:n*ChunkSize], src[:n*ChunkSize], n)
