@@ -259,8 +259,8 @@ more, at $\Nprim$, to replace the ideal-side simulator by the real permutation
 dominates the $\Ntot$ term.
 
 \paragraph{Dominant terms and margin.}
-At $\Ntot \leq 2^{63}$, the hash bounds other than ePre and the
-CMTDs-4 bound have flat-sponge and root or leaf birthday terms on the same
+At $\Ntot \leq 2^{63}$, the hash bounds other than ePre, together with the
+CMTDs-4 bound, have flat-sponge and root or leaf birthday terms on the same
 $2^{-131}$ scale. The ePre and \textsf{INT-RUP} bounds retain the flat sponge
 loss as their only birthday-scale term, and the single-user AE bound carries
 its two flat-sponge terms, at $\Ntot$ and $\Nprim$, as its only birthday-scale
@@ -278,8 +278,8 @@ answers in both worlds (\Cref{sec:games-pp}). At feasible resource splits,
 the multi-user key-guessing witness needs one accepted nonempty encryption per
 targeted user; with $t$ targeted users and $q=\Nprim$ direct guesses, the
 joint cap imposes $2t+q \leq 2^{63}$, so the feasible key-guessing scale is
-about $2^{-133}$, reached near $t=2^{61}$ and $q=2^{62}$
-(\Cref{sec:loss-terms}). The remaining distance to the proof bound is
+about $2^{-133}$, reached near $t=2^{61}$ and $q=2^{62}$.
+The remaining distance to the proof bound is
 hybrid slack from charging created-but-idle users plus the two flat-sponge
 composition terms.
 
@@ -301,8 +301,10 @@ abruptly: at $\Ntot = 2^{100}$, for example, the $s = 2$ collision bound is
 still below $2^{-55}$. Once $\Ntot$ reaches
 $2^{c/2} = 2^{128}$, the flat sponge loss exceeds $1/2$ and no longer
 gives meaningful security (\Cref{sec:loss-terms}); the displayed
-closed form itself becomes a trivial advantage bound only when it
-reaches $1$, near $\Ntot = 2^{(c+1)/2}$. The cap
+closed forms themselves become trivial advantage bounds when they
+reach $1$, which each form does within a factor of two of
+$\Ntot = 2^{c/2}$, the exact point depending on how many
+quadratic-scale terms it carries. The cap
 $\Ntot \leq 2^{63}$ is therefore a data-scale choice: a single work bound at
 which every notion's advantage lies below the $2^{-128}$ target
 simultaneously, not the largest workload the mode tolerates.
