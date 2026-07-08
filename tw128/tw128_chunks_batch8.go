@@ -67,10 +67,6 @@ func initLeafBatch8(s *state8, key, nonce []byte, baseIndex uint64) {
 	s.closeBlock(initLast)
 }
 
-func extractLeafBatch8Tags(s *state8, tags *leafTagBuffer) {
-	extractLeafTagsN(s, tags, 8)
-}
-
 func extractLeafTagsN(s *state8, tags *leafTagBuffer, n int) {
 	for inst := range n {
 		binary.LittleEndian.PutUint64(tags[inst*32:], s.a[0][inst])
