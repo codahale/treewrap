@@ -111,9 +111,10 @@ Resource caps split per potential user $d \leq D$: $N^{(d)}$,
 $\qv^{(d)}$, $\nleaf^{(d)}$ are the per-user counts under
 \Cref{sec:resources}, with inactive users contributing zero. The global
 totals $N = \sum_{d=1}^D N^{(d)}$, $\qv = \sum_{d=1}^D \qv^{(d)}$,
-$\nleaf = \sum_{d=1}^D \nleaf^{(d)}$ appear in the final bound: $N$
-through the lift term $\Lift_c(\Ntot)$, and $\nleaf$ and $\qv$ through
-the leaf-collision and verification-tag terms. $\Nprim$
+$\nleaf = \sum_{d=1}^D \nleaf^{(d)}$ enter the final bound through their
+execution-uniform caps: $N$ through the lift term $\Lift_c(\Ntot)$, and
+$\nleaf$ and $\qv$ through the leaf-collision and verification-tag terms
+at $\Nleaf$ and $\Qv$. $\Nprim$
 remains a single shared count over the primitive interface.
 
 The mu-ind treatment applies only to indistinguishability. The

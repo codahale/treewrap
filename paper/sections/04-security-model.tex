@@ -238,9 +238,11 @@ fixed query bounds, but they are not listed as headline resource parameters
 unless they affect the final bound.
 
 \Cref{tab:resource-accounting} gives the compact notation summary used in later
-theorems. Lowercase resource quantities are realized counts in a random oracle
-experiment, while uppercase quantities are execution-uniform caps used in the
-public-permutation bounds. The detailed definitions below fix exactly which
+theorems. For the paired symbols, the lowercase form is the realized count in a
+random oracle experiment and the uppercase form is the execution-uniform cap
+used in the public-permutation bounds; the single-symbol quantities $N$,
+$\Nprim$, and $\Ntot$ serve as both the realized count and its cap. The
+detailed definitions below fix exactly which
 computations contribute to each count, and \Cref{sec:loss-terms} defines the
 closed-form loss terms.
 
@@ -294,9 +296,10 @@ closed-form loss terms.
       & Defined in \cref{sec:loss-terms}. \\
     \bottomrule
   \end{tabular}
-  \caption{Resource caps and recurring loss terms. Uppercase resource symbols
-    are the caps that appear in public-permutation theorems; lowercase symbols
-    are realized counts in random oracle executions or source games.}
+  \caption{Resource caps and recurring loss terms. For paired resource symbols,
+    the lowercase form is the realized count in random oracle executions or
+    source games and the uppercase form is the cap appearing in
+    public-permutation theorems; $N$, $\Nprim$, and $\Ntot$ serve as both.}
   \label{tab:resource-accounting}
   \label{tab:notation}
 \end{table}
