@@ -114,6 +114,23 @@ func TestAEADInPlace(t *testing.T) {
 	}
 }
 
+func TestAEADSealSingleAllocation(t *testing.T) {
+	key := seq(KeySize)
+	nonce := seq(NonceSize)
+	a, _ := New(key)
+	pt := seq(ChunkSize*2 + 7)
+
+	// Seal with a nil dst must size the output for the tag up front rather
+	// than appending it past capacity, which would reallocate and copy the
+	// entire ciphertext.
+	allocs := testing.AllocsPerRun(10, func() {
+		a.Seal(nil, nonce, pt, nil)
+	})
+	if allocs != 1 {
+		t.Fatalf("Seal(nil, ...): got %v allocations, want 1", allocs)
+	}
+}
+
 func TestAEADBadKeySize(t *testing.T) {
 	if _, err := New(make([]byte, KeySize-1)); err == nil {
 		t.Fatal("New accepted a short key")

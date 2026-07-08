@@ -95,8 +95,19 @@ func (a *AEAD) DecryptAndHash(dst, nonce, ciphertext, additionalData []byte) ([]
 // To reuse plaintext's storage for the encrypted output, use plaintext[:0] as
 // dst. plaintext and dst must overlap entirely or not at all.
 func (a *AEAD) Seal(dst, nonce, plaintext, additionalData []byte) []byte {
-	ret, tag := a.EncryptAndHash(dst, nonce, plaintext, additionalData)
-	return append(ret, tag[:]...)
+	if len(nonce) != NonceSize {
+		panic("tw128: invalid nonce size")
+	}
+
+	ret, out := sliceForAppend(dst, len(plaintext)+TagSize)
+	if inexactOverlap(out[:len(plaintext)], plaintext) {
+		panic("tw128: invalid buffer overlap")
+	}
+
+	tag := crypt(a.key[:], nonce, additionalData, out[:len(plaintext)], plaintext, false)
+	copy(out[len(plaintext):], tag[:])
+
+	return ret
 }
 
 // Open decrypts and authenticates ciphertext, authenticates the additional data,
