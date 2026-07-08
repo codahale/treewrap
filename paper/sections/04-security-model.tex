@@ -9,8 +9,10 @@ with the theorem sections that use them: tag hash and committing games in
 \Cref{sec:aead-games,sec:mu-setting}.
 
 \Cref{tab:security-notions} summarizes the proof obligations before those
-formal games. The loss terms named there are defined in
-\Cref{sec:loss-terms}, and the implemented-parameter instantiations appear in
+formal games. The closed-form loss terms named there are defined in
+\Cref{sec:loss-terms}; the leaf tag and root tag guessing terms of the
+AE-facing rows are stated inline in the theorems of \Cref{sec:aead-security}.
+The implemented-parameter instantiations appear in
 \Cref{sec:concrete-security}.
 
 \paragraph{Proof worlds.}
@@ -54,9 +56,11 @@ mode-level question is identified as future work in
       & \Cref{thm:coll}
       & Capacity lift, root collision, leaf collision \\
     $\HTW$ preimage
-      & Find an input hitting a fixed target tag.
-      & \Cref{thm:epre}
-      & Capacity lift, root preimage \\
+      & Find an input hitting a random challenge tag (Pre) or a fixed
+        target tag (ePre), in the \cite{RS04} senses.
+      & \Cref{thm:pre,thm:epre}
+      & Capacity lift, root preimage; leaf collision and a source-guess
+        term for Pre \\
     $\HTW$ second preimage
       & Find a second preimage in the standard or everywhere
         \cite{RS04} sense.
@@ -71,12 +75,12 @@ mode-level question is identified as future work in
       & Produce a fresh accepting ciphertext after encryption and
         plaintext-computing queries.
       & \Cref{thm:int-rup}
-      & Capacity lift, key guess, leaf collision, tag guess \\
+      & Capacity lift, key guess, leaf tag, root tag guess \\
     AE / mu-ind
       & Distinguish real encryption and verification from random ciphertexts
         and replay-only verification, with nonce-respecting encryption queries.
       & \Cref{thm:mu-ind,cor:ae}
-      & Capacity lift, key guess, leaf collision, tag guess \\
+      & Capacity lift, key guess, leaf tag, root tag guess \\
     \bottomrule
   \end{tabular}
   \caption{Proof obligations and the dominant loss shapes used for \TW{}.
