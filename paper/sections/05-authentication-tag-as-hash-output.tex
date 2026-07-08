@@ -47,8 +47,8 @@ ePre, \Cref{thm:epre}
   & Terms: $\Lift_c$, $\RootPre$. Ingredient: fixed-target root candidate hit
     bound. \\
 CMTDs-4, \Cref{cor:cmtds4}
-  & Terms: $\Lift_c$, $\RootColl$. Ingredients: \TW{} tidiness; common
-    ciphertext body; opening-triple separation. \\
+  & Terms: $\Lift_c$, $\RootColl$. Ingredients: common ciphertext body;
+    opening-triple separation. \\
 CMT/CMTD, \Cref{cor:committing-combined}
   & Terms: $\Lift_c$, $\RootColl$. Ingredients: \cite{BH22} hierarchy for
     D-notions; direct encryption-source root collision argument for CMTs. \\
@@ -772,17 +772,15 @@ adversary $\mathcal{A}$ against \TW{} with the resources of
 \end{corollary}
 
 \begin{proof}
-A CMTDs-4 winner gives one ciphertext $C \concat T$ and $s$ distinct inputs
-$(K_i, U_i, A_i, M_i)$ such that
-$\Dec_{K_i}(U_i, A_i, C \concat T) = M_i$ for every $i$. By \TW{} tidiness
-(\Cref{lem:tw-tidiness}), each opened input re-encrypts to the same ciphertext:
-$\Enc_{K_i}(U_i, A_i, M_i) = C \concat T$. In particular the opened inputs share
-the root tag $T$. For the displayed no-$\LeafColl$ bound, use the dedicated
-root-collision derivation of \Cref{thm:cmtds4-ro}, lifted by
-\Cref{cor:lift-application}: in this all-bodies-equal case, the single shared
-body $C$ forces the triples $(K_i, U_i, A_i)$ pairwise distinct; by Opening
-Triple Separation (\Cref{cor:triple-sep}), a leaf tag collision cannot merge
-two openings and no $\LeafColl$ term arises.
+By the Lift Application corollary (\Cref{cor:lift-application}) for the
+CMTDs-4 game, the derived random oracle adversary $\mathcal{B}$ has
+$\qRO(\mathcal{B}) \leq \Nprim$, and the random oracle bound of
+\Cref{thm:cmtds4-ro} is nondecreasing in $\qRO(\mathcal{B})$, so the
+monotone form of \Cref{cor:lift-application} gives the stated bound. The
+challenger's $s$ decryption checks are construction computations whose
+duplex calls are counted in $N$ and enter through $\Lift_c(\Ntot)$; their
+$s$ final-root lookups are the candidate-sequence slack of
+$\RootColl_{\tauroot}$ (\Cref{sec:loss-terms}).
 \end{proof}
 
 \paragraph{Remaining committing notions.}
