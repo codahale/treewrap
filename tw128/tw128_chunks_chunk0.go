@@ -10,15 +10,6 @@ func initChunk0BatchState(s *state8, g *aggregator) {
 	}
 }
 
-// initChunk0PairState initializes instance 0 with the trunk and instance 1
-// with the requested leaf. It is used by pair-width chunk0 fusion paths.
-func initChunk0PairState(s *state8, g *aggregator, leafIndex uint64) {
-	var leaf duplex
-	p := leafInit(g.key[:], g.nonce[:], leafIndex)
-	leaf.initWith(p[:])
-	initPairStateFromDuplexes(s, &g.trunk, &leaf)
-}
-
 // finishChunk0Lanes writes fused lane 0 back into the trunk and absorbs the
 // produced leaf tags. tags[0:leafTagSize] belongs to the trunk lane and is not
 // a leaf tag.

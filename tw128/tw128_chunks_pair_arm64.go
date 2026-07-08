@@ -49,3 +49,12 @@ func decryptChunkPair(g *aggregator, src, dst []byte) bool {
 	g.absorbLeafTags(tags[:2*leafTagSize], 2)
 	return true
 }
+
+// initPairStateFromDuplexes packs two x1 duplex states into instances 0 and
+// 1 of s's lane-major layout; instances 2..7 are left untouched.
+func initPairStateFromDuplexes(s *state8, d0, d1 *duplex) {
+	for lane := range lanes {
+		s.a[lane][0] = d0.a[lane]
+		s.a[lane][1] = d1.a[lane]
+	}
+}

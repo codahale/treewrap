@@ -51,3 +51,12 @@ func decryptChunk0Fused(g *aggregator, src, dst []byte, k int) int {
 	finishChunk0Lanes(g, &s, tags[:], 2)
 	return 2
 }
+
+// initChunk0PairState initializes instance 0 with the trunk and instance 1
+// with the requested leaf. It is used by pair-width chunk0 fusion paths.
+func initChunk0PairState(s *state8, g *aggregator, leafIndex uint64) {
+	var leaf duplex
+	p := leafInit(g.key[:], g.nonce[:], leafIndex)
+	leaf.initWith(p[:])
+	initPairStateFromDuplexes(s, &g.trunk, &leaf)
+}
