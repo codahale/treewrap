@@ -53,18 +53,23 @@ func initLeafBatch8(s *state8, key, nonce []byte, baseIndex uint64) {
 
 	for inst := range 8 {
 		prefix := leafInit(key, nonce, baseIndex+uint64(inst))
-		full := leafInitLen >> 3
-		for lane := range full {
-			s.a[lane][inst] = binary.LittleEndian.Uint64(prefix[lane<<3 : lane<<3+8])
-		}
-		if rem := leafInitLen & 7; rem > 0 {
-			off := full << 3
-			s.a[full][inst] = loadPartialLE(prefix[off : off+rem])
-		}
+		loadInitPrefix(s, inst, prefix[:])
 	}
 
 	s.pos = leafInitLen
 	s.closeBlock(initLast)
+}
+
+// loadInitPrefix loads a leaf init prefix into instance inst of s.
+func loadInitPrefix(s *state8, inst int, prefix []byte) {
+	full := len(prefix) >> 3
+	for lane := range full {
+		s.a[lane][inst] = binary.LittleEndian.Uint64(prefix[lane<<3 : lane<<3+8])
+	}
+	if rem := len(prefix) & 7; rem > 0 {
+		off := full << 3
+		s.a[full][inst] = loadPartialLE(prefix[off : off+rem])
+	}
 }
 
 func extractLeafTagsN(s *state8, tags *leafTagBuffer, n int) {

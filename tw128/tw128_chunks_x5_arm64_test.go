@@ -79,10 +79,11 @@ func BenchmarkChunks5Kernel(b *testing.B) {
 	b.SetBytes(5 * ChunkSize)
 	for b.Loop() {
 		var s state8
-		initLeafBatch8(&s, key, nonce, 1)
+		initLeafBatch5(&s, key, nonce, 1)
 		var d duplex
-		p := leafInit(key, nonce, 5)
-		d.initWith(p[:])
+		for lane := range lanes {
+			d.a[lane] = s.a[lane][4]
+		}
 		encryptChunks5ARM64(&s, &d, &src[0], &dst[0], &tags[0])
 	}
 }
