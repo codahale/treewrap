@@ -163,13 +163,16 @@ When the same operational trace is run against
 $(\Sim^{\ROflat},\Sim^{-1,\ROflat})$, every construction-internal forward
 query lies on a rooted, paddable path determined by a well-formed \TW{}
 prefix. In an execution whose combined primitive trace has cost less
-than $2^c$, the simulator cannot have saturated: each primitive query
-adds at most one capacity value to the simulator's internal
-$\mathcal{R} \cup \mathcal{O}$ set, so fewer than $2^c$ queries cannot
-fill the $2^c$-element capacity space. The simulator's
-sponge-consistency invariant \cite[Lemma~2]{BDPV08} therefore makes the
-rate part returned at that node agree with the corresponding lazy value
-$\ROflat(\flatmap(X))$. Thus the simulator-side operational construction
+than $2^c$, the simulator answers every query of the trace
+unsaturated: its internal set $\mathcal{R} \cup \mathcal{O}$ contains
+the initially rooted supernode $0^c$ and gains at most one element per
+answered query, so when any query of the trace is answered the set has
+fewer than $2^c$ elements and cannot equal the $2^c$-element capacity
+space. The simulator's sponge-consistency invariant
+(\cite[Lemma~2]{BDPV08}, stated for the transformation simulator and
+extended to the permutation simulator in \cite[\S4.3]{BDPV08})
+therefore makes the rate part returned at that node agree with the
+corresponding lazy value $\ROflat(\flatmap(X))$. Thus the simulator-side operational construction
 has the same construction-output law as the flat-RO construction
 interface used in \Cref{sec:ro-model}.
 \end{proof}
