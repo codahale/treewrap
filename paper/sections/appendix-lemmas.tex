@@ -735,28 +735,42 @@ them can only shorten the sequence, so it suffices to analyze the
 subsequence of distinct fresh decoded candidate keys
 $K'_1, \dots, K'_m$, where $m \leq \qRO$.
 
-Let $F_i$ be the event that the first $i$ fresh decoded candidate keys
-all miss the hidden $K$. The invariant says that, conditioned on the
-visible prefix before the $(i+1)$-st fresh test and on $F_i$, the
-hidden $K$ is uniform over the $2^k - i$ values not yet tested. The next
-fresh candidate key $K'_{i+1}$ is one of those remaining values and is
-determined by the adversary's next direct query, so
+For a fixed position $i \in \{1, \dots, \qRO\}$, let $E_i$ be the
+event that the $i$-th fresh key test occurs and its candidate key
+$K'_i$ equals the hidden $K$. Because $\badkey$ aborts the game
+immediately, $E_i$ implies that the first $i-1$ fresh tests all
+occurred and all missed; if some earlier fresh test never occurs then
+$E_i$ is false and the bound below still holds, as in the proof of
+\Cref{lem:adaptive-candidate}.
+
+Fix $j \in \{0, \dots, i-2\}$ and condition on any positive-probability
+visible prefix before the $(j+1)$-st fresh test on which the first $j$
+fresh tests occurred and missed. The invariant says that the hidden $K$
+is then uniform over the $2^k - j$ values not yet tested, and the next
+fresh candidate key $K'_{j+1}$ is one of those remaining values and is
+determined by the adversary's next direct query, so the $(j+1)$-st
+fresh test misses with probability $1 - 1/(2^k - j)$. Chaining these
+conditional miss probabilities over the fixed steps
+$j = 0, \dots, i-2$ telescopes to
 \[
-  \Pr[K = K'_{i+1} \mid F_i] = \frac{1}{2^k - i},
-  \qquad
-  \Pr[F_{i+1} \mid F_i] = 1 - \frac{1}{2^k - i}.
+  \Pr[\text{the first $i-1$ fresh tests occur and miss}]
+  \leq \prod_{j=0}^{i-2} \left(1 - \frac{1}{2^k - j}\right)
+  = \prod_{j=0}^{i-2} \frac{2^k - j - 1}{2^k - j}
+  = \frac{2^k - i + 1}{2^k}.
 \]
-Multiplying the miss probabilities gives
+Conditioned on any such prefix, the $i$-th fresh test hits the hidden
+$K$ with probability $1/(2^k - i + 1)$, so
 \[
-  \Pr[F_m]
-  = \prod_{i=0}^{m-1} \left(1 - \frac{1}{2^k - i}\right)
-  = \prod_{i=0}^{m-1} \frac{2^k - i - 1}{2^k - i}
-  = \frac{2^k - m}{2^k}.
+  \Pr[E_i]
+  \leq \frac{2^k - i + 1}{2^k} \cdot \frac{1}{2^k - i + 1}
+  = \frac{1}{2^k}.
 \]
-Thus the probability that some fresh decoded candidate key equals the
-hidden $K$ is $m / 2^k \leq \qRO / 2^k$. This event is exactly the
-first $\badkey$ abort, because
-$\KeyedTWOut$ returns either $\bot$ or a unique candidate key.
+The first $\badkey$ abort occurs at a fresh key test, because
+$\KeyedTWOut$ returns either $\bot$ or a unique candidate key and a
+repeat of a previously tested candidate would already have fired the
+abort. Hence $\badkey \subseteq \bigcup_{i=1}^{\qRO} E_i$, and a union
+bound over the $\qRO$ positions gives
+$\Pr[\badkey] \leq \qRO / 2^k$.
 \end{proof}
 
 \subsection{Leaf Tag Collision Bound}
