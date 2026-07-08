@@ -502,8 +502,7 @@ source-guess and leaf-collision events gives the theorem.
 
 \begin{theorem}[Random Oracle Everywhere Preimage Resistance of $\HTW$]
 \label{thm:epre-ro}
-For every query-independent target tag $T^* \in \bits^{\tauroot}$ and
-every ePre adversary $\mathcal{B}$ in the \TW{}
+For every ePre adversary $\mathcal{B}$ in the \TW{}
 random oracle model (\Cref{sec:ro-model}),
 \[
   \AdvePre_\RO(\mathcal{B})
@@ -513,8 +512,10 @@ random oracle model (\Cref{sec:ro-model}),
 \end{theorem}
 
 \begin{proof}
-Run the random oracle preimage game for the query-independent target
-$T^*$, which is independent of $\ROflat$. After rejecting unless the
+Fix any query-independent target tag $T^* \in \bits^{\tauroot}$; the
+bound below is uniform in $T^*$, so it bounds the worst case over
+targets. Run the random oracle preimage game for $T^*$, which is
+independent of $\ROflat$. After rejecting unless the
 output input $X = (K, U, A, M)$ is in the \TW{} domain, the challenger
 performs one encryption $\Enc_{K}^\RO(U, A, M)$, reaching a final root
 transcript $R$. A win means $\HTW(X) = T^*$, i.e.\ the root tag
@@ -582,7 +583,7 @@ with $\RootColl_{\tauroot}(\Nprim, 2) = \binom{\Nprim + 2}{2} / 2^{\tauroot}$.
 \begin{proof}
 The $s = 2$ case of \Cref{thm:coll}; \cite{BH22} note that $s = 2$
 recovers the classical notion of collision resistance, which under the
-keyed-by-the-permutation convention of \Cref{sec:commit-defs} is the
+keyed-by-the-permutation convention of \Cref{sec:root-tag-defs} is the
 Coll notion of \cite{RS04}.
 \end{proof}
 
@@ -664,9 +665,8 @@ of \Cref{cor:lift-application} gives the stated bound.
 
 \begin{theorem}[Everywhere Preimage Resistance of $\HTW$]
 \label{thm:epre}
-For every target tag $T^* \in \bits^{\tauroot}$ fixed in advance and every
-ePre adversary $\mathcal{A}$ against $\HTW$ with the resources of
-\Cref{sec:resources},
+For every ePre adversary $\mathcal{A}$ against $\HTW$ with the
+resources of \Cref{sec:resources},
 \[
   \AdvePre_\TW(\mathcal{A})
   \;\leq\;
@@ -678,7 +678,7 @@ ePre adversary $\mathcal{A}$ against $\HTW$ with the resources of
 
 \begin{proof}
 By the Lift Application corollary (\Cref{cor:lift-application}) for the
-everywhere-preimage game---whose target $T^*$ is fixed before the
+everywhere-preimage game---whose target tag is fixed before the
 primitive
 sampling---the derived random oracle adversary $\mathcal{B}$ has
 $\qRO(\mathcal{B}) \leq \Nprim$, and the random oracle bound of
@@ -714,9 +714,10 @@ preimage resistance is \Cref{thm:epre}. These bounds quantify the
 adversary's success at the same $\tauroot$-bit projection of the final root
 transcript, and \Cref{cor:concrete-security} evaluates them at the
 implemented parameters. Binding is the compact-commitment property supplied
-by collision and second-preimage resistance. Standard preimage resistance is
-the property that a tag produced from a uniformly sampled fixed-length
-opening does not reveal an efficiently findable opening; everywhere preimage
+by collision and second-preimage resistance. Standard preimage resistance
+bounds the probability that an adversary with the stated query
+resources finds an opening for the tag of a uniformly sampled
+fixed-length opening; everywhere preimage
 resistance is the corresponding fixed-target property for tags chosen
 independently of the primitive.
 \end{proof}

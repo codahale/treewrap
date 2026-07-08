@@ -24,7 +24,7 @@ construction-oracle conventions of \Cref{sec:games-pp}. The random oracle
 versions are obtained by the mechanical substitution of \Cref{sec:ro-model}.
 
 \paragraph{All-in-one AE.}
-The all-in-one authenticated encryption game~\cite{RS06} samples
+The all-in-one authenticated encryption game~\cite{RS06,BT16} samples
 $K \sample \bits^k$ and compares the real pair
 $(\Enc_K[\pi], \Ver_K[\pi])$ with the ideal pair $(\Rand, \Replay)$.
 On each accepted encryption query $(U, A, M)$, $\Rand$ samples a uniformly
@@ -336,16 +336,16 @@ leaf-tag table accesses up to the first accepting non-replay submission.
 The same-slot case of \Cref{lem:leaf-collision}, applied to the enlarged set
 of construction computations, gives
 \[
-  \Pr[\badleaf \text{ before } \badkey \cup \forge]
+  \Pr[\badleaf \text{ before } \badkey \vee \forge]
   \leq
   \frac{\nleaf(\mathcal{B})}{2^{\tauleaf}}.
 \]
 
-It remains to bound accepting verification before $\badkey \cup \badleaf$.
+It remains to bound accepting verification before $\badkey \vee \badleaf$.
 The \textsf{INT-RUP} root-guessing lemma (\Cref{lem:int-rup-root-guess})
 gives
 \[
-  \Pr[\forge \text{ before } \badkey \cup \badleaf]
+  \Pr[\forge \text{ before } \badkey \vee \badleaf]
   \leq \qv(\mathcal{B}) / 2^{\tauroot}.
 \]
 Combining the three bounds through the first-occurrence decomposition
