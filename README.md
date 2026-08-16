@@ -1,5 +1,16 @@
 # TreeWrap
 
+> [!CAUTION]
+> I used this project as a personal experiment in using frontier LLM models to aid in the design of
+> cryptographic primitives. I think the eventual desing of TW128 is sound, but it's also not
+> particularly compelling in terms of peformance or security. Frontier LLM models (as of mid 2026)
+> are pretty good at finding problems in cryptographic proofs but pretty mediocre at writing them.
+> They're surprisingly good at doing literature surveys and citation cross-referencing, but trying
+> to use them to write a decent paper is more maddening than practical. I think I've pushed this
+> particular design as far as it can be pushed, which satisfies my curiosity, if nothing else.
+
+---
+
 > [!WARNING]
 > TreeWrap/TW128 is an unreviewed research construction. This repository is a
 > research artifact, not a production cryptographic library.
